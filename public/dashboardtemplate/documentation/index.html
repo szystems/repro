@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<title>Documentation - Sapphire Admin Template</title>
+		<!-- Meta -->
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link href="https://fonts.googleapis.com/css?family=Lato:400,400i,700,700i&display=swap" rel="stylesheet" />
+
+		<!-- Bootstrap CSS -->
+		<link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+
+		<!-- Prism CSS -->
+		<link rel="stylesheet" href="assets/css/prism/prism.css" />
+
+		<!-- Main CSS -->
+		<link id="theme-style" rel="stylesheet" href="assets/css/main.css" />
+	</head>
+
+	<body>
+		<!-- Document header start -->
+		<div id="document-header" class="document-header">
+			<h2 class="document-title">Sapphire Admin Dashbaord</h2>
+			<div class="last-update">Last updated: September 2023</div>
+		</div>
+		<!-- Document header end -->
+
+		<div class="container">
+			<!-- Document container start -->
+			<div class="document-container">
+				<!-- Document body start -->
+				<div class="document-body">
+					<!-- Document nav start -->
+					<div id="document-nav" class="document-nav">
+						<nav id="document-menu" class="nav document-menu sticky">
+							<a class="nav-link scrollto" href="#welcome-section">Introduction</a>
+							<a class="nav-link scrollto" href="#html-section">HTML structure</a>
+							<a class="nav-link scrollto" href="#css-files">CSS files</a>
+							<a class="nav-link scrollto" href="#images">Images</a>
+							<a class="nav-link scrollto" href="#fonts">Fonts</a>
+							<a class="nav-link scrollto" href="#credits">Credits</a>
+							<a class="nav-link scrollto" href="#jquery-files">jQuery files</a>
+							<a class="nav-link scrollto" href="#special-thanks">Special thanks</a>
+						</nav>
+					</div>
+					<!-- Document nav end -->
+
+					<!-- Document sections start -->
+					<div class="document-sections-container">
+						<!-- Sectioon start -->
+						<section id="welcome-section" class="document-section">
+							<h2>Welcome!</h2>
+							<div id="step1" class="document-section-body">
+								<h3>Introduction</h3>
+								<p class="mb-5 mt-5">
+									<b>Item Name: </b> Sapphire Admin Template<br />
+									<b>Author: </b> Bootstrap Gallery<br />
+									<b>Version: </b> v1.0<br />
+								</p>
+								<p>
+									Thank you for your interest in <b>Sapphire Admin Template</b>.
+									This documentation is to help you regarding each step of
+									customization and get you started. Please go through the
+									documentation carefully to understand how this template is
+									made and how to edit this properly. HTML5, CSS3 knowledge is
+									required to customize this template.
+								</p>
+							</div>
+						</section>
+						<!-- Sectioon end -->
+
+						<!-- Sectioon start -->
+						<section id="html-section" class="document-section">
+							<h3 class="m-0">Folder and Files structure</h3>
+
+							<div class="document-section-body">
+								<div class="file-structure">
+									<img src="assets/images/file-structure.svg" class="img-fluid" alt="File Structure" />
+								</div>
+							</div>
+						</section>
+						<!-- Sectioon end -->
+
+						<!-- Sectioon start -->
+						<section id="html-section" class="document-section">
+							<h3 class="m-0">HTML layout structure</h3>
+
+							<div class="document-section-body">
+								<div class="code-block">
+									<pre><code class="language-markup">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+	&lt;head&gt;
+		&lt;!-- Required meta tags --&gt;
+		&lt;meta charset="utf-8" /&gt;
+		&lt;meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, shrink-to-fit=no"
+		/&gt;
+
+		&lt;!-- Title --&gt;
+		&lt;title&gt;Bootstrap Gallery - Admin Dashboard&lt;/title&gt;
+
+		&lt;!-- *************
+			************ Common Css Files *************
+		************ --&gt;
+		&lt;!-- Bootstrap css --&gt;
+		&lt;link rel="stylesheet" href="css/bootstrap.min.css" /&gt;
+
+		&lt;!-- Bootstrap font icons css --&gt;
+		&lt;link rel="stylesheet" href="fonts/bootstrap/bootstrap-icons.css" /&gt;
+
+		&lt;!-- Main css --&gt;
+		&lt;link rel="stylesheet" href="css/main.css" /&gt;
+
+		&lt;!-- *************
+			************ Vendor Css Files *************
+		************ --&gt;
+
+		&lt;!-- Scrollbar CSS --&gt;
+		&lt;link
+			rel="stylesheet"
+			href="vendor/overlay-scroll/OverlayScrollbars.min.css"
+		/&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;!-- Loading wrapper start --&gt;
+		&lt;div id="loading-wrapper"&gt;
+			&lt;div class="spinner"&gt;
+				&lt;div class="line1"&gt;&lt;/div&gt;
+				&lt;div class="line2"&gt;&lt;/div&gt;
+				&lt;div class="line3"&gt;&lt;/div&gt;
+				&lt;div class="line4"&gt;&lt;/div&gt;
+				&lt;div class="line5"&gt;&lt;/div&gt;
+				&lt;div class="line6"&gt;&lt;/div&gt;
+			&lt;/div&gt;
+		&lt;/div&gt;
+		&lt;!-- Loading wrapper end --&gt;
+
+		&lt;!-- Page wrapper start --&gt;
+		&lt;div class="page-wrapper"&gt;
+			&lt;!-- Page header starts --&gt;
+			&lt;div class="page-header"&gt;
+				&lt;!-- Sidebar brand starts --&gt;
+				&lt;div class="brand"&gt;
+					&lt;a href="#" class="logo"&gt;
+						&lt;img
+							src="img/logo.svg"
+							class="d-none d-md-block me-4"
+							alt="Sapphire Admin Dashboard"
+						/&gt;
+						&lt;img
+							src="img/logo-sm.svg"
+							class="d-block d-md-none me-4"
+							alt="Sapphire Admin Dashboard"
+						/&gt;
+					&lt;/a&gt;
+				&lt;/div&gt;
+				&lt;!-- Sidebar brand starts --&gt;
+				&lt;div class="toggle-sidebar" id="toggle-sidebar"&gt;
+					&lt;i class="bi bi-list"&gt;&lt;/i&gt;
+				&lt;/div&gt;
+				&lt;!-- Header actions ccontainer start --&gt;
+				&lt;div class="header-actions-container"&gt;
+					&lt;!-- Search container start --&gt;
+					&lt;div class="search-container me-3 d-xl-block d-lg-none"&gt;
+						&lt;!-- Search input group start --&gt;
+						&lt;div class="input-group"&gt;
+							&lt;input
+								type="text"
+								class="form-control"
+								placeholder="Search Jobs"
+							/&gt;
+							&lt;button class="btn btn-outline-secondary" type="button"&gt;
+								&lt;i class="bi bi-search"&gt;&lt;/i&gt;
+							&lt;/button&gt;
+						&lt;/div&gt;
+						&lt;!-- Search input group end --&gt;
+					&lt;/div&gt;
+					&lt;!-- Search container end --&gt;
+
+					&lt;!-- Header actions start --&gt;
+					&lt;div class="header-actions d-xl-flex d-lg-none"&gt;
+						&lt;a
+							href="#"
+							data-bs-toggle="tooltip"
+							data-bs-placement="bottom"
+							data-bs-custom-class="custom-tooltip-red"
+							data-bs-title="Events List"
+						&gt;
+							&lt;i class="bi bi-bell font-1xx"&gt;&lt;/i&gt;
+						&lt;/a&gt;
+						&lt;a
+							href="#"
+							data-bs-toggle="tooltip"
+							data-bs-placement="bottom"
+							data-bs-custom-class="custom-tooltip-blue"
+							data-bs-title="Settings"
+						&gt;
+							&lt;i class="bi bi-gear font-1xx"&gt;&lt;/i&gt;
+						&lt;/a&gt;
+					&lt;/div&gt;
+					&lt;!-- Header actions start --&gt;
+
+					&lt;!-- Header profile start --&gt;
+					&lt;div
+						class="header-profile d-flex align-items-center justify-content-end position-relative ms-3"
+					&gt;
+						&lt;div class="dropdown"&gt;
+							&lt;a
+								href="#"
+								id="userSettings"
+								class="user-settings"
+								data-toggle="dropdown"
+								aria-haspopup="true"
+							&gt;
+								&lt;span class="user-name d-none d-md-block"&gt;Michelle White&lt;/span&gt;
+								&lt;span class="avatar"&gt;
+									&lt;img src="img/user7.png" alt="Admin Templates" /&gt;
+									&lt;span class="status online"&gt;&lt;/span&gt;
+								&lt;/span&gt;
+							&lt;/a&gt;
+							&lt;div
+								class="dropdown-menu dropdown-menu-end"
+								aria-labelledby="userSettings"
+							&gt;
+								&lt;div class="header-profile-actions"&gt;
+									&lt;a href="#"&gt;Profile&lt;/a&gt;
+									&lt;a href="#"&gt;Settings&lt;/a&gt;
+									&lt;a href="#"&gt;Logout&lt;/a&gt;
+								&lt;/div&gt;
+							&lt;/div&gt;
+						&lt;/div&gt;
+					&lt;/div&gt;
+					&lt;!-- Header profile end --&gt;
+				&lt;/div&gt;
+				&lt;!-- Header actions ccontainer end --&gt;
+			&lt;/div&gt;
+			&lt;!-- Page header ends --&gt;
+
+			&lt;!-- Main container start --&gt;
+			&lt;div class="main-container"&gt;
+				&lt;!-- Sidebar wrapper start --&gt;
+				&lt;nav class="sidebar-wrapper"&gt;
+					&lt;!-- Sidebar custom nav starts --&gt;
+					&lt;div class="sidebar-custom-nav"&gt;
+						&lt;a href="#"&gt;
+							&lt;i class="bi bi-speedometer2"&gt;&lt;/i&gt;
+							&lt;span&gt;Link 1&lt;/span&gt;
+						&lt;/a&gt;
+						&lt;a href="#"&gt;
+							&lt;i class="bi bi-bar-chart-line"&gt;&lt;/i&gt;
+							&lt;span&gt;Link 2&lt;/span&gt;
+						&lt;/a&gt;
+						&lt;a href="#"&gt;
+							&lt;i class="bi bi-pie-chart"&gt;&lt;/i&gt;
+							&lt;span&gt;Link 3&lt;/span&gt;
+						&lt;/a&gt;
+						&lt;a href="#"&gt;
+							&lt;i class="bi bi-graph-up-arrow"&gt;&lt;/i&gt;
+							&lt;span&gt;Lnk 4&lt;/span&gt;
+						&lt;/a&gt;
+					&lt;/div&gt;
+					&lt;!-- Sidebar custom nav end --&gt;
+
+					&lt;!-- Sidebar menu starts --&gt;
+					&lt;div class="sidebar-menu"&gt;
+						&lt;div class="sidebarMenuScroll"&gt;
+							&lt;ul&gt;
+								&lt;li class="sidebar-dropdown"&gt;
+									&lt;a href="#"&gt;
+										&lt;i class="bi bi-house"&gt;&lt;/i&gt;
+										&lt;span class="menu-text"&gt;Dropdown Default&lt;/span&gt;
+									&lt;/a&gt;
+									&lt;div class="sidebar-submenu"&gt;
+										&lt;ul&gt;
+											&lt;li&gt;
+												&lt;a href="#"&gt;Menu Link 1&lt;/a&gt;
+											&lt;/li&gt;
+											&lt;li&gt;
+												&lt;a href="#"&gt;Menu Link 2&lt;/a&gt;
+											&lt;/li&gt;
+											&lt;li&gt;
+												&lt;a href="#"&gt;Menu Link 3&lt;/a&gt;
+											&lt;/li&gt;
+										&lt;/ul&gt;
+									&lt;/div&gt;
+								&lt;/li&gt;
+								&lt;li&gt;
+									&lt;a href="#"&gt;
+										&lt;i class="bi bi-box"&gt;&lt;/i&gt;
+										&lt;span class="menu-text"&gt;Direct Link&lt;/span&gt;
+									&lt;/a&gt;
+								&lt;/li&gt;
+								&lt;li class="active-page-link"&gt;
+									&lt;a href="#"&gt;
+										&lt;i class="bi bi-code-square"&gt;&lt;/i&gt;
+										&lt;span class="menu-text"&gt;Direct Link Active&lt;/span&gt;
+									&lt;/a&gt;
+								&lt;/li&gt;
+								&lt;li class="sidebar-dropdown active"&gt;
+									&lt;a href="#"&gt;
+										&lt;i class="bi bi-layout-sidebar"&gt;&lt;/i&gt;
+										&lt;span class="menu-text"&gt;Dropdown Menu Active&lt;/span&gt;
+									&lt;/a&gt;
+									&lt;div class="sidebar-submenu"&gt;
+										&lt;ul&gt;
+											&lt;li&gt;
+												&lt;a href="#" class="current-page"
+													&gt;Current Page&lt;/a
+												&gt;
+											&lt;/li&gt;
+											&lt;li&gt;
+												&lt;a href="#"&gt;Link&lt;/a&gt;
+											&lt;/li&gt;
+											&lt;li&gt;
+												&lt;a href="#"&gt;Link&lt;/a&gt;
+											&lt;/li&gt;
+											&lt;li&gt;
+												&lt;a href="#"&gt;Link&lt;/a&gt;
+											&lt;/li&gt;
+										&lt;/ul&gt;
+									&lt;/div&gt;
+								&lt;/li&gt;								
+							&lt;/ul&gt;
+						&lt;/div&gt;
+					&lt;/div&gt;
+					&lt;!-- Sidebar menu ends --&gt;
+				&lt;/nav&gt;
+				&lt;!-- Sidebar wrapper end --&gt;
+				&lt;!-- Content wrapper scroll start --&gt;
+				&lt;div class="content-wrapper-scroll"&gt;
+					&lt;!-- Main header starts --&gt;
+					&lt;div
+						class="main-header d-flex align-items-center justify-content-between position-relative"
+					&gt;
+						&lt;div class="d-flex align-items-center justify-content-center"&gt;
+							&lt;div class="page-icon pe-3"&gt;
+								&lt;i class="bi bi-layout-sidebar"&gt;&lt;/i&gt;
+							&lt;/div&gt;
+							&lt;div class="page-title d-none d-md-block"&gt;
+								&lt;h5&gt;Default Layout&lt;/h5&gt;
+							&lt;/div&gt;
+						&lt;/div&gt;
+						&lt;!-- Live updates start --&gt;
+						&lt;ul
+							class="updates d-flex align-items-end flex-column overflow-hidden"
+							id="updates"
+						&gt;
+							&lt;li&gt;
+								&lt;a href="javascript:void(0)"&gt;
+									&lt;i class="bi bi-envelope-paper text-red font-2x me-2"&gt;&lt;/i&gt;
+									&lt;span&gt;12 emails from David Michaiah.&lt;/span&gt;
+								&lt;/a&gt;
+							&lt;/li&gt;
+							&lt;li&gt;
+								&lt;a href="javascript:void(0)"&gt;
+									&lt;i class="bi bi-bar-chart text-blue font-2x me-2"&gt;&lt;/i&gt;
+									&lt;span&gt;15 new features updated successfully.&lt;/span&gt;
+								&lt;/a&gt;
+							&lt;/li&gt;
+							&lt;li&gt;
+								&lt;a href="javascript:void(0)"&gt;
+									&lt;i class="bi bi-folder-check text-yellow font-2x me-2"&gt;&lt;/i&gt;
+									&lt;span&gt;The media folder is created successfully.&lt;/span&gt;
+								&lt;/a&gt;
+							&lt;/li&gt;
+						&lt;/ul&gt;
+						&lt;!-- Live updates end --&gt;
+					&lt;/div&gt;
+					&lt;!-- Main header ends --&gt;
+					&lt;!-- Content wrapper start --&gt;
+					&lt;div class="content-wrapper"&gt;
+						&lt;!-- Row start --&gt;
+						&lt;div class="row"&gt;
+							&lt;div class="col-xl-12"&gt;
+								&lt;div class="card"&gt;
+									&lt;div class="card-header"&gt;
+										&lt;div class="card-title"&gt;Card Title&lt;/div&gt;
+									&lt;/div&gt;
+									&lt;div class="card-body"&gt;&lt;/div&gt;
+								&lt;/div&gt;
+							&lt;/div&gt;
+						&lt;/div&gt;
+						&lt;!-- Row end --&gt;
+					&lt;/div&gt;
+					&lt;!-- Content wrapper end --&gt;
+				&lt;/div&gt;
+				&lt;!-- Content wrapper scroll end --&gt;
+			&lt;/div&gt;
+			&lt;!-- Main container end --&gt;
+
+			&lt;!-- App Footer start --&gt;
+			&lt;div class="app-footer"&gt;
+				&lt;span&gt;© Sapphire admin 2022&lt;/span&gt;
+			&lt;/div&gt;
+			&lt;!-- App footer end --&gt;
+		&lt;/div&gt;
+		&lt;!-- Page wrapper end --&gt;
+
+		&lt;!-- *************
+			************ Required JavaScript Files *************
+		************* --&gt;
+		&lt;!-- Required jQuery first, then Bootstrap Bundle JS --&gt;
+		&lt;script src="js/jquery.min.js"&gt;&lt;/script&gt;
+		&lt;script src="js/bootstrap.bundle.min.js"&gt;&lt;/script&gt;
+		&lt;script src="js/modernizr.js"&gt;&lt;/script&gt;
+		&lt;script src="js/moment.js"&gt;&lt;/script&gt;
+
+		&lt;!-- *************
+			************ Vendor Js Files *************
+		************* --&gt;
+
+		&lt;!-- Overlay Scroll JS --&gt;
+		&lt;script src="vendor/overlay-scroll/jquery.overlayScrollbars.min.js"&gt;&lt;/script&gt;
+		&lt;script src="vendor/overlay-scroll/custom-scrollbar.js"&gt;&lt;/script&gt;
+
+		&lt;!-- News ticker --&gt;
+		&lt;script src="vendor/newsticker/newsTicker.min.js"&gt;&lt;/script&gt;
+		&lt;script src="vendor/newsticker/custom-newsTicker.js"&gt;&lt;/script&gt;
+
+		&lt;!-- Main Js Required --&gt;
+		&lt;script src="js/main.js"&gt;&lt;/script&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+										
+									</code></pre>
+								</div>
+							</div>
+						</section>
+						<!-- Sectioon end -->
+
+						<!-- Sectioon start -->
+						<section id="css-files" class="document-section">
+							<h3 class="m-0">CSS files</h3>
+
+							<div class="document-section-body">
+								<div class="code-block">
+									<pre><code class="language-markup">Note:
+- All common css files are included in css folder.
+- All plugin css files are included in vendor folder.
+
+
+&lt;!-- *************
+	************ Common Css Files *************
+************ --&gt;
+&lt;!-- Bootstrap css --&gt;
+&lt;link rel="stylesheet" href="css/bootstrap.min.css" /&gt;
+
+&lt;!-- Bootstrap font icons css --&gt;
+&lt;link rel="stylesheet" href="fonts/bootstrap/bootstrap-icons.css" /&gt;
+
+&lt;!-- Main css --&gt;
+&lt;link rel="stylesheet" href="css/main.css" /&gt;
+
+&lt;!-- *************
+	************ Vendor Css Files *************
+************ --&gt;
+
+&lt;!-- Scrollbar CSS --&gt;
+&lt;link
+	rel="stylesheet"
+	href="vendor/overlay-scroll/OverlayScrollbars.min.css"
+/&gt;
+
+&lt;!-- Calendar CSS --&gt;
+&lt;link rel="stylesheet" href="vendor/calendar/css/custom.css" /&gt;
+&lt;link rel="stylesheet" href="vendor/calendar/css/main.min.css" /&gt;
+
+&lt;!-- Data Tables CSS --&gt;
+&lt;link rel="stylesheet" href="vendor/datatables/dataTables.bs4.css" /&gt;
+&lt;link rel="stylesheet" href="vendor/datatables/dataTables.bs4-custom.css" /&gt;
+&lt;link href="vendor/datatables/buttons.bs.css" rel="stylesheet" /&gt;
+
+&lt;!-- Daterange CSS --&gt;
+&lt;link rel="stylesheet" href="vendor/daterange/daterange.css"&gt;
+
+&lt;!-- Dropzone CSS --&gt;
+&lt;link rel="stylesheet" href="vendor/dropzone/dropzone.min.css"&gt;
+
+&lt;!-- Megamenu CSS --&gt;
+&lt;link rel="stylesheet" href="vendor/megamenu/megamenu.css"&gt;
+
+&lt;!-- Morris CSS --&gt;
+&lt;link rel="stylesheet" href="vendor/morris/morris.css" /&gt;
+
+&lt;!-- Overlay Scroll CSS --&gt;
+&lt;link rel="stylesheet" href="vendor/overlay-scroll/OverlayScrollbars.min.css" /&gt;
+
+&lt;!-- Particles CSS --&gt;
+&lt;link rel="stylesheet" href="vendor/circliful/circliful.css" /&gt;
+</code></pre>
+								</div>
+							</div>
+						</section>
+						<!-- Sectioon end -->
+
+						<!-- Sectioon start -->
+						<section id="images" class="document-section">
+							<h3 class="m-0">Images</h3>
+
+							<div class="document-section-body">
+								<div class="code-block">
+									<pre><code class="language-markup">Note:
+- All image placeholders are included in images folder.
+- Country Flags SVG images are included in flags folder.
+- Images which are used in the live demo are not included in the download folder.
+- Please replace the images as per your requirement.
+</code></pre>
+								</div>
+							</div>
+						</section>
+						<!-- Sectioon end -->
+
+						<!-- Sectioon start -->
+						<section id="fonts" class="document-section">
+							<h3 class="m-0">Fonts</h3>
+
+							<div class="document-section-body">
+								<div class="code-block">
+									<pre><code class="language-markup">Note:
+- Font icons files are included in fonts folder.
+- Lato is the primary font and Rubik-mono is the secondary font used in Sapphire Admin Dashboard.</code></pre>
+								</div>
+							</div>
+						</section>
+						<!-- Sectioon end -->
+
+						<!-- Sectioon start -->
+						<section id="credits" class="document-section">
+							<h3 class="m-0">Credits</h3>
+
+							<div class="document-section-body">
+								<div class="code-block">
+									<pre><code class="language-markup">JavaScript Libraries
+---------------------
+--------------------
+-------------------
+------------------
+
+Bootstrap 5
+https://getbootstrap.com/
+
+jQuery 
+http://www.jquery.com
+
+jQuery-UI 
+http://www.jqueryui.com
+
+
+JavaScript Plugins
+---------------------
+--------------------
+-------------------
+------------------
+
+Apex Graphs
+https://apexcharts.com/
+
+Circliful
+https://github.com/pguso/jquery-plugin-circliful
+
+DataTables
+http://datatables.net/
+
+Daterange
+https://github.com/dangrossman/daterangepicker
+
+dropzone
+https://www.dropzonejs.com
+
+FullCalendar
+https://fullcalendar.io/
+
+Input Masks 
+https://github.com/nosir/cleave.js
+
+jVector Maps
+http://jvectormap.com
+
+Moment
+http://momentjs.com/
+
+Morris
+https://morrisjs.github.io/morris.js
+
+Particles
+vincentgarreau.com/particles.js
+
+Rating
+https://www.wbotelhos.com/raty
+
+Overlay Scroll
+https://github.com/KingSora/OverlayScrollbars
+
+Summernote Editor
+https://summernote.org
+
+
+
+
+CSS Files 
+---------------------
+--------------------
+-------------------
+------------------
+
+Bootstrap
+http://getbootstrap.com
+
+
+Circliful
+https://github.com/pguso/jquery-plugin-circliful
+
+Calendar
+https://plugins.jquery.com/fullcalendar
+
+Data Tables
+https://datatables.net
+
+Icomoon Icons
+https://icomoon.io/
+
+jQuery UI
+https://jqueryui.com
+
+Summernote Editor
+https://summernote.org
+
+
+
+
+Images
+---------------------
+--------------------
+-------------------
+------------------
+
+Pexels
+https://pexels.com
+
+
+
+
+
+Fonts
+---------------------
+--------------------
+-------------------
+------------------
+
+Icon Font
+https://icomoon.io
+
+Web Fonts
+https://fonts.google.com/
+Merriweather and Lato
+
+</code></pre>
+								</div>
+							</div>
+						</section>
+						<!-- Sectioon end -->
+
+						<!-- Sectioon start -->
+						<section id="jquery-files" class="document-section">
+							<h3 class="m-0">jQuery files</h3>
+
+							<div class="document-section-body">
+								<div class="code-block">
+									<pre><code class="language-markup">Note:
+- All common js files are included in js folder.
+- All plugins js files are included in vendor folder.
+
+
+&lt;!-- *************
+	************ Required JavaScript Files *************
+************* --&gt;
+&lt;!-- Required jQuery first, then Bootstrap Bundle JS --&gt;
+&lt;script src="js/jquery.min.js"&gt;&lt;/script&gt;
+&lt;script src="js/bootstrap.bundle.min.js"&gt;&lt;/script&gt;
+&lt;script src="js/moment.js"&gt;&lt;/script&gt;
+
+
+&lt;!-- *************
+	************ Required Vendor Js Files *************
+************* --&gt;
+&lt;!-- Overlay Scroll JS --&gt;
+&lt;script src="vendor/overlay-scroll/jquery.overlayScrollbars.min.js"&gt;&lt;/script&gt;
+&lt;script src="vendor/overlay-scroll/custom-scrollbar.js"&gt;&lt;/script&gt;
+
+
+&lt;!-- *************
+	************ Optional Vendor Js Files
+	- Include below js files based on your requirment.
+	- Included all optional js files in vendor folder.
+	*************
+************* --&gt;
+&lt;!-- Apex Charts --&gt;
+&lt;script src="vendor/apex/apexcharts.min.js"&gt;&lt;/script&gt;
+	--- more apex js files are included in design/vendor/apex
+
+&lt;!-- Circliful js --&gt;
+&lt;script src="vendor/circliful/circliful.min.js"&gt;&lt;/script&gt;
+	--- more apex js files are included in design/vendor/circliful
+
+&lt;!-- Data Tables --&gt;
+&lt;script src="vendor/datatables/dataTables.min.js"&gt;&lt;/script&gt;
+&lt;script src="vendor/datatables/dataTables.bootstrap.min.js"&gt;&lt;/script&gt;
+	--- more apex js files are included in design/vendor/datatables
+
+&lt;!-- Datepickers --&gt;
+&lt;script src="vendor/datepicker/js/picker.js"&gt;&lt;/script&gt;
+&lt;script src="vendor/datepicker/js/picker.date.js"&gt;&lt;/script&gt;
+	--- more apex js files are included in design/vendor/datepicker
+
+&lt;!-- Daterange --&gt;
+&lt;script src="vendor/daterange/daterange.js"&gt;&lt;/script&gt;
+&lt;script src="vendor/daterange/custom-daterange.js"&gt;&lt;/script&gt;
+
+&lt;!-- Fullcalendar --&gt;
+&lt;script src="vendor/calendar/js/core/main.min.js"&gt;&lt;/script&gt;
+	--- more apex js files are included in design/vendor/calendar
+
+&lt;!-- Input Masks JS --&gt;
+&lt;script src="vendor/input-masks/cleave.min.js"&gt;&lt;/script&gt;
+	--- more apex js files are included in design/vendor/input-masks
+
+&lt;!-- jQuery UI --&gt;
+&lt;script src="js/jquery-ui.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- jVector Maps --&gt;
+&lt;script src="vendor/jvectormap/jquery-jvectormap-2.0.3.min.js"&gt;&lt;/script&gt;
+	--- more apex js files are included in design/vendor/jvectormap
+
+&lt;!-- Morris Graphs --&gt;
+&lt;script src="vendor/morris/raphael-min.js"&gt;&lt;/script&gt;
+&lt;script src="vendor/morris/morris.min.js"&gt;&lt;/script&gt;
+	--- more apex js files are included in design/vendor/morris
+
+&lt;!-- Rating JS --&gt;
+&lt;script src="vendor/rating/raty.js"&gt;&lt;/script&gt;
+	--- more apex js files are included in design/vendor/rating
+
+&lt;!-- Main Js Required --&gt;
+	--- All layout related js files are included in main.js
+&lt;script src="js/main.js"&gt;&lt;/script&gt;</code></pre>
+								</div>
+							</div>
+						</section>
+						<!-- Sectioon end -->
+
+						<!-- Sectioon start -->
+						<section id="special-thanks" class="document-section">
+							<h3 class="m-0">Special Thanks</h3>
+
+							<div class="document-section-body">
+								<div class="code-block">
+									Thank you so much for purchasing this theme.
+								</div>
+							</div>
+						</section>
+						<!-- Sectioon end -->
+					</div>
+					<!-- Document sections end -->
+				</div>
+				<!-- Document body end -->
+			</div>
+			<!-- Document container end -->
+		</div>
+		<!-- Container end -->
+
+		<!-- Main Javascript -->
+		<script type="text/javascript" src="assets/js/jquery.min.js"></script>
+		<script type="text/javascript" src="assets/js/bootstrap.bundle.min.js"></script>
+		<script type="text/javascript" src="assets/js/stickyfill/stickyfill.min.js"></script>
+		<script type="text/javascript" src="assets/js/scroll-to/jquery.scrollTo.min.js"></script>
+		<script type="text/javascript" src="assets/js/prism/prism-min.js"></script>
+		<script type="text/javascript" src="assets/js/main.js"></script>
+	</body>
+
+</html>

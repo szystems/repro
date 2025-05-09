@@ -1,0 +1,512 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\Empresa;
+use App\Http\Requests\UserFormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use App\Models\Config;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
+use PDF;
+use DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\UserMail;
+use App\Mail\UserResetPasswordMail;
+
+class UsersController extends Controller
+{
+    public function users(Request $request)
+    {
+        $queryUser = $request->input('fuser');
+        $role_filter = $request->input('role_filter');
+        $empresa_filter = $request->input('empresa_filter');
+
+        $usersQuery = User::where('estado', '=', 1);
+
+        // Aplicar filtro de búsqueda por nombre, email, teléfono o celular
+        if($queryUser) {
+            $usersQuery->where(function ($query) use ($queryUser) {
+                $query->where('name', 'LIKE', '%' . $queryUser . '%')
+                    ->orWhere('email', 'LIKE', '%' . $queryUser . '%')
+                    ->orWhere('telefono', 'LIKE', '%' . $queryUser . '%')
+                    ->orWhere('celular', 'LIKE', '%' . $queryUser . '%');
+            });
+        }
+
+        // Aplicar filtro por rol si está definido
+        if($role_filter !== null && $role_filter !== '') {
+            $usersQuery->where('role_as', '=', $role_filter);
+        }
+
+        // Filtro por empresa para usuarios tipo empresa (role_as = 1)
+        if($empresa_filter !== null && $empresa_filter !== '') {
+            $usersQuery->where('empresa_id', '=', $empresa_filter);
+        }
+
+        // Si el usuario actual es de tipo empresa, solo puede ver usuarios de su empresa
+        if(Auth::user()->role_as == 1) {
+            $usersQuery->where('empresa_id', '=', Auth::user()->empresa_id);
+        }
+
+        $users = $usersQuery->orderBy('name', 'asc')->paginate(20);
+        $filterUsers = User::all();
+        $empresas = Empresa::where('estado', 1)->orderBy('nombre', 'asc')->get();
+
+        return view('admin.user.index', compact('users', 'queryUser', 'filterUsers', 'role_filter', 'empresa_filter', 'empresas'));
+    }
+
+    public function showuser(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        // Verificar permisos: usuarios empresa solo pueden ver usuarios de su misma empresa
+        if(Auth::user()->role_as == 1 && Auth::user()->empresa_id != $user->empresa_id) {
+            return redirect('users')->with('status', 'No tiene permisos para ver este usuario');
+        }
+
+        $hoy = Carbon::now('America/Guatemala');
+        $fechaVista = $hoy->format('d-m-Y');
+        $fecha = date("Y-m-d", strtotime($fechaVista));
+        $filtros = $request->all();
+
+        return view('admin.user.show', compact('user','fecha','filtros','fechaVista'));
+    }
+
+    public function adduser()
+    {
+        // Verificar permisos para crear usuarios
+        $currentUser = Auth::user();
+        $canCreateAdmin = $currentUser->role_as == 3; // Solo admin puede crear admins
+        $canCreateRepro = $currentUser->role_as == 3; // Solo admin puede crear usuarios de Repro
+        $canCreateEmpresa = $currentUser->role_as >= 2; // Admin y Repro pueden crear usuarios de empresa
+        $canCreateEvaluado = $currentUser->role_as >= 1; // Todos pueden crear evaluados excepto los mismos evaluados
+
+        // Cargar todas las empresas activas para el selector
+        $empresas = Empresa::where('estado', 1)->orderBy('nombre', 'asc')->get();
+
+        // Obtener la empresa_id del parámetro de consulta si existe (para preseleccionar)
+        $empresa_id = request('empresa_id');
+
+        return view('admin.user.add', compact(
+            'canCreateAdmin',
+            'canCreateRepro',
+            'canCreateEmpresa',
+            'canCreateEvaluado',
+            'empresas',
+            'empresa_id'
+        ));
+    }
+
+    public function insertuser(UserFormRequest $request)
+    {
+        $user = new User();
+        $currentUser = Auth::user();
+
+        // Verificar permisos antes de asignar rol
+        $requestedRole = $request->input('role_as');
+
+        if ($requestedRole == 3 && $currentUser->role_as != 3) {
+            return redirect()->back()->with('error', 'No tiene permisos para crear administradores');
+        }
+
+        if ($requestedRole == 2 && $currentUser->role_as != 3) {
+            return redirect()->back()->with('error', 'No tiene permisos para crear usuarios de REPRO');
+        }
+
+        if ($requestedRole == 1 && $currentUser->role_as < 2) {
+            return redirect()->back()->with('error', 'No tiene permisos para crear usuarios de empresas');
+        }
+
+        // Procesamiento de imagen de perfil
+        if($request->hasFile('fotografia')) {
+            $file = $request->file('fotografia');
+            $ext = $file->getClientOriginalExtension();
+            $filename = time().'.'.$ext;
+            $file->move('assets/imgs/users', $filename);
+            $user->fotografia = $filename;
+        }
+
+        // Asignar datos básicos
+        $user->estado = 1;
+        $user->principal = $request->has('principal') ? 1 : 0;
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+
+        // Generar contraseña temporal
+        $tempPassword = 'Repro'.rand(1111,9999);
+        $user->password = Hash::make($tempPassword);
+
+        $user->telefono = $request->input('telefono');
+        $user->celular = $request->input('celular');
+        $user->direccion = $request->input('direccion');
+        $user->fecha_nacimiento = $request->input('fecha_nacimiento');
+
+        // Asignar rol
+        $user->role_as = $request->input('role_as');
+
+        // Campos específicos según el tipo de usuario
+        if ($user->role_as == 1) { // Usuario de empresa
+            // Validar que se haya seleccionado una empresa
+            if (!$request->input('empresa_id')) {
+                return redirect()->back()->with('error', 'Debe seleccionar una empresa para usuarios de tipo empresa')->withInput();
+            }
+            $user->empresa_id = $request->input('empresa_id');
+            $user->cargo = $request->input('cargo');
+        } else {
+            // Asegurarse de que empresa_id sea null para otros tipos de usuario
+            $user->empresa_id = null;
+        }
+
+        if ($user->role_as == 2) { // Usuario de Repro
+            $user->cargo = $request->input('cargo');
+            // Guardar permisos como JSON
+            if ($request->has('permisos')) {
+                $user->permisos = json_encode($request->input('permisos'));
+            }
+        }
+
+        $user->save();
+
+        // Enviar correo con credenciales
+        try {
+            Mail::to($user->email)->send(new UserMail($user, $tempPassword));
+        } catch (\Exception $e) {
+            // Log el error pero continúa
+            \Log::error("Error enviando email: " . $e->getMessage());
+        }
+
+        return redirect('users')->with('status', __('Usuario agregado correctamente'));
+    }
+
+    public function edituser($id)
+    {
+        $user = User::find($id);
+        $currentUser = Auth::user();
+
+        // Verificar permisos
+        if($currentUser->role_as == 1 && $currentUser->empresa_id != $user->empresa_id) {
+            return redirect('users')->with('error', 'No tiene permisos para editar este usuario');
+        }
+
+        // Comprobar permisos según roles
+        $canEditRole = $currentUser->role_as == 3; // Solo admins pueden cambiar roles
+        $canEditEmpresa = $currentUser->role_as >= 2; // Admin y Repro pueden cambiar empresa
+
+        // Cargar todas las empresas activas
+        $empresas = Empresa::where('estado', 1)->orderBy('nombre', 'asc')->get();
+
+        return view('admin.user.edit', compact('user', 'canEditRole', 'canEditEmpresa', 'empresas'));
+    }
+
+    public function updateuser(UserFormRequest $request, $id)
+    {
+        $user = User::find($id);
+        $currentUser = Auth::user();
+
+        // Verificar permisos
+        if($currentUser->role_as == 1 && $currentUser->empresa_id != $user->empresa_id) {
+            return redirect('users')->with('error', 'No tiene permisos para editar este usuario');
+        }
+
+        // Verificar si se intenta cambiar el rol y si tiene permisos
+        if ($request->has('role_as') && $user->role_as != $request->input('role_as')) {
+            if ($currentUser->role_as != 3) {
+                return redirect()->back()->with('error', 'No tiene permisos para cambiar el rol del usuario');
+            }
+        }
+
+        // Procesar imagen si se ha subido una nueva
+        if($request->hasFile('fotografia')) {
+            $path = 'assets/imgs/users/'.$user->fotografia;
+            if(File::exists($path)) {
+                File::delete($path);
+            }
+            $file = $request->file('fotografia');
+            $ext = $file->getClientOriginalExtension();
+            $filename = time().'.'.$ext;
+            $file->move('assets/imgs/users', $filename);
+            $user->fotografia = $filename;
+        }
+
+        // Actualizar datos básicos
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->telefono = $request->input('telefono');
+        $user->celular = $request->input('celular');
+        $user->direccion = $request->input('direccion');
+        $user->fecha_nacimiento = $request->input('fecha_nacimiento');
+
+        // Actualizar estado principal si se tiene permiso
+        if ($currentUser->role_as >= 2 && $request->has('principal')) {
+            $user->principal = $request->has('principal') ? 1 : 0;
+        }
+
+        // Actualizar rol si se tiene permiso (solo admin)
+        if ($currentUser->role_as == 3 && $request->has('role_as')) {
+            $user->role_as = $request->input('role_as');
+
+            // Si el usuario ya no es de tipo empresa, limpiar el campo empresa_id
+            if ($user->role_as != 1) {
+                $user->empresa_id = null;
+            }
+        }
+
+        // Campos específicos según el tipo de usuario
+        if ($user->role_as == 1) {
+            if ($currentUser->role_as >= 2 && $request->has('empresa_id')) {
+                // Validar que se haya seleccionado una empresa
+                if (!$request->input('empresa_id')) {
+                    return redirect()->back()->with('error', 'Debe seleccionar una empresa para usuarios de tipo empresa')->withInput();
+                }
+                $user->empresa_id = $request->input('empresa_id');
+            }
+            $user->cargo = $request->input('cargo');
+        }
+
+        if ($user->role_as == 2 && $currentUser->role_as == 3) {
+            $user->cargo = $request->input('cargo');
+            // Actualizar permisos
+            if ($request->has('permisos')) {
+                $user->permisos = json_encode($request->input('permisos'));
+            }
+        }
+
+        // Resetear contraseña si se solicita
+        if ($request->has('reset_password') && $currentUser->role_as >= 2) {
+            $tempPassword = 'Repro'.rand(1111,9999);
+            $user->password = Hash::make($tempPassword);
+
+            // Enviar email con nueva contraseña
+            try {
+                Mail::to($user->email)->send(new UserResetPasswordMail($user, $tempPassword));
+            } catch (\Exception $e) {
+                \Log::error("Error enviando email de reset: " . $e->getMessage());
+            }
+        }
+
+        $user->update();
+
+        return redirect('show-user/'.$id)->with('status', __('Usuario actualizado correctamente.'));
+    }
+
+    public function destroyuser($id)
+    {
+        $user = User::find($id);
+        $currentUser = Auth::user();
+
+        // Verificar permisos
+        if ($currentUser->role_as < 2 || ($currentUser->role_as == 2 && $user->role_as >= 2)) {
+            return redirect('users')->with('error', 'No tiene permisos para eliminar este usuario');
+        }
+
+        // No permitir eliminar usuarios principales
+        if ($user->principal == 1) {
+            return redirect('users')->with('error', 'No se puede eliminar un usuario principal');
+        }
+
+        // Eliminar foto si existe
+        if ($user->fotografia) {
+            $path = 'assets/imgs/users/'.$user->fotografia;
+            if (File::exists($path)) {
+                File::delete($path);
+            }
+        }
+
+        // Marcar como eliminado y modificar email para permitir reutilización
+        $user->estado = 0;
+        $user->email = $user->email.'-Deleted'.$user->id;
+        $user->update();
+
+        return redirect('users')->with('status', __('Usuario eliminado correctamente.'));
+    }
+
+    public function pdf(Request $request)
+    {
+        $queryUser = $request->input('fuser');
+        $role_filter = $request->input('role_filter');
+        $empresa_filter = $request->input('empresa_filter');
+
+        $currentUser = Auth::user();
+        $usuariosQuery = User::where('estado', 1);
+
+        // Aplicar filtros
+        if($queryUser) {
+            $usuariosQuery->where(function ($query) use ($queryUser) {
+                $query->where('name', 'LIKE', '%' . $queryUser . '%')
+                    ->orWhere('email', 'LIKE', '%' . $queryUser . '%')
+                    ->orWhere('telefono', 'LIKE', '%' . $queryUser . '%')
+                    ->orWhere('celular', 'LIKE', '%' . $queryUser . '%');
+            });
+        }
+
+        if($role_filter !== null && $role_filter !== '') {
+            $usuariosQuery->where('role_as', '=', $role_filter);
+        }
+
+        if($empresa_filter !== null && $empresa_filter !== '') {
+            $usuariosQuery->where('empresa_id', '=', $empresa_filter);
+        }
+
+        // Restricciones por rol
+        if($currentUser->role_as == 1) {
+            $usuariosQuery->where('empresa_id', '=', $currentUser->empresa_id);
+        }
+
+        $usuarios = $usuariosQuery->with('empresa')->orderBy('name', 'asc')->get();
+        $verpdf = "Browser";
+        $nompdf = date('m/d/Y g:ia');
+        $path = public_path('assets/imgs/');
+
+        $config = Config::first();
+        $currency = $config->currency_simbol;
+
+        if ($config->logo == null) {
+            $logo = null;
+            $imagen = null;
+        } else {
+            $logo = $config->logo;
+            $imagen = public_path('assets/imgs/logos/'.$logo);
+        }
+
+        // Título del PDF
+        $titulo = 'Listado de Usuarios';
+        if($queryUser) {
+            $titulo .= ' (Filtro: '.$queryUser.')';
+        }
+
+        // Agregar información de rol al título si se filtró por rol
+        if($role_filter !== null && $role_filter !== '') {
+            $rolMap = [
+                '0' => 'Evaluados',
+                '1' => 'Empresas',
+                '2' => 'Repro',
+                '3' => 'Administradores'
+            ];
+            $rolName = isset($rolMap[$role_filter]) ? $rolMap[$role_filter] : 'Desconocido';
+            $titulo .= ' - '.$rolName;
+        }
+
+        // Agregar información de empresa al título si se filtró por empresa
+        if($empresa_filter !== null && $empresa_filter !== '') {
+            $empresa = Empresa::find($empresa_filter);
+            if($empresa) {
+                $titulo .= ' - Empresa: '.$empresa->nombre;
+            }
+        }
+
+        if ($verpdf == "Download") {
+            $pdf = PDF::loadView('admin.user.pdf', [
+                'usuarios' => $usuarios,
+                'path' => $path,
+                'config' => $config,
+                'imagen' => $imagen,
+                'currency' => $currency,
+                'titulo' => $titulo,
+                'queryUser' => $queryUser,
+                'role_filter' => $role_filter,
+                'empresa_filter' => $empresa_filter
+            ]);
+            return $pdf->download($titulo.' '.$nompdf.'.pdf');
+        }
+
+        if ($verpdf == "Browser") {
+            $pdf = PDF::loadView('admin.user.pdf', [
+                'usuarios' => $usuarios,
+                'path' => $path,
+                'config' => $config,
+                'imagen' => $imagen,
+                'currency' => $currency,
+                'titulo' => $titulo,
+                'queryUser' => $queryUser,
+                'role_filter' => $role_filter,
+                'empresa_filter' => $empresa_filter
+            ]);
+            return $pdf->stream($titulo.' '.$nompdf.'.pdf');
+        }
+    }
+
+    public function pdfuser($id)
+    {
+        $usuario = User::with('empresa')->find($id);
+        $currentUser = Auth::user();
+
+        // Verificar permisos
+        if($currentUser->role_as == 1 && $currentUser->empresa_id != $usuario->empresa_id) {
+            return redirect('users')->with('error', 'No tiene permisos para ver este usuario');
+        }
+
+        $verpdf = "Browser";
+        $nompdf = date('m/d/Y g:ia');
+
+        // Configuración
+        $config = Config::first();
+        $currency = $config->currency_simbol;
+
+        // Obtener rutas absolutas para las imágenes
+        $pathuser = public_path('assets/imgs/users/');
+        $defaultImagePath = public_path('assets/imgs/users/usericon4.png');
+
+        // Imagen del logo
+        $imagen = null;
+        if ($config->logo && file_exists(public_path('assets/imgs/logos/'.$config->logo))) {
+            $imagen = public_path('assets/imgs/logos/'.$config->logo);
+        }
+
+        // Establecer tamaño de papel y orientación
+        $pdftamaño = 'Letter';
+        $pdfhorientacion = 'portrait';
+
+        if ($verpdf == "Download") {
+            $pdf = PDF::loadView('admin.user.pdfuser', compact('usuario', 'pathuser', 'defaultImagePath', 'config', 'imagen', 'currency'));
+
+            // Configuración adicional para DOMPDF
+            $pdf->getDomPDF()->set_option("enable_html5_parser", true);
+            $pdf->getDomPDF()->set_option("isHtml5ParserEnabled", true);
+            $pdf->getDomPDF()->set_option("isRemoteEnabled", true);
+
+            $pdf->setPaper($pdftamaño, $pdfhorientacion);
+
+            return $pdf->download('Usuario_'.$usuario->name.'_'.$nompdf.'.pdf');
+        }
+
+        if ($verpdf == "Browser") {
+            $pdf = PDF::loadView('admin.user.pdfuser', compact('usuario', 'pathuser', 'defaultImagePath', 'config', 'imagen', 'currency'));
+
+            // Configuración adicional para DOMPDF
+            $pdf->getDomPDF()->set_option("enable_html5_parser", true);
+            $pdf->getDomPDF()->set_option("isHtml5ParserEnabled", true);
+            $pdf->getDomPDF()->set_option("isRemoteEnabled", true);
+
+            $pdf->setPaper($pdftamaño, $pdfhorientacion);
+
+            return $pdf->stream('Usuario_'.$usuario->name.'_'.$nompdf.'.pdf');
+        }
+    }
+
+    // Método para cambiar contraseña por el propio usuario
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        // Verificar contraseña actual
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'La contraseña actual es incorrecta']);
+        }
+
+        // Actualizar contraseña
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return redirect()->back()->with('status', 'Contraseña actualizada correctamente');
+    }
+}
