@@ -35,10 +35,10 @@ class CreateEmpresasTable extends Migration
             $table->timestamps();
         });
 
-        // Agregar clave foránea en la tabla users
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreign('empresa_id')->references('id')->on('empresas')->onDelete('set null');
-        });
+        // Eliminar la clave foránea redundante en la tabla users
+        // Schema::table('users', function (Blueprint $table) {
+        //     $table->foreign('empresa_id')->references('id')->on('empresas')->onDelete('set null');
+        // });
     }
 
     /**

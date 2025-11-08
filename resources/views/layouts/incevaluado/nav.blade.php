@@ -2,7 +2,10 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="{{ url('/dashboard') }}">
-            <img src="{{ asset('assets/imgs/logos/logo-light.png') }}" class="img-fluid" alt="REPRO" height="40">
+            <div class="border border-primary rounded p-2" style="background-color: #f8f9fa; width: 100%;">
+                <img src="{{ asset('img/logos/logoreproxelahorizontal.png') }}" class="d-none d-md-block img-fluid" style="max-height: 50px;" alt="Repro" />
+                <img src="{{ asset('img/logos/logo.png') }}" class="d-block d-md-none mx-auto" style="height: 36px; max-height: 50px;" alt="Repro" />
+            </div>
             <span class="ms-2 d-none d-md-inline">PORTAL EVALUADO</span>
         </a>
 

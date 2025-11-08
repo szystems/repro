@@ -1,20 +1,54 @@
-<!-- Navbar start -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-success">
-    <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center" href="{{ url('/dashboard') }}">
-            <img src="{{ asset('assets/imgs/logos/logo-light.png') }}" class="img-fluid" alt="REPRO" height="40">
-            <span class="ms-2 d-none d-md-inline">PORTAL EMPRESAS</span>
-        </a>
+<!-- Page header starts -->
+<div class="page-header">
 
-        <div class="ms-auto d-flex align-items-center">
+    <div class="toggle-sidebar m-3" id="toggle-sidebar">
+        <i class="bi bi-list"></i>
+    </div>
+
+    <!-- Sidebar brand starts -->
+    <div class="brand">
+        <a href="{{ url('dashboard') }}" class="logo mb-3 mt-1 align-self-center d-flex justify-content-center">
+            <div class="border border-primary rounded p-2" style="background-color: #f8f9fa; width: 100%;">
+                <img src="{{ asset('img/logos/logoreproxelahorizontal.png') }}" class="d-none d-md-block img-fluid" alt="Repro" />
+                <img src="{{ asset('img/logos/logo.png') }}" class="d-block d-md-none mx-auto" style="height: 36px;" alt="Repro" />
+            </div>
+        </a>
+    </div>
+    <!-- Sidebar brand ends -->
+
+    <!-- Header actions container start -->
+    <div class="header-actions-container">
+
+        <!-- Header actions start -->
+        <div class="header-actions d-flex gap-3">
+            @if(Auth::user()->role_as != 1)
+            <a href="{{ url('configs') }}" class="header-action-link" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                data-bs-title="Configuración">
+                <i class="bi bi-gear fs-5"></i>
+            </a>
+            @endif
+
+            <!-- <a href="{{ url('ventas') }}" class="header-action-link" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                data-bs-title="Ventas">
+                <i class="bi bi-cash-stack fs-5"></i>
+            </a>
+
+            <a href="{{ url('inventario') }}" class="header-action-link" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                data-bs-title="Inventario">
+                <i class="bi bi-box-seam fs-5"></i>
+            </a>  -->
+        </div>
+        <!-- Header actions end -->
+
+        <!-- Header profile start -->
+        <div class="header-profile d-flex align-items-center">
             <!-- Reloj y fecha -->
             <span class="navbar-text d-none d-lg-block me-3">
                 <span class="badge bg-light text-success" id="reloj"></span>
             </span>
-
             <!-- Información de usuario y menú desplegable -->
             <div class="dropdown">
-                <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <a class="nav-link dropdown-toggle text-primary d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     @if(Auth::user()->fotografia)
                         <img src="{{ asset('assets/imgs/users/'.Auth::user()->fotografia) }}" class="rounded-circle me-2" width="32" height="32" alt="{{ Auth::user()->name }}">
                     @else
@@ -54,7 +88,7 @@
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item text-danger" href="{{ route('logout') }}"
                         onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                        <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
+                        <i class="bi bi-box-arrow-right"></i>&ensp;Cerrar Sesión
                     </a>
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                         @csrf
@@ -62,6 +96,74 @@
                 </div>
             </div>
         </div>
+        <!-- Header profile end -->
+
     </div>
-</nav>
-<!-- Navbar end -->
+    <!-- Header actions container end -->
+
+</div>
+<!-- Page header ends -->
+
+<style>
+.header-action-link {
+    color: #495057;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.header-action-link:hover {
+    background-color: #e9ecef;
+    color: #0d6efd;
+}
+
+.header-profile-actions .dropdown-item {
+    padding: 0.5rem 1rem;
+}
+
+.header-profile-actions .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-header {
+    padding: 1rem;
+}
+
+.user-settings:hover {
+    text-decoration: none;
+}
+
+.user-name {
+    margin-right: 0.5rem;
+}
+
+/* Corrección para dispositivos móviles */
+@media (max-width: 767.98px) {
+    .header-actions {
+        gap: 0.5rem !important;
+    }
+
+    .header-action-link {
+        padding: 0.25rem;
+    }
+}
+</style>
+
+<!-- Initialize tooltips -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleSidebar = document.getElementById('toggle-sidebar');
+        const pageWrapper = document.querySelector('.page-wrapper');
+
+        if (toggleSidebar && pageWrapper) {
+            toggleSidebar.addEventListener('click', function() {
+                pageWrapper.classList.toggle('toggled');
+            });
+        } else {
+            console.error('No se encontró el botón toggle-sidebar o el contenedor page-wrapper.');
+        }
+    });
+</script>

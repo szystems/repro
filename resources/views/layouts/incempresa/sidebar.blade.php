@@ -1,7 +1,7 @@
 <!-- Sidebar wrapper start -->
 <nav class="sidebar-wrapper" id="sidebar">
     <!-- Sidebar header starts -->
-    <div class="sidebar-header bg-light">
+    <div class="sidebar-header">
         <div class="sidebar-logo text-center pt-3 pb-3">
             @if(Auth::user()->empresa && Auth::user()->empresa->logo)
                 <img src="{{ asset('assets/imgs/empresas/'.Auth::user()->empresa->logo) }}" alt="{{ Auth::user()->empresa->nombre }}" class="img-fluid" style="max-height: 60px;">
@@ -17,10 +17,10 @@
         <div class="sidebarMenuScroll">
             <ul>
                 <!-- Perfil del usuario -->
-                <li>
+                <li class="active">
                     <a href="{{ url('show-user/'.Auth::user()->id) }}">
                         <span class="avatar">
-                            @if(Auth::user()->fotografia)
+                            @if (Auth::user()->fotografia != null)
                                 <img src="{{ asset('assets/imgs/users/'.Auth::user()->fotografia) }}" alt="Usuario" class="img-thumbnail rounded-4 border-success m-2 img-fluid" style="height: 40px;"/>
                             @else
                                 <img src="{{ asset('assets/imgs/users/usericon4.png') }}" alt="Usuario" class="img-thumbnail rounded-4 border-success m-2 img-fluid" style="height: 40px;"/>
@@ -31,7 +31,7 @@
                             $usuario = Auth::user()->name;
                             $nombre = explode(' ', trim($usuario));
                         @endphp
-                        <span class="menu-text"><u><strong>{{ ucwords($nombre[0]) }}</strong></u></span>
+                        <span class="menu-text"><u><strong> {{ ucwords($nombre[0]) }}</strong></u></span>
                     </a>
                 </li>
                 <li class="menu-separator">
@@ -116,11 +116,18 @@
 
     <!-- Sidebar footer starts -->
     <div class="sidebar-footer">
-        <div class="d-flex align-items-center justify-content-center">
+        <div class="d-flex align-items-center justify-content-between">
             <div>
-                <a href="{{ url('contacto') }}" class="btn btn-sm btn-outline-success">
-                    <i class="bi bi-headset"></i> Soporte
+                <span class="small text-muted"><a href="https://szystems.com" target="_blank" rel="noopener noreferrer">Szystems v1.0.0</a></span>
+            </div>
+            <div>
+                <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                   class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Cerrar sesión">
+                    <i class="bi bi-power"></i>
                 </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                    @csrf
+                </form>
             </div>
         </div>
     </div>
@@ -131,44 +138,67 @@
 <!-- JavaScript para el sidebar collapse -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Restaurar el estado del sidebar
-        if (localStorage.getItem('empresa-sidebar-collapsed') === 'true') {
-            document.getElementById('sidebar').classList.add('collapsed');
-        }
-
-        // Agregar funcionalidad de toggle al botón
-        const sidebarToggle = document.querySelector('.sidebar-toggle button');
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', function() {
+        const sidebarCollapse = document.getElementById('sidebarCollapse');
+        if (sidebarCollapse) {
+            sidebarCollapse.addEventListener('click', function() {
                 document.getElementById('sidebar').classList.toggle('collapsed');
                 // Guardar el estado en localStorage
-                localStorage.setItem('empresa-sidebar-collapsed',
-                    document.getElementById('sidebar').classList.contains('collapsed')
-                );
+                if (document.getElementById('sidebar').classList.contains('collapsed')) {
+                    localStorage.setItem('sidebar-collapsed', 'true');
+                } else {
+                    localStorage.setItem('sidebar-collapsed', 'false');
+                }
             });
+        }
+
+        // Restaurar el estado del sidebar
+        if (localStorage.getItem('sidebar-collapsed') === 'true') {
+            document.getElementById('sidebar').classList.add('collapsed');
         }
     });
 </script>
 
+<!-- Añadir estos estilos en su archivo CSS o en un bloque de estilo -->
 <style>
-    /* Estilos personalizados para el sidebar de empresa */
     .sidebar-wrapper {
-        background-color: #f8f9fa;
-        border-right: 1px solid #e9ecef;
+        transition: all 0.3s ease;
     }
-
     .sidebar-wrapper .menu-category {
-        color: #28a745;
+        font-size: 0.8rem;
+        color: #6c757d;
         font-weight: 600;
+        padding: 12px 15px 5px;
+        text-transform: uppercase;
     }
-
-    .sidebar-wrapper .active-page-link {
-        background-color: #e2f3e5;
+    .sidebar-wrapper .menu-separator {
+        padding: 0 15px;
     }
-
-    .sidebar-wrapper .active-page-link i,
-    .sidebar-wrapper .active-page-link .menu-text {
-        color: #28a745;
-        font-weight: bold;
+    .sidebar-wrapper.collapsed {
+        width: 70px;
+    }
+    .sidebar-wrapper.collapsed .menu-text,
+    .sidebar-wrapper.collapsed .menu-category,
+    .sidebar-wrapper.collapsed .menu-arrow,
+    .sidebar-wrapper.collapsed .sidebar-submenu,
+    .sidebar-wrapper.collapsed .sidebar-logo img,
+    .sidebar-wrapper.collapsed .sidebar-footer span {
+        display: none;
+    }
+    .sidebar-wrapper.collapsed .sidebar-toggle {
+        text-align: center;
+        width: 100%;
+    }
+    .sidebar-wrapper.collapsed + .content-wrapper {
+        margin-left: 70px;
+    }
+    .sidebar-wrapper .sidebar-footer {
+        padding: 10px 15px;
+        border-top: 1px solid rgba(0,0,0,0.1);
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+    }
+    .sidebar-wrapper .active-dropdown i.menu-arrow {
+        transform: rotate(180deg);
     }
 </style>

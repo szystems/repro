@@ -27,13 +27,13 @@ class EmpresasController extends Controller
         if(Auth::user()->role_as < 2) {
             return redirect('/dashboard')->with('error', 'No tiene permisos para acceder a esta sección');
         }
-        
+
         // Obtener parámetros de búsqueda y filtrado
         $searchTerm = $request->input('search');
         $estado = $request->input('estado');
-        
+
         $empresasQuery = Empresa::query();
-        
+
         // Aplicar filtros de búsqueda
         if($searchTerm) {
             $empresasQuery->where(function($query) use ($searchTerm) {
@@ -43,7 +43,7 @@ class EmpresasController extends Controller
                     ->orWhere('telefono', 'like', '%'.$searchTerm.'%');
             });
         }
-        
+
         // Filtrar por estado si se especifica
         if($estado !== null && $estado !== '') {
             $empresasQuery->where('estado', $estado);
@@ -51,9 +51,9 @@ class EmpresasController extends Controller
             // Por defecto mostrar solo empresas activas
             $empresasQuery->where('estado', 1);
         }
-        
+
         $empresas = $empresasQuery->orderBy('nombre', 'asc')->paginate(20);
-        
+
         return view('admin.empresa.index', compact('empresas', 'searchTerm', 'estado'));
     }
 
@@ -68,7 +68,7 @@ class EmpresasController extends Controller
         if(Auth::user()->role_as < 2) {
             return redirect('/dashboard')->with('error', 'No tiene permisos para crear empresas');
         }
-        
+
         return view('admin.empresa.create');
     }
 
@@ -94,7 +94,7 @@ class EmpresasController extends Controller
         $empresa->contacto_email = $request->input('contacto_email');
         $empresa->notas = $request->input('notas');
         $empresa->estado = 1; // Activa por defecto
-        
+
         // Subir logo si se proporciona
         if($request->hasFile('logo')) {
             $file = $request->file('logo');
@@ -103,9 +103,9 @@ class EmpresasController extends Controller
             $file->move('assets/imgs/empresas', $filename);
             $empresa->logo = $filename;
         }
-        
+
         $empresa->save();
-        
+
         return redirect('empresas')->with('status', 'Empresa agregada correctamente');
     }
 
@@ -121,16 +121,16 @@ class EmpresasController extends Controller
         if(Auth::user()->role_as < 2) {
             return redirect('/dashboard')->with('error', 'No tiene permisos para ver detalles de empresas');
         }
-        
+
         $empresa = Empresa::findOrFail($id);
-        
+
         // Obtener usuarios relacionados con esta empresa
         $usuarios = User::where('empresa_id', $id)
                 ->where('estado', 1)
                 ->orderBy('principal', 'desc')
                 ->orderBy('name', 'asc')
                 ->get();
-                
+
         return view('admin.empresa.show', compact('empresa', 'usuarios'));
     }
 
@@ -146,9 +146,9 @@ class EmpresasController extends Controller
         if(Auth::user()->role_as < 2) {
             return redirect('/dashboard')->with('error', 'No tiene permisos para editar empresas');
         }
-        
+
         $empresa = Empresa::findOrFail($id);
-        
+
         return view('admin.empresa.edit', compact('empresa'));
     }
 
@@ -162,7 +162,7 @@ class EmpresasController extends Controller
     public function update(EmpresaFormRequest $request, $id)
     {
         $empresa = Empresa::findOrFail($id);
-        
+
         $empresa->nombre = $request->input('nombre');
         $empresa->nit = $request->input('nit');
         $empresa->direccion = $request->input('direccion');
@@ -175,11 +175,11 @@ class EmpresasController extends Controller
         $empresa->contacto_telefono = $request->input('contacto_telefono');
         $empresa->contacto_email = $request->input('contacto_email');
         $empresa->notas = $request->input('notas');
-        
+
         if($request->has('estado')) {
             $empresa->estado = $request->input('estado');
         }
-        
+
         // Subir logo si se proporciona uno nuevo
         if($request->hasFile('logo')) {
             // Eliminar logo anterior si existe
@@ -189,16 +189,16 @@ class EmpresasController extends Controller
                     File::delete($path);
                 }
             }
-            
+
             $file = $request->file('logo');
             $ext = $file->getClientOriginalExtension();
             $filename = time().'.'.$ext;
             $file->move('assets/imgs/empresas', $filename);
             $empresa->logo = $filename;
         }
-        
+
         $empresa->update();
-        
+
         return redirect('show-empresa/'.$id)->with('status', 'Información de empresa actualizada correctamente');
     }
 
@@ -214,19 +214,19 @@ class EmpresasController extends Controller
         if(Auth::user()->role_as != 3) {
             return redirect('empresas')->with('error', 'No tiene permisos para eliminar empresas');
         }
-        
+
         $empresa = Empresa::findOrFail($id);
-        
+
         // Verificar si hay usuarios asociados a esta empresa
         $usuariosAsociados = User::where('empresa_id', $id)->where('estado', 1)->count();
         if($usuariosAsociados > 0) {
             return redirect('empresas')->with('error', 'No se puede eliminar esta empresa porque tiene usuarios asociados');
         }
-        
+
         // Desactivar en lugar de eliminar físicamente
         $empresa->estado = 0;
         $empresa->update();
-        
+
         return redirect('empresas')->with('status', 'Empresa desactivada correctamente');
     }
 
@@ -242,12 +242,12 @@ class EmpresasController extends Controller
         if(Auth::user()->role_as < 2) {
             return redirect('/dashboard')->with('error', 'No tiene permisos para generar reportes');
         }
-        
+
         $searchTerm = $request->input('search');
         $estado = $request->input('estado');
-        
+
         $empresasQuery = Empresa::query();
-        
+
         // Aplicar filtros de búsqueda
         if($searchTerm) {
             $empresasQuery->where(function($query) use ($searchTerm) {
@@ -257,7 +257,7 @@ class EmpresasController extends Controller
                     ->orWhere('telefono', 'like', '%'.$searchTerm.'%');
             });
         }
-        
+
         // Filtrar por estado si se especifica
         if($estado !== null && $estado !== '') {
             $empresasQuery->where('estado', $estado);
@@ -265,31 +265,31 @@ class EmpresasController extends Controller
             // Por defecto mostrar solo empresas activas
             $empresasQuery->where('estado', 1);
         }
-        
+
         $empresas = $empresasQuery->orderBy('nombre', 'asc')->get();
-        
+
         // Configuración para el PDF
         $verpdf = "Browser"; // "Download" o "Browser"
         $nompdf = date('d-m-Y_H-i-s');
-        
+
         $config = Config::first();
         $currency = $config->currency_simbol;
-        
+
         $imagen = null;
         if ($config->logo && file_exists(public_path('assets/imgs/logos/'.$config->logo))) {
             $imagen = public_path('assets/imgs/logos/'.$config->logo);
         }
-        
+
         // Construir título del reporte
         $titulo = 'Listado de Empresas';
         if($searchTerm) {
             $titulo .= ' (Búsqueda: '.$searchTerm.')';
         }
-        
+
         if($estado !== null && $estado !== '') {
             $titulo .= ' - ' . ($estado == 1 ? 'Activas' : 'Inactivas');
         }
-        
+
         if ($verpdf == "Download") {
             $pdf = PDF::loadView('admin.empresa.pdf', compact('empresas', 'config', 'imagen', 'titulo', 'currency'));
             return $pdf->download('Empresas_'.$nompdf.'.pdf');
@@ -311,66 +311,66 @@ class EmpresasController extends Controller
         if(Auth::user()->role_as < 2) {
             return redirect('/dashboard')->with('error', 'No tiene permisos para generar reportes');
         }
-        
+
         $empresa = Empresa::findOrFail($id);
-        
+
         // Obtener usuarios relacionados con esta empresa
         $usuarios = User::where('empresa_id', $id)
                 ->where('estado', 1)
                 ->orderBy('principal', 'desc')
                 ->orderBy('name', 'asc')
                 ->get();
-        
+
         $verpdf = "Browser"; // "Download" o "Browser"
         $nompdf = date('d-m-Y_H-i-s');
-        
+
         $config = Config::first();
         $currency = $config->currency_simbol;
-        
+
         // Rutas de imágenes
         $logoEmpresaPath = null;
         if($empresa->logo && file_exists(public_path('assets/imgs/empresas/'.$empresa->logo))) {
             $logoEmpresaPath = public_path('assets/imgs/empresas/'.$empresa->logo);
         }
-        
+
         $logoConfigPath = null;
         if ($config->logo && file_exists(public_path('assets/imgs/logos/'.$config->logo))) {
             $logoConfigPath = public_path('assets/imgs/logos/'.$config->logo);
         }
-        
+
         // Opciones de papel
         $pdftamaño = 'Letter';
         $pdfhorientacion = 'portrait';
-        
+
         if ($verpdf == "Download") {
             $pdf = PDF::loadView('admin.empresa.pdfempresa', compact(
                 'empresa', 'usuarios', 'config', 'logoConfigPath', 'logoEmpresaPath', 'currency'
             ));
-            
+
             // Configuración adicional para DOMPDF
             $pdf->getDomPDF()->set_option("enable_html5_parser", true);
             $pdf->getDomPDF()->set_option("isHtml5ParserEnabled", true);
             $pdf->getDomPDF()->set_option("isRemoteEnabled", true);
-            
+
             $pdf->setPaper($pdftamaño, $pdfhorientacion);
-            
+
             return $pdf->download('Empresa_'.$empresa->nombre.'_'.$nompdf.'.pdf');
         } else {
             $pdf = PDF::loadView('admin.empresa.pdfempresa', compact(
                 'empresa', 'usuarios', 'config', 'logoConfigPath', 'logoEmpresaPath', 'currency'
             ));
-            
+
             // Configuración adicional para DOMPDF
             $pdf->getDomPDF()->set_option("enable_html5_parser", true);
             $pdf->getDomPDF()->set_option("isHtml5ParserEnabled", true);
             $pdf->getDomPDF()->set_option("isRemoteEnabled", true);
-            
+
             $pdf->setPaper($pdftamaño, $pdfhorientacion);
-            
+
             return $pdf->stream('Empresa_'.$empresa->nombre.'_'.$nompdf.'.pdf');
         }
     }
-    
+
     /**
      * Activar o desactivar una empresa
      *
@@ -384,13 +384,13 @@ class EmpresasController extends Controller
         if(Auth::user()->role_as != 3) {
             return redirect('empresas')->with('error', 'No tiene permisos para cambiar el estado de las empresas');
         }
-        
+
         $empresa = Empresa::findOrFail($id);
         $empresa->estado = $estado;
         $empresa->update();
-        
+
         $mensaje = $estado == 1 ? 'Empresa activada correctamente' : 'Empresa desactivada correctamente';
-        
+
         return redirect()->back()->with('status', $mensaje);
     }
 }

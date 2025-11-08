@@ -9,8 +9,8 @@
     <div class="brand">
         <a href="{{ url('dashboard') }}" class="logo mb-3 mt-1 align-self-center d-flex justify-content-center">
             <div class="border border-primary rounded p-2" style="background-color: #f8f9fa; width: 100%;">
-                <img src="{{ asset('img/logo.png') }}" class="d-none d-md-block img-fluid" alt="Repro" />
-                <img src="{{ asset('img/jireh 2.png') }}" class="d-block d-md-none mx-auto" style="height: 36px;" alt="Repro" />
+                <img src="{{ asset('img/logos/logoreproxelahorizontal.png') }}" class="d-none d-md-block img-fluid" alt="Repro" />
+                <img src="{{ asset('img/logos/logo.png') }}" class="d-block d-md-none mx-auto" style="height: 36px;" alt="Repro" />
             </div>
         </a>
     </div>

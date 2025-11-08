@@ -24,7 +24,26 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
+// Registrar rutas de autenticación predeterminadas
+Auth::routes();
+
+// Ruta para la página de inicio de sesión
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login');
+
+// Ruta para procesar el inicio de sesión
+Route::post('/login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'store'])->name('login.store');
+
 // Rutas de autenticación se manejan automáticamente por Laravel
+
+// Ruta para la solicitud de restablecimiento de contraseña
+Route::get('/password/reset', function () {
+    return view('auth.passwords.email');
+})->name('password.request');
+
+// Ruta para enviar el correo de restablecimiento de contraseña
+Route::post('/password/email', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 
 // Rutas protegidas
 Route::middleware(['auth', 'redirect.role'])->group(function () {
@@ -60,3 +79,11 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
 // Ruta de cambio de contraseña disponible para todos los usuarios autenticados
 Route::post('change-password', [UsersController::class, 'changePassword'])
     ->middleware(['auth']);
+
+// Ruta para el cierre de sesión
+Route::post('/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/');
+})->name('logout');

@@ -9,7 +9,8 @@
 html,
 body {
     height: 100%;
-    font-size: 100%
+    font-size: 100%;
+    overflow-x: hidden;
 }
 
 body {
@@ -484,7 +485,9 @@ p {
 
 .page-wrapper {
     padding: 0;
-    position: relative
+    position: relative;
+    overflow-y: auto;
+    height: 100vh;
 }
 
 .page-wrapper.fullscreen .sidebar-wrapper {
@@ -779,7 +782,29 @@ p {
     transition: padding-left .3s ease;
     padding: 0 0 0 250px;
     height: calc(100vh - 65px);
-    background: #eef1f6
+    background: #eef1f6;
+    overflow: hidden;
+}
+
+/* Ajustes para evitar desbordamiento horizontal en el panel de control */
+.content-wrapper {
+    overflow-x: hidden;
+    margin: 0 auto;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.card {
+    max-width: 100%;
+}
+
+.alert {
+    max-width: 100%;
 }
 
 @media(max-width: 1199.98px) {
@@ -990,7 +1015,8 @@ ul.updates li a i {
 }
 
 .header-profile {
-    padding: 7px 25px
+    padding: 7px 25px;
+    margin-bottom: 0;
 }
 
 .header-profile a.user-settings {
@@ -1044,6 +1070,11 @@ ul.updates li a i {
 
 .header-profile .dropdown-menu-end {
     right: 0
+}
+
+.header-profile .dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 @media(max-width: 575.98px) {
@@ -2023,7 +2054,8 @@ ul.updates li a i {
 
 .alert {
     background-image: radial-gradient(92% 85% at 89% 80%, rgba(0, 0, 0, 0.23) 0%, transparent 86.18%), radial-gradient(60% 85% at 25% 20%, rgba(255, 255, 255, 0.41) 0%, rgba(255, 255, 255, 0) 69.79%, rgba(255, 255, 255, 0) 100%) !important;
-    box-shadow: 2px 10px 10px rgba(0, 0, 0, .2)
+    box-shadow: 2px 10px 10px rgba(0, 0, 0, .2);
+    max-width: 100%;
 }
 
 .alert a {
@@ -2152,7 +2184,8 @@ ul.updates li a i {
     -moz-border-radius: 8px;
     border-radius: 8px;
     position: relative;
-    margin-bottom: 16px
+    margin-bottom: 16px;
+    max-width: 100%;
 }
 
 .card .card-header {
@@ -3999,4 +4032,34 @@ select:-webkit-autofill:focus {
 .gutters>[class*=col-] {
     padding-right: 10px;
     padding-left: 10px
+}
+
+@media (max-width: 767.98px) {
+    body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    .content-wrapper {
+        padding: 5px;
+    }
+
+    .page-header {
+        margin-bottom: 5px;
+    }
+
+    .card {
+        margin-bottom: 10px;
+    }
+
+    .alert {
+        padding: 8px;
+        font-size: 0.85rem;
+    }
+
+    .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
 }

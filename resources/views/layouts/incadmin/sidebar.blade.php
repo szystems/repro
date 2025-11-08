@@ -4,7 +4,7 @@
     <div class="sidebar-header">
         {{-- <div class="sidebar-logo">
             <a href="{{ url('/dashboard') }}">
-                <img src="{{ asset('img/logo.png') }}" alt="Logo" class="img-fluid" width="120">
+                <img src="{{ asset('img/logos/logoreproxelahorizontal.png') }}" alt="Logo" class="img-fluid" width="120">
             </a>
         </div> --}}
         {{-- <br>

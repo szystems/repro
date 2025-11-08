@@ -80,6 +80,8 @@
                 flex-direction: column;
                 min-height: 100vh;
                 overflow-x: hidden;
+                overflow-y: auto;
+                height: 100vh;
             }
 
             .main-container {
@@ -88,6 +90,7 @@
                 flex-direction: column;
                 overflow-x: hidden;
                 position: relative;
+                overflow: visible;
             }
 
             .content-wrapper {
@@ -96,6 +99,7 @@
                 padding-bottom: 10px;
                 overflow-y: auto;
                 overflow-x: hidden;
+                overflow: visible;
             }
 
             .custom-bg {
@@ -111,6 +115,48 @@
             .container-fluid,
             .container {
                 overflow-x: hidden;
+            }
+
+            /* Fijar el nav y el footer */
+            .page-wrapper {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            .main-container {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                overflow: hidden;
+            }
+
+            .content-wrapper {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px;
+            }
+
+            nav {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                z-index: 1000;
+            }
+
+            footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                z-index: 1000;
+            }
+
+            .main-container {
+                margin-top: 60px; /* Altura aproximada del nav */
+                margin-bottom: 40px; /* Altura aproximada del footer */
             }
         </style>
 

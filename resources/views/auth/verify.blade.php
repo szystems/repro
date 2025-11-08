@@ -9,7 +9,7 @@
                 <div class="login-form">
                     <a href="{{ url('/') }}" class="login-logo mb-3 align-self-center d-flex justify-content-center">
                         <div class="border border-primary custom-bg p-2 rounded" style="width: 100%;">
-                            <img src="{{ asset('img/logo.png') }}" alt="Repro Automotriz" class="img-fluid w-100" />
+                            <img src="{{ asset('img/logos/logoreproxelahorizontal.png') }}" alt="Repro Automotriz" class="img-fluid w-100" />
                         </div>
                     </a>
                     <h3 class="fw-bold text-center mb-3"><strong><u>Verifica tu dirección de email</u></strong></h3>

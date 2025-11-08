@@ -127,7 +127,7 @@
                                                 </div>
                                             </td>
                                             <td align="center">
-                                                <span class="badge 
+                                                <span class="badge
                                                 @if($user->role_as == 0) bg-secondary
                                                 @elseif($user->role_as == 1) bg-success
                                                 @elseif($user->role_as == 2) bg-info
