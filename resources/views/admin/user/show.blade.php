@@ -44,16 +44,16 @@
                                         <h5 class="mb-0">{{ $user->name }}</h5>
                                         <div class="mt-2 mb-3">
                                             <span class="badge
-                                                @if($user->role_as == 0) bg-secondary
-                                                @elseif($user->role_as == 1) bg-success
+                                                @if($user->role_as == 1) bg-success
                                                 @elseif($user->role_as == 2) bg-info
                                                 @elseif($user->role_as == 3) bg-danger
+                                                @else bg-secondary
                                                 @endif px-3 py-2">
                                                 <i class="bi
-                                                    @if($user->role_as == 0) bi-person
-                                                    @elseif($user->role_as == 1) bi-building
+                                                    @if($user->role_as == 1) bi-building
                                                     @elseif($user->role_as == 2) bi-briefcase-fill
                                                     @elseif($user->role_as == 3) bi-shield-lock-fill
+                                                    @else bi-person
                                                     @endif me-1"></i>
                                                 {{ $user->getRoleName() }}
                                             </span>
@@ -150,13 +150,7 @@
                                                     <i class="bi bi-telephone-fill"></i> Contacto
                                                 </a>
                                             </li>
-                                            @if(Auth::user()->role_as >= 2 && $user->role_as == 0)
-                                            <li class="nav-item" role="presentation">
-                                                <a class="nav-link" id="evaluacion-tab" data-bs-toggle="tab" href="#evaluacion" role="tab" aria-controls="evaluacion" aria-selected="false">
-                                                    <i class="bi bi-clipboard-data"></i> Datos de Evaluación
-                                                </a>
-                                            </li>
-                                            @endif
+                                            {{-- Evaluados no tienen pestaña de evaluación porque ya no son usuarios --}}
                                         </ul>
                                     </div>
                                     <div class="card-body">
@@ -238,10 +232,10 @@
                                                                 <h6 class="mb-0 text-muted">Rol del Sistema</h6>
                                                                 <p class="fs-5">
                                                                     <span class="badge
-                                                                    @if($user->role_as == 0) bg-secondary
-                                                                    @elseif($user->role_as == 1) bg-success
+                                                                    @if($user->role_as == 1) bg-success
                                                                     @elseif($user->role_as == 2) bg-info
                                                                     @elseif($user->role_as == 3) bg-danger
+                                                                    @else bg-secondary
                                                                     @endif">
                                                                         {{ $user->getRoleName() }}
                                                                     </span>
@@ -338,18 +332,7 @@
                                                 </div>
                                             </div>
 
-                                            @if(Auth::user()->role_as >= 2 && $user->role_as == 0)
-                                            <div class="tab-pane fade" id="evaluacion" role="tabpanel" aria-labelledby="evaluacion-tab">
-                                                <div class="alert alert-info">
-                                                    <i class="bi bi-info-circle"></i> Esta sección mostrará información relacionada con las evaluaciones de polígrafo del usuario.
-                                                </div>
-                                                <div class="text-center py-4">
-                                                    <a href="#" class="btn btn-primary">
-                                                        <i class="bi bi-clipboard-plus"></i> Ver evaluaciones
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            @endif
+                                            {{-- Evaluados ya no son usuarios del sistema, por lo tanto no tienen pestaña de evaluación --}}
 
                                             <!-- Información específica según tipo de usuario -->
                                             @if($user->role_as == 1)

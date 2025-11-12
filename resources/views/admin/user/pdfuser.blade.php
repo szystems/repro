@@ -162,10 +162,10 @@
                 <th width="20%">Tipo de Usuario</th>
                 <td width="30%">
                     <span class="badge
-                        @if($usuario->role_as == 0) badge-secondary
-                        @elseif($usuario->role_as == 1) badge-success
+                        @if($usuario->role_as == 1) badge-success
                         @elseif($usuario->role_as == 2) badge-info
                         @elseif($usuario->role_as == 3) badge-danger
+                        @else badge-secondary
                         @endif">
                         {{ $usuario->getRoleName() }}
                     </span>
@@ -287,10 +287,10 @@
                 <th>Permisos</th>
                 <td>
                     <span class="badge
-                        @if($usuario->role_as == 0) badge-secondary
-                        @elseif($usuario->role_as == 1) badge-success
+                        @if($usuario->role_as == 1) badge-success
                         @elseif($usuario->role_as == 2) badge-info
                         @elseif($usuario->role_as == 3) badge-danger
+                        @else badge-secondary
                         @endif">
                         {{ $usuario->getRoleName() }}
                     </span>

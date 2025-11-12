@@ -29,7 +29,7 @@
                             <label for="role_filter" class="form-label">Tipo de usuario</label>
                             <select name="role_filter" id="role_filter" class="form-select">
                                 <option value="">Todos los roles</option>
-                                <option value="0" {{ isset($role_filter) && $role_filter == '0' ? 'selected' : '' }}>Evaluado</option>
+                                {{-- NOTA: Evaluados ya NO son usuarios del sistema --}}
                                 <option value="1" {{ isset($role_filter) && $role_filter == '1' ? 'selected' : '' }}>Empresa</option>
                                 @if(Auth::user()->role_as >= 2)
                                     <option value="2" {{ isset($role_filter) && $role_filter == '2' ? 'selected' : '' }}>Repro</option>
@@ -75,8 +75,8 @@
                         @if(isset($role_filter) && $role_filter != '')
                             <span class="badge bg-light text-dark">
                                 Rol:
-                                @if($role_filter == '0') Evaluado
-                                @elseif($role_filter == '1') Empresa
+                                {{-- Evaluados ya no son usuarios --}}
+                                @if($role_filter == '1') Empresa
                                 @elseif($role_filter == '2') Repro
                                 @elseif($role_filter == '3') Administrador
                                 @endif

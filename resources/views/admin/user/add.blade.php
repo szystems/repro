@@ -130,11 +130,8 @@
                                                         <select name="role_as" id="role_as" class="form-select" required>
                                                             <option value="" disabled selected>Seleccione tipo de usuario</option>
 
-                                                            @if($canCreateEvaluado)
-                                                            <option value="0" {{ old('role_as') == '0' ? 'selected' : '' }}>
-                                                                Evaluado (Persona a evaluar)
-                                                            </option>
-                                                            @endif
+                                                            {{-- NOTA: Evaluados ya NO son usuarios del sistema --}}
+                                                            {{-- Se crean en tabla evaluados_orden al generar órdenes --}}
 
                                                             @if($canCreateEmpresa)
                                                             <option value="1" {{ old('role_as') == '1' ? 'selected' : '' }}>

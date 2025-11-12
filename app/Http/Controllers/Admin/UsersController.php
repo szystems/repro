@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Empresa;
+use App\Models\Role;
+use App\Models\Permission;
 use App\Http\Requests\UserFormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -84,10 +86,19 @@ class UsersController extends Controller
         $canCreateAdmin = $currentUser->role_as == 3; // Solo admin puede crear admins
         $canCreateRepro = $currentUser->role_as == 3; // Solo admin puede crear usuarios de Repro
         $canCreateEmpresa = $currentUser->role_as >= 2; // Admin y Repro pueden crear usuarios de empresa
-        $canCreateEvaluado = $currentUser->role_as >= 1; // Todos pueden crear evaluados excepto los mismos evaluados
+
+        // NOTA: Los evaluados NO son usuarios del sistema
+        // Se crean en tabla evaluados_orden al crear una orden (sin cuenta de usuario)
 
         // Cargar todas las empresas activas para el selector
         $empresas = Empresa::where('estado', 1)->orderBy('nombre', 'asc')->get();
+
+        // Cargar solo roles válidos (admin, repro, empresa)
+        // El rol "evaluado" ya no existe en el sistema
+        $roles = Role::all();
+
+        // Cargar todos los permisos agrupados por módulo
+        $permissions = Permission::all()->groupBy('module');
 
         // Obtener la empresa_id del parámetro de consulta si existe (para preseleccionar)
         $empresa_id = request('empresa_id');
@@ -96,9 +107,10 @@ class UsersController extends Controller
             'canCreateAdmin',
             'canCreateRepro',
             'canCreateEmpresa',
-            'canCreateEvaluado',
             'empresas',
-            'empresa_id'
+            'empresa_id',
+            'roles',
+            'permissions'
         ));
     }
 
@@ -170,7 +182,28 @@ class UsersController extends Controller
             }
         }
 
+        // Nuevos campos
+        $user->documento_identidad = $request->input('documento_identidad');
+        $user->tipo_documento = $request->input('tipo_documento');
+
         $user->save();
+
+        // Asignar roles del nuevo sistema si se proporcionaron
+        if ($request->has('roles') && !empty($request->input('roles'))) {
+            $user->syncRoles($request->input('roles'));
+        } else {
+            // Si no se especificaron roles, asignar rol basado en role_as
+            // NOTA: role_as = 0 (evaluado) ya no existe - evaluados no son usuarios
+            $roleMapping = [
+                1 => 'empresa',
+                2 => 'repro',
+                3 => 'admin',
+            ];
+            
+            if (isset($roleMapping[$user->role_as])) {
+                $user->assignRole($roleMapping[$user->role_as]);
+            }
+        }
 
         // Enviar correo con credenciales
         try {
@@ -185,7 +218,7 @@ class UsersController extends Controller
 
     public function edituser($id)
     {
-        $user = User::find($id);
+        $user = User::with('roles')->find($id);
         $currentUser = Auth::user();
 
         // Verificar permisos
@@ -200,7 +233,24 @@ class UsersController extends Controller
         // Cargar todas las empresas activas
         $empresas = Empresa::where('estado', 1)->orderBy('nombre', 'asc')->get();
 
-        return view('admin.user.edit', compact('user', 'canEditRole', 'canEditEmpresa', 'empresas'));
+        // Cargar todos los roles disponibles
+        $roles = Role::all();
+
+        // Cargar todos los permisos agrupados por módulo
+        $permissions = Permission::all()->groupBy('module');
+
+        // Obtener los roles actuales del usuario
+        $userRoles = $user->roles->pluck('name')->toArray();
+
+        return view('admin.user.edit', compact(
+            'user',
+            'canEditRole',
+            'canEditEmpresa',
+            'empresas',
+            'roles',
+            'permissions',
+            'userRoles'
+        ));
     }
 
     public function updateuser(UserFormRequest $request, $id)
@@ -287,6 +337,15 @@ class UsersController extends Controller
             } catch (\Exception $e) {
                 \Log::error("Error enviando email de reset: " . $e->getMessage());
             }
+        }
+
+        // Actualizar nuevos campos
+        $user->documento_identidad = $request->input('documento_identidad');
+        $user->tipo_documento = $request->input('tipo_documento');
+
+        // Actualizar roles si se tienen permisos
+        if ($currentUser->role_as == 3 && $request->has('roles')) {
+            $user->syncRoles($request->input('roles'));
         }
 
         $user->update();
@@ -382,11 +441,11 @@ class UsersController extends Controller
         // Agregar información de rol al título si se filtró por rol
         if($role_filter !== null && $role_filter !== '') {
             $rolMap = [
-                '0' => 'Evaluados',
                 '1' => 'Empresas',
                 '2' => 'Repro',
                 '3' => 'Administradores'
             ];
+            // NOTA: '0' => 'Evaluados' eliminado - evaluados no son usuarios
             $rolName = isset($rolMap[$role_filter]) ? $rolMap[$role_filter] : 'Desconocido';
             $titulo .= ' - '.$rolName;
         }

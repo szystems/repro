@@ -128,10 +128,10 @@
                                             </td>
                                             <td align="center">
                                                 <span class="badge
-                                                @if($user->role_as == 0) bg-secondary
-                                                @elseif($user->role_as == 1) bg-success
+                                                @if($user->role_as == 1) bg-success
                                                 @elseif($user->role_as == 2) bg-info
                                                 @elseif($user->role_as == 3) bg-danger
+                                                @else bg-secondary
                                                 @endif">
                                                     {{ $user->getRoleName() }}
                                                 </span>

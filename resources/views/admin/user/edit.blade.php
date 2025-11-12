@@ -50,10 +50,10 @@
                                 <h5 class="text-primary mb-1">Editar Usuario</h5>
                                 <h4 class="m-0">{{ $user->name }}</h4>
                                 <span class="badge
-                                    @if($user->role_as == 0) bg-secondary
-                                    @elseif($user->role_as == 1) bg-success
+                                    @if($user->role_as == 1) bg-success
                                     @elseif($user->role_as == 2) bg-info
                                     @elseif($user->role_as == 3) bg-danger
+                                    @else bg-secondary
                                     @endif">
                                     {{ $user->getRoleName() }}
                                 </span>
@@ -145,9 +145,7 @@
                                                     <div class="input-group">
                                                         <span class="input-group-text"><i class="bi bi-shield-fill"></i></span>
                                                         <select name="role_as" id="role_as" class="form-select" required>
-                                                            <option value="0" {{ $user->role_as == 0 ? 'selected' : '' }}>
-                                                                Evaluado (Persona a evaluar)
-                                                            </option>
+                                                            {{-- NOTA: Evaluados ya NO son usuarios del sistema --}}
                                                             <option value="1" {{ $user->role_as == 1 ? 'selected' : '' }}>
                                                                 Empresa (Usuario empresa cliente)
                                                             </option>

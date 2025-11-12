@@ -177,8 +177,8 @@
             @endif
             @if(isset($role_filter) && $role_filter !== null && $role_filter !== '')
                 | <strong>Rol:</strong>
-                @if($role_filter == '0') Evaluado
-                @elseif($role_filter == '1') Empresa
+                {{-- Evaluados ya no son usuarios --}}
+                @if($role_filter == '1') Empresa
                 @elseif($role_filter == '2') Repro
                 @elseif($role_filter == '3') Administrador
                 @endif
@@ -192,15 +192,12 @@
         <div class="summary-section">
             <table class="summary-table">
                 <tr>
-                    <td width="16%" class="text-center">
+                    <td width="20%" class="text-center">
                         <div class="text-primary text-bold">Total Usuarios</div>
                         <div>{{ count($usuarios) }}</div>
                     </td>
-                    <td width="16%" class="text-center">
-                        <div class="text-secondary text-bold">Evaluados</div>
-                        <div>{{ $usuarios->where('role_as', 0)->count() }}</div>
-                    </td>
-                    <td width="16%" class="text-center">
+                    {{-- Evaluados ya no son usuarios del sistema --}}
+                    <td width="20%" class="text-center">
                         <div class="text-success text-bold">Empresas</div>
                         <div>{{ $usuarios->where('role_as', 1)->count() }}</div>
                     </td>
@@ -258,13 +255,13 @@
                         </td>
                         <td class="text-center">
                             <span class="badge
-                                @if($usuario->role_as == 0) badge-secondary
-                                @elseif($usuario->role_as == 1) badge-success
+                                @if($usuario->role_as == 1) badge-success
                                 @elseif($usuario->role_as == 2) badge-info
                                 @elseif($usuario->role_as == 3) badge-danger
+                                @else badge-secondary
                                 @endif">
-                                @if($usuario->role_as == 0) Evaluado
-                                @elseif($usuario->role_as == 1) Empresa
+                                {{-- Evaluados ya no son usuarios --}}
+                                @if($usuario->role_as == 1) Empresa
                                 @elseif($usuario->role_as == 2) Repro
                                 @elseif($usuario->role_as == 3) Admin
                                 @endif
