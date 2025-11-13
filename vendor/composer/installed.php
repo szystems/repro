@@ -445,6 +445,15 @@
                 0 => '*',
             ),
         ),
+        'laravel/boost' => array(
+            'pretty_version' => 'v1.7.1',
+            'version' => '1.7.1.0',
+            'reference' => '355f7c27952862aab3f61adec27773fd4d41a582',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../laravel/boost',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
         'laravel/framework' => array(
             'pretty_version' => 'v12.37.0',
             'version' => '12.37.0.0',
@@ -463,6 +472,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'laravel/mcp' => array(
+            'pretty_version' => 'v0.3.2',
+            'version' => '0.3.2.0',
+            'reference' => 'dc722a4c388f172365dec70461f0413ac366f360',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../laravel/mcp',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
         'laravel/prompts' => array(
             'pretty_version' => 'v0.3.7',
             'version' => '0.3.7.0',
@@ -471,6 +489,15 @@
             'install_path' => __DIR__ . '/../laravel/prompts',
             'aliases' => array(),
             'dev_requirement' => false,
+        ),
+        'laravel/roster' => array(
+            'pretty_version' => 'v0.2.9',
+            'version' => '0.2.9.0',
+            'reference' => '82bbd0e2de614906811aebdf16b4305956816fa6',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../laravel/roster',
+            'aliases' => array(),
+            'dev_requirement' => true,
         ),
         'laravel/sail' => array(
             'pretty_version' => 'v1.47.0',

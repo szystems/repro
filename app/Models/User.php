@@ -64,42 +64,155 @@ class User extends Authenticatable
     }
 
     /**
+     * Relación con roles (nuevo sistema)
+     */
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_role')
+            ->withTimestamps();
+    }
+
+    /**
+     * Verificar si el usuario tiene un rol específico
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    /**
+     * Verificar si el usuario tiene alguno de los roles especificados
+     */
+    public function hasAnyRole(array $roleNames): bool
+    {
+        return $this->roles()->whereIn('name', $roleNames)->exists();
+    }
+
+    /**
+     * Verificar si el usuario tiene todos los roles especificados
+     */
+    public function hasAllRoles(array $roleNames): bool
+    {
+        foreach ($roleNames as $roleName) {
+            if (!$this->hasRole($roleName)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Verificar si el usuario tiene un permiso específico
+     */
+    public function hasPermission(string $permissionName): bool
+    {
+        return $this->roles()
+            ->whereHas('permissions', function ($query) use ($permissionName) {
+                $query->where('name', $permissionName);
+            })
+            ->exists();
+    }
+
+    /**
+     * Verificar si el usuario tiene alguno de los permisos especificados
+     */
+    public function hasAnyPermission(array $permissionNames): bool
+    {
+        return $this->roles()
+            ->whereHas('permissions', function ($query) use ($permissionNames) {
+                $query->whereIn('name', $permissionNames);
+            })
+            ->exists();
+    }
+
+    /**
+     * Verificar si el usuario tiene todos los permisos especificados
+     */
+    public function hasAllPermissions(array $permissionNames): bool
+    {
+        foreach ($permissionNames as $permissionName) {
+            if (!$this->hasPermission($permissionName)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Asignar rol al usuario
+     */
+    public function assignRole(string $roleName): void
+    {
+        $role = Role::where('name', $roleName)->firstOrFail();
+        $this->roles()->syncWithoutDetaching([$role->id]);
+    }
+
+    /**
+     * Remover rol del usuario
+     */
+    public function removeRole(string $roleName): void
+    {
+        $role = Role::where('name', $roleName)->first();
+        if ($role) {
+            $this->roles()->detach($role->id);
+        }
+    }
+
+    /**
+     * Obtener todos los permisos del usuario (a través de sus roles)
+     */
+    public function getAllPermissions()
+    {
+        return Permission::whereHas('roles', function ($query) {
+            $query->whereIn('role_id', $this->roles->pluck('id'));
+        })->get();
+    }
+
+    // ==================== Métodos de compatibilidad con role_as ====================
+
+    /**
      * Verificar si el usuario es administrador
      */
-    public function isAdmin()
+    public function isAdmin(): bool
     {
-        return $this->role_as == 3;
+        return $this->role_as == 3 || $this->hasRole('admin');
     }
 
     /**
      * Verificar si el usuario es de REPRO
      */
-    public function isRepro()
+    public function isRepro(): bool
     {
-        return $this->role_as == 2;
+        return $this->role_as == 2 || $this->hasRole('repro');
     }
 
     /**
      * Verificar si el usuario es de una empresa cliente
      */
-    public function isEmpresa()
+    public function isEmpresa(): bool
     {
-        return $this->role_as == 1;
+        return $this->role_as == 1 || $this->hasRole('empresa');
     }
 
     /**
      * Verificar si el usuario es una persona evaluada
      */
-    public function isEvaluado()
+    public function isEvaluado(): bool
     {
-        return $this->role_as == 0;
+        return $this->role_as == 0 || $this->hasRole('evaluado');
     }
 
     /**
-     * Obtener el nombre del rol del usuario
+     * Obtener el nombre del rol del usuario (legacy)
      */
-    public function getRoleName()
+    public function getRoleName(): string
     {
+        // Priorizar el nuevo sistema de roles
+        if ($this->roles->isNotEmpty()) {
+            return $this->roles->first()->display_name;
+        }
+
+        // Fallback al sistema antiguo
         switch ($this->role_as) {
             case 0: return 'Evaluado';
             case 1: return 'Empresa';
@@ -107,6 +220,14 @@ class User extends Authenticatable
             case 3: return 'Administrador';
             default: return 'Desconocido';
         }
+    }
+
+    /**
+     * Obtener todos los nombres de roles del usuario
+     */
+    public function getRoleNames(): array
+    {
+        return $this->roles->pluck('display_name')->toArray();
     }
 
     // Métodos para fechas
