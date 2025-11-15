@@ -25,24 +25,28 @@ class EvaluadoOrdenFactory extends Factory
     {
         return [
             'orden_id' => null, // Se asigna manualmente o por Orden factory
-            'nombre' => $this->faker->name(),
+            'nombre' => $this->faker->firstName(),
+            'apellidos' => $this->faker->lastName(),
             'email' => $this->faker->unique()->safeEmail(),
             'telefono' => $this->faker->numerify('2###-####'),
-            'celular' => $this->faker->numerify('5###-####'),
             'dpi' => $this->faker->numerify('#############'), // 13 dígitos
-            'tipo_documento' => $this->faker->randomElement(['DPI', 'Pasaporte', 'Licencia']),
+            'tipo_documento' => $this->faker->randomElement(['dpi', 'pasaporte', 'cedula']),
             'token_unico' => EvaluadoOrden::generarToken(),
             'token_expira_at' => now()->addDays(30),
-            'token_usado_at' => null,
             'cuestionario_completado' => false,
             'completado_at' => null,
             'firma_digital' => null,
             'ip_completado' => null,
-            'user_agent' => null,
-            'intentos_acceso' => 0,
-            'notas' => null,
-            'notificado' => false,
-            'notificado_at' => null,
+            'puesto_evaluar' => $this->faker->optional()->jobTitle(),
+            'observaciones' => $this->faker->optional()->paragraph(),
+            // Nuevos campos granulares
+            'tipo_servicio' => $this->faker->randomElement(['poligrafo', 'vsa', 'socioeconomico']),
+            'tipo_formulario' => $this->faker->randomElement(['preempleo', 'periodica', 'especifica']),
+            'fecha_programada' => $this->faker->optional()->dateTimeBetween('+1 day', '+30 days'),
+            'poligrafista_id' => null,
+            'estado_evaluacion' => 'pendiente',
+            'resultado' => null,
+            'notas_poligrafo' => null,
         ];
     }
 

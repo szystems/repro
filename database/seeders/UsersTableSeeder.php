@@ -52,8 +52,8 @@ class UsersTableSeeder extends Seeder
         // Crear usuarios de empresas
         User::factory()->empresa()->count(10)->create();
         
-        // Crear usuarios evaluados
-        User::factory()->evaluado()->count(20)->create();
+        // NOTA: Los usuarios evaluados NO se crean como usuarios del sistema
+        // Los evaluados acceden vía token único en la tabla 'evaluados_orden'
         
         // Marcar algunos usuarios de empresa como principales
         $empresasIds = Empresa::pluck('id')->toArray();

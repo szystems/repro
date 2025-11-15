@@ -196,10 +196,11 @@ class User extends Authenticatable
 
     /**
      * Verificar si el usuario es una persona evaluada
+     * NOTA: Los evaluados acceden via token, no como usuarios del sistema
      */
     public function isEvaluado(): bool
     {
-        return $this->role_as == 0 || $this->hasRole('evaluado');
+        return $this->role_as == 0; // Solo para compatibilidad legacy
     }
 
     /**
@@ -214,7 +215,7 @@ class User extends Authenticatable
 
         // Fallback al sistema antiguo
         switch ($this->role_as) {
-            case 0: return 'Evaluado';
+            case 0: return 'Evaluado (Legacy)'; // Los evaluados no son usuarios del sistema
             case 1: return 'Empresa';
             case 2: return 'Repro';
             case 3: return 'Administrador';

@@ -176,32 +176,31 @@ class UsersController extends Controller
 
         if ($user->role_as == 2) { // Usuario de Repro
             $user->cargo = $request->input('cargo');
-            // Guardar permisos como JSON
-            if ($request->has('permisos')) {
-                $user->permisos = json_encode($request->input('permisos'));
-            }
         }
 
-        // Nuevos campos
+        // Campos de identificación
         $user->documento_identidad = $request->input('documento_identidad');
         $user->tipo_documento = $request->input('tipo_documento');
 
         $user->save();
 
-        // Asignar roles del nuevo sistema si se proporcionaron
-        if ($request->has('roles') && !empty($request->input('roles'))) {
-            $user->syncRoles($request->input('roles'));
-        } else {
-            // Si no se especificaron roles, asignar rol basado en role_as
-            // NOTA: role_as = 0 (evaluado) ya no existe - evaluados no son usuarios
-            $roleMapping = [
-                1 => 'empresa',
-                2 => 'repro',
-                3 => 'admin',
-            ];
-            
-            if (isset($roleMapping[$user->role_as])) {
-                $user->assignRole($roleMapping[$user->role_as]);
+        // Asignar rol principal basado en role_as
+        $roleMapping = [
+            1 => 'empresa',
+            2 => 'repro', 
+            3 => 'admin',
+        ];
+        
+        if (isset($roleMapping[$user->role_as])) {
+            $user->assignRole($roleMapping[$user->role_as]);
+        }
+
+        // Asignar roles adicionales para usuarios de Repro
+        if ($user->role_as == 2 && $request->has('additional_roles')) {
+            foreach ($request->input('additional_roles') as $roleName) {
+                if ($roleName !== 'evaluado') { // No permitir rol evaluado a usuarios del sistema
+                    $user->assignRole($roleName);
+                }
             }
         }
 

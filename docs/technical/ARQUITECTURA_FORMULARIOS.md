@@ -43,9 +43,16 @@ Repro procesa resultados
 **Campos Opcionales:**
 - Empresa/Departamento
 - Fecha tentativa
-- Observaciones iniciales
+- Observaciones inicialesPRÓXIMOS PASOS
+Ahora que tenemos la base sólida implementada, el siguiente hito sería:
 
-**Funcionalidades:**
+Módulo de Órdenes - Crear órdenes con tipos de servicio
+Formularios Dinámicos - Según tipo de evaluación
+Sistema de Cuestionarios - Acceso público por token
+Dashboard de Estados - Seguimiento en tiempo real
+Notificaciones Email - Envío de tokens a evaluados+*3
+79/
+\*Funcionalidades:**
 - Generador automático de código único
 - Validador de DPI en tiempo real
 - Consulta automática de antecedentes

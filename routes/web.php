@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Admin\ConfigController;
+use App\Http\Controllers\Admin\OrdenesController;
+use App\Http\Controllers\Admin\RolesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +47,19 @@ Route::get('/password/reset', function () {
 // Ruta para enviar el correo de restablecimiento de contraseña
 Route::post('/password/email', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 
+// Ruta de debug temporal
+Route::post('/debug-orden', function (Illuminate\Http\Request $request) {
+    \Illuminate\Support\Facades\Log::info('=== DEBUG ORDEN ===');
+    \Illuminate\Support\Facades\Log::info('Request all:', $request->all());
+    \Illuminate\Support\Facades\Log::info('User:', Auth::user() ? Auth::user()->name : 'NO USER');
+    
+    return response()->json([
+        'status' => 'received',
+        'data' => $request->all(),
+        'user' => Auth::user() ? Auth::user()->name : 'NO USER'
+    ]);
+})->middleware('auth');
+
 // Rutas protegidas
 Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
@@ -60,6 +75,12 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('pdf-users', [UsersController::class, 'pdf']);
     Route::get('pdf-user/{id}', [UsersController::class, 'pdfuser']);
 
+    //Roles y Permisos (solo para administradores)
+    Route::prefix('admin')->group(function () {
+        Route::get('roles/permissions', [RolesController::class, 'permissions'])->name('roles.permissions');
+        Route::resource('roles', RolesController::class);
+    });
+
     //config
     Route::get('config', [ConfigController::class, 'index']);
     Route::put('update-config', [ConfigController::class, 'update']);
@@ -74,6 +95,18 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('cambiar-estado-empresa/{id}/{estado}', [App\Http\Controllers\Admin\EmpresasController::class, 'cambiarEstado']);
     Route::get('pdf-empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'pdf']);
     Route::get('pdf-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'pdfEmpresa']);
+
+    // Rutas para el módulo de Órdenes - Disponible para admin, repro y empresas
+    Route::resource('ordenes', OrdenesController::class)->parameters(['ordenes' => 'orden']);
+    
+    // Rutas adicionales para órdenes
+    Route::patch('ordenes/{orden}/cambiar-estado', [OrdenesController::class, 'cambiarEstado'])->name('ordenes.cambiar-estado');
+    
+    // Rutas para diferentes tipos de usuario con middleware específico
+    Route::middleware(['role:admin,repro'])->group(function () {
+        // Solo admin y repro pueden acceder a todas las órdenes y estadísticas
+        Route::get('ordenes-resumen', [OrdenesController::class, 'resumen'])->name('ordenes.resumen');
+    });
 });
 
 // Ruta de cambio de contraseña disponible para todos los usuarios autenticados

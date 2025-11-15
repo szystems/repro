@@ -1,0 +1,285 @@
+@extends('layouts.admin')
+@section('content')
+
+<!-- Content wrapper scroll start -->
+<div class="content-wrapper-scroll">
+
+    <!-- Main header starts -->
+    <div class="main-header d-flex align-items-center justify-content-between position-relative">
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="page-icon">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <div class="page-title">
+                <h5>Órdenes de Evaluación</h5>
+            </div>
+        </div>
+        <div class="d-flex align-items-end d-none d-sm-block">
+            <h6 class="float-end text-light" id="reloj"></h6>
+        </div>
+    </div>
+    <!-- Main header ends -->
+
+    <!-- Content wrapper start -->
+    <div class="content-wrapper">
+
+        <!-- Row start -->
+        <div class="row gx-3">
+            <div class="col-xl-12">
+                <div class="card card-background-mask-info">
+                    <div class="card-header">
+                        <div class="card-title"><i class="bi bi-search"></i> Filtrar Órdenes</div>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ route('ordenes.index') }}" method="GET">
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label">Buscar por código o empresa</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                        <input class="form-control" placeholder="Buscar..." name="buscar" value="{{ request('buscar') }}"/>
+                                    </div>
+                                </div>
+                                
+                                @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label">Empresa</label>
+                                    <select class="form-select" name="empresa_id">
+                                        <option value="">Todas las empresas</option>
+                                        @foreach($empresas as $empresa)
+                                        <option value="{{ $empresa->id }}" {{ request('empresa_id') == $empresa->id ? 'selected' : '' }}>
+                                            {{ $empresa->nombre }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
+
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label">Estado</label>
+                                    <select class="form-select" name="estado">
+                                        <option value="">Todos los estados</option>
+                                        @foreach($estados as $key => $valor)
+                                        <option value="{{ $key }}" {{ request('estado') == $key ? 'selected' : '' }}>
+                                            {{ $valor }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label">Tipo de Servicio</label>
+                                    <select class="form-select" name="tipo_servicio">
+                                        <option value="">Todos los tipos</option>
+                                        @foreach($tiposServicio as $key => $valor)
+                                        <option value="{{ $key }}" {{ request('tipo_servicio') == $key ? 'selected' : '' }}>
+                                            {{ $valor }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-info"><i class="bi bi-search"></i> Buscar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Row end -->
+
+        <!-- Row start -->
+        <div class="row gx-3">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Lista de Órdenes</div>
+                        <div class="card-options">
+                            <a href="{{ route('ordenes.create') }}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-circle"></i> Nueva Orden
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+
+                        @if(session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        @endif
+
+                        @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        @endif
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Empresa</th>
+                                        <th>Tipos de Servicio</th>
+                                        <th>Estado</th>
+                                        <th>Evaluados</th>
+                                        <th>Fechas</th>
+                                        <th>Prioridad</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($ordenes as $orden)
+                                    <tr>
+                                        <td>
+                                            <strong>{{ $orden->codigo_orden }}</strong>
+                                        </td>
+                                        <td>{{ $orden->empresa->nombre ?? 'N/A' }}</td>
+                                        <td>
+                                            @php
+                                                $tiposUnicos = $orden->evaluados->pluck('tipo_servicio')->unique();
+                                            @endphp
+                                            @foreach($tiposUnicos as $tipo)
+                                                <span class="badge me-1
+                                                    @if($tipo == 'poligrafo') bg-primary
+                                                    @elseif($tipo == 'vsa') bg-info
+                                                    @else bg-warning
+                                                    @endif">
+                                                    @if($tipo == 'poligrafo') Polígrafo
+                                                    @elseif($tipo == 'vsa') VSA
+                                                    @else Socioeconómico
+                                                    @endif
+                                                </span>
+                                            @endforeach
+                                            @if($tiposUnicos->isEmpty())
+                                                <span class="badge bg-secondary">Sin definir</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                @if($orden->estado == 'solicitud') bg-secondary
+                                                @elseif($orden->estado == 'en_proceso') bg-primary
+                                                @elseif($orden->estado == 'entregado') bg-success
+                                                @elseif($orden->estado == 'cancelado') bg-danger
+                                                @else bg-info
+                                                @endif">
+                                                {{ $estados[$orden->estado] ?? $orden->estado }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ $orden->evaluados_count ?? $orden->evaluados->count() }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="small">
+                                                <strong>Solicitud:</strong> {{ $orden->fecha_solicitud ? \Carbon\Carbon::parse($orden->fecha_solicitud)->format('d/m/Y') : 'N/A' }}<br>
+                                                @if($orden->fecha_limite)
+                                                    @php
+                                                        $fechaLimite = \Carbon\Carbon::parse($orden->fecha_limite);
+                                                        $diasRestantes = now()->diffInDays($fechaLimite, false);
+                                                        $alertClass = '';
+                                                        if ($diasRestantes < 0) {
+                                                            $alertClass = 'text-danger fw-bold';
+                                                        } elseif ($diasRestantes <= 3 && !in_array($orden->estado, ['entregado', 'cancelado'])) {
+                                                            $alertClass = 'text-warning fw-bold';
+                                                        }
+                                                    @endphp
+                                                    <strong>Límite:</strong> <span class="{{ $alertClass }}">{{ $fechaLimite->format('d/m/Y') }}</span>
+                                                    @if($diasRestantes < 0)
+                                                        <i class="bi bi-exclamation-triangle text-danger" title="Vencida"></i>
+                                                    @elseif($diasRestantes <= 3 && !in_array($orden->estado, ['entregado', 'cancelado']))
+                                                        <i class="bi bi-clock text-warning" title="Por vencer"></i>
+                                                    @endif
+                                                @else
+                                                    <strong>Límite:</strong> <span class="text-muted">Sin definir</span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if($orden->prioridad)
+                                                <span class="badge 
+                                                    @if($orden->prioridad == 'urgente') bg-danger
+                                                    @elseif($orden->prioridad == 'alta') bg-warning
+                                                    @elseif($orden->prioridad == 'normal') bg-info
+                                                    @else bg-secondary
+                                                    @endif">
+                                                    {{ ucfirst($orden->prioridad) }}
+                                                </span>
+                                            @else
+                                                <span class="badge bg-secondary">Normal</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{{ route('ordenes.show', $orden) }}" class="btn btn-outline-info" title="Ver detalles">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                
+                                                @if(Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->hasRole('empresa') && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'programacion'])))
+                                                <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-outline-warning" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                @endif
+
+                                                @if(Auth::user()->hasRole('admin'))
+                                                <form action="{{ route('ordenes.destroy', $orden) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('¿Está seguro de eliminar esta orden?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-outline-danger" title="Eliminar">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="8" class="text-center">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="bi bi-info-circle"></i> No hay órdenes registradas
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        @if($ordenes->hasPages())
+                        <div class="d-flex justify-content-center mt-3">
+                            {{ $ordenes->appends(request()->query())->links() }}
+                        </div>
+                        @endif
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Row end -->
+
+    </div>
+    <!-- Content wrapper end -->
+
+</div>
+<!-- Content wrapper scroll end -->
+
+@endsection
+
+@push('scripts')
+<script>
+    // Auto-submit form on select change for better UX
+    document.querySelectorAll('select[name="empresa_id"], select[name="estado"], select[name="tipo_servicio"]').forEach(function(select) {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+</script>
+@endpush

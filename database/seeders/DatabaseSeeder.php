@@ -14,9 +14,11 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call([
+            RolesAndPermissionsSeeder::class, // Primero crear roles y permisos
             ConfigsTableSeeder::class,
-            EmpresasTableSeeder::class, // Primero creamos las empresas
+            EmpresasTableSeeder::class, // Luego creamos las empresas
             UsersTableSeeder::class,    // Luego los usuarios que se vinculan a empresas
+            RoleSeeder::class,          // Finalmente asignar roles a usuarios específicos
         ]);
     }
 }

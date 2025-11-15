@@ -29,18 +29,18 @@ class RolesAndPermissionsSeeder extends Seeder
                 'display_name' => 'Usuario Empresa',
                 'description' => 'Usuario de empresa cliente que solicita pruebas'
             ],
-            [
-                'name' => 'evaluado',
-                'display_name' => 'Persona Evaluada',
-                'description' => 'Persona que completa cuestionario y realiza prueba'
-            ],
+            // NOTA: Los evaluados NO son usuarios del sistema
+            // Acceden vía token único en la tabla 'evaluados_orden'
         ];
 
         foreach ($roles as $role) {
-            DB::table('roles')->insert(array_merge($role, [
-                'created_at' => now(),
-                'updated_at' => now()
-            ]));
+            DB::table('roles')->updateOrInsert(
+                ['name' => $role['name']], // Condición de búsqueda
+                array_merge($role, [
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ])
+            );
         }
 
         // Crear permisos organizados por módulos
@@ -88,11 +88,14 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            DB::table('permissions')->insert(array_merge($permission, [
-                'description' => null,
-                'created_at' => now(),
-                'updated_at' => now()
-            ]));
+            DB::table('permissions')->updateOrInsert(
+                ['name' => $permission['name']], // Condición de búsqueda
+                array_merge($permission, [
+                    'description' => null,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ])
+            );
         }
 
         // Asignar permisos a roles
@@ -109,12 +112,18 @@ class RolesAndPermissionsSeeder extends Seeder
         $allPermissions = DB::table('permissions')->get();
         
         foreach ($allPermissions as $permission) {
-            DB::table('role_permission')->insert([
-                'role_id' => $adminRole->id,
-                'permission_id' => $permission->id,
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
+            DB::table('role_permission')->updateOrInsert(
+                [
+                    'role_id' => $adminRole->id,
+                    'permission_id' => $permission->id
+                ],
+                [
+                    'role_id' => $adminRole->id,
+                    'permission_id' => $permission->id,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]
+            );
         }
 
         // Repro: gestión de evaluaciones, resultados, ver empresas
@@ -142,13 +151,8 @@ class RolesAndPermissionsSeeder extends Seeder
         
         $this->assignPermissionsByName($empresaRole->id, $empresaPermissions);
 
-        // Evaluado: solo completar cuestionario
-        $evaluadoRole = DB::table('roles')->where('name', 'evaluado')->first();
-        $evaluadoPermissions = [
-            'cuestionarios.completar'
-        ];
-        
-        $this->assignPermissionsByName($evaluadoRole->id, $evaluadoPermissions);
+        // NOTA: El rol 'evaluado' se elimina ya que los evaluados
+        // no son usuarios del sistema, acceden vía token único
     }
 
     /**
@@ -160,12 +164,18 @@ class RolesAndPermissionsSeeder extends Seeder
             $permission = DB::table('permissions')->where('name', $permissionName)->first();
             
             if ($permission) {
-                DB::table('role_permission')->insert([
-                    'role_id' => $roleId,
-                    'permission_id' => $permission->id,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+                DB::table('role_permission')->updateOrInsert(
+                    [
+                        'role_id' => $roleId,
+                        'permission_id' => $permission->id
+                    ],
+                    [
+                        'role_id' => $roleId,
+                        'permission_id' => $permission->id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]
+                );
             }
         }
     }

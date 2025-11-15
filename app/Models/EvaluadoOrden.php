@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 /**
@@ -18,7 +17,7 @@ use Illuminate\Support\Str;
  */
 class EvaluadoOrden extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     /**
      * Nombre de la tabla
@@ -31,11 +30,20 @@ class EvaluadoOrden extends Model
     protected $fillable = [
         'orden_id',
         'nombre',
+        'apellidos',
         'email',
         'telefono',
         'celular',
         'dpi',
         'tipo_documento',
+        'tipo_servicio',
+        'tipo_formulario',
+        'poligrafista_id',
+        'fecha_programada',
+        'fecha_realizada',
+        'estado_evaluacion',
+        'resultado',
+        'notas_poligrafo',
         'token_unico',
         'token_expira_at',
         'token_usado_at',
@@ -54,13 +62,14 @@ class EvaluadoOrden extends Model
      * Campos de fecha
      */
     protected $dates = [
+        'fecha_programada',
+        'fecha_realizada',
         'token_expira_at',
         'token_usado_at',
         'completado_at',
         'notificado_at',
         'created_at',
         'updated_at',
-        'deleted_at',
     ];
 
     /**
@@ -100,6 +109,26 @@ class EvaluadoOrden extends Model
     public function orden()
     {
         return $this->belongsTo(Orden::class, 'orden_id');
+    }
+
+    /**
+     * Polígrafo asignado a este evaluado específico
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function poligrafo()
+    {
+        return $this->belongsTo(User::class, 'poligrafista_id');
+    }
+
+    /**
+     * Alias para poligrafo (compatibilidad)
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function poligrafista()
+    {
+        return $this->poligrafo();
     }
 
     /**
@@ -299,5 +328,115 @@ class EvaluadoOrden extends Model
     {
         $nombres = explode(' ', $this->nombre);
         return implode(' ', array_slice($nombres, 0, 2));
+    }
+
+    // ========================================
+    // Métodos para nuevos campos específicos
+    // ========================================
+
+    /**
+     * Verificar si el evaluado está programado
+     */
+    public function estaProgramado(): bool
+    {
+        return $this->estado_evaluacion === 'programado' && !is_null($this->fecha_programada);
+    }
+
+    /**
+     * Verificar si la evaluación está completada
+     */
+    public function evaluacionCompletada(): bool
+    {
+        return $this->estado_evaluacion === 'completado' && !is_null($this->fecha_realizada);
+    }
+
+    /**
+     * Obtener el nombre del polígrafo asignado
+     */
+    public function getNombrePoligrafoAttribute(): ?string
+    {
+        return $this->poligrafo ? $this->poligrafo->name : null;
+    }
+
+    /**
+     * Obtener texto del tipo de servicio
+     */
+    public function getTipoServicioTextoAttribute(): string
+    {
+        return match($this->tipo_servicio) {
+            'poligrafo' => 'Polígrafo',
+            'vsa' => 'VSA (Voice Stress Analysis)',
+            'socioeconomico' => 'Socioeconómico',
+            default => 'No definido'
+        };
+    }
+
+    /**
+     * Obtener texto del tipo de formulario
+     */
+    public function getTipoFormularioTextoAttribute(): string
+    {
+        return match($this->tipo_formulario) {
+            'preempleo' => 'Pre-empleo',
+            'periodica' => 'Periódica',
+            'especifica' => 'Específica',
+            default => 'No definido'
+        };
+    }
+
+    /**
+     * Obtener texto del estado de evaluación
+     */
+    public function getEstadoEvaluacionTextoAttribute(): string
+    {
+        return match($this->estado_evaluacion) {
+            'pendiente' => 'Pendiente',
+            'contactado' => 'Contactado',
+            'programado' => 'Programado',
+            'en_proceso' => 'En Proceso',
+            'completado' => 'Completado',
+            'cancelado' => 'Cancelado',
+            'reprogramado' => 'Reprogramado',
+            default => 'Estado desconocido'
+        };
+    }
+
+    /**
+     * Obtener texto del resultado
+     */
+    public function getResultadoTextoAttribute(): string
+    {
+        return match($this->resultado) {
+            'pendiente' => 'Pendiente',
+            'aprobado' => 'Aprobado',
+            'no_aprobado' => 'No Aprobado',
+            'inconcluso' => 'Inconcluso',
+            default => 'Sin resultado'
+        };
+    }
+
+    /**
+     * Programar evaluación
+     */
+    public function programarEvaluacion(string $fecha, int $poligrafistaid): bool
+    {
+        $this->fecha_programada = $fecha;
+        $this->poligrafista_id = $poligrafistaid;
+        $this->estado_evaluacion = 'programado';
+        return $this->save();
+    }
+
+    /**
+     * Marcar evaluación como completada
+     */
+    public function completarEvaluacion(string $resultado, ?string $notas = null): bool
+    {
+        $this->fecha_realizada = now();
+        $this->estado_evaluacion = 'completado';
+        $this->resultado = $resultado;
+        if ($notas) {
+            $this->notas_poligrafo = $notas;
+        }
+        return $this->save();
     }
 }

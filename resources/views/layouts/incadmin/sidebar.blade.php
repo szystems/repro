@@ -133,6 +133,11 @@
                             <li class="{{ Request::is('users','show-user/*','add-user','edit-user/*') ? 'active-page-link':''  }}">
                                 <a href="{{ url('users') }}"><i class="bi bi-people"></i> Usuarios</a>
                             </li>
+                            @if(Auth::user()->role_as >= 3)
+                            <li class="{{ Request::is('admin/roles','admin/roles/*') ? 'active-page-link':''  }}">
+                                <a href="{{ url('admin/roles') }}"><i class="bi bi-shield-check"></i> Roles y Permisos</a>
+                            </li>
+                            @endif
                         </ul>
                     </div>
                 </li>

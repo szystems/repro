@@ -122,6 +122,33 @@
                                                     @endif
                                                 </div>
 
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="documento_identidad" class="form-label">Documento de Identidad</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                                                        <input name="documento_identidad" type="text" class="form-control" placeholder="Número de documento" value="{{ old('documento_identidad') }}" />
+                                                    </div>
+                                                    @if ($errors->has('documento_identidad'))
+                                                        <div class="text-danger mt-1">{{ $errors->first('documento_identidad') }}</div>
+                                                    @endif
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="tipo_documento" class="form-label">Tipo de Documento</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="bi bi-card-list"></i></span>
+                                                        <select name="tipo_documento" class="form-select">
+                                                            <option value="">Seleccione tipo de documento</option>
+                                                            <option value="DPI" {{ old('tipo_documento') == 'DPI' ? 'selected' : '' }}>DPI</option>
+                                                            <option value="Pasaporte" {{ old('tipo_documento') == 'Pasaporte' ? 'selected' : '' }}>Pasaporte</option>
+                                                            <option value="Licencia" {{ old('tipo_documento') == 'Licencia' ? 'selected' : '' }}>Licencia</option>
+                                                        </select>
+                                                    </div>
+                                                    @if ($errors->has('tipo_documento'))
+                                                        <div class="text-danger mt-1">{{ $errors->first('tipo_documento') }}</div>
+                                                    @endif
+                                                </div>
+
                                                 <!-- Tipo de usuario -->
                                                 <div class="col-md-6 mb-3">
                                                     <label for="role_as" class="form-label">Tipo de Usuario <span class="text-danger">*</span></label>
@@ -151,6 +178,24 @@
                                                             </option>
                                                             @endif
                                                         </select>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Información para Administrador -->
+                                                <div class="col-12 admin-info" style="display: none;">
+                                                    <div class="alert alert-danger">
+                                                        <h6><i class="bi bi-shield-fill-exclamation"></i> Permisos de Administrador</h6>
+                                                        <p class="mb-0">Este usuario tendrá <strong>ACCESO COMPLETO</strong> al sistema:</p>
+                                                        <ul class="small mb-0 mt-2">
+                                                            <li>Todos los permisos de evaluaciones, órdenes y resultados</li>
+                                                            <li>Gestión completa de empresas y usuarios</li>
+                                                            <li>Administración de roles y permisos</li>
+                                                            <li>Configuración del sistema</li>
+                                                            <li>Acceso a todos los reportes y estadísticas</li>
+                                                        </ul>
+                                                        <div class="mt-2">
+                                                            <small><strong>⚠️ Nota:</strong> Los administradores pueden gestionar todos los aspectos del sistema.</small>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -203,7 +248,7 @@
                                                                     </div>
                                                                 </div>
 
-                                                                <div class="col-md-12">
+                                                                <div class="col-md-12 mb-3">
                                                                     <div class="form-check">
                                                                         <input class="form-check-input" type="checkbox" value="1" name="principal" id="principal" {{ old('principal') ? 'checked' : '' }}>
                                                                         <label class="form-check-label" for="principal">
@@ -212,6 +257,19 @@
                                                                         <div class="form-text">
                                                                             El usuario principal tiene permisos para administrar otros usuarios de su empresa.
                                                                         </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="col-md-12">
+                                                                    <div class="alert alert-success">
+                                                                        <h6><i class="bi bi-building-check"></i> Permisos de Usuario Empresa</h6>
+                                                                        <p class="mb-0">Este usuario tendrá automáticamente los permisos de <strong>Usuario Empresa</strong>:</p>
+                                                                        <ul class="small mb-0 mt-2">
+                                                                            <li>Crear y ver órdenes de evaluación</li>
+                                                                            <li>Ver y descargar resultados de sus evaluaciones</li>
+                                                                            <li>Gestionar usuarios de su empresa</li>
+                                                                            <li>Ver evaluaciones de su empresa</li>
+                                                                        </ul>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -234,35 +292,15 @@
                                                                 </div>
 
                                                                 <div class="col-md-12 mb-3">
-                                                                    <label class="form-label">Permisos especiales</label>
-                                                                    <div class="form-text mb-2">
-                                                                        Seleccione los permisos adicionales que tendrá este usuario:
-                                                                    </div>
-                                                                    <div class="row">
-                                                                        <div class="col-md-4">
-                                                                            <div class="form-check">
-                                                                                <input class="form-check-input" type="checkbox" value="evaluaciones" name="permisos[]" id="permiso_evaluaciones" {{ (old('permisos') && in_array('evaluaciones', old('permisos'))) ? 'checked' : '' }}>
-                                                                                <label class="form-check-label" for="permiso_evaluaciones">
-                                                                                    Gestionar evaluaciones
-                                                                                </label>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-md-4">
-                                                                            <div class="form-check">
-                                                                                <input class="form-check-input" type="checkbox" value="empresas" name="permisos[]" id="permiso_empresas" {{ (old('permisos') && in_array('empresas', old('permisos'))) ? 'checked' : '' }}>
-                                                                                <label class="form-check-label" for="permiso_empresas">
-                                                                                    Gestionar empresas
-                                                                                </label>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-md-4">
-                                                                            <div class="form-check">
-                                                                                <input class="form-check-input" type="checkbox" value="reportes" name="permisos[]" id="permiso_reportes" {{ (old('permisos') && in_array('reportes', old('permisos'))) ? 'checked' : '' }}>
-                                                                                <label class="form-check-label" for="permiso_reportes">
-                                                                                    Generar reportes
-                                                                                </label>
-                                                                            </div>
-                                                                        </div>
+                                                                    <div class="alert alert-info">
+                                                                        <h6><i class="bi bi-shield-check"></i> Permisos Automáticos</h6>
+                                                                        <p class="mb-0">Este usuario tendrá automáticamente todos los permisos de <strong>Personal Repro</strong>, que incluyen:</p>
+                                                                        <ul class="small mb-0 mt-2">
+                                                                            <li>Ver y gestionar evaluaciones y pruebas de polígrafo</li>
+                                                                            <li>Ver resultados y generar reportes</li>
+                                                                            <li>Ver información de empresas y usuarios</li>
+                                                                            <li>Gestionar órdenes de evaluación</li>
+                                                                        </ul>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -397,6 +435,7 @@
                 // Ocultar todos los campos específicos primero
                 $(".empresa-fields").hide();
                 $(".repro-fields").hide();
+                $(".admin-info").hide();
                 $(".principal-check-container").hide();
 
                 // Mostrar campos según el rol seleccionado
@@ -411,6 +450,10 @@
                 if (role == "2") { // Repro
                     $(".repro-fields").show();
                     $(".principal-check-container").show();
+                }
+
+                if (role == "3") { // Administrador
+                    $(".admin-info").show();
                 }
             }
 

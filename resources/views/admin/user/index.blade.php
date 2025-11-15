@@ -179,8 +179,17 @@
                                         @endforeach
                                     </tbody>
                                 </table>
-                                <div class="d-flex justify-content-center mt-3">
-                                    {{ $users->appends(request()->query())->links() }}
+                                <!-- Paginación -->
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div>
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle"></i>
+                                            Mostrando {{ $users->firstItem() ?? 0 }} a {{ $users->lastItem() ?? 0 }} de {{ $users->total() }} usuarios
+                                        </small>
+                                    </div>
+                                    <div>
+                                        {{ $users->appends(request()->query())->links() }}
+                                    </div>
                                 </div>
                             </div>
                             @else
@@ -198,4 +207,8 @@
     </div>
     <!-- Content wrapper scroll end -->
 @endsection
+
+
+
+
 
