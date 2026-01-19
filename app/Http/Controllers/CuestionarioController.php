@@ -1,0 +1,485 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\Cuestionario\DatosPersonalesRequest;
+use App\Http\Requests\Cuestionario\InformacionFamiliarRequest;
+use App\Http\Requests\Cuestionario\HistorialLaboralRequest;
+use App\Http\Requests\Cuestionario\SituacionEconomicaRequest;
+use App\Http\Requests\Cuestionario\AntecedentesRequest;
+use App\Models\EvaluadoOrden;
+use App\Models\Cuestionario;
+use App\Models\CuestionarioRespuesta;
+use App\Models\FormularioCampo;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+
+/**
+ * Controlador público para cuestionarios de evaluados
+ * 
+ * IMPORTANTE: Este controlador NO requiere autenticación
+ * Los evaluados acceden mediante token único
+ */
+class CuestionarioController extends Controller
+{
+    /**
+     * Mostrar página de verificación de identidad y acceso inicial
+     */
+    public function mostrar(string $token)
+    {
+        try {
+            // Buscar evaluado por token
+            $evaluado = EvaluadoOrden::where('token_unico', $token)
+                ->where('token_expira_at', '>', now())
+                ->with(['orden.empresa'])
+                ->firstOrFail();
+
+            // Verificar si ya completó el cuestionario
+            if ($evaluado->cuestionario_completado) {
+                return view('cuestionario.completado', compact('evaluado'));
+            }
+
+            // Registrar acceso (comentado temporalmente para debug)
+            // $evaluado->registrarAcceso();
+
+            // Verificar si ya existe un cuestionario iniciado
+            $cuestionario = $evaluado->cuestionario;
+            
+            // Comentado temporalmente para debug
+            // if (!$cuestionario) {
+            //     // Crear nuevo cuestionario
+            //     $cuestionario = $this->crearCuestionario($evaluado);
+            // }
+
+            // Redirigir a verificación de identidad
+            return view('cuestionario.verificar-identidad', compact('evaluado', 'token'));
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Token no encontrado o expirado
+            abort(404, 'El enlace al cuestionario no es válido o ha expirado.');
+        } catch (\Exception $e) {
+            Log::error('Error en cuestionario.mostrar', [
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            abort(500, 'Ha ocurrido un error al cargar el cuestionario.');
+        }
+    }
+
+    /**
+     * Verificar identidad del evaluado con DPI
+     */
+    public function verificarIdentidad(Request $request, string $token)
+    {
+        $request->validate([
+            'dpi_ingresado' => 'required|string|size:13|regex:/^[0-9]{13}$/',
+        ], [
+            'dpi_ingresado.required' => 'Debe ingresar su DPI.',
+            'dpi_ingresado.size' => 'El DPI debe tener exactamente 13 dígitos.',
+            'dpi_ingresado.regex' => 'El DPI solo puede contener números.',
+        ]);
+
+        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        $dpiIngresado = preg_replace('/[^0-9]/', '', $request->dpi_ingresado);
+
+        if ($dpiIngresado !== $evaluado->dpi) {
+            return back()->withErrors([
+                'dpi_ingresado' => 'El DPI ingresado no coincide con nuestros registros.'
+            ])->withInput();
+        }
+
+        // DPI correcto, crear cuestionario si no existe y redirigir
+        $cuestionario = $evaluado->cuestionario;
+        
+        if (!$cuestionario) {
+            // Crear nuevo cuestionario para este evaluado
+            $cuestionario = $evaluado->cuestionario()->create([
+                'tipo_formulario' => $evaluado->tipo_formulario ?? 'preempleo',
+                'seccion_actual' => 1,
+                'total_secciones' => 10, // TODO: Hacer configurable
+                'progreso_porcentaje' => 0,
+                'completado' => false,
+                'bloqueado' => false
+            ]);
+        }
+        
+        return redirect()->route('cuestionario.seccion', [
+            'token' => $token,
+            'numero' => $cuestionario->seccion_actual
+        ]);
+    }
+
+    /**
+     * Mostrar sección específica del cuestionario
+     */
+    public function seccion(string $token, int $numero)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->with(['orden.empresa'])
+            ->firstOrFail();
+        
+        // Verificar si el token está expirado
+        if ($evaluado->token_expira_at <= now()) {
+            return response()->json(['error' => 'Token expirado'], 403);
+        }
+        
+        // Verificar si ya completó el cuestionario
+        if ($evaluado->cuestionario_completado) {
+            return view('cuestionario.completado', compact('evaluado'));
+        }
+        
+        $cuestionario = $evaluado->cuestionario;
+
+        // Crear cuestionario si no existe
+        if (!$cuestionario) {
+            $cuestionario = $evaluado->cuestionario()->create([
+                'tipo_formulario' => $evaluado->tipo_formulario ?? 'preempleo',
+                'seccion_actual' => 1,
+                'total_secciones' => 10, // TODO: Hacer configurable
+                'progreso_porcentaje' => 0,
+                'completado' => false,
+                'bloqueado' => false
+            ]);
+        }
+
+        // Verificar que puede acceder a esta sección
+        if (!$cuestionario->puedeAvanzarASeccion($numero)) {
+            return redirect()->route('cuestionario.seccion', [
+                'token' => $token,
+                'numero' => $cuestionario->seccion_actual
+            ]);
+        }
+
+        // Obtener configuración de secciones
+        $secciones = $cuestionario->getSeccionesConfig();
+        $nombreSeccion = $secciones[$numero] ?? 'Sección ' . $numero;
+
+        // Obtener respuestas existentes para esta sección
+        $seccionSlug = $this->getSlugSeccion($numero, $cuestionario->tipo_formulario);
+        $respuestasExistentes = $cuestionario->getRespuestasPorSeccion($seccionSlug);
+
+        // Datos adicionales para la vista
+        $numeroSeccion = $numero;
+        $totalSecciones = count($secciones);
+        $tituloSeccion = $nombreSeccion;
+        $nombresSecciones = $secciones;
+        $iconoSeccion = $this->getIconoSeccion($numero);
+
+        // Variables adicionales para el layout
+        $currentSection = $numero;
+        $totalSections = count($secciones);
+
+        return view('cuestionario.seccion', compact(
+            'evaluado', 
+            'cuestionario', 
+            'token', 
+            'numero',
+            'numeroSeccion',
+            'totalSecciones',
+            'totalSections',
+            'currentSection',
+            'tituloSeccion',
+            'nombreSeccion', 
+            'secciones',
+            'nombresSecciones',
+            'respuestasExistentes',
+            'iconoSeccion'
+        ));
+    }
+
+    /**
+     * Guardar datos de una sección
+     */
+    public function guardarSeccion(Request $request, string $token, int $numero)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        $cuestionario = $evaluado->cuestionario;
+
+        // Validar según la sección
+        $datosValidados = $this->validarSeccion($request, $numero);
+
+        DB::beginTransaction();
+        try {
+            // Obtener slug de la sección
+            $seccionSlug = $this->getSlugSeccion($numero, $cuestionario->tipo_formulario);
+
+            // Guardar respuestas
+            CuestionarioRespuesta::guardarRespuestas(
+                $cuestionario->id, 
+                $seccionSlug, 
+                $datosValidados
+            );
+
+            // Actualizar progreso si es necesario
+            if ($numero >= $cuestionario->seccion_actual) {
+                $cuestionario->seccion_actual = min($numero + 1, $cuestionario->total_secciones);
+                $cuestionario->actualizarProgreso();
+            }
+
+            DB::commit();
+
+            // Verificar si es la última sección
+            $esUltimaSeccion = $numero >= $cuestionario->total_secciones;
+
+            if ($esUltimaSeccion) {
+                return redirect()->route('cuestionario.finalizar', ['token' => $token]);
+            }
+
+            // Redirigir a siguiente sección
+            return redirect()->route('cuestionario.seccion', [
+                'token' => $token,
+                'numero' => $numero + 1
+            ])->with('success', 'Sección guardada correctamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->withErrors(['error' => 'Error al guardar la información. Intente nuevamente.'])
+                ->withInput();
+        }
+    }
+
+    /**
+     * Mostrar página de finalización y firma digital
+     */
+    public function finalizar(string $token)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        $cuestionario = $evaluado->cuestionario;
+
+        // Verificar que completó todas las secciones
+        if ($cuestionario->seccion_actual < $cuestionario->total_secciones) {
+            return redirect()->route('cuestionario.seccion', [
+                'token' => $token,
+                'numero' => $cuestionario->seccion_actual
+            ]);
+        }
+
+        return view('cuestionario.finalizar', compact('evaluado', 'cuestionario', 'token'));
+    }
+
+    /**
+     * Completar cuestionario con firma digital
+     */
+    public function completar(Request $request, string $token)
+    {
+        $request->validate([
+            'firma_digital' => 'required|string',
+            'acepta_terminos' => 'required|accepted',
+        ], [
+            'firma_digital.required' => 'Debe proporcionar su firma digital.',
+            'acepta_terminos.accepted' => 'Debe aceptar los términos y condiciones.',
+        ]);
+
+        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        $cuestionario = $evaluado->cuestionario;
+
+        DB::beginTransaction();
+        try {
+            // Marcar cuestionario como completado
+            $cuestionario->marcarCompletado($request->ip());
+            $cuestionario->firma_digital = $request->firma_digital;
+            $cuestionario->save();
+
+            // Marcar evaluado como completado
+            $evaluado->cuestionario_completado = true;
+            $evaluado->cuestionario_completado_at = now();
+            $evaluado->ip_acceso = $request->ip();
+            $evaluado->save();
+
+            DB::commit();
+
+            // TODO: Enviar notificación a REPRO sobre cuestionario completado
+
+            return redirect()->route('cuestionario.completado', ['token' => $token]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->withErrors(['error' => 'Error al completar el cuestionario. Intente nuevamente.'])
+                ->withInput();
+        }
+    }
+
+    /**
+     * Mostrar página de cuestionario completado
+     */
+    public function completado(string $token)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        
+        if (!$evaluado->cuestionario_completado) {
+            return redirect()->route('cuestionario.mostrar', ['token' => $token]);
+        }
+
+        return view('cuestionario.completado', compact('evaluado'));
+    }
+
+    // ========================================
+    // Métodos privados auxiliares
+    // ========================================
+
+    /**
+     * Crear nuevo cuestionario para un evaluado
+     */
+    private function crearCuestionario(EvaluadoOrden $evaluado): Cuestionario
+    {
+        $tipoFormulario = $evaluado->tipo_formulario;
+        $secciones = $this->getSecciones($tipoFormulario);
+
+        return Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => $tipoFormulario,
+            'seccion_actual' => 1,
+            'total_secciones' => count($secciones),
+        ]);
+    }
+
+    /**
+     * Obtener configuración de secciones por tipo de formulario
+     */
+    private function getSecciones(string $tipo): array
+    {
+        $secciones = [
+            'preempleo' => [
+                1 => 'Datos Personales',
+                2 => 'Información Familiar', 
+                3 => 'Historial Laboral',
+                4 => 'Situación Económica',
+                5 => 'Antecedentes y Referencias',
+                6 => 'Firma Digital'
+            ],
+            'periodica' => [
+                1 => 'Actualización de Datos',
+                2 => 'Cambios Familiares',
+                3 => 'Situación Laboral Actual',
+                4 => 'Antecedentes Recientes',
+                5 => 'Firma Digital'
+            ],
+            'especifica' => [
+                1 => 'Datos Básicos',
+                2 => 'Situación Específica',
+                3 => 'Antecedentes Relevantes', 
+                4 => 'Firma Digital'
+            ],
+            'socioeconomico' => [
+                1 => 'Datos Personales',
+                2 => 'Información Familiar',
+                3 => 'Historial Laboral',
+                4 => 'Situación Económica Detallada',
+                5 => 'Situación Habitacional',
+                6 => 'Referencias Comunitarias',
+                7 => 'Verificación de Documentos',
+                8 => 'Firma Digital'
+            ]
+        ];
+        
+        return $secciones[$tipo] ?? [];
+    }
+
+    /**
+     * Obtener slug de sección para base de datos
+     */
+    private function getSlugSeccion(int $numero, string $tipo): string
+    {
+        $slugs = [
+            'preempleo' => [
+                1 => 'datos_personales',
+                2 => 'informacion_familiar',
+                3 => 'historial_laboral',
+                4 => 'situacion_economica',
+                5 => 'antecedentes',
+                6 => 'firma_digital'
+            ],
+            'periodica' => [
+                1 => 'actualizacion_datos',
+                2 => 'cambios_familiares',
+                3 => 'situacion_laboral',
+                4 => 'antecedentes_recientes',
+                5 => 'firma_digital'
+            ],
+            'especifica' => [
+                1 => 'datos_basicos',
+                2 => 'situacion_especifica',
+                3 => 'antecedentes_relevantes',
+                4 => 'firma_digital'
+            ],
+            'socioeconomico' => [
+                1 => 'datos_personales',
+                2 => 'informacion_familiar',
+                3 => 'historial_laboral',
+                4 => 'situacion_economica_detallada',
+                5 => 'situacion_habitacional',
+                6 => 'referencias_comunitarias',
+                7 => 'verificacion_documentos',
+                8 => 'firma_digital'
+            ]
+        ];
+
+        return $slugs[$tipo][$numero] ?? 'seccion_' . $numero;
+    }
+
+    /**
+     * Obtener vista para una sección específica
+     */
+    private function getVistaSeccion(int $numero): string
+    {
+        $vistas = [
+            1 => 'cuestionario.secciones.datos-personales',
+            2 => 'cuestionario.secciones.informacion-familiar',
+            3 => 'cuestionario.secciones.historial-laboral',
+            4 => 'cuestionario.secciones.situacion-economica',
+            5 => 'cuestionario.secciones.antecedentes',
+        ];
+
+        return $vistas[$numero] ?? 'cuestionario.secciones.generica';
+    }
+
+    /**
+     * Obtener icono FontAwesome para una sección específica
+     */
+    private function getIconoSeccion(int $numero): string
+    {
+        $iconos = [
+            1 => 'user',
+            2 => 'users',
+            3 => 'briefcase',
+            4 => 'dollar-sign',
+            5 => 'shield-alt',
+        ];
+
+        return $iconos[$numero] ?? 'file-alt';
+    }
+
+    /**
+     * Validar datos según la sección
+     */
+    private function validarSeccion(Request $request, int $numero): array
+    {
+        switch ($numero) {
+            case 1:
+                $formRequest = app(DatosPersonalesRequest::class);
+                break;
+            case 2:
+                $formRequest = app(InformacionFamiliarRequest::class);
+                break;
+            case 3:
+                $formRequest = app(HistorialLaboralRequest::class);
+                break;
+            case 4:
+                $formRequest = app(SituacionEconomicaRequest::class);
+                break;
+            case 5:
+                $formRequest = app(AntecedentesRequest::class);
+                break;
+            default:
+                return $request->all();
+        }
+
+        return $request->validate($formRequest->rules(), $formRequest->messages());
+    }
+}

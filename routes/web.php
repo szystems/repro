@@ -10,6 +10,9 @@ use App\Http\Controllers\Admin\ConfigController;
 use App\Http\Controllers\Admin\OrdenesController;
 use App\Http\Controllers\Admin\RolesController;
 
+//cuestionarios
+use App\Http\Controllers\CuestionarioController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -107,6 +110,18 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         // Solo admin y repro pueden acceder a todas las órdenes y estadísticas
         Route::get('ordenes-resumen', [OrdenesController::class, 'resumen'])->name('ordenes.resumen');
     });
+    
+    // ========================================
+    // ADMINISTRACIÓN DE CUESTIONARIOS (ADMIN Y REPRO)
+    // ========================================
+    Route::middleware(['role:admin,repro'])->prefix('cuestionarios')->name('admin.cuestionarios.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\CuestionariosController::class, 'index'])->name('index');
+        Route::get('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'show'])->name('show');
+        Route::get('/{cuestionario}/editar', [App\Http\Controllers\Admin\CuestionariosController::class, 'edit'])->name('edit');
+        Route::put('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'update'])->name('update');
+        Route::get('/{cuestionario}/pdf', [App\Http\Controllers\Admin\CuestionariosController::class, 'generarPDF'])->name('pdf');
+        Route::post('/{cuestionario}/completar', [App\Http\Controllers\Admin\CuestionariosController::class, 'marcarCompleto'])->name('completar');
+    });
 });
 
 // Ruta de cambio de contraseña disponible para todos los usuarios autenticados
@@ -120,3 +135,48 @@ Route::post('/logout', function () {
     request()->session()->regenerateToken();
     return redirect('/');
 })->name('logout');
+
+// ========================================
+// RUTAS PÚBLICAS DE CUESTIONARIOS (SIN AUTENTICACIÓN)
+// ========================================
+
+// Ruta de prueba para verificar cuestionarios
+Route::get('/test-cuestionario/{token}', function($token) {
+    $evaluado = \App\Models\EvaluadoOrden::where('token_unico', $token)->first();
+    if ($evaluado) {
+        return response()->json([
+            'status' => 'success',
+            'token' => $token,
+            'evaluado' => $evaluado->nombre . ' ' . $evaluado->apellidos,
+            'dpi' => $evaluado->dpi,
+            'expira' => $evaluado->token_expira_at,
+            'completado' => $evaluado->cuestionario_completado
+        ]);
+    } else {
+        return response()->json(['status' => 'error', 'message' => 'Token no encontrado']);
+    }
+});
+
+Route::prefix('cuestionario')->name('cuestionario.')->group(function () {
+    // Acceso inicial con token
+    Route::get('/{token}', [CuestionarioController::class, 'mostrar'])->name('mostrar');
+    
+    // Verificación de identidad
+    Route::post('/{token}/verificar', [CuestionarioController::class, 'verificarIdentidad'])->name('verificar');
+    
+    // Navegación por secciones
+    Route::get('/{token}/seccion/{numero}', [CuestionarioController::class, 'seccion'])
+        ->name('seccion')
+        ->where('numero', '[0-9]+');
+    
+    Route::post('/{token}/seccion/{numero}', [CuestionarioController::class, 'guardarSeccion'])
+        ->name('guardar-seccion')
+        ->where('numero', '[0-9]+');
+    
+    // Finalización y firma
+    Route::get('/{token}/finalizar', [CuestionarioController::class, 'finalizar'])->name('finalizar');
+    Route::post('/{token}/completar', [CuestionarioController::class, 'completar'])->name('completar');
+    
+    // Página de completado
+    Route::get('/{token}/completado', [CuestionarioController::class, 'completado'])->name('completado');
+});

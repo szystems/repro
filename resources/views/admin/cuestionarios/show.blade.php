@@ -1,0 +1,363 @@
+@extends('layouts.admin')
+
+@section('title', 'Detalle del Cuestionario #' . $cuestionario->id)
+
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            {{-- Header con acciones --}}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">
+                            <i class="bi bi-clipboard-check"></i> 
+                            Cuestionario #{{ $cuestionario->id }}
+                        </h3>
+                        <small class="text-muted">
+                            {{ $cuestionario->evaluadoOrden->nombre }} {{ $cuestionario->evaluadoOrden->apellidos }}
+                        </small>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver al Listado
+                        </a>
+                        @if($cuestionario->estado != 'completado')
+                            <a href="{{ route('admin.cuestionarios.edit', $cuestionario) }}" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                        @endif
+                        <a href="{{ route('admin.cuestionarios.pdf', $cuestionario) }}" class="btn btn-success" target="_blank">
+                            <i class="bi bi-file-earmark-pdf"></i> Generar PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            {{-- Información general --}}
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                @switch($cuestionario->estado)
+                                    @case('pendiente')
+                                        <i class="bi bi-clock fs-1 text-warning"></i>
+                                        <h5 class="mt-2 text-warning">Pendiente</h5>
+                                        @break
+                                    @case('en_progreso')
+                                        <i class="bi bi-pencil-square fs-1 text-info"></i>
+                                        <h5 class="mt-2 text-info">En Progreso</h5>
+                                        @break
+                                    @case('completado')
+                                        <i class="bi bi-check-circle fs-1 text-success"></i>
+                                        <h5 class="mt-2 text-success">Completado</h5>
+                                        @break
+                                @endswitch
+                            </div>
+                            <div class="progress mb-3" style="height: 25px;">
+                                @php $progreso = $cuestionario->calcularProgreso(); @endphp
+                                <div class="progress-bar 
+                                    @if($progreso < 25) bg-danger 
+                                    @elseif($progreso < 75) bg-warning 
+                                    @else bg-success @endif" 
+                                     role="progressbar" 
+                                     style="width: {{ $progreso }}%">
+                                    {{ $progreso }}%
+                                </div>
+                            </div>
+                            <p class="mb-0">{{ $cuestionario->seccion_actual }} de {{ $cuestionario->total_secciones }} secciones completadas</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-9">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-person"></i> Información del Evaluado</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Nombre:</strong></td>
+                                            <td>{{ $cuestionario->evaluadoOrden->nombre }} {{ $cuestionario->evaluadoOrden->apellidos }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>DPI:</strong></td>
+                                            <td>{{ $cuestionario->evaluadoOrden->dpi }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Email:</strong></td>
+                                            <td>{{ $cuestionario->evaluadoOrden->email ?? 'No proporcionado' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Teléfono:</strong></td>
+                                            <td>{{ $cuestionario->evaluadoOrden->telefono ?? 'No proporcionado' }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-building"></i> Información de la Evaluación</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Empresa:</strong></td>
+                                            <td>{{ $cuestionario->evaluadoOrden->orden->empresa->nombre }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Puesto:</strong></td>
+                                            <td>{{ $cuestionario->evaluadoOrden->puesto_evaluar ?? 'No especificado' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Orden #:</strong></td>
+                                            <td>{{ $cuestionario->evaluadoOrden->orden->id }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Tipo de Servicio:</strong></td>
+                                            <td>{{ ucfirst($cuestionario->evaluadoOrden->tipo_servicio) }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-calendar3"></i> Fechas Importantes</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Creado:</strong></td>
+                                            <td>{{ $cuestionario->created_at->format('d/m/Y H:i:s') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Última actualización:</strong></td>
+                                            <td>{{ $cuestionario->updated_at->format('d/m/Y H:i:s') }}</td>
+                                        </tr>
+                                        @if($cuestionario->completado_at)
+                                            <tr>
+                                                <td><strong>Completado:</strong></td>
+                                                <td class="text-success">{{ $cuestionario->completado_at->format('d/m/Y H:i:s') }}</td>
+                                            </tr>
+                                        @endif
+                                    </table>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-link-45deg"></i> Acceso del Evaluado</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Token:</strong></td>
+                                            <td>
+                                                <code>{{ substr($cuestionario->evaluadoOrden->token_unico, 0, 12) }}...</code>
+                                                <button class="btn btn-sm btn-outline-secondary ms-2" 
+                                                        onclick="copiarToken('{{ $cuestionario->evaluadoOrden->token_unico }}')">
+                                                    <i class="bi bi-clipboard"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Enlace:</strong></td>
+                                            <td>
+                                                <a href="{{ route('cuestionario.mostrar', $cuestionario->evaluadoOrden->token_unico) }}" 
+                                                   target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-box-arrow-up-right"></i> Abrir
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        @if($cuestionario->evaluadoOrden->token_expira_at)
+                                            <tr>
+                                                <td><strong>Expira:</strong></td>
+                                                <td class="text-warning">{{ $cuestionario->evaluadoOrden->token_expira_at->format('d/m/Y H:i') }}</td>
+                                            </tr>
+                                        @endif
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {{-- Contenido de las secciones --}}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-ul"></i> Contenido del Cuestionario
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {{-- Navegación por pestañas --}}
+                            <ul class="nav nav-tabs" id="seccionesTabs" role="tablist">
+                                @for($i = 1; $i <= 5; $i++)
+                                    @php
+                                        $seccion = $secciones[$i] ?? null;
+                                        $completada = $seccion && $cuestionario->progreso_secciones[$i] ?? false;
+                                    @endphp
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link {{ $i == 1 ? 'active' : '' }} {{ $completada ? 'text-success' : 'text-muted' }}" 
+                                                id="seccion{{ $i }}-tab" 
+                                                data-bs-toggle="tab" 
+                                                data-bs-target="#seccion{{ $i }}" 
+                                                type="button" 
+                                                role="tab">
+                                            @if($completada)
+                                                <i class="bi bi-check-circle-fill"></i>
+                                            @else
+                                                <i class="bi bi-circle"></i>
+                                            @endif
+                                            Sección {{ $i }}
+                                        </button>
+                                    </li>
+                                @endfor
+                            </ul>
+                            
+                            {{-- Contenido de las pestañas --}}
+                            <div class="tab-content mt-3" id="seccionesTabContent">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <div class="tab-pane fade {{ $i == 1 ? 'show active' : '' }}" 
+                                         id="seccion{{ $i }}" 
+                                         role="tabpanel">
+                                        @include('admin.cuestionarios.partials.seccion_' . $i, [
+                                            'respuestas' => $cuestionario->obtenerRespuestasSeccion($i),
+                                            'completada' => $cuestionario->progreso_secciones[$i] ?? false
+                                        ])
+                                    </div>
+                                @endfor
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {{-- Firma digital --}}
+            @if($cuestionario->firma_digital)
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-pen"></i> Firma Digital
+                                </h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <img src="{{ $cuestionario->firma_digital }}" 
+                                     alt="Firma Digital" 
+                                     class="img-fluid border rounded p-3" 
+                                     style="max-height: 200px; background: white;">
+                                <p class="mt-2 text-muted">
+                                    Firmado el {{ $cuestionario->completado_at?->format('d/m/Y \a \l\a\s H:i:s') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+            
+            {{-- Observaciones administrativas --}}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-sticky"></i> Observaciones Administrativas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ route('admin.cuestionarios.update', $cuestionario) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                
+                                <div class="form-group">
+                                    <label for="observaciones_repro" class="form-label">Notas internas</label>
+                                    <textarea class="form-control" 
+                                              id="observaciones_repro" 
+                                              name="observaciones_repro" 
+                                              rows="4" 
+                                              placeholder="Agregue observaciones, notas o comentarios sobre este cuestionario...">{{ $cuestionario->observaciones_repro }}</textarea>
+                                    <small class="form-text text-muted">
+                                        Estas observaciones son solo para uso interno de REPRO
+                                    </small>
+                                </div>
+                                
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-floppy"></i> Guardar Observaciones
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+function copiarToken(token) {
+    navigator.clipboard.writeText(token).then(function() {
+        // Mostrar notificación de éxito
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+        
+        Toast.fire({
+            icon: 'success',
+            title: 'Token copiado al portapapeles'
+        });
+    }).catch(function(err) {
+        console.error('Error al copiar token: ', err);
+        alert('Error al copiar el token');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Mejorar navegación por pestañas
+    const tabs = document.querySelectorAll('#seccionesTabs button[data-bs-toggle="tab"]');
+    tabs.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(event) {
+            // Opcional: trackear qué sección está viendo el admin
+            const seccionId = event.target.getAttribute('data-bs-target');
+            console.log('Visualizando: ' + seccionId);
+        });
+    });
+});
+</script>
+@endpush
+
+@push('styles')
+<style>
+.nav-tabs .nav-link.text-success {
+    border-color: #28a745;
+}
+
+.nav-tabs .nav-link.active.text-success {
+    color: #28a745 !important;
+    border-bottom-color: #28a745;
+}
+
+.table-sm td {
+    border-top: none;
+    padding: 0.3rem;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+code {
+    font-size: 0.9em;
+    padding: 0.2rem 0.4rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+}
+</style>
+@endpush

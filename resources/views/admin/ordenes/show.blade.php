@@ -388,11 +388,39 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if(!$evaluado->cuestionario_completado)
-                                            <a href="#" class="btn btn-outline-primary btn-sm" title="Enviar enlace">
-                                                <i class="bi bi-send"></i>
-                                            </a>
-                                            @endif
+                                            <div class="btn-group" role="group">
+                                                @php
+                                                    $cuestionario = $evaluado->cuestionario;
+                                                @endphp
+                                                
+                                                @if($cuestionario)
+                                                    {{-- Cuestionario existe --}}
+                                                    @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                                                        <a href="{{ route('admin.cuestionarios.show', $cuestionario->id) }}" 
+                                                           class="btn btn-outline-info btn-sm" 
+                                                           title="Ver Cuestionario">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                        <a href="{{ route('admin.cuestionarios.edit', $cuestionario->id) }}" 
+                                                           class="btn btn-outline-warning btn-sm" 
+                                                           title="Editar Cuestionario">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                    @endif
+                                                @else
+                                                    {{-- No hay cuestionario --}}
+                                                    <span class="text-muted small">Sin cuestionario</span>
+                                                @endif
+                                                
+                                                @if(!$evaluado->cuestionario_completado)
+                                                    <a href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}" 
+                                                       class="btn btn-outline-primary btn-sm" 
+                                                       title="Enlace del Evaluado" 
+                                                       target="_blank">
+                                                        <i class="bi bi-link-45deg"></i>
+                                                    </a>
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                     @endforeach

@@ -35,6 +35,15 @@
 		<!-- Login css -->
 		<link rel="stylesheet" href="{{ asset('dashboardtemplate/design/assets/css/login.css') }}" />
 
+		<!-- Font Awesome -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+		<!-- SweetAlert2 -->
+		<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+		<!-- Cuestionario Custom CSS -->
+		<link href="{{ asset('css/cuestionario.css') }}" rel="stylesheet">
+
         <style>
             .custom-bg {
                 background-color: #b6becc; /* Un color gris claro */
@@ -75,10 +84,30 @@
             }
         </style>
 
+        <!-- CSRF Token -->
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        
         <!-- Auth scripts -->
         <script src="{{ asset('js/auth.js') }}" defer></script>
+        
+        @stack('styles')
 	</head>
 
-    @yield('content')
+	<body class="@if(request()->is('admin/cuestionarios*')) admin-cuestionarios @endif">
+		@yield('content')
+		
+		<!-- Bootstrap JS -->
+		<script src="{{ asset('dashboardtemplate/design/assets/js/bootstrap.bundle.min.js') }}"></script>
+		
+		<!-- SweetAlert2 -->
+		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+		
+		<!-- Admin Cuestionarios JavaScript -->
+		@if(request()->is('admin/cuestionarios*'))
+			<script src="{{ asset('js/admin-cuestionarios.js') }}"></script>
+		@endif
+		
+		@stack('scripts')
+	</body>
 
 </html>

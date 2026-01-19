@@ -46,16 +46,10 @@ class EvaluadoOrden extends Model
         'notas_poligrafo',
         'token_unico',
         'token_expira_at',
-        'token_usado_at',
         'cuestionario_completado',
-        'completado_at',
-        'firma_digital',
-        'ip_completado',
-        'user_agent',
-        'intentos_acceso',
+        'cuestionario_completado_at',
+        'ip_acceso',
         'notas',
-        'notificado',
-        'notificado_at',
     ];
 
     /**
@@ -143,13 +137,14 @@ class EvaluadoOrden extends Model
 
     /**
      * Evaluaciones realizadas a este evaluado
+     * TODO: Crear modelo Evaluacion en el siguiente módulo
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function evaluaciones()
-    {
-        return $this->hasMany(Evaluacion::class, 'evaluado_orden_id');
-    }
+    // public function evaluaciones()
+    // {
+    //     return $this->hasMany(Evaluacion::class, 'evaluado_orden_id');
+    // }
 
     // ========================================
     // Scopes
@@ -284,7 +279,7 @@ class EvaluadoOrden extends Model
     public static function historialPorDpi(string $dpi)
     {
         return self::where('dpi', $dpi)
-            ->with(['orden.empresa', 'cuestionario', 'evaluaciones'])
+            ->with(['orden.empresa', 'cuestionario']) // TODO: agregar 'evaluaciones' cuando se cree el modelo
             ->orderBy('created_at', 'desc')
             ->get();
     }
