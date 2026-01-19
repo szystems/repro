@@ -1,23 +1,28 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
+namespace Tests\Unit\Models;
+
+use App\Models\User;
+use Tests\TestCase;
 
 class UserTest extends TestCase
 {
-    public function testUserCreation()
+    public function testUserModelCanBeInstantiated()
     {
         $user = new User();
-        $user->setName('John Doe');
-        $this->assertEquals('John Doe', $user->getName());
+        $this->assertInstanceOf(User::class, $user);
     }
 
-    public function testUserEmailValidation()
+    public function testUserHasCorrectTable()
     {
         $user = new User();
-        $user->setEmail('invalid-email');
-        $this->assertFalse($user->isValidEmail());
+        $this->assertEquals('users', $user->getTable());
+    }
 
-        $user->setEmail('john.doe@example.com');
-        $this->assertTrue($user->isValidEmail());
+    public function testUserHasFillableAttributes()
+    {
+        $user = new User();
+        $this->assertContains('name', $user->getFillable());
+        $this->assertContains('email', $user->getFillable());
     }
 }

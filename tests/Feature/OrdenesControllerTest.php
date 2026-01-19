@@ -173,8 +173,6 @@ class OrdenesControllerTest extends TestCase
         // Actualizar orden
         $datosActualizados = [
             'empresa_id' => $empresa->id,
-            'tipo_servicio' => 'vsa',
-            'tipo_formulario' => 'periodica',
             'observaciones' => 'Orden actualizada',
             'evaluados' => [
                 [
@@ -182,7 +180,9 @@ class OrdenesControllerTest extends TestCase
                     'apellidos' => 'García López',
                     'dpi' => '2345678901234',
                     'email' => 'juan.actualizado@example.com',
-                    'telefono' => '55441122'
+                    'telefono' => '55441122',
+                    'tipo_servicio' => 'vsa',
+                    'tipo_formulario' => 'periodica'
                 ]
             ]
         ];
@@ -194,8 +194,11 @@ class OrdenesControllerTest extends TestCase
         
         // Verificar actualización
         $orden->refresh();
-        $this->assertEquals('vsa', $orden->tipo_servicio);
-        $this->assertEquals('periodica', $orden->tipo_formulario);
         $this->assertEquals('Orden actualizada', $orden->observaciones);
+        
+        // Verificar evaluado actualizado
+        $evaluado = $orden->evaluados()->first();
+        $this->assertEquals('vsa', $evaluado->tipo_servicio);
+        $this->assertEquals('periodica', $evaluado->tipo_formulario);
     }
 }

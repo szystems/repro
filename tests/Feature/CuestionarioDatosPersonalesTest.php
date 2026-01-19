@@ -31,6 +31,11 @@ class CuestionarioDatosPersonalesTest extends TestCase
     {
         $evaluado = $this->crearEvaluadoValido();
 
+        // Primero verificar identidad
+        $this->post("/cuestionario/{$evaluado->token_unico}/verificar", [
+            'dpi_ingresado' => '1234567890101'
+        ]);
+
         $datosFormulario = [
             'nombres_completos' => 'Juan Carlos',
             'apellidos_completos' => 'Pérez García',
@@ -101,6 +106,11 @@ class CuestionarioDatosPersonalesTest extends TestCase
     public function test_acepta_dpi_correcto_del_evaluado(): void
     {
         $evaluado = $this->crearEvaluadoValido();
+        
+        // Primero verificar el DPI para establecer sesión
+        $this->post("/cuestionario/{$evaluado->token_unico}/verificar", [
+            'dpi_ingresado' => $evaluado->dpi
+        ]);
         
         $datosFormulario = [
             'nombres_completos' => 'Juan Carlos',

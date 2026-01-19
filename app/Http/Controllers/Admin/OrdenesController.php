@@ -319,15 +319,23 @@ class OrdenesController extends Controller
         DB::beginTransaction();
         
         try {
-            // Actualizar datos básicos de la orden
+            // Actualizar datos básicos de la orden - solo campos que vienen en el request
             $datosOrden = [
-                'observaciones' => $validated['observaciones'] ?? null,
-                'prioridad' => $validated['prioridad'] ?? 'normal',
-                'fecha_limite' => $validated['fecha_limite'] ?? null,
-                'fecha_solicitud' => $validated['fecha_solicitud'] ?? null,
-                'instrucciones_generales' => $validated['instrucciones_generales'] ?? null,
-                'poligrafista_id' => $validated['poligrafista_id'] ?? null,
+                'observaciones' => $validated['observaciones'] ?? $orden->observaciones,
+                'prioridad' => $validated['prioridad'] ?? $orden->prioridad ?? 'normal',
+                'instrucciones_generales' => $validated['instrucciones_generales'] ?? $orden->instrucciones_generales,
             ];
+            
+            // Solo actualizar estos campos si vienen explícitamente en el request
+            if (isset($validated['fecha_limite'])) {
+                $datosOrden['fecha_limite'] = $validated['fecha_limite'];
+            }
+            if (isset($validated['fecha_solicitud'])) {
+                $datosOrden['fecha_solicitud'] = $validated['fecha_solicitud'];
+            }
+            if (isset($validated['poligrafista_id'])) {
+                $datosOrden['poligrafista_id'] = $validated['poligrafista_id'];
+            }
             
             if (Auth::user()->hasAnyRole(['admin', 'repro'])) {
                 $datosOrden['empresa_id'] = $validated['empresa_id'];
