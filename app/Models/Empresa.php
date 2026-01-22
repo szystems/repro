@@ -59,6 +59,14 @@ class Empresa extends Model
     }
 
     /**
+     * Relación con órdenes de evaluación
+     */
+    public function ordenes()
+    {
+        return $this->hasMany(Orden::class, 'empresa_id', 'id');
+    }
+
+    /**
      * Obtener el estado en formato legible
      */
     public function getEstadoTexto()

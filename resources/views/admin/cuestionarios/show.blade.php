@@ -22,11 +22,9 @@
                         <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left"></i> Volver al Listado
                         </a>
-                        @if($cuestionario->estado != 'completado')
-                            <a href="{{ route('admin.cuestionarios.edit', $cuestionario) }}" class="btn btn-primary">
-                                <i class="bi bi-pencil"></i> Editar
-                            </a>
-                        @endif
+                        <a href="{{ route('admin.cuestionarios.edit', $cuestionario) }}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
                         <a href="{{ route('admin.cuestionarios.pdf', $cuestionario) }}" class="btn btn-success" target="_blank">
                             <i class="bi bi-file-earmark-pdf"></i> Generar PDF
                         </a>
@@ -145,28 +143,54 @@
                                     <h6><i class="bi bi-link-45deg"></i> Acceso del Evaluado</h6>
                                     <table class="table table-sm">
                                         <tr>
-                                            <td><strong>Token:</strong></td>
-                                            <td>
-                                                <code>{{ substr($cuestionario->evaluadoOrden->token_unico, 0, 12) }}...</code>
-                                                <button class="btn btn-sm btn-outline-secondary ms-2" 
-                                                        onclick="copiarToken('{{ $cuestionario->evaluadoOrden->token_unico }}')">
-                                                    <i class="bi bi-clipboard"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr>
                                             <td><strong>Enlace:</strong></td>
                                             <td>
                                                 <a href="{{ route('cuestionario.mostrar', $cuestionario->evaluadoOrden->token_unico) }}" 
                                                    target="_blank" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-box-arrow-up-right"></i> Abrir
+                                                    <i class="bi bi-box-arrow-up-right"></i> Abrir Cuestionario
                                                 </a>
+                                                <button class="btn btn-sm btn-outline-secondary ms-1" 
+                                                        onclick="copiarEnlace('{{ route('cuestionario.mostrar', $cuestionario->evaluadoOrden->token_unico) }}')"
+                                                        title="Copiar enlace al portapapeles">
+                                                    <i class="bi bi-clipboard"></i> Copiar
+                                                </button>
                                             </td>
                                         </tr>
                                         @if($cuestionario->evaluadoOrden->token_expira_at)
+                                            @php
+                                                $fechaExpira = $cuestionario->evaluadoOrden->token_expira_at;
+                                                $diasRestantes = now()->diffInDays($fechaExpira, false);
+                                                $yaExpiro = $fechaExpira->isPast();
+                                                $cuestionarioCompletado = $cuestionario->completado;
+                                            @endphp
                                             <tr>
                                                 <td><strong>Expira:</strong></td>
-                                                <td class="text-warning">{{ $cuestionario->evaluadoOrden->token_expira_at->format('d/m/Y H:i') }}</td>
+                                                <td>
+                                                    @if($cuestionarioCompletado)
+                                                        <span class="text-success">
+                                                            <i class="bi bi-check-circle"></i> Completado
+                                                        </span>
+                                                    @elseif($yaExpiro)
+                                                        <span class="text-danger">
+                                                            <i class="bi bi-x-circle"></i> Expirado el {{ $fechaExpira->format('d/m/Y H:i') }}
+                                                        </span>
+                                                    @elseif($diasRestantes <= 3)
+                                                        <span class="text-danger">
+                                                            <i class="bi bi-exclamation-triangle"></i> {{ $fechaExpira->format('d/m/Y H:i') }}
+                                                            <small>({{ $diasRestantes }} días restantes)</small>
+                                                        </span>
+                                                    @elseif($diasRestantes <= 7)
+                                                        <span class="text-warning">
+                                                            <i class="bi bi-clock"></i> {{ $fechaExpira->format('d/m/Y H:i') }}
+                                                            <small>({{ $diasRestantes }} días restantes)</small>
+                                                        </span>
+                                                    @else
+                                                        <span class="text-success">
+                                                            <i class="bi bi-clock"></i> {{ $fechaExpira->format('d/m/Y H:i') }}
+                                                            <small>({{ $diasRestantes }} días restantes)</small>
+                                                        </span>
+                                                    @endif
+                                                </td>
                                             </tr>
                                         @endif
                                     </table>
@@ -189,10 +213,13 @@
                         <div class="card-body">
                             {{-- Navegación por pestañas --}}
                             <ul class="nav nav-tabs" id="seccionesTabs" role="tablist">
-                                @for($i = 1; $i <= 5; $i++)
+                                @php
+                                    $totalSeccionesForm = count($secciones);
+                                @endphp
+                                @for($i = 1; $i <= $totalSeccionesForm; $i++)
                                     @php
-                                        $seccion = $secciones[$i] ?? null;
-                                        $completada = $seccion && $cuestionario->progreso_secciones[$i] ?? false;
+                                        $nombreSeccion = $secciones[$i] ?? 'Sección ' . $i;
+                                        $completada = $cuestionario->progreso_secciones[$i] ?? false;
                                     @endphp
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link {{ $i == 1 ? 'active' : '' }} {{ $completada ? 'text-success' : 'text-muted' }}" 
@@ -200,13 +227,14 @@
                                                 data-bs-toggle="tab" 
                                                 data-bs-target="#seccion{{ $i }}" 
                                                 type="button" 
-                                                role="tab">
+                                                role="tab"
+                                                title="{{ $nombreSeccion }}">
                                             @if($completada)
                                                 <i class="bi bi-check-circle-fill"></i>
                                             @else
                                                 <i class="bi bi-circle"></i>
                                             @endif
-                                            Sección {{ $i }}
+                                            {{ $i }}. {{ $nombreSeccion }}
                                         </button>
                                     </li>
                                 @endfor
@@ -214,14 +242,35 @@
                             
                             {{-- Contenido de las pestañas --}}
                             <div class="tab-content mt-3" id="seccionesTabContent">
-                                @for($i = 1; $i <= 5; $i++)
+                                @for($i = 1; $i <= $totalSeccionesForm; $i++)
                                     <div class="tab-pane fade {{ $i == 1 ? 'show active' : '' }}" 
                                          id="seccion{{ $i }}" 
                                          role="tabpanel">
-                                        @include('admin.cuestionarios.partials.seccion_' . $i, [
-                                            'respuestas' => $cuestionario->obtenerRespuestasSeccion($i),
-                                            'completada' => $cuestionario->progreso_secciones[$i] ?? false
-                                        ])
+                                        @if(View::exists('admin.cuestionarios.partials.seccion_' . $i))
+                                            @include('admin.cuestionarios.partials.seccion_' . $i, [
+                                                'respuestas' => $cuestionario->obtenerRespuestasSeccion($i),
+                                                'completada' => $cuestionario->progreso_secciones[$i] ?? false,
+                                                'nombreSeccion' => $secciones[$i] ?? 'Sección ' . $i
+                                            ])
+                                        @else
+                                            {{-- Vista genérica para secciones sin partial específico --}}
+                                            <div class="alert alert-info">
+                                                <h6><i class="bi bi-info-circle"></i> {{ $secciones[$i] ?? 'Sección ' . $i }}</h6>
+                                                @php $respuestasSeccion = $cuestionario->obtenerRespuestasSeccion($i); @endphp
+                                                @if(count($respuestasSeccion) > 0)
+                                                    <table class="table table-sm table-striped mt-2">
+                                                        @foreach($respuestasSeccion as $campo => $valor)
+                                                            <tr>
+                                                                <td class="fw-bold" style="width: 30%;">{{ ucfirst(str_replace('_', ' ', $campo)) }}:</td>
+                                                                <td>{{ is_array($valor) ? json_encode($valor) : $valor }}</td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </table>
+                                                @else
+                                                    <p class="text-muted mb-0">No hay datos registrados en esta sección.</p>
+                                                @endif
+                                            </div>
+                                        @endif
                                     </div>
                                 @endfor
                             </div>
@@ -297,9 +346,48 @@
 
 @push('scripts')
 <script>
-function copiarToken(token) {
-    navigator.clipboard.writeText(token).then(function() {
-        // Mostrar notificación de éxito
+function copiarEnlace(texto) {
+    // Método moderno con fallback
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(texto).then(function() {
+            mostrarNotificacion('success', 'Enlace copiado al portapapeles');
+        }).catch(function(err) {
+            console.error('Error al copiar: ', err);
+            copiarFallback(texto);
+        });
+    } else {
+        // Fallback para contextos no seguros (HTTP)
+        copiarFallback(texto);
+    }
+}
+
+function copiarFallback(texto) {
+    const textArea = document.createElement('textarea');
+    textArea.value = texto;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const exitoso = document.execCommand('copy');
+        if (exitoso) {
+            mostrarNotificacion('success', 'Enlace copiado al portapapeles');
+        } else {
+            mostrarNotificacion('error', 'No se pudo copiar el enlace');
+        }
+    } catch (err) {
+        console.error('Error al copiar: ', err);
+        mostrarNotificacion('error', 'Error al copiar el enlace');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function mostrarNotificacion(tipo, mensaje) {
+    if (typeof Swal !== 'undefined') {
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -309,13 +397,12 @@ function copiarToken(token) {
         });
         
         Toast.fire({
-            icon: 'success',
-            title: 'Token copiado al portapapeles'
+            icon: tipo,
+            title: mensaje
         });
-    }).catch(function(err) {
-        console.error('Error al copiar token: ', err);
-        alert('Error al copiar el token');
-    });
+    } else {
+        alert(mensaje);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

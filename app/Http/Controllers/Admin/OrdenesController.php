@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OrdenFormRequest;
+use App\Mail\EvaluadoAsignadoMail;
 use App\Models\Orden;
 use App\Models\EvaluadoOrden;
 use App\Models\Empresa;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -395,12 +397,13 @@ class OrdenesController extends Controller
     public function cambiarEstado(Request $request, Orden $orden)
     {
         $request->validate([
-            'nuevo_estado' => 'required|in:pendiente,programada,en_proceso,analisis,preliminar,final,entregado,cancelado',
+            'nuevo_estado' => 'required|in:solicitud,autorizacion,requisito,programacion,en_proceso,analisis,preliminar,final,entregado,cancelado',
             'observaciones' => 'nullable|string|max:500'
         ]);
 
         if (!$orden->puedeTransicionarA($request->nuevo_estado)) {
-            return back()->with('error', 'Transición de estado no válida.');
+            $estadoActualTexto = $orden->getEstadoTexto();
+            return back()->with('error', "No se puede cambiar de '{$estadoActualTexto}' a '{$request->nuevo_estado}'. Transición no permitida.");
         }
 
         $estadoAnterior = $orden->estado;
@@ -460,6 +463,9 @@ class OrdenesController extends Controller
             } else {
                 $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
                 Log::info('Evaluado creado con ID: ' . $evaluadoCreado->id);
+                
+                // Enviar notificación al evaluado si tiene email
+                $this->notificarEvaluadoAsignado($evaluadoCreado);
             }
         }
         
@@ -468,6 +474,39 @@ class OrdenesController extends Controller
 
         if ($esActualizacion && !empty($evaluadosExistentes)) {
             EvaluadoOrden::whereIn('id', $evaluadosExistentes)->delete();
+        }
+    }
+
+    /**
+     * Enviar notificación por email al evaluado cuando es asignado a una orden.
+     */
+    private function notificarEvaluadoAsignado(EvaluadoOrden $evaluado): void
+    {
+        try {
+            if (empty($evaluado->email)) {
+                Log::info('Evaluado sin email, no se envía notificación', [
+                    'evaluado_id' => $evaluado->id,
+                ]);
+                return;
+            }
+
+            // Cargar relaciones necesarias
+            $evaluado->load('orden.empresa');
+
+            Mail::to($evaluado->email)
+                ->queue(new EvaluadoAsignadoMail($evaluado));
+
+            Log::info('Notificación de asignación enviada', [
+                'evaluado_id' => $evaluado->id,
+                'email' => $evaluado->email,
+            ]);
+
+        } catch (\Exception $e) {
+            // No fallar el flujo principal si la notificación falla
+            Log::error('Error enviando notificación de asignación', [
+                'evaluado_id' => $evaluado->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -509,5 +548,91 @@ class OrdenesController extends Controller
         }
 
         return false;
+    }
+
+    /**
+     * Generar PDF de la orden
+     */
+    public function pdf(Orden $orden)
+    {
+        // Verificar permisos
+        if (!$this->usuarioPuedeVerOrden($orden)) {
+            abort(403, 'No tienes permisos para ver esta orden.');
+        }
+
+        // Cargar relaciones necesarias
+        $orden->load(['empresa', 'creador', 'evaluados.poligrafista']);
+
+        $estados = [
+            'solicitud' => 'Solicitud',
+            'autorizacion' => 'Autorización',
+            'requisito' => 'Requisito',
+            'programacion' => 'Programación',
+            'en_proceso' => 'En Proceso',
+            'analisis' => 'En Análisis',
+            'preliminar' => 'Reporte Preliminar',
+            'final' => 'Reporte Final',
+            'entregado' => 'Entregado',
+            'cancelado' => 'Cancelado'
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf', compact('orden', 'estados'));
+        
+        return $pdf->stream('orden-' . $orden->codigo_orden . '.pdf');
+    }
+
+    /**
+     * Reenviar correo de asignación a un evaluado.
+     */
+    public function reenviarCorreo(EvaluadoOrden $evaluado)
+    {
+        // Verificar que el usuario tiene permiso para ver esta orden
+        if (!$this->usuarioPuedeVerOrden($evaluado->orden)) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        // Verificar que el evaluado tiene email
+        if (empty($evaluado->email)) {
+            return back()->with('error', 'El evaluado no tiene email registrado.');
+        }
+
+        // Verificar que el cuestionario no esté completado
+        if ($evaluado->cuestionario_completado) {
+            return back()->with('warning', 'El evaluado ya completó su cuestionario.');
+        }
+
+        // Verificar que el token no haya expirado
+        if ($evaluado->token_expira_at && $evaluado->token_expira_at->isPast()) {
+            // Regenerar token si expiró
+            $evaluado->update([
+                'token_unico' => EvaluadoOrden::generarToken(),
+                'token_expira_at' => now()->addDays(30),
+            ]);
+            $evaluado->refresh();
+        }
+
+        try {
+            // Cargar relaciones necesarias
+            $evaluado->load('orden.empresa');
+
+            Mail::to($evaluado->email)
+                ->send(new EvaluadoAsignadoMail($evaluado));
+
+            Log::info('Correo reenviado manualmente', [
+                'evaluado_id' => $evaluado->id,
+                'email' => $evaluado->email,
+                'usuario' => Auth::user()->name,
+            ]);
+
+            return back()->with('success', "Correo reenviado exitosamente a {$evaluado->email}");
+
+        } catch (\Exception $e) {
+            Log::error('Error reenviando correo', [
+                'evaluado_id' => $evaluado->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Error al enviar el correo. Intente nuevamente.');
+        }
     }
 }

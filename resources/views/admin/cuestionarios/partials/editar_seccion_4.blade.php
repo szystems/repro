@@ -1,146 +1,189 @@
-{{-- Partial para editar Sección 4: Competencias y Habilidades --}}
+{{-- Partial para editar Sección 4 --}}
+@php
+    $tipoFormulario = $tipoFormulario ?? 'preempleo';
+    $nombreSeccion = $nombreSeccion ?? 'Situación Económica';
+@endphp
 <div class="section-edit-content">
     <h6 class="text-primary mb-3">
-        <i class="bi bi-star"></i> Competencias y Habilidades
+        <i class="bi bi-cash-stack"></i> {{ $nombreSeccion }}
     </h6>
     
-    <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i>
-        <strong>Nota:</strong> Esta sección contiene datos complejos de evaluación de competencias.
-        Use el editor JSON para modificaciones detalladas.
-    </div>
-    
-    {{-- Fortalezas Principales --}}
-    <div class="form-group">
-        <label for="fortalezas_principales" class="form-label">
-            <i class="bi bi-hand-thumbs-up text-success"></i> Fortalezas Principales
-        </label>
-        <textarea class="form-control" 
-                  id="fortalezas_principales" 
-                  name="seccion_{{ $seccion }}[fortalezas_principales]" 
-                  rows="3"
-                  placeholder="Liste las principales fortalezas del evaluado...">{{ old('seccion_' . $seccion . '.fortalezas_principales', is_array($respuestas['fortalezas_principales'] ?? null) ? implode("\n", $respuestas['fortalezas_principales']) : ($respuestas['fortalezas_principales'] ?? '')) }}</textarea>
-        <small class="form-text text-muted">Una fortaleza por línea</small>
-    </div>
-    
-    {{-- Áreas de Mejora --}}
-    <div class="form-group">
-        <label for="areas_mejora" class="form-label">
-            <i class="bi bi-graph-up text-warning"></i> Áreas de Mejora
-        </label>
-        <textarea class="form-control" 
-                  id="areas_mejora" 
-                  name="seccion_{{ $seccion }}[areas_mejora]" 
-                  rows="3"
-                  placeholder="Liste las áreas de mejora identificadas...">{{ old('seccion_' . $seccion . '.areas_mejora', is_array($respuestas['areas_mejora'] ?? null) ? implode("\n", $respuestas['areas_mejora']) : ($respuestas['areas_mejora'] ?? '')) }}</textarea>
-        <small class="form-text text-muted">Un área por línea</small>
-    </div>
-    
-    {{-- Autoevaluación General --}}
-    <div class="form-group">
-        <label for="autoevaluacion_general" class="form-label">Autoevaluación General</label>
-        <textarea class="form-control" 
-                  id="autoevaluacion_general" 
-                  name="seccion_{{ $seccion }}[autoevaluacion_general]" 
-                  rows="4"
-                  placeholder="Descripción general de la autoevaluación del evaluado...">{{ old('seccion_' . $seccion . '.autoevaluacion_general', $respuestas['autoevaluacion_general'] ?? '') }}</textarea>
-    </div>
-    
-    {{-- Habilidades Técnicas Simplificadas --}}
+    {{-- Campos de Situación Económica (común para preempleo y periodica en sección 4) --}}
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-12 mb-3">
+            <h6 class="text-secondary border-bottom pb-2">Ingresos Mensuales</h6>
+        </div>
+        
+        <div class="col-md-4">
             <div class="form-group">
-                <label class="form-label">Nivel de Informática (0-100)</label>
-                <input type="range" 
-                       class="form-range" 
-                       id="informatica_nivel" 
-                       name="seccion_{{ $seccion }}[habilidades_tecnicas][informatica]"
-                       min="0" 
-                       max="100" 
-                       value="{{ old('seccion_' . $seccion . '.habilidades_tecnicas.informatica', $respuestas['habilidades_tecnicas']['informatica'] ?? 50) }}">
-                <div class="d-flex justify-content-between">
-                    <small>Básico (0)</small>
-                    <small id="informatica_valor">{{ old('seccion_' . $seccion . '.habilidades_tecnicas.informatica', $respuestas['habilidades_tecnicas']['informatica'] ?? 50) }}%</small>
-                    <small>Experto (100)</small>
-                </div>
+                <label for="ingresos_principales" class="form-label">Ingresos Principales (Q)</label>
+                <input type="number" class="form-control" id="ingresos_principales" 
+                       name="respuestas[ingresos_principales]" 
+                       value="{{ $respuestas['ingresos_principales'] ?? '' }}"
+                       step="0.01" min="0">
             </div>
         </div>
         
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="form-group">
-                <label class="form-label">Nivel de Comunicación (0-100)</label>
-                <input type="range" 
-                       class="form-range" 
-                       id="comunicacion_nivel" 
-                       name="seccion_{{ $seccion }}[habilidades_blandas][comunicacion]"
-                       min="0" 
-                       max="100" 
-                       value="{{ old('seccion_' . $seccion . '.habilidades_blandas.comunicacion', $respuestas['habilidades_blandas']['comunicacion'] ?? 50) }}">
-                <div class="d-flex justify-content-between">
-                    <small>Básico (0)</small>
-                    <small id="comunicacion_valor">{{ old('seccion_' . $seccion . '.habilidades_blandas.comunicacion', $respuestas['habilidades_blandas']['comunicacion'] ?? 50) }}%</small>
-                    <small>Excelente (100)</small>
-                </div>
+                <label for="ingresos_adicionales" class="form-label">Ingresos Adicionales (Q)</label>
+                <input type="number" class="form-control" id="ingresos_adicionales" 
+                       name="respuestas[ingresos_adicionales]" 
+                       value="{{ $respuestas['ingresos_adicionales'] ?? '' }}"
+                       step="0.01" min="0">
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="ingresos_familiares" class="form-label">Ingresos Familiares (Q)</label>
+                <input type="number" class="form-control" id="ingresos_familiares" 
+                       name="respuestas[ingresos_familiares]" 
+                       value="{{ $respuestas['ingresos_familiares'] ?? '' }}"
+                       step="0.01" min="0">
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="total_ingresos" class="form-label"><strong>Total Ingresos (Q)</strong></label>
+                <input type="number" class="form-control bg-light" id="total_ingresos" 
+                       name="respuestas[total_ingresos]" 
+                       value="{{ $respuestas['total_ingresos'] ?? '' }}"
+                       step="0.01" min="0">
             </div>
         </div>
     </div>
     
-    {{-- Editor JSON para datos complejos --}}
-    <div class="mt-4">
-        <div class="card bg-light">
-            <div class="card-body">
-                <h6 class="card-title">
-                    <i class="bi bi-gear"></i> Edición Completa de Competencias
-                </h6>
-                <p class="card-text">
-                    Para editar habilidades técnicas, test de personalidad, competencias de liderazgo 
-                    y otros datos complejos, use el editor JSON.
-                </p>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="mostrarEditorJSON('competencias')">
-                    <i class="bi bi-code-slash"></i> Editor JSON
-                </button>
+    <div class="row mt-4">
+        <div class="col-12 mb-3">
+            <h6 class="text-secondary border-bottom pb-2">Gastos Mensuales</h6>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="gastos_vivienda" class="form-label">Gastos Vivienda (Q)</label>
+                <input type="number" class="form-control" id="gastos_vivienda" 
+                       name="respuestas[gastos_vivienda]" 
+                       value="{{ $respuestas['gastos_vivienda'] ?? '' }}"
+                       step="0.01" min="0">
             </div>
         </div>
         
-        <textarea id="competencias_json" 
-                  name="seccion_{{ $seccion }}[datos_json]" 
-                  class="form-control mt-2" 
-                  style="display: none; font-family: monospace;"
-                  rows="15">{{ json_encode($respuestas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</textarea>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="gastos_alimentacion" class="form-label">Gastos Alimentación (Q)</label>
+                <input type="number" class="form-control" id="gastos_alimentacion" 
+                       name="respuestas[gastos_alimentacion]" 
+                       value="{{ $respuestas['gastos_alimentacion'] ?? '' }}"
+                       step="0.01" min="0">
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="gastos_transporte" class="form-label">Gastos Transporte (Q)</label>
+                <input type="number" class="form-control" id="gastos_transporte" 
+                       name="respuestas[gastos_transporte]" 
+                       value="{{ $respuestas['gastos_transporte'] ?? '' }}"
+                       step="0.01" min="0">
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="gastos_educacion" class="form-label">Gastos Educación (Q)</label>
+                <input type="number" class="form-control" id="gastos_educacion" 
+                       name="respuestas[gastos_educacion]" 
+                       value="{{ $respuestas['gastos_educacion'] ?? '' }}"
+                       step="0.01" min="0">
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="gastos_salud" class="form-label">Gastos Salud (Q)</label>
+                <input type="number" class="form-control" id="gastos_salud" 
+                       name="respuestas[gastos_salud]" 
+                       value="{{ $respuestas['gastos_salud'] ?? '' }}"
+                       step="0.01" min="0">
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="gastos_otros" class="form-label">Otros Gastos (Q)</label>
+                <input type="number" class="form-control" id="gastos_otros" 
+                       name="respuestas[gastos_otros]" 
+                       value="{{ $respuestas['gastos_otros'] ?? '' }}"
+                       step="0.01" min="0">
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="total_gastos" class="form-label"><strong>Total Gastos (Q)</strong></label>
+                <input type="number" class="form-control bg-light" id="total_gastos" 
+                       name="respuestas[total_gastos]" 
+                       value="{{ $respuestas['total_gastos'] ?? '' }}"
+                       step="0.01" min="0">
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="balance_mensual" class="form-label"><strong>Balance Mensual (Q)</strong></label>
+                <input type="number" class="form-control bg-light" id="balance_mensual" 
+                       name="respuestas[balance_mensual]" 
+                       value="{{ $respuestas['balance_mensual'] ?? '' }}"
+                       step="0.01">
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12 mb-3">
+            <h6 class="text-secondary border-bottom pb-2">Situación Financiera</h6>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="tiene_ahorros" class="form-label">¿Tiene Ahorros?</label>
+                <select class="form-control" id="tiene_ahorros" name="respuestas[tiene_ahorros]">
+                    <option value="">Seleccione...</option>
+                    <option value="si" {{ ($respuestas['tiene_ahorros'] ?? '') == 'si' ? 'selected' : '' }}>Sí</option>
+                    <option value="no" {{ ($respuestas['tiene_ahorros'] ?? '') == 'no' ? 'selected' : '' }}>No</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="tiene_deudas" class="form-label">¿Tiene Deudas?</label>
+                <select class="form-control" id="tiene_deudas" name="respuestas[tiene_deudas]">
+                    <option value="">Seleccione...</option>
+                    <option value="si" {{ ($respuestas['tiene_deudas'] ?? '') == 'si' ? 'selected' : '' }}>Sí</option>
+                    <option value="no" {{ ($respuestas['tiene_deudas'] ?? '') == 'no' ? 'selected' : '' }}>No</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="col-12">
+            <div class="form-group">
+                <label for="detalle_deudas" class="form-label">Detalle de Deudas</label>
+                <textarea class="form-control" id="detalle_deudas" 
+                          name="respuestas[detalle_deudas]" 
+                          rows="3" placeholder="Describa sus deudas actuales...">{{ $respuestas['detalle_deudas'] ?? '' }}</textarea>
+            </div>
+        </div>
+        
+        <div class="col-12">
+            <div class="form-group">
+                <label for="observaciones_economicas" class="form-label">Observaciones Económicas</label>
+                <textarea class="form-control" id="observaciones_economicas" 
+                          name="respuestas[observaciones_economicas]" 
+                          rows="3">{{ $respuestas['observaciones_economicas'] ?? '' }}</textarea>
+            </div>
+        </div>
     </div>
 </div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Actualizar valores de los rangesliders
-    const informaticaRange = document.getElementById('informatica_nivel');
-    const comunicacionRange = document.getElementById('comunicacion_nivel');
-    
-    if (informaticaRange) {
-        informaticaRange.addEventListener('input', function() {
-            document.getElementById('informatica_valor').textContent = this.value + '%';
-        });
-    }
-    
-    if (comunicacionRange) {
-        comunicacionRange.addEventListener('input', function() {
-            document.getElementById('comunicacion_valor').textContent = this.value + '%';
-        });
-    }
-});
-
-function mostrarEditorJSON(campo) {
-    const textarea = document.getElementById(campo + '_json');
-    const button = event.target;
-    
-    if (textarea.style.display === 'none') {
-        textarea.style.display = 'block';
-        button.innerHTML = '<i class="bi bi-eye-slash"></i> Ocultar JSON';
-    } else {
-        textarea.style.display = 'none';
-        button.innerHTML = '<i class="bi bi-code-slash"></i> Editor JSON';
-    }
-}
-</script>
-@endpush

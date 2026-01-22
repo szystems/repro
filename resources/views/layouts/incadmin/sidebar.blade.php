@@ -52,12 +52,6 @@
                 <!-- Módulo de Evaluaciones - Para todos excepto usuarios evaluados -->
                 @if(Auth::user()->role_as >= 1)
                 <li class="menu-category">Evaluaciones</li>
-                <li class="{{ Request::is('evaluaciones','show-evaluacion/*','add-evaluacion','edit-evaluacion/*') ? 'active-page-link':''  }}">
-                    <a href="{{ url('evaluaciones') }}">
-                        <i class="bi bi-clipboard-check"></i>
-                        <span class="menu-text">Evaluaciones de Polígrafo</span>
-                    </a>
-                </li>
                 <li class="{{ Request::is('cuestionarios','show-cuestionario/*','add-cuestionario','edit-cuestionario/*') ? 'active-page-link':''  }}">
                     <a href="{{ url('cuestionarios') }}">
                         <i class="bi bi-card-checklist"></i>
@@ -81,16 +75,6 @@
                     <a href="{{ url('empresas') }}">
                         <i class="bi bi-building"></i>
                         <span class="menu-text">Empresas</span>
-                    </a>
-                </li>
-                @endif
-
-                <!-- Módulo de evaluados (personas que hacen las pruebas) -->
-                @if(Auth::user()->role_as >= 1)
-                <li class="{{ Request::is('evaluados','show-evaluado/*','add-evaluado','edit-evaluado/*') ? 'active-page-link':''  }}">
-                    <a href="{{ url('evaluados') }}">
-                        <i class="bi bi-person-video2"></i>
-                        <span class="menu-text">Personas Evaluadas</span>
                     </a>
                 </li>
                 @endif

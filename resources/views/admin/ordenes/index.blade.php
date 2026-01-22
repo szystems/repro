@@ -220,6 +220,9 @@
                                                 <a href="{{ route('ordenes.show', $orden) }}" class="btn btn-outline-info" title="Ver detalles">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
+                                                <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-outline-danger" title="Imprimir PDF" target="_blank">
+                                                    <i class="bi bi-file-pdf"></i>
+                                                </a>
                                                 
                                                 @if(Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->hasRole('empresa') && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'programacion'])))
                                                 <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-outline-warning" title="Editar">

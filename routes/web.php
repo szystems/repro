@@ -104,11 +104,32 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     
     // Rutas adicionales para órdenes
     Route::patch('ordenes/{orden}/cambiar-estado', [OrdenesController::class, 'cambiarEstado'])->name('ordenes.cambiar-estado');
+    Route::get('ordenes/{orden}/pdf', [OrdenesController::class, 'pdf'])->name('ordenes.pdf');
+    
+    // Reenviar correo a evaluado
+    Route::post('evaluados/{evaluado}/reenviar-correo', [OrdenesController::class, 'reenviarCorreo'])->name('evaluados.reenviar-correo');
     
     // Rutas para diferentes tipos de usuario con middleware específico
     Route::middleware(['role:admin,repro'])->group(function () {
         // Solo admin y repro pueden acceder a todas las órdenes y estadísticas
         Route::get('ordenes-resumen', [OrdenesController::class, 'resumen'])->name('ordenes.resumen');
+    });
+
+    // ========================================
+    // MÓDULO DE REPORTES
+    // ========================================
+    Route::prefix('reportes')->name('reportes.')->group(function () {
+        // Reporte de Evaluaciones - Disponible para todos los usuarios autenticados
+        Route::get('evaluaciones', [App\Http\Controllers\Admin\ReportesController::class, 'evaluaciones'])->name('evaluaciones');
+        Route::get('evaluaciones/pdf', [App\Http\Controllers\Admin\ReportesController::class, 'evaluacionesPdf'])->name('evaluaciones.pdf');
+        Route::get('evaluaciones/excel', [App\Http\Controllers\Admin\ReportesController::class, 'evaluacionesExcel'])->name('evaluaciones.excel');
+        
+        // Reporte de Empresas - Solo para admin y repro
+        Route::middleware(['role:admin,repro'])->group(function () {
+            Route::get('empresas', [App\Http\Controllers\Admin\ReportesController::class, 'empresas'])->name('empresas');
+            Route::get('empresas/pdf', [App\Http\Controllers\Admin\ReportesController::class, 'empresasPdf'])->name('empresas.pdf');
+            Route::get('empresas/excel', [App\Http\Controllers\Admin\ReportesController::class, 'empresasExcel'])->name('empresas.excel');
+        });
     });
     
     // ========================================

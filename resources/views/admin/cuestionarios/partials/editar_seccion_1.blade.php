@@ -1,7 +1,18 @@
-{{-- Partial para editar Sección 1: Datos Generales --}}
+{{-- Partial para editar Sección 1: Datos Generales / Actualización de Datos --}}
+@php
+    $tipoFormulario = $tipoFormulario ?? 'preempleo';
+    $nombreSeccion = $nombreSeccion ?? 'Datos Personales';
+    
+    // Mapeo de campos para compatibilidad entre diferentes tipos de formulario
+    $nombreValue = $respuestas['nombres_completos'] ?? $respuestas['nombre'] ?? '';
+    $apellidosValue = $respuestas['apellidos_completos'] ?? $respuestas['apellidos'] ?? '';
+    $emailValue = $respuestas['email_personal'] ?? $respuestas['email'] ?? '';
+    $telefonoValue = $respuestas['telefono_personal'] ?? $respuestas['telefono'] ?? '';
+    $direccionValue = $respuestas['direccion_residencia'] ?? $respuestas['direccion'] ?? '';
+@endphp
 <div class="section-edit-content">
     <h6 class="text-primary mb-3">
-        <i class="bi bi-person"></i> Datos Generales del Evaluado
+        <i class="bi bi-person"></i> {{ $nombreSeccion }}
     </h6>
     
     <div class="row">
@@ -12,7 +23,7 @@
                        class="form-control @error('seccion_' . $seccion . '.nombre') is-invalid @enderror" 
                        id="nombre" 
                        name="seccion_{{ $seccion }}[nombre]" 
-                       value="{{ old('seccion_' . $seccion . '.nombre', $respuestas['nombre'] ?? '') }}"
+                       value="{{ old('seccion_' . $seccion . '.nombre', $nombreValue) }}"
                        required>
                 @error('seccion_' . $seccion . '.nombre')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -27,7 +38,7 @@
                        class="form-control @error('seccion_' . $seccion . '.apellidos') is-invalid @enderror" 
                        id="apellidos" 
                        name="seccion_{{ $seccion }}[apellidos]" 
-                       value="{{ old('seccion_' . $seccion . '.apellidos', $respuestas['apellidos'] ?? '') }}"
+                       value="{{ old('seccion_' . $seccion . '.apellidos', $apellidosValue) }}"
                        required>
                 @error('seccion_' . $seccion . '.apellidos')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -125,7 +136,7 @@
                        class="form-control @error('seccion_' . $seccion . '.email') is-invalid @enderror" 
                        id="email" 
                        name="seccion_{{ $seccion }}[email]" 
-                       value="{{ old('seccion_' . $seccion . '.email', $respuestas['email'] ?? '') }}">
+                       value="{{ old('seccion_' . $seccion . '.email', $emailValue) }}">
                 @error('seccion_' . $seccion . '.email')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -139,7 +150,7 @@
                        class="form-control @error('seccion_' . $seccion . '.telefono') is-invalid @enderror" 
                        id="telefono" 
                        name="seccion_{{ $seccion }}[telefono]" 
-                       value="{{ old('seccion_' . $seccion . '.telefono', $respuestas['telefono'] ?? '') }}">
+                       value="{{ old('seccion_' . $seccion . '.telefono', $telefonoValue) }}">
                 @error('seccion_' . $seccion . '.telefono')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -152,7 +163,7 @@
                 <textarea class="form-control @error('seccion_' . $seccion . '.direccion') is-invalid @enderror" 
                           id="direccion" 
                           name="seccion_{{ $seccion }}[direccion]" 
-                          rows="3">{{ old('seccion_' . $seccion . '.direccion', $respuestas['direccion'] ?? '') }}</textarea>
+                          rows="3">{{ old('seccion_' . $seccion . '.direccion', $direccionValue) }}</textarea>
                 @error('seccion_' . $seccion . '.direccion')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror

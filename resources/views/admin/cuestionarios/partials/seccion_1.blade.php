@@ -1,4 +1,27 @@
 {{-- Sección 1: Datos Generales --}}
+@php
+    // Mapeo de campos para compatibilidad entre diferentes tipos de formulario
+    $nombre = $respuestas['nombres_completos'] ?? $respuestas['nombre'] ?? null;
+    $apellidos = $respuestas['apellidos_completos'] ?? $respuestas['apellidos'] ?? null;
+    $email = $respuestas['email_personal'] ?? $respuestas['email'] ?? null;
+    $telefono = $respuestas['telefono_personal'] ?? $respuestas['telefono'] ?? null;
+    $telefonoAlt = $respuestas['telefono_alternativo'] ?? null;
+    $direccion = $respuestas['direccion_residencia'] ?? $respuestas['direccion'] ?? null;
+    $lugarNacimiento = $respuestas['lugar_nacimiento'] ?? null;
+    $nivelEducativo = $respuestas['nivel_educativo'] ?? null;
+    $profesion = $respuestas['profesion_oficio'] ?? $respuestas['profesion'] ?? null;
+    $codigoPostal = $respuestas['codigo_postal'] ?? null;
+    
+    // Calcular edad si hay fecha de nacimiento
+    $edad = null;
+    if (isset($respuestas['fecha_nacimiento']) && $respuestas['fecha_nacimiento']) {
+        try {
+            $edad = \Carbon\Carbon::parse($respuestas['fecha_nacimiento'])->age;
+        } catch (\Exception $e) {
+            $edad = null;
+        }
+    }
+@endphp
 <div class="section-content">
     @if($completada)
         <div class="alert alert-success mb-3">
@@ -11,7 +34,7 @@
     @endif
     
     <h5 class="section-title mb-4">
-        <i class="bi bi-person"></i> Datos Generales del Evaluado
+        <i class="bi bi-person"></i> {{ $nombreSeccion ?? 'Datos Generales del Evaluado' }}
     </h5>
     
     <div class="row">
@@ -24,11 +47,11 @@
                     <table class="table table-borderless">
                         <tr>
                             <td class="fw-bold">Nombre:</td>
-                            <td>{{ $respuestas['nombre'] ?? 'No proporcionado' }}</td>
+                            <td>{{ $nombre ?? 'No proporcionado' }}</td>
                         </tr>
                         <tr>
                             <td class="fw-bold">Apellidos:</td>
-                            <td>{{ $respuestas['apellidos'] ?? 'No proporcionado' }}</td>
+                            <td>{{ $apellidos ?? 'No proporcionado' }}</td>
                         </tr>
                         <tr>
                             <td class="fw-bold">DPI:</td>
@@ -40,7 +63,7 @@
                         </tr>
                         <tr>
                             <td class="fw-bold">Edad:</td>
-                            <td>{{ $respuestas['edad'] ?? 'No calculada' }} años</td>
+                            <td>{{ $edad ?? 'No calculada' }} años</td>
                         </tr>
                         <tr>
                             <td class="fw-bold">Género:</td>
@@ -48,8 +71,26 @@
                         </tr>
                         <tr>
                             <td class="fw-bold">Estado Civil:</td>
-                            <td>{{ ucfirst($respuestas['estado_civil'] ?? 'No especificado') }}</td>
+                            <td>{{ ucfirst(str_replace('_', ' ', $respuestas['estado_civil'] ?? 'No especificado')) }}</td>
                         </tr>
+                        @if($lugarNacimiento)
+                        <tr>
+                            <td class="fw-bold">Lugar de Nacimiento:</td>
+                            <td>{{ $lugarNacimiento }}</td>
+                        </tr>
+                        @endif
+                        @if($nivelEducativo)
+                        <tr>
+                            <td class="fw-bold">Nivel Educativo:</td>
+                            <td>{{ ucfirst(str_replace('_', ' ', $nivelEducativo)) }}</td>
+                        </tr>
+                        @endif
+                        @if($profesion)
+                        <tr>
+                            <td class="fw-bold">Profesión/Oficio:</td>
+                            <td>{{ $profesion }}</td>
+                        </tr>
+                        @endif
                     </table>
                 </div>
             </div>
@@ -64,15 +105,21 @@
                     <table class="table table-borderless">
                         <tr>
                             <td class="fw-bold">Email:</td>
-                            <td>{{ $respuestas['email'] ?? 'No proporcionado' }}</td>
+                            <td>{{ $email ?? 'No proporcionado' }}</td>
                         </tr>
                         <tr>
                             <td class="fw-bold">Teléfono:</td>
-                            <td>{{ $respuestas['telefono'] ?? 'No proporcionado' }}</td>
+                            <td>{{ $telefono ?? 'No proporcionado' }}</td>
                         </tr>
+                        @if($telefonoAlt)
+                        <tr>
+                            <td class="fw-bold">Teléfono Alternativo:</td>
+                            <td>{{ $telefonoAlt }}</td>
+                        </tr>
+                        @endif
                         <tr>
                             <td class="fw-bold">Dirección:</td>
-                            <td>{{ $respuestas['direccion'] ?? 'No proporcionada' }}</td>
+                            <td>{!! nl2br(e($direccion ?? 'No proporcionada')) !!}</td>
                         </tr>
                         <tr>
                             <td class="fw-bold">Departamento:</td>
@@ -82,6 +129,12 @@
                             <td class="fw-bold">Municipio:</td>
                             <td>{{ $respuestas['municipio'] ?? 'No especificado' }}</td>
                         </tr>
+                        @if($codigoPostal)
+                        <tr>
+                            <td class="fw-bold">Código Postal:</td>
+                            <td>{{ $codigoPostal }}</td>
+                        </tr>
+                        @endif
                         <tr>
                             <td class="fw-bold">Nacionalidad:</td>
                             <td>{{ $respuestas['nacionalidad'] ?? 'No especificada' }}</td>

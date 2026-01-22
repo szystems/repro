@@ -7,13 +7,16 @@ use App\Http\Requests\Cuestionario\InformacionFamiliarRequest;
 use App\Http\Requests\Cuestionario\HistorialLaboralRequest;
 use App\Http\Requests\Cuestionario\SituacionEconomicaRequest;
 use App\Http\Requests\Cuestionario\AntecedentesRequest;
+use App\Mail\CuestionarioCompletadoMail;
 use App\Models\EvaluadoOrden;
 use App\Models\Cuestionario;
 use App\Models\CuestionarioRespuesta;
 use App\Models\FormularioCampo;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 /**
@@ -97,10 +100,17 @@ class CuestionarioController extends Controller
         
         if (!$cuestionario) {
             // Crear nuevo cuestionario para este evaluado
+            $tipoFormulario = $evaluado->tipo_formulario ?? 'preempleo';
+            $totalSeccionesPorTipo = [
+                'preempleo' => 5,
+                'periodica' => 5,
+                'especifica' => 4,
+                'socioeconomico' => 7,
+            ];
             $cuestionario = $evaluado->cuestionario()->create([
-                'tipo_formulario' => $evaluado->tipo_formulario ?? 'preempleo',
+                'tipo_formulario' => $tipoFormulario,
                 'seccion_actual' => 1,
-                'total_secciones' => 10, // TODO: Hacer configurable
+                'total_secciones' => $totalSeccionesPorTipo[$tipoFormulario] ?? 5,
                 'progreso_porcentaje' => 0,
                 'completado' => false,
                 'bloqueado' => false
@@ -136,10 +146,17 @@ class CuestionarioController extends Controller
 
         // Crear cuestionario si no existe
         if (!$cuestionario) {
+            $tipoFormulario = $evaluado->tipo_formulario ?? 'preempleo';
+            $totalSeccionesPorTipo = [
+                'preempleo' => 5,
+                'periodica' => 5,
+                'especifica' => 4,
+                'socioeconomico' => 7,
+            ];
             $cuestionario = $evaluado->cuestionario()->create([
-                'tipo_formulario' => $evaluado->tipo_formulario ?? 'preempleo',
+                'tipo_formulario' => $tipoFormulario,
                 'seccion_actual' => 1,
-                'total_secciones' => 10, // TODO: Hacer configurable
+                'total_secciones' => $totalSeccionesPorTipo[$tipoFormulario] ?? 5,
                 'progreso_porcentaje' => 0,
                 'completado' => false,
                 'bloqueado' => false
@@ -259,7 +276,52 @@ class CuestionarioController extends Controller
             ]);
         }
 
-        return view('cuestionario.finalizar', compact('evaluado', 'cuestionario', 'token'));
+        // Generar resumen de secciones
+        $secciones = $cuestionario->getSeccionesConfig();
+        $iconos = [
+            1 => 'user',
+            2 => 'users',
+            3 => 'briefcase',
+            4 => 'dollar-sign',
+            5 => 'clipboard-check',
+            6 => 'home',
+            7 => 'file-alt',
+        ];
+        
+        $resumenSecciones = [];
+        foreach ($secciones as $numero => $nombre) {
+            $seccionSlug = $this->getSlugSeccion($numero, $cuestionario->tipo_formulario);
+            $respuestas = $cuestionario->getRespuestasPorSeccion($seccionSlug);
+            $totalCampos = count($respuestas) > 0 ? count($respuestas) : 5; // Estimado
+            $camposCompletados = count(array_filter($respuestas, fn($v) => !empty($v)));
+            
+            $resumenSecciones[$numero] = [
+                'nombre' => $nombre,
+                'icono' => $iconos[$numero] ?? 'check',
+                'completada' => $camposCompletados > 0,
+                'campos_completados' => $camposCompletados,
+                'total_campos' => $totalCampos,
+            ];
+        }
+
+        // Obtener datos para mostrar en el resumen
+        $datosPersonales = $cuestionario->getRespuestasPorSeccion($this->getSlugSeccion(1, $cuestionario->tipo_formulario));
+        $historialLaboral = $cuestionario->getRespuestasPorSeccion($this->getSlugSeccion(3, $cuestionario->tipo_formulario));
+        $situacionEconomica = $cuestionario->getRespuestasPorSeccion($this->getSlugSeccion(4, $cuestionario->tipo_formulario));
+        
+        // Alias para compatibilidad con la vista
+        $evaluadoOrden = $evaluado;
+
+        return view('cuestionario.finalizar', compact(
+            'evaluado', 
+            'evaluadoOrden',
+            'cuestionario', 
+            'token', 
+            'resumenSecciones',
+            'datosPersonales',
+            'historialLaboral',
+            'situacionEconomica'
+        ));
     }
 
     /**
@@ -269,39 +331,64 @@ class CuestionarioController extends Controller
     {
         $request->validate([
             'firma_digital' => 'required|string',
-            'acepta_terminos' => 'required|accepted',
+            'confirmacion_final' => 'required|accepted',
         ], [
             'firma_digital.required' => 'Debe proporcionar su firma digital.',
-            'acepta_terminos.accepted' => 'Debe aceptar los términos y condiciones.',
+            'confirmacion_final.required' => 'Debe confirmar que ha revisado la información.',
+            'confirmacion_final.accepted' => 'Debe confirmar que ha revisado la información.',
         ]);
 
         $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
         $cuestionario = $evaluado->cuestionario;
 
+        // Debug: verificar que la firma llega
+        $firmaRecibida = $request->input('firma_digital');
+        \Log::info('Firma recibida', [
+            'token' => $token,
+            'firma_length' => strlen($firmaRecibida ?? ''),
+            'firma_preview' => substr($firmaRecibida ?? '', 0, 50)
+        ]);
+
         DB::beginTransaction();
         try {
-            // Marcar cuestionario como completado
-            $cuestionario->marcarCompletado($request->ip());
-            $cuestionario->firma_digital = $request->firma_digital;
+            // Guardar firma digital y marcar como completado
+            $cuestionario->firma_digital = $firmaRecibida;
+            $cuestionario->completado = true;
+            $cuestionario->bloqueado = true;
+            $cuestionario->progreso_porcentaje = 100;
+            $cuestionario->completado_at = now();
+            $cuestionario->ip_completado = $request->ip();
             $cuestionario->save();
+            
+            \Log::info('Cuestionario guardado', [
+                'id' => $cuestionario->id,
+                'firma_guardada' => !empty($cuestionario->firma_digital),
+                'firma_length' => strlen($cuestionario->firma_digital ?? '')
+            ]);
 
             // Marcar evaluado como completado
             $evaluado->cuestionario_completado = true;
             $evaluado->cuestionario_completado_at = now();
+            $evaluado->completado_at = now();
+            $evaluado->estado_evaluacion = 'completado';
             $evaluado->ip_acceso = $request->ip();
             $evaluado->save();
 
             DB::commit();
 
-            // TODO: Enviar notificación a REPRO sobre cuestionario completado
+            // Enviar notificación a administradores y usuarios REPRO sobre cuestionario completado
+            $this->notificarCuestionarioCompletado($evaluado);
 
             return redirect()->route('cuestionario.completado', ['token' => $token]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()
-                ->withErrors(['error' => 'Error al completar el cuestionario. Intente nuevamente.'])
-                ->withInput();
+            \Log::error('Error al completar cuestionario: ' . $e->getMessage(), [
+                'token' => $token,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->route('cuestionario.finalizar', ['token' => $token])
+                ->withErrors(['error' => 'Error al completar el cuestionario. Intente nuevamente.']);
         }
     }
 
@@ -481,5 +568,42 @@ class CuestionarioController extends Controller
         }
 
         return $request->validate($formRequest->rules(), $formRequest->messages());
+    }
+
+    /**
+     * Enviar notificación cuando un cuestionario se completa.
+     * Notifica a los usuarios REPRO/Admin asociados.
+     */
+    private function notificarCuestionarioCompletado(EvaluadoOrden $evaluado): void
+    {
+        try {
+            // Recargar relaciones necesarias
+            $evaluado->load('orden.empresa');
+
+            // Obtener destinatarios: usuarios admin y repro
+            $destinatarios = User::whereHas('roles', function ($query) {
+                $query->whereIn('name', ['admin', 'repro']);
+            })
+            ->where('estado', 1)
+            ->whereNotNull('email')
+            ->get();
+
+            foreach ($destinatarios as $usuario) {
+                Mail::to($usuario->email)
+                    ->queue(new CuestionarioCompletadoMail($evaluado));
+            }
+
+            Log::info('Notificaciones de cuestionario completado enviadas', [
+                'evaluado_id' => $evaluado->id,
+                'destinatarios' => $destinatarios->count(),
+            ]);
+
+        } catch (\Exception $e) {
+            // No fallar el flujo principal si la notificación falla
+            Log::error('Error enviando notificación de cuestionario completado', [
+                'evaluado_id' => $evaluado->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

@@ -171,67 +171,70 @@ class CuestionariosController extends Controller
     {
         $cuestionario = Cuestionario::findOrFail($id);
 
-        // Validar datos básicos
+        // Validar datos básicos - respuestas es opcional para permitir solo guardar observaciones
         $request->validate([
             'observaciones_repro' => 'nullable|string|max:2000',
-            'respuestas' => 'required|array',
+            'respuestas' => 'nullable|array',
         ]);
 
         DB::beginTransaction();
         try {
-            // Log especial para ediciones de cuestionarios completados
-            if ($cuestionario->estado === 'completado') {
-                \Illuminate\Support\Facades\Log::info('Editando cuestionario completado', [
-                    'cuestionario_id' => $cuestionario->id,
-                    'usuario' => Auth::user()->name,
-                    'usuario_id' => Auth::id(),
-                    'evaluado_dpi' => $cuestionario->evaluadoOrden->dpi,
-                    'motivo' => 'Corrección post-completado',
-                    'timestamp' => now()
-                ]);
-            }
-
             // Actualizar observaciones de REPRO
             $cuestionario->update([
                 'observaciones_repro' => $request->observaciones_repro
             ]);
 
-            // Actualizar respuestas y registrar cambios
-            $cambiosRealizados = [];
-            foreach ($request->respuestas as $respuestaId => $nuevoValor) {
-                $respuesta = CuestionarioRespuesta::where('cuestionario_id', $cuestionario->id)
-                    ->where('id', $respuestaId)
-                    ->first();
-
-                if ($respuesta) {
-                    $valorAnterior = $respuesta->valor;
-                    if ($valorAnterior !== $nuevoValor) {
-                        $cambiosRealizados[] = [
-                            'campo' => $respuesta->campo,
-                            'seccion' => $respuesta->seccion,
-                            'valor_anterior' => $valorAnterior,
-                            'valor_nuevo' => $nuevoValor
-                        ];
-                    }
-                    $respuesta->update(['valor' => $nuevoValor]);
+            // Si hay respuestas para actualizar
+            if ($request->has('respuestas') && is_array($request->respuestas)) {
+                // Log especial para ediciones de cuestionarios completados
+                if ($cuestionario->estado === 'completado') {
+                    \Illuminate\Support\Facades\Log::info('Editando cuestionario completado', [
+                        'cuestionario_id' => $cuestionario->id,
+                        'usuario' => Auth::user()->name,
+                        'usuario_id' => Auth::id(),
+                        'evaluado_dpi' => $cuestionario->evaluadoOrden->dpi,
+                        'motivo' => 'Corrección post-completado',
+                        'timestamp' => now()
+                    ]);
                 }
-            }
 
-            // Log detallado de cambios para cuestionarios completados
-            if ($cuestionario->estado === 'completado' && !empty($cambiosRealizados)) {
-                \Illuminate\Support\Facades\Log::info('Cambios detallados en cuestionario completado', [
-                    'cuestionario_id' => $cuestionario->id,
-                    'usuario' => Auth::user()->name,
-                    'cambios' => $cambiosRealizados,
-                    'total_cambios' => count($cambiosRealizados)
-                ]);
+                // Actualizar respuestas y registrar cambios
+                $cambiosRealizados = [];
+                foreach ($request->respuestas as $respuestaId => $nuevoValor) {
+                    $respuesta = CuestionarioRespuesta::where('cuestionario_id', $cuestionario->id)
+                        ->where('id', $respuestaId)
+                        ->first();
+
+                    if ($respuesta) {
+                        $valorAnterior = $respuesta->valor;
+                        if ($valorAnterior !== $nuevoValor) {
+                            $cambiosRealizados[] = [
+                                'campo' => $respuesta->campo,
+                                'seccion' => $respuesta->seccion,
+                                'valor_anterior' => $valorAnterior,
+                                'valor_nuevo' => $nuevoValor
+                            ];
+                        }
+                        $respuesta->update(['valor' => $nuevoValor]);
+                    }
+                }
+
+                // Log detallado de cambios para cuestionarios completados
+                if ($cuestionario->estado === 'completado' && !empty($cambiosRealizados)) {
+                    \Illuminate\Support\Facades\Log::info('Cambios detallados en cuestionario completado', [
+                        'cuestionario_id' => $cuestionario->id,
+                        'usuario' => Auth::user()->name,
+                        'cambios' => $cambiosRealizados,
+                        'total_cambios' => count($cambiosRealizados)
+                    ]);
+                }
             }
 
             DB::commit();
 
-            $mensaje = $cuestionario->estado === 'completado' 
-                ? 'Correcciones guardadas correctamente en cuestionario completado.'
-                : 'Cuestionario actualizado correctamente.';
+            $mensaje = $request->has('respuestas') 
+                ? 'Cuestionario actualizado correctamente.'
+                : 'Observaciones guardadas correctamente.';
 
             return redirect()
                 ->route('admin.cuestionarios.show', $cuestionario->id)
@@ -282,10 +285,18 @@ class CuestionariosController extends Controller
 
         $respuestasPorSeccion = $cuestionario->respuestas->groupBy('seccion');
 
+        // Obtener logo de REPRO desde configuración
+        $config = \App\Models\Config::first();
+        $imagen = null;
+        if ($config && $config->logo && file_exists(public_path('assets/imgs/logos/'.$config->logo))) {
+            $imagen = public_path('assets/imgs/logos/'.$config->logo);
+        }
+
         $pdf = app('dompdf.wrapper');
         $pdf->loadView('admin.cuestionarios.pdf', compact(
             'cuestionario', 
-            'respuestasPorSeccion'
+            'respuestasPorSeccion',
+            'imagen'
         ));
 
         $nombreArchivo = 'cuestionario_' . 

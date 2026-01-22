@@ -60,13 +60,22 @@
                                             </span>
                                         @endif
                                     </h6>
-                                    <p class="card-text small">
-                                        {{ $seccion['campos_completados'] }} de {{ $seccion['total_campos'] }} campos completados
+                                    <p class="card-text small text-muted">
+                                        @if($seccion['completada'])
+                                            <i class="fas fa-check-circle text-success"></i> Información guardada correctamente
+                                        @else
+                                            <i class="fas fa-exclamation-circle text-warning"></i> Pendiente de completar
+                                        @endif
                                     </p>
                                     @if(!$seccion['completada'])
                                         <a href="{{ route('cuestionario.seccion', ['token' => $token, 'numero' => $numero]) }}" 
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i> Completar
+                                        </a>
+                                    @else
+                                        <a href="{{ route('cuestionario.seccion', ['token' => $token, 'numero' => $numero]) }}" 
+                                           class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-eye"></i> Revisar
                                         </a>
                                     @endif
                                 </div>
@@ -81,9 +90,18 @@
                         <div class="card bg-light">
                             <div class="card-body">
                                 <h6 class="card-title"><i class="fas fa-user"></i> Información Personal</h6>
-                                <p class="mb-1"><strong>Nombre:</strong> {{ $datosPersonales['primer_nombre'] ?? '' }} {{ $datosPersonales['primer_apellido'] ?? '' }}</p>
+                                <p class="mb-1"><strong>Nombre:</strong> {{ $datosPersonales['nombres_completos'] ?? '' }} {{ $datosPersonales['apellidos_completos'] ?? '' }}</p>
                                 <p class="mb-1"><strong>DPI:</strong> {{ $evaluadoOrden->dpi }}</p>
-                                <p class="mb-0"><strong>Edad:</strong> {{ $datosPersonales['edad'] ?? 'No especificada' }} años</p>
+                                @php
+                                    $edad = null;
+                                    if (!empty($datosPersonales['fecha_nacimiento'])) {
+                                        try {
+                                            $fechaNac = \Carbon\Carbon::parse($datosPersonales['fecha_nacimiento']);
+                                            $edad = $fechaNac->age;
+                                        } catch (\Exception $e) {}
+                                    }
+                                @endphp
+                                <p class="mb-0"><strong>Edad:</strong> {{ $edad ?? 'No especificada' }} años</p>
                             </div>
                         </div>
                     </div>
@@ -94,7 +112,12 @@
                                 <h6 class="card-title"><i class="fas fa-briefcase"></i> Situación Laboral</h6>
                                 <p class="mb-1"><strong>Estado:</strong> {{ ucfirst(str_replace('_', ' ', $historialLaboral['situacion_laboral_actual'] ?? 'No especificado')) }}</p>
                                 <p class="mb-1"><strong>Experiencia:</strong> {{ $historialLaboral['anos_experiencia_laboral'] ?? 'No especificada' }} años</p>
-                                <p class="mb-0"><strong>Ingresos mensuales:</strong> Q. {{ number_format($situacionEconomica['ingresos_mensuales_totales'] ?? 0, 2) }}</p>
+                                @php
+                                    $ingresosPrincipales = floatval($situacionEconomica['ingresos_principales'] ?? 0);
+                                    $ingresosAdicionales = floatval($situacionEconomica['ingresos_adicionales'] ?? 0);
+                                    $ingresosTotales = $ingresosPrincipales + $ingresosAdicionales;
+                                @endphp
+                                <p class="mb-0"><strong>Ingresos mensuales:</strong> Q. {{ number_format($ingresosTotales, 2) }}</p>
                             </div>
                         </div>
                     </div>
@@ -296,11 +319,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function verifySignature() {
+        const container = canvas.parentElement;
         if (hasSignature) {
-            cuestionarioHelpers.showAlert('Firma válida detectada.', 'success');
+            container.style.borderColor = '#28a745';
+            container.style.boxShadow = '0 0 10px rgba(40, 167, 69, 0.5)';
+            alert('✅ Firma válida detectada. Puede continuar.');
         } else {
-            cuestionarioHelpers.showAlert('No se ha detectado una firma. Por favor, firme en el recuadro.', 'warning');
+            container.style.borderColor = '#dc3545';
+            container.style.boxShadow = '0 0 10px rgba(220, 53, 69, 0.5)';
+            alert('⚠️ No se ha detectado una firma. Por favor, firme en el recuadro.');
         }
+        // Restaurar estilo después de 3 segundos
+        setTimeout(() => {
+            container.style.borderColor = '#ddd';
+            container.style.boxShadow = 'none';
+        }, 3000);
     }
     
     // Event listeners para botones
@@ -343,18 +376,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar con línea de guía
     clearSignature();
     
-    // Prevenir salida accidental
-    window.addEventListener('beforeunload', function(e) {
-        if (hasSignature) {
+    // Variable para controlar si el formulario se está enviando
+    let isSubmitting = false;
+    
+    // Prevenir salida accidental (solo si hay firma y no se está enviando)
+    function beforeUnloadHandler(e) {
+        if (hasSignature && !isSubmitting) {
             e.preventDefault();
             e.returnValue = '¿Está seguro de salir? Perderá la firma que ha creado.';
+            return e.returnValue;
         }
-    });
+    }
     
-    // Remover prevención al enviar formulario
-    form.addEventListener('submit', function() {
-        window.removeEventListener('beforeunload', arguments.callee);
-    });
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+    
+    // Modificar el submit para marcar que se está enviando
+    const originalSubmitHandler = form.onsubmit;
+    form.addEventListener('submit', function(e) {
+        // Marcar que se está enviando para evitar el mensaje de beforeunload
+        isSubmitting = true;
+        window.removeEventListener('beforeunload', beforeUnloadHandler);
+    }, true); // usar capture para que se ejecute primero
 });
 </script>
 @endpush

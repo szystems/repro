@@ -52,7 +52,11 @@
         }
         
         .logo-repro {
-            max-height: 45px;
+            max-height: 40px;
+            padding: 6px 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #000555;
+            border-radius: 6px;
         }
         
         .progress-indicator {
@@ -334,6 +338,60 @@
                 font-size: 1.2rem;
             }
         }
+        
+        /* Estilos de impresión para el layout */
+        @media print {
+            /* Ocultar elementos no necesarios */
+            .footer-info,
+            .loading-overlay,
+            .progress-indicator,
+            .evaluado-info {
+                display: none !important;
+            }
+            
+            /* Mostrar cabecera pero simplificada */
+            .cuestionario-header {
+                position: static !important;
+                padding: 0.5rem 0 !important;
+                margin-bottom: 0.5rem !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .cuestionario-header .container-fluid {
+                padding: 0 !important;
+            }
+            
+            .cuestionario-header .navbar-brand {
+                font-size: 1rem !important;
+            }
+            
+            .cuestionario-header .logo-repro {
+                max-height: 30px !important;
+            }
+            
+            .cuestionario-header .d-none {
+                display: none !important;
+            }
+            
+            body {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .main-container {
+                min-height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            .container {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+        }
     </style>
     
     @stack('styles')
@@ -387,7 +445,7 @@
             <div class="footer-info">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="mb-1"><strong>REPRO - Registro de Personas Reprobadas</strong></p>
+                        <p class="mb-1"><strong>REPRO </strong></p>
                         <p class="mb-0">Este cuestionario es confidencial y será utilizado únicamente para fines laborales</p>
                     </div>
                     <div class="d-none d-md-block">

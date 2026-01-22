@@ -1,4 +1,8 @@
-{{-- Sección 2: Educación y Formación --}}
+{{-- Sección 2: Información Familiar / Cambios Familiares --}}
+@php
+    // Determinar si es formulario periódico con cambios familiares
+    $esPeriodico = isset($respuestas['vive_con_pareja']) || isset($respuestas['tiene_hijos']) || isset($respuestas['tipo_vivienda']);
+@endphp
 <div class="section-content">
     @if($completada)
         <div class="alert alert-success mb-3">
@@ -11,158 +15,185 @@
     @endif
     
     <h5 class="section-title mb-4">
-        <i class="bi bi-mortarboard"></i> Educación y Formación Académica
+        <i class="bi bi-people"></i> {{ $nombreSeccion ?? 'Información Familiar' }}
     </h5>
     
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0">Nivel Educativo</h6>
+    @if($esPeriodico)
+        {{-- Vista para formulario periódico --}}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Situación Familiar</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            @if(isset($respuestas['vive_con_pareja']))
+                            <tr>
+                                <td class="fw-bold">¿Vive con pareja?:</td>
+                                <td>{{ $respuestas['vive_con_pareja'] == '1' || $respuestas['vive_con_pareja'] === 'si' ? 'Sí' : 'No' }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['pareja_trabaja']))
+                            <tr>
+                                <td class="fw-bold">¿Pareja trabaja?:</td>
+                                <td>{{ $respuestas['pareja_trabaja'] == '1' || $respuestas['pareja_trabaja'] === 'si' ? 'Sí' : 'No' }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['estado_civil_detalle']))
+                            <tr>
+                                <td class="fw-bold">Estado Civil Detalle:</td>
+                                <td>{{ ucfirst(str_replace('_', ' ', $respuestas['estado_civil_detalle'])) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['tiene_hijos']))
+                            <tr>
+                                <td class="fw-bold">¿Tiene hijos?:</td>
+                                <td>{{ $respuestas['tiene_hijos'] == '1' || $respuestas['tiene_hijos'] === 'si' ? 'Sí' : 'No' }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['numero_hijos']))
+                            <tr>
+                                <td class="fw-bold">Número de hijos:</td>
+                                <td>{{ $respuestas['numero_hijos'] }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['hijos_menores']))
+                            <tr>
+                                <td class="fw-bold">Hijos menores de edad:</td>
+                                <td>{{ $respuestas['hijos_menores'] }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['hijos_dependientes']))
+                            <tr>
+                                <td class="fw-bold">Hijos dependientes:</td>
+                                <td>{{ $respuestas['hijos_dependientes'] }}</td>
+                            </tr>
+                            @endif
+                        </table>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <table class="table table-borderless">
-                        <tr>
-                            <td class="fw-bold">Nivel más alto completado:</td>
-                            <td>{{ ucfirst($respuestas['nivel_educativo'] ?? 'No especificado') }}</td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">Especialidad/Carrera:</td>
-                            <td>{{ $respuestas['especialidad'] ?? 'No especificada' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">Institución:</td>
-                            <td>{{ $respuestas['institucion_educativa'] ?? 'No especificada' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">Año de graduación:</td>
-                            <td>{{ $respuestas['anio_graduacion'] ?? 'No especificado' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">¿Título en trámite?:</td>
-                            <td>
-                                @if(isset($respuestas['titulo_en_tramite']))
-                                    {{ $respuestas['titulo_en_tramite'] ? 'Sí' : 'No' }}
-                                @else
-                                    No especificado
-                                @endif
-                            </td>
-                        </tr>
-                    </table>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Situación de Vivienda</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            @if(isset($respuestas['tipo_vivienda']))
+                            <tr>
+                                <td class="fw-bold">Tipo de vivienda:</td>
+                                <td>{{ ucfirst(str_replace('_', ' ', $respuestas['tipo_vivienda'])) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['personas_hogar']))
+                            <tr>
+                                <td class="fw-bold">Personas en el hogar:</td>
+                                <td>{{ $respuestas['personas_hogar'] }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['dependientes_economicos']))
+                            <tr>
+                                <td class="fw-bold">Dependientes económicos:</td>
+                                <td>{{ $respuestas['dependientes_economicos'] }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['personas_contribuyen_gastos']))
+                            <tr>
+                                <td class="fw-bold">Personas que contribuyen:</td>
+                                <td>{{ $respuestas['personas_contribuyen_gastos'] }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['monto_alquiler']) && $respuestas['monto_alquiler'])
+                            <tr>
+                                <td class="fw-bold">Monto de alquiler:</td>
+                                <td>Q{{ number_format($respuestas['monto_alquiler'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['monto_hipoteca']) && $respuestas['monto_hipoteca'])
+                            <tr>
+                                <td class="fw-bold">Monto de hipoteca:</td>
+                                <td>Q{{ number_format($respuestas['monto_hipoteca'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['anos_restantes_hipoteca']) && $respuestas['anos_restantes_hipoteca'])
+                            <tr>
+                                <td class="fw-bold">Años restantes hipoteca:</td>
+                                <td>{{ $respuestas['anos_restantes_hipoteca'] }} años</td>
+                            </tr>
+                            @endif
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0">Idiomas</h6>
-                </div>
-                <div class="card-body">
-                    @if(isset($respuestas['idiomas']) && is_array($respuestas['idiomas']))
-                        @foreach($respuestas['idiomas'] as $idioma => $nivel)
-                            <div class="row mb-2">
-                                <div class="col-6">
-                                    <strong>{{ ucfirst($idioma) }}:</strong>
-                                </div>
-                                <div class="col-6">
-                                    <span class="badge 
-                                        @switch($nivel)
-                                            @case('basico') bg-warning @break
-                                            @case('intermedio') bg-info @break
-                                            @case('avanzado') bg-success @break
-                                            @case('nativo') bg-primary @break
-                                            @default bg-secondary
-                                        @endswitch
-                                    ">
-                                        {{ ucfirst($nivel) }}
-                                    </span>
-                                </div>
-                            </div>
-                        @endforeach
-                    @else
-                        <p class="text-muted">No se han registrado idiomas</p>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    {{-- Cursos y Certificaciones --}}
-    <div class="row mt-3">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0">Cursos y Certificaciones</h6>
-                </div>
-                <div class="card-body">
-                    @if(isset($respuestas['cursos_certificaciones']) && is_array($respuestas['cursos_certificaciones']))
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Curso/Certificación</th>
-                                        <th>Institución</th>
-                                        <th>Año</th>
-                                        <th>Duración</th>
-                                        <th>Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($respuestas['cursos_certificaciones'] as $curso)
-                                        <tr>
-                                            <td>{{ $curso['nombre'] ?? 'N/A' }}</td>
-                                            <td>{{ $curso['institucion'] ?? 'N/A' }}</td>
-                                            <td>{{ $curso['anio'] ?? 'N/A' }}</td>
-                                            <td>{{ $curso['duracion'] ?? 'N/A' }}</td>
-                                            <td>
-                                                <span class="badge {{ ($curso['completado'] ?? false) ? 'bg-success' : 'bg-warning' }}">
-                                                    {{ ($curso['completado'] ?? false) ? 'Completado' : 'En progreso' }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <p class="text-muted">No se han registrado cursos o certificaciones</p>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    {{-- Competencias Técnicas --}}
-    @if(isset($respuestas['competencias_tecnicas']))
+        @if(isset($respuestas['observaciones_familiares']) && $respuestas['observaciones_familiares'])
         <div class="row mt-3">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h6 class="mb-0">Competencias Técnicas</h6>
+                        <h6 class="mb-0">Observaciones Familiares</h6>
                     </div>
                     <div class="card-body">
-                        @if(is_array($respuestas['competencias_tecnicas']))
-                            <div class="row">
-                                @foreach($respuestas['competencias_tecnicas'] as $competencia => $nivel)
-                                    <div class="col-md-4 mb-2">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span>{{ ucfirst($competencia) }}:</span>
-                                            <div class="progress" style="width: 100px; height: 20px;">
-                                                <div class="progress-bar 
-                                                    @if($nivel >= 80) bg-success
-                                                    @elseif($nivel >= 60) bg-info
-                                                    @elseif($nivel >= 40) bg-warning
-                                                    @else bg-danger
-                                                    @endif
-                                                " style="width: {{ $nivel }}%">{{ $nivel }}%</div>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <p class="mb-0">{!! nl2br(e($respuestas['observaciones_familiares'])) !!}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+    @else
+        {{-- Vista para formulario preempleo: Educación y Formación --}}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Nivel Educativo</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold">Nivel más alto:</td>
+                                <td>{{ ucfirst(str_replace('_', ' ', $respuestas['nivel_educativo'] ?? 'No especificado')) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Especialidad/Carrera:</td>
+                                <td>{{ $respuestas['especialidad'] ?? 'No especificada' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Institución:</td>
+                                <td>{{ $respuestas['institucion_educativa'] ?? 'No especificada' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Año de graduación:</td>
+                                <td>{{ $respuestas['anio_graduacion'] ?? 'No especificado' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Información Adicional</h6>
+                    </div>
+                    <div class="card-body">
+                        @if(count($respuestas) > 0)
+                            <table class="table table-borderless">
+                                @foreach($respuestas as $campo => $valor)
+                                    @if(!in_array($campo, ['nivel_educativo', 'especialidad', 'institucion_educativa', 'anio_graduacion']))
+                                    <tr>
+                                        <td class="fw-bold">{{ ucfirst(str_replace('_', ' ', $campo)) }}:</td>
+                                        <td>{{ is_array($valor) ? json_encode($valor) : $valor }}</td>
+                                    </tr>
+                                    @endif
                                 @endforeach
-                            </div>
+                            </table>
                         @else
-                            <p class="mb-0">{{ $respuestas['competencias_tecnicas'] }}</p>
+                            <p class="text-muted">No hay información adicional</p>
                         @endif
                     </div>
                 </div>

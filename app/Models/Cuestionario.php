@@ -50,6 +50,8 @@ class Cuestionario extends Model
     // Métodos útiles
     public function getSeccionesConfig(): array
     {
+        // Nota: La "Firma Digital" no es una sección regular,
+        // se maneja en la pantalla de finalización
         $secciones = [
             'preempleo' => [
                 1 => 'Datos Personales',
@@ -57,20 +59,19 @@ class Cuestionario extends Model
                 3 => 'Historial Laboral',
                 4 => 'Situación Económica',
                 5 => 'Antecedentes y Referencias',
-                6 => 'Firma Digital'
             ],
             'periodica' => [
                 1 => 'Actualización de Datos',
                 2 => 'Cambios Familiares',
                 3 => 'Situación Laboral Actual',
-                4 => 'Antecedentes Recientes',
-                5 => 'Firma Digital'
+                4 => 'Situación Económica',
+                5 => 'Antecedentes y Referencias',
             ],
             'especifica' => [
                 1 => 'Datos Básicos',
                 2 => 'Situación Específica',
-                3 => 'Antecedentes Relevantes', 
-                4 => 'Firma Digital'
+                3 => 'Situación Económica',
+                4 => 'Antecedentes Relevantes', 
             ],
             'socioeconomico' => [
                 1 => 'Datos Personales',
@@ -80,7 +81,6 @@ class Cuestionario extends Model
                 5 => 'Situación Habitacional',
                 6 => 'Referencias Comunitarias',
                 7 => 'Verificación de Documentos',
-                8 => 'Firma Digital'
             ]
         ];
         
@@ -142,14 +142,42 @@ class Cuestionario extends Model
      */
     protected function getSlugSeccion(int $numero): string
     {
-        $slugs = [
-            1 => 'datos_personales',
-            2 => 'informacion_familiar',
-            3 => 'historial_laboral',
-            4 => 'situacion_economica',
-            5 => 'antecedentes_referencias',
-            6 => 'firma_digital'
+        $slugsPorTipo = [
+            'preempleo' => [
+                1 => 'datos_personales',
+                2 => 'informacion_familiar',
+                3 => 'historial_laboral',
+                4 => 'situacion_economica',
+                5 => 'antecedentes_referencias',
+                6 => 'firma_digital'
+            ],
+            'periodica' => [
+                1 => 'actualizacion_datos',
+                2 => 'cambios_familiares',
+                3 => 'situacion_laboral',
+                4 => 'antecedentes_recientes',  // Contiene datos económicos (así se guardó)
+                5 => 'firma_digital'             // Contiene antecedentes (así se guardó)
+            ],
+            'especifica' => [
+                1 => 'datos_basicos',
+                2 => 'situacion_especifica',
+                3 => 'situacion_economica',
+                4 => 'antecedentes_relevantes',
+                5 => 'firma_digital'
+            ],
+            'socioeconomico' => [
+                1 => 'datos_personales',
+                2 => 'informacion_familiar',
+                3 => 'historial_laboral',
+                4 => 'situacion_economica_detallada',
+                5 => 'situacion_habitacional',
+                6 => 'referencias_comunitarias',
+                7 => 'verificacion_documentos',
+                8 => 'firma_digital'
+            ]
         ];
+        
+        $slugs = $slugsPorTipo[$this->tipo_formulario] ?? $slugsPorTipo['preempleo'];
         
         return $slugs[$numero] ?? 'seccion_' . $numero;
     }

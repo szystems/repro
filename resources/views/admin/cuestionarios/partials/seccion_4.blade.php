@@ -1,4 +1,4 @@
-{{-- Sección 4: Competencias y Habilidades --}}
+{{-- Sección 4: Situación Económica --}}
 <div class="section-content">
     @if($completada)
         <div class="alert alert-success mb-3">
@@ -11,252 +11,191 @@
     @endif
     
     <h5 class="section-title mb-4">
-        <i class="bi bi-star"></i> Competencias y Habilidades
+        <i class="bi bi-currency-dollar"></i> {{ $nombreSeccion ?? 'Situación Económica' }}
     </h5>
     
-    {{-- Habilidades Técnicas --}}
-    @if(isset($respuestas['habilidades_tecnicas']) && is_array($respuestas['habilidades_tecnicas']))
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">Habilidades Técnicas</h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    @foreach($respuestas['habilidades_tecnicas'] as $categoria => $habilidades)
-                        <div class="col-md-6 mb-3">
-                            <h6 class="text-primary">{{ ucfirst(str_replace('_', ' ', $categoria)) }}</h6>
-                            @if(is_array($habilidades))
-                                @foreach($habilidades as $habilidad => $nivel)
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span>{{ ucfirst($habilidad) }}</span>
-                                        <div class="d-flex align-items-center">
-                                            <div class="progress me-2" style="width: 100px; height: 20px;">
-                                                <div class="progress-bar 
-                                                    @if($nivel >= 80) bg-success
-                                                    @elseif($nivel >= 60) bg-info
-                                                    @elseif($nivel >= 40) bg-warning
-                                                    @else bg-danger
-                                                    @endif
-                                                " style="width: {{ $nivel }}%"></div>
-                                            </div>
-                                            <small class="text-muted">{{ $nivel }}%</small>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            @else
-                                <p class="text-muted">{{ $habilidades }}</p>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
-    
-    {{-- Habilidades Blandas --}}
-    @if(isset($respuestas['habilidades_blandas']) && is_array($respuestas['habilidades_blandas']))
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">Habilidades Blandas</h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    @foreach($respuestas['habilidades_blandas'] as $habilidad => $descripcion)
-                        <div class="col-md-6 mb-3">
-                            <div class="d-flex align-items-start">
-                                <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
-                                <div>
-                                    <strong>{{ ucfirst(str_replace('_', ' ', $habilidad)) }}</strong>
-                                    @if(is_string($descripcion) && !empty($descripcion))
-                                        <p class="text-muted mb-0 small">{{ $descripcion }}</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
-    
-    {{-- Test de Personalidad --}}
-    @if(isset($respuestas['test_personalidad']))
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">Perfil de Personalidad</h6>
-            </div>
-            <div class="card-body">
-                @if(is_array($respuestas['test_personalidad']))
-                    <div class="row">
-                        @foreach($respuestas['test_personalidad'] as $dimension => $valor)
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <strong>{{ ucfirst(str_replace('_', ' ', $dimension)) }}</strong>
-                                    <span class="badge 
-                                        @if($valor >= 80) bg-success
-                                        @elseif($valor >= 60) bg-info
-                                        @elseif($valor >= 40) bg-warning
-                                        @else bg-danger
-                                        @endif
-                                    ">{{ $valor }}%</span>
-                                </div>
-                                <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar 
-                                        @if($valor >= 80) bg-success
-                                        @elseif($valor >= 60) bg-info
-                                        @elseif($valor >= 40) bg-warning
-                                        @else bg-danger
-                                        @endif
-                                    " style="width: {{ $valor }}%"></div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <p>{{ $respuestas['test_personalidad'] }}</p>
-                @endif
-            </div>
-        </div>
-    @endif
-    
-    {{-- Competencias de Liderazgo --}}
-    @if(isset($respuestas['competencias_liderazgo']))
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">Competencias de Liderazgo</h6>
-            </div>
-            <div class="card-body">
-                @if(is_array($respuestas['competencias_liderazgo']))
-                    <div class="row">
-                        @foreach($respuestas['competencias_liderazgo'] as $competencia => $nivel)
-                            <div class="col-md-4 mb-3">
-                                <div class="text-center">
-                                    <div class="position-relative d-inline-block">
-                                        <svg width="80" height="80" class="circular-progress">
-                                            <circle cx="40" cy="40" r="35" 
-                                                    fill="none" 
-                                                    stroke="#e9ecef" 
-                                                    stroke-width="5"/>
-                                            <circle cx="40" cy="40" r="35" 
-                                                    fill="none" 
-                                                    stroke="
-                                                        @if($nivel >= 80) #28a745
-                                                        @elseif($nivel >= 60) #17a2b8
-                                                        @elseif($nivel >= 40) #ffc107
-                                                        @else #dc3545
-                                                        @endif
-                                                    " 
-                                                    stroke-width="5"
-                                                    stroke-dasharray="{{ (2 * 3.14159 * 35) }}"
-                                                    stroke-dashoffset="{{ (2 * 3.14159 * 35) * (1 - $nivel/100) }}"
-                                                    transform="rotate(-90 40 40)"/>
-                                        </svg>
-                                        <div class="position-absolute top-50 start-50 translate-middle">
-                                            <strong>{{ $nivel }}%</strong>
-                                        </div>
-                                    </div>
-                                    <p class="mt-2 mb-0 small">{{ ucfirst(str_replace('_', ' ', $competencia)) }}</p>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <p>{{ $respuestas['competencias_liderazgo'] }}</p>
-                @endif
-            </div>
-        </div>
-    @endif
-    
-    {{-- Fortalezas y Áreas de Mejora --}}
-    <div class="row">
-        @if(isset($respuestas['fortalezas_principales']))
+    @if(count($respuestas) > 0)
+        <div class="row">
+            {{-- Ingresos --}}
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header bg-success text-white">
-                        <h6 class="mb-0">
-                            <i class="bi bi-hand-thumbs-up"></i> Fortalezas Principales
-                        </h6>
+                        <h6 class="mb-0"><i class="bi bi-arrow-up-circle"></i> Ingresos</h6>
                     </div>
                     <div class="card-body">
-                        @if(is_array($respuestas['fortalezas_principales']))
-                            <ul class="list-unstyled">
-                                @foreach($respuestas['fortalezas_principales'] as $fortaleza)
-                                    <li class="mb-2">
-                                        <i class="bi bi-check text-success me-2"></i>
-                                        {{ $fortaleza }}
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @else
-                            <p class="mb-0">{{ $respuestas['fortalezas_principales'] }}</p>
-                        @endif
+                        <table class="table table-borderless">
+                            @if(isset($respuestas['ingresos_principales']) && $respuestas['ingresos_principales'])
+                            <tr>
+                                <td class="fw-bold">Ingresos principales:</td>
+                                <td class="text-success fw-bold">Q{{ number_format($respuestas['ingresos_principales'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['ingresos_adicionales']) && $respuestas['ingresos_adicionales'])
+                            <tr>
+                                <td class="fw-bold">Ingresos adicionales:</td>
+                                <td class="text-success">Q{{ number_format($respuestas['ingresos_adicionales'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['ingresos_familiares']) && $respuestas['ingresos_familiares'])
+                            <tr>
+                                <td class="fw-bold">Ingresos familiares:</td>
+                                <td class="text-success">Q{{ number_format($respuestas['ingresos_familiares'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['total_ingresos']) && $respuestas['total_ingresos'])
+                            <tr class="border-top">
+                                <td class="fw-bold fs-5">TOTAL INGRESOS:</td>
+                                <td class="text-success fw-bold fs-5">Q{{ number_format($respuestas['total_ingresos'], 2) }}</td>
+                            </tr>
+                            @endif
+                        </table>
                     </div>
                 </div>
             </div>
-        @endif
-        
-        @if(isset($respuestas['areas_mejora']))
+            
+            {{-- Gastos --}}
             <div class="col-md-6">
                 <div class="card">
-                    <div class="card-header bg-warning text-dark">
-                        <h6 class="mb-0">
-                            <i class="bi bi-graph-up"></i> Áreas de Mejora
-                        </h6>
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="mb-0"><i class="bi bi-arrow-down-circle"></i> Gastos</h6>
                     </div>
                     <div class="card-body">
-                        @if(is_array($respuestas['areas_mejora']))
-                            <ul class="list-unstyled">
-                                @foreach($respuestas['areas_mejora'] as $area)
-                                    <li class="mb-2">
-                                        <i class="bi bi-arrow-up text-warning me-2"></i>
-                                        {{ $area }}
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @else
-                            <p class="mb-0">{{ $respuestas['areas_mejora'] }}</p>
-                        @endif
+                        <table class="table table-borderless">
+                            @if(isset($respuestas['gastos_vivienda']) && $respuestas['gastos_vivienda'])
+                            <tr>
+                                <td class="fw-bold">Vivienda:</td>
+                                <td class="text-danger">Q{{ number_format($respuestas['gastos_vivienda'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['gastos_alimentacion']) && $respuestas['gastos_alimentacion'])
+                            <tr>
+                                <td class="fw-bold">Alimentación:</td>
+                                <td class="text-danger">Q{{ number_format($respuestas['gastos_alimentacion'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['gastos_transporte']) && $respuestas['gastos_transporte'])
+                            <tr>
+                                <td class="fw-bold">Transporte:</td>
+                                <td class="text-danger">Q{{ number_format($respuestas['gastos_transporte'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['gastos_educacion']) && $respuestas['gastos_educacion'])
+                            <tr>
+                                <td class="fw-bold">Educación:</td>
+                                <td class="text-danger">Q{{ number_format($respuestas['gastos_educacion'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['gastos_salud']) && $respuestas['gastos_salud'])
+                            <tr>
+                                <td class="fw-bold">Salud:</td>
+                                <td class="text-danger">Q{{ number_format($respuestas['gastos_salud'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['gastos_otros']) && $respuestas['gastos_otros'])
+                            <tr>
+                                <td class="fw-bold">Otros gastos:</td>
+                                <td class="text-danger">Q{{ number_format($respuestas['gastos_otros'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['total_gastos']) && $respuestas['total_gastos'])
+                            <tr class="border-top">
+                                <td class="fw-bold fs-5">TOTAL GASTOS:</td>
+                                <td class="text-danger fw-bold fs-5">Q{{ number_format($respuestas['total_gastos'], 2) }}</td>
+                            </tr>
+                            @endif
+                        </table>
                     </div>
                 </div>
             </div>
+        </div>
+        
+        {{-- Balance y Deudas --}}
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-graph-up"></i> Balance Mensual</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        @php
+                            $balance = $respuestas['balance_mensual'] ?? 0;
+                        @endphp
+                        <h2 class="{{ $balance >= 0 ? 'text-success' : 'text-danger' }}">
+                            Q{{ number_format($balance, 2) }}
+                        </h2>
+                        <p class="mb-0 {{ $balance >= 0 ? 'text-success' : 'text-danger' }}">
+                            @if($balance > 0)
+                                <i class="bi bi-arrow-up"></i> Superávit mensual
+                            @elseif($balance < 0)
+                                <i class="bi bi-arrow-down"></i> Déficit mensual
+                            @else
+                                <i class="bi bi-dash"></i> Equilibrado
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-wallet2"></i> Situación Financiera</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            @if(isset($respuestas['tiene_ahorros']))
+                            <tr>
+                                <td class="fw-bold">¿Tiene ahorros?:</td>
+                                <td>
+                                    @if($respuestas['tiene_ahorros'] == '1' || $respuestas['tiene_ahorros'] === 'si')
+                                        <span class="badge bg-success">Sí</span>
+                                    @else
+                                        <span class="badge bg-secondary">No</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['tiene_deudas']))
+                            <tr>
+                                <td class="fw-bold">¿Tiene deudas?:</td>
+                                <td>
+                                    @if($respuestas['tiene_deudas'] == '1' || $respuestas['tiene_deudas'] === 'si')
+                                        <span class="badge bg-warning">Sí</span>
+                                    @else
+                                        <span class="badge bg-success">No</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['detalle_deudas']) && $respuestas['detalle_deudas'])
+                            <tr>
+                                <td class="fw-bold">Detalle de deudas:</td>
+                                <td>{!! nl2br(e($respuestas['detalle_deudas'])) !!}</td>
+                            </tr>
+                            @endif
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        @if(isset($respuestas['observaciones_economicas']) && $respuestas['observaciones_economicas'])
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Observaciones Económicas</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">{!! nl2br(e($respuestas['observaciones_economicas'])) !!}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
         @endif
-    </div>
-    
-    {{-- Autoevaluación General --}}
-    @if(isset($respuestas['autoevaluacion_general']))
-        <div class="card mt-4">
-            <div class="card-header">
-                <h6 class="mb-0">Autoevaluación General</h6>
-            </div>
-            <div class="card-body">
-                <p class="mb-0">{{ $respuestas['autoevaluacion_general'] }}</p>
-            </div>
+    @else
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No hay información económica registrada en esta sección.
         </div>
     @endif
 </div>
-
-@push('styles')
-<style>
-.circular-progress {
-    transform: rotate(-90deg);
-}
-
-.progress {
-    border-radius: 10px;
-}
-
-.progress-bar {
-    border-radius: 10px;
-}
-
-.section-content .card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    border: 1px solid rgba(0, 0, 0, 0.125);
-}
-
-.section-content .card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-}
-</style>
-@endpush

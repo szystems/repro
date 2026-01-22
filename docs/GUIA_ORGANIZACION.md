@@ -2,7 +2,7 @@
 
 **Propósito:** Mantener la estructura de archivos organizada y consistente  
 **Audiencia:** Desarrolladores y agentes de IA  
-**Fecha:** 15 de noviembre de 2025  
+**Fecha:** 21 de enero de 2026  
 
 ---
 

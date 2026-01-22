@@ -15,67 +15,42 @@ class HistorialLaboralRequest extends FormRequest
     {
         return [
             // Situación laboral actual
-            'situacion_actual' => 'required|in:empleado,desempleado,estudiante,independiente,jubilado',
-            'empresa_actual' => 'required_unless:situacion_actual,desempleado,estudiante,jubilado|nullable|string|max:255',
-            'cargo_actual' => 'required_unless:situacion_actual,desempleado,estudiante,jubilado|nullable|string|max:255',
-            'salario_actual' => 'required_unless:situacion_actual,desempleado,estudiante,jubilado|nullable|numeric|min:0',
-            'fecha_inicio_actual' => 'required_unless:situacion_actual,desempleado,estudiante,jubilado|nullable|date|before_or_equal:today',
-            'jefe_inmediato_nombre' => 'nullable|string|max:255',
-            'jefe_inmediato_telefono' => 'nullable|string|max:20',
+            'situacion_laboral_actual' => 'required|string|in:empleado,independiente,empresario,desempleado,estudiante,jubilado',
+            'anos_experiencia_laboral' => 'required|integer|min:0|max:50',
             
-            // Historial laboral (últimos 5 años)
-            'empleos_anteriores' => 'nullable|array',
-            'empleos_anteriores.*.empresa' => 'required|string|max:255',
-            'empleos_anteriores.*.cargo' => 'required|string|max:255',
-            'empleos_anteriores.*.fecha_inicio' => 'required|date|before_or_equal:today',
-            'empleos_anteriores.*.fecha_fin' => 'required|date|after:empleos_anteriores.*.fecha_inicio|before_or_equal:today',
-            'empleos_anteriores.*.salario' => 'required|numeric|min:0',
-            'empleos_anteriores.*.motivo_salida' => 'required|string|max:500',
-            'empleos_anteriores.*.jefe_nombre' => 'required|string|max:255',
-            'empleos_anteriores.*.jefe_telefono' => 'required|string|max:20',
-            'empleos_anteriores.*.puede_contactar' => 'required|boolean',
+            // Empleo actual (si aplica - empleado)
+            'empresa_actual' => 'nullable|string|max:100',
+            'puesto_actual' => 'nullable|string|max:100',
+            'fecha_inicio_actual' => 'nullable|date|before_or_equal:today',
+            'salario_actual' => 'nullable|numeric|min:0',
+            'jefe_inmediato' => 'nullable|string|max:100',
             
-            // Períodos de desempleo
-            'periodos_desempleo' => 'nullable|array',
-            'periodos_desempleo.*.fecha_inicio' => 'required|date',
-            'periodos_desempleo.*.fecha_fin' => 'required|date|after:periodos_desempleo.*.fecha_inicio',
-            'periodos_desempleo.*.motivo' => 'required|string|max:500',
-            'periodos_desempleo.*.actividad_realizada' => 'nullable|string|max:500',
+            // Trabajo independiente (si aplica)
+            'tipo_negocio' => 'nullable|string|max:100',
+            'ingresos_mensuales' => 'nullable|numeric|min:0',
             
-            // Referencias laborales
-            'referencia_laboral_1_nombre' => 'required|string|max:255',
-            'referencia_laboral_1_empresa' => 'required|string|max:255',
-            'referencia_laboral_1_cargo' => 'required|string|max:255',
-            'referencia_laboral_1_telefono' => 'required|string|max:20',
-            'referencia_laboral_1_email' => 'nullable|email|max:255',
-            'referencia_laboral_1_años_conoce' => 'required|integer|between:1,50',
+            // Historial laboral (texto libre)
+            'empleos_anteriores' => 'nullable|string|max:2000',
             
-            'referencia_laboral_2_nombre' => 'nullable|string|max:255',
-            'referencia_laboral_2_empresa' => 'nullable|string|max:255',
-            'referencia_laboral_2_cargo' => 'nullable|string|max:255',
-            'referencia_laboral_2_telefono' => 'nullable|string|max:20',
-            'referencia_laboral_2_email' => 'nullable|email|max:255',
-            'referencia_laboral_2_años_conoce' => 'nullable|integer|between:1,50',
-            
-            // Metas profesionales
-            'metas_corto_plazo' => 'nullable|string|max:500',
-            'metas_largo_plazo' => 'nullable|string|max:500',
-            'capacitaciones_recientes' => 'nullable|string|max:500',
+            // Motivo de búsqueda de empleo
+            'motivo_busqueda' => 'nullable|string|in:desempleo,mejor_oportunidad,cambio_de_area,mejores_ingresos,crecimiento_profesional,ambiente_laboral,otro',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'situacion_actual.required' => 'Debe indicar su situación laboral actual.',
-            'empresa_actual.required_unless' => 'El nombre de la empresa actual es obligatorio.',
-            'cargo_actual.required_unless' => 'El cargo actual es obligatorio.',
-            'salario_actual.required_unless' => 'El salario actual es obligatorio.',
-            'fecha_inicio_actual.required_unless' => 'La fecha de inicio en el trabajo actual es obligatoria.',
-            'empleos_anteriores.*.empresa.required' => 'El nombre de la empresa es obligatorio.',
-            'empleos_anteriores.*.cargo.required' => 'El cargo desempeñado es obligatorio.',
-            'empleos_anteriores.*.motivo_salida.required' => 'El motivo de salida es obligatorio.',
-            'referencia_laboral_1_nombre.required' => 'Debe proporcionar al menos una referencia laboral.',
+            'situacion_laboral_actual.required' => 'Debe indicar su situación laboral actual.',
+            'situacion_laboral_actual.in' => 'Seleccione una situación laboral válida.',
+            'anos_experiencia_laboral.required' => 'Debe indicar sus años de experiencia laboral.',
+            'anos_experiencia_laboral.integer' => 'Los años de experiencia deben ser un número entero.',
+            'anos_experiencia_laboral.min' => 'Los años de experiencia no pueden ser negativos.',
+            'anos_experiencia_laboral.max' => 'Los años de experiencia no pueden ser mayores a 50.',
+            'fecha_inicio_actual.date' => 'La fecha de inicio debe ser una fecha válida.',
+            'fecha_inicio_actual.before_or_equal' => 'La fecha de inicio no puede ser futura.',
+            'salario_actual.numeric' => 'El salario debe ser un número válido.',
+            'salario_actual.min' => 'El salario no puede ser negativo.',
+            'motivo_busqueda.in' => 'Seleccione un motivo válido.',
         ];
     }
 }

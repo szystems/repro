@@ -26,14 +26,21 @@
         <!-- Messages -->
         @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
+            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         @endif
 
         @if(session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+
+        @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>{{ session('warning') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         @endif
@@ -47,6 +54,9 @@
                         <div class="card-options">
                             <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm me-1">
                                 <i class="bi bi-arrow-left"></i> Volver
+                            </a>
+                            <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-danger btn-sm me-1" target="_blank">
+                                <i class="bi bi-file-pdf"></i> PDF
                             </a>
                             
                             @if(Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->hasRole('empresa') && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'programacion'])))
@@ -76,6 +86,11 @@
                                         {{ $estados[$orden->estado] ?? $orden->estado }}
                                     </span>
                                 </div>
+                                @if($orden->observaciones)
+                                <div class="mt-2">
+                                    <small class="text-muted"><i class="bi bi-chat-left-text"></i> {{ $orden->observaciones }}</small>
+                                </div>
+                                @endif
                             </div>
                         </div>
 
@@ -401,6 +416,12 @@
                                                            title="Ver Cuestionario">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
+                                                        <a href="{{ route('admin.cuestionarios.pdf', $cuestionario->id) }}" 
+                                                           class="btn btn-outline-danger btn-sm" 
+                                                           title="Imprimir PDF"
+                                                           target="_blank">
+                                                            <i class="bi bi-file-pdf"></i>
+                                                        </a>
                                                         <a href="{{ route('admin.cuestionarios.edit', $cuestionario->id) }}" 
                                                            class="btn btn-outline-warning btn-sm" 
                                                            title="Editar Cuestionario">
@@ -409,7 +430,7 @@
                                                     @endif
                                                 @else
                                                     {{-- No hay cuestionario --}}
-                                                    <span class="text-muted small">Sin cuestionario</span>
+                                                    <span class="text-muted small">Sin cuestionario<br</span>
                                                 @endif
                                                 
                                                 @if(!$evaluado->cuestionario_completado)
@@ -419,6 +440,20 @@
                                                        target="_blank">
                                                         <i class="bi bi-link-45deg"></i>
                                                     </a>
+                                                    
+                                                    @if($evaluado->email)
+                                                    <form action="{{ route('evaluados.reenviar-correo', $evaluado->id) }}" 
+                                                          method="POST" 
+                                                          class="d-inline"
+                                                          onsubmit="return confirm('¿Enviar correo a {{ $evaluado->email }}?');">
+                                                        @csrf
+                                                        <button type="submit" 
+                                                                class="btn btn-outline-success btn-sm" 
+                                                                title="Reenviar correo a {{ $evaluado->email }}">
+                                                            <i class="bi bi-envelope"></i>
+                                                        </button>
+                                                    </form>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </td>

@@ -339,22 +339,13 @@ class CuestionarioModuloCompletoTest extends TestCase
         $this->completarSeccion1();
 
         $datosSeccion2 = [
-            'tiene_pareja' => false,
-            'padre_nombre' => 'Carlos Alberto Pérez',
-            'padre_vive' => true,
-            'padre_edad' => 55,
-            'padre_profesion' => 'Comerciante',
-            'madre_nombre' => 'María Elena García',
-            'madre_vive' => true,
-            'madre_edad' => 52,
-            'madre_profesion' => 'Ama de casa',
-            'numero_hermanos' => 2,
-            'tiene_hijos' => false,
+            'estado_civil_detalle' => 'soltero',
+            'vive_con_pareja' => 'no',
+            'tiene_hijos' => 'no',
             'personas_hogar' => 4,
-            'referencia_familiar_1_nombre' => 'Roberto Pérez',
-            'referencia_familiar_1_parentesco' => 'Tío',
-            'referencia_familiar_1_telefono' => '55551234',
-            'referencia_familiar_1_direccion' => 'Zona 5, Ciudad de Guatemala'
+            'dependientes_economicos' => 2,
+            'tipo_vivienda' => 'familiar',
+            'personas_contribuyen_gastos' => 2
         ];
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/2", $datosSeccion2);
@@ -376,18 +367,12 @@ class CuestionarioModuloCompletoTest extends TestCase
         $this->completarSeccion2();
 
         $datosSeccion3 = [
-            'situacion_actual' => 'empleado',
+            'situacion_laboral_actual' => 'empleado',
+            'anos_experiencia_laboral' => 5,
             'empresa_actual' => 'Empresa Ejemplo S.A.',
-            'cargo_actual' => 'Analista de Sistemas',
+            'puesto_actual' => 'Analista de Sistemas',
             'salario_actual' => 8000.00,
-            'fecha_inicio_actual' => '2022-01-15',
-            'jefe_inmediato_nombre' => 'Luis Martínez',
-            'jefe_inmediato_telefono' => '55559876',
-            'referencia_laboral_1_nombre' => 'Ana López',
-            'referencia_laboral_1_empresa' => 'Empresa Anterior S.A.',
-            'referencia_laboral_1_cargo' => 'Gerente de TI',
-            'referencia_laboral_1_telefono' => '55554321',
-            'referencia_laboral_1_años_conoce' => 3
+            'empleos_anteriores' => 'Empresa Anterior - Asistente - 2019-2021'
         ];
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/3", $datosSeccion3);
@@ -410,18 +395,13 @@ class CuestionarioModuloCompletoTest extends TestCase
         $this->completarSeccion3();
 
         $datosSeccion4 = [
-            'ingreso_mensual_personal' => 8000.00,
-            'ingreso_familiar_total' => 15000.00,
-            'gasto_vivienda' => 2500.00,
-            'gasto_alimentacion' => 3000.00,
-            'gasto_transporte' => 800.00,
-            'gasto_servicios' => 600.00,
-            'gastos_totales' => 6900.00,
-            'tiene_casa_propia' => false,
-            'tiene_vehiculo' => false,
-            'referencia_comercial_1_empresa' => 'Banco Industrial',
-            'referencia_comercial_1_telefono' => '55557890',
-            'referencia_comercial_1_tipo' => 'banco'
+            'ingresos_principales' => 8000.00,
+            'ingresos_adicionales' => 1000.00,
+            'gastos_vivienda' => 2500.00,
+            'gastos_alimentacion' => 3000.00,
+            'gastos_transporte' => 800.00,
+            'tiene_deudas' => 'no',
+            'tiene_ahorros' => 'si'
         ];
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/4", $datosSeccion4);
@@ -445,32 +425,17 @@ class CuestionarioModuloCompletoTest extends TestCase
         $this->completarSeccion4();
 
         $datosSeccion5 = [
-            'antecedentes_penales' => false,
-            'problemas_legales_actuales' => false,
-            'demandas_civiles' => false,
-            'consume_alcohol' => 'nunca',
-            'consume_drogas' => false,
-            'fuma_cigarrillos' => false,
-            'tratamiento_psicologico' => false,
-            'medicamentos_psiquiatricos' => false,
-            'enfermedades_importantes' => false,
-            'accidentes_importantes' => false,
-            'practica_deportes_extremos' => false,
-            'situaciones_comprometedoras' => false,
-            'tiempo_diario_redes_sociales' => 2,
-            'juegos_en_linea' => false,
-            'referencia_personal_1_nombre' => 'María García',
-            'referencia_personal_1_telefono' => '55551111',
-            'referencia_personal_1_profesion' => 'Contadora',
-            'referencia_personal_1_tiempo_conoce' => 5,
-            'referencia_personal_1_como_conoce' => 'Amigos de la universidad',
-            'referencia_personal_2_nombre' => 'Pedro López',
-            'referencia_personal_2_telefono' => '55552222',
-            'referencia_personal_2_profesion' => 'Abogado',
-            'referencia_personal_2_tiempo_conoce' => 8,
-            'referencia_personal_2_como_conoce' => 'Vecinos desde la infancia',
-            'acepta_investigacion' => true,
-            'acepta_veracidad' => true
+            'referencia1_nombre' => 'María García',
+            'referencia1_telefono' => '55551111',
+            'referencia1_relacion' => 'Amiga',
+            'referencia2_nombre' => 'Pedro López',
+            'referencia2_telefono' => '55552222',
+            'referencia2_relacion' => 'Vecino',
+            'antecedentes_penales' => 'no',
+            'despedido_trabajo' => 'no',
+            'consume_alcohol' => 'ocasionalmente',
+            'consume_drogas' => 'nunca',
+            'problemas_salud_mental' => 'no'
         ];
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/5", $datosSeccion5);
@@ -480,46 +445,33 @@ class CuestionarioModuloCompletoTest extends TestCase
     }
 
     /**
-     * Test: Requiere declaración de veracidad en sección 5
+     * Test: Requiere campos obligatorios en sección 5 (Antecedentes)
      */
-    public function test_requiere_declaracion_veracidad(): void
+    public function test_requiere_campos_obligatorios_seccion_5(): void
     {
         $this->completarSeccion1();
         $this->completarSeccion2();
         $this->completarSeccion3();
         $this->completarSeccion4();
 
-        $datosSinDeclaracion = [
-            'antecedentes_penales' => false,
-            'problemas_legales_actuales' => false,
-            'demandas_civiles' => false,
-            'consume_alcohol' => 'nunca',
-            'consume_drogas' => false,
-            'fuma_cigarrillos' => false,
-            'tratamiento_psicologico' => false,
-            'medicamentos_psiquiatricos' => false,
-            'enfermedades_importantes' => false,
-            'accidentes_importantes' => false,
-            'practica_deportes_extremos' => false,
-            'situaciones_comprometedoras' => false,
-            'tiempo_diario_redes_sociales' => 2,
-            'juegos_en_linea' => false,
-            'referencia_personal_1_nombre' => 'María García',
-            'referencia_personal_1_telefono' => '55551111',
-            'referencia_personal_1_profesion' => 'Contadora',
-            'referencia_personal_1_tiempo_conoce' => 5,
-            'referencia_personal_1_como_conoce' => 'Amigos',
-            'referencia_personal_2_nombre' => 'Pedro López',
-            'referencia_personal_2_telefono' => '55552222',
-            'referencia_personal_2_profesion' => 'Abogado',
-            'referencia_personal_2_tiempo_conoce' => 8,
-            'referencia_personal_2_como_conoce' => 'Vecinos',
-            // Falta acepta_investigacion y acepta_veracidad
+        // Datos incompletos - falta referencia1_nombre
+        $datosIncompletos = [
+            // 'referencia1_nombre' => 'María García', // Falta este campo
+            'referencia1_telefono' => '55551111',
+            'referencia1_relacion' => 'Amiga',
+            'referencia2_nombre' => 'Pedro López',
+            'referencia2_telefono' => '55552222',
+            'referencia2_relacion' => 'Vecino',
+            'antecedentes_penales' => 'no',
+            'despedido_trabajo' => 'no',
+            'consume_alcohol' => 'ocasionalmente',
+            'consume_drogas' => 'nunca',
+            'problemas_salud_mental' => 'no'
         ];
 
-        $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/5", $datosSinDeclaracion);
+        $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/5", $datosIncompletos);
 
-        $response->assertSessionHasErrors(['acepta_veracidad']);
+        $response->assertSessionHasErrors(['referencia1_nombre']);
     }
 
     // =========================================================================
@@ -685,20 +637,13 @@ class CuestionarioModuloCompletoTest extends TestCase
     protected function completarSeccion2(): void
     {
         $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/2", [
-            'tiene_pareja' => false,
-            'padre_nombre' => 'Carlos Alberto Pérez',
-            'padre_vive' => true,
-            'padre_edad' => 55,
-            'madre_nombre' => 'María Elena García',
-            'madre_vive' => true,
-            'madre_edad' => 52,
-            'numero_hermanos' => 2,
-            'tiene_hijos' => false,
+            'estado_civil_detalle' => 'soltero',
+            'vive_con_pareja' => 'no',
+            'tiene_hijos' => 'no',
             'personas_hogar' => 4,
-            'referencia_familiar_1_nombre' => 'Roberto Pérez',
-            'referencia_familiar_1_parentesco' => 'Tío',
-            'referencia_familiar_1_telefono' => '55551234',
-            'referencia_familiar_1_direccion' => 'Zona 5, Ciudad de Guatemala'
+            'dependientes_economicos' => 2,
+            'tipo_vivienda' => 'familiar',
+            'personas_contribuyen_gastos' => 2
         ]);
     }
 
@@ -708,16 +653,12 @@ class CuestionarioModuloCompletoTest extends TestCase
     protected function completarSeccion3(): void
     {
         $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/3", [
-            'situacion_actual' => 'empleado',
+            'situacion_laboral_actual' => 'empleado',
+            'anos_experiencia_laboral' => 5,
             'empresa_actual' => 'Empresa Ejemplo S.A.',
-            'cargo_actual' => 'Analista de Sistemas',
+            'puesto_actual' => 'Analista de Sistemas',
             'salario_actual' => 8000.00,
-            'fecha_inicio_actual' => '2022-01-15',
-            'referencia_laboral_1_nombre' => 'Ana López',
-            'referencia_laboral_1_empresa' => 'Empresa Anterior S.A.',
-            'referencia_laboral_1_cargo' => 'Gerente de TI',
-            'referencia_laboral_1_telefono' => '55554321',
-            'referencia_laboral_1_años_conoce' => 3
+            'empleos_anteriores' => 'Empresa Anterior - Asistente - 2019-2021'
         ]);
     }
 
@@ -727,18 +668,13 @@ class CuestionarioModuloCompletoTest extends TestCase
     protected function completarSeccion4(): void
     {
         $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/4", [
-            'ingreso_mensual_personal' => 8000.00,
-            'ingreso_familiar_total' => 15000.00,
-            'gasto_vivienda' => 2500.00,
-            'gasto_alimentacion' => 3000.00,
-            'gasto_transporte' => 800.00,
-            'gasto_servicios' => 600.00,
-            'gastos_totales' => 6900.00,
-            'tiene_casa_propia' => false,
-            'tiene_vehiculo' => false,
-            'referencia_comercial_1_empresa' => 'Banco Industrial',
-            'referencia_comercial_1_telefono' => '55557890',
-            'referencia_comercial_1_tipo' => 'banco'
+            'ingresos_principales' => 8000.00,
+            'ingresos_adicionales' => 1000.00,
+            'gastos_vivienda' => 2500.00,
+            'gastos_alimentacion' => 3000.00,
+            'gastos_transporte' => 800.00,
+            'tiene_deudas' => 'no',
+            'tiene_ahorros' => 'si'
         ]);
     }
 
@@ -748,32 +684,17 @@ class CuestionarioModuloCompletoTest extends TestCase
     protected function completarSeccion5(): void
     {
         $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/5", [
-            'antecedentes_penales' => false,
-            'problemas_legales_actuales' => false,
-            'demandas_civiles' => false,
-            'consume_alcohol' => 'nunca',
-            'consume_drogas' => false,
-            'fuma_cigarrillos' => false,
-            'tratamiento_psicologico' => false,
-            'medicamentos_psiquiatricos' => false,
-            'enfermedades_importantes' => false,
-            'accidentes_importantes' => false,
-            'practica_deportes_extremos' => false,
-            'situaciones_comprometedoras' => false,
-            'tiempo_diario_redes_sociales' => 2,
-            'juegos_en_linea' => false,
-            'referencia_personal_1_nombre' => 'María García',
-            'referencia_personal_1_telefono' => '55551111',
-            'referencia_personal_1_profesion' => 'Contadora',
-            'referencia_personal_1_tiempo_conoce' => 5,
-            'referencia_personal_1_como_conoce' => 'Amigos de la universidad',
-            'referencia_personal_2_nombre' => 'Pedro López',
-            'referencia_personal_2_telefono' => '55552222',
-            'referencia_personal_2_profesion' => 'Abogado',
-            'referencia_personal_2_tiempo_conoce' => 8,
-            'referencia_personal_2_como_conoce' => 'Vecinos desde la infancia',
-            'acepta_investigacion' => true,
-            'acepta_veracidad' => true
+            'referencia1_nombre' => 'María García',
+            'referencia1_telefono' => '55551111',
+            'referencia1_relacion' => 'Amiga',
+            'referencia2_nombre' => 'Pedro López',
+            'referencia2_telefono' => '55552222',
+            'referencia2_relacion' => 'Vecino',
+            'antecedentes_penales' => 'no',
+            'despedido_trabajo' => 'no',
+            'consume_alcohol' => 'ocasionalmente',
+            'consume_drogas' => 'nunca',
+            'problemas_salud_mental' => 'no'
         ]);
     }
 

@@ -1,4 +1,8 @@
-{{-- Sección 3: Experiencia Laboral --}}
+{{-- Sección 3: Historial Laboral / Situación Laboral Actual --}}
+@php
+    // Determinar si es formulario periódico con situación laboral actual
+    $esPeriodico = isset($respuestas['situacion_laboral_actual']) || isset($respuestas['empresa_actual']) || isset($respuestas['puesto_actual']);
+@endphp
 <div class="section-content">
     @if($completada)
         <div class="alert alert-success mb-3">
@@ -11,191 +15,196 @@
     @endif
     
     <h5 class="section-title mb-4">
-        <i class="bi bi-briefcase"></i> Experiencia Laboral
+        <i class="bi bi-briefcase"></i> {{ $nombreSeccion ?? 'Historial Laboral' }}
     </h5>
     
-    {{-- Resumen de Experiencia --}}
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h3 class="text-primary">{{ $respuestas['anios_experiencia_total'] ?? '0' }}</h3>
-                    <p class="mb-0">Años de experiencia total</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h3 class="text-info">{{ $respuestas['numero_empleos'] ?? '0' }}</h3>
-                    <p class="mb-0">Empleos anteriores</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h3 class="text-success">{{ $respuestas['salario_actual'] ?? 'N/A' }}</h3>
-                    <p class="mb-0">Salario actual/esperado</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    {{-- Historial de Empleos --}}
-    @if(isset($respuestas['historial_empleos']) && is_array($respuestas['historial_empleos']))
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">Historial de Empleos</h6>
-            </div>
-            <div class="card-body">
-                @foreach($respuestas['historial_empleos'] as $index => $empleo)
-                    <div class="row mb-4 {{ $index > 0 ? 'border-top pt-4' : '' }}">
-                        <div class="col-md-8">
-                            <h6 class="text-primary">
-                                {{ $empleo['puesto'] ?? 'Puesto no especificado' }}
-                                @if($empleo['es_actual'] ?? false)
-                                    <span class="badge bg-success ms-2">Actual</span>
-                                @endif
-                            </h6>
-                            <p class="mb-1">
-                                <i class="bi bi-building"></i> 
-                                <strong>{{ $empleo['empresa'] ?? 'Empresa no especificada' }}</strong>
-                            </p>
-                            <p class="mb-1">
-                                <i class="bi bi-calendar3"></i> 
-                                {{ $empleo['fecha_inicio'] ?? 'N/A' }} - 
-                                {{ ($empleo['es_actual'] ?? false) ? 'Presente' : ($empleo['fecha_fin'] ?? 'N/A') }}
-                            </p>
-                            <p class="mb-1">
-                                <i class="bi bi-geo-alt"></i> 
-                                {{ $empleo['ubicacion'] ?? 'Ubicación no especificada' }}
-                            </p>
-                            @if(isset($empleo['salario']))
-                                <p class="mb-1">
-                                    <i class="bi bi-currency-dollar"></i> 
-                                    Q{{ number_format($empleo['salario'], 2) }}
-                                </p>
-                            @endif
-                        </div>
-                        
-                        <div class="col-md-4">
-                            @if(isset($empleo['tipo_contrato']))
-                                <span class="badge bg-info mb-2">{{ ucfirst($empleo['tipo_contrato']) }}</span>
-                            @endif
-                            @if(isset($empleo['area_trabajo']))
-                                <span class="badge bg-secondary mb-2">{{ $empleo['area_trabajo'] }}</span>
-                            @endif
-                            @if(isset($empleo['nivel_jerarquico']))
-                                <span class="badge bg-warning mb-2">{{ ucfirst($empleo['nivel_jerarquico']) }}</span>
-                            @endif
-                        </div>
-                        
-                        @if(isset($empleo['responsabilidades']))
-                            <div class="col-12 mt-2">
-                                <strong>Responsabilidades principales:</strong>
-                                <p class="text-muted">{{ $empleo['responsabilidades'] }}</p>
-                            </div>
-                        @endif
-                        
-                        @if(isset($empleo['logros']))
-                            <div class="col-12 mt-2">
-                                <strong>Logros destacados:</strong>
-                                <p class="text-muted">{{ $empleo['logros'] }}</p>
-                            </div>
-                        @endif
-                        
-                        @if(isset($empleo['motivo_salida']) && !($empleo['es_actual'] ?? false))
-                            <div class="col-12 mt-2">
-                                <strong>Motivo de salida:</strong>
-                                <p class="text-muted">{{ $empleo['motivo_salida'] }}</p>
-                            </div>
-                        @endif
+    @if($esPeriodico)
+        {{-- Vista para formulario periódico --}}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Situación Laboral Actual</h6>
                     </div>
-                @endforeach
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            @if(isset($respuestas['situacion_laboral_actual']))
+                            <tr>
+                                <td class="fw-bold">Situación:</td>
+                                <td>
+                                    <span class="badge 
+                                        @if($respuestas['situacion_laboral_actual'] == 'empleado') bg-success
+                                        @elseif($respuestas['situacion_laboral_actual'] == 'desempleado') bg-danger
+                                        @elseif($respuestas['situacion_laboral_actual'] == 'independiente') bg-info
+                                        @else bg-secondary
+                                        @endif
+                                    ">
+                                        {{ ucfirst(str_replace('_', ' ', $respuestas['situacion_laboral_actual'])) }}
+                                    </span>
+                                </td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['empresa_actual']) && $respuestas['empresa_actual'])
+                            <tr>
+                                <td class="fw-bold">Empresa actual:</td>
+                                <td>{{ $respuestas['empresa_actual'] }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['puesto_actual']) && $respuestas['puesto_actual'])
+                            <tr>
+                                <td class="fw-bold">Puesto actual:</td>
+                                <td>{{ $respuestas['puesto_actual'] }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['fecha_inicio_actual']) && $respuestas['fecha_inicio_actual'])
+                            <tr>
+                                <td class="fw-bold">Fecha de inicio:</td>
+                                <td>{{ $respuestas['fecha_inicio_actual'] }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['jefe_inmediato']) && $respuestas['jefe_inmediato'])
+                            <tr>
+                                <td class="fw-bold">Jefe inmediato:</td>
+                                <td>{{ $respuestas['jefe_inmediato'] }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['tipo_negocio']) && $respuestas['tipo_negocio'])
+                            <tr>
+                                <td class="fw-bold">Tipo de negocio:</td>
+                                <td>{{ $respuestas['tipo_negocio'] }}</td>
+                            </tr>
+                            @endif
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Información Económica Laboral</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            @if(isset($respuestas['salario_actual']) && $respuestas['salario_actual'])
+                            <tr>
+                                <td class="fw-bold">Salario actual:</td>
+                                <td class="text-success fw-bold">Q{{ number_format($respuestas['salario_actual'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['ingresos_mensuales']) && $respuestas['ingresos_mensuales'])
+                            <tr>
+                                <td class="fw-bold">Ingresos mensuales:</td>
+                                <td class="text-success">Q{{ number_format($respuestas['ingresos_mensuales'], 2) }}</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['anos_experiencia_laboral']))
+                            <tr>
+                                <td class="fw-bold">Años de experiencia:</td>
+                                <td>{{ $respuestas['anos_experiencia_laboral'] }} años</td>
+                            </tr>
+                            @endif
+                            @if(isset($respuestas['empleos_anteriores']))
+                            <tr>
+                                <td class="fw-bold">Empleos anteriores:</td>
+                                <td>{{ $respuestas['empleos_anteriores'] }}</td>
+                            </tr>
+                            @endif
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
+        
+        @if(isset($respuestas['motivo_busqueda']) && $respuestas['motivo_busqueda'])
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Motivo de Búsqueda de Empleo</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">{!! nl2br(e($respuestas['motivo_busqueda'])) !!}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
     @else
-        <div class="card">
-            <div class="card-body text-center">
-                <i class="bi bi-briefcase" style="font-size: 3rem;" class="text-muted mb-3"></i>
-                <p class="text-muted">No se ha registrado experiencia laboral</p>
+        {{-- Vista para formulario preempleo: Historial de Empleos --}}
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary">{{ $respuestas['anios_experiencia_total'] ?? '0' }}</h3>
+                        <p class="mb-0">Años de experiencia total</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-info">{{ $respuestas['numero_empleos'] ?? '0' }}</h3>
+                        <p class="mb-0">Empleos anteriores</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success">{{ isset($respuestas['salario_actual']) ? 'Q' . number_format($respuestas['salario_actual'], 2) : 'N/A' }}</h3>
+                        <p class="mb-0">Salario actual/esperado</p>
+                    </div>
+                </div>
             </div>
         </div>
-    @endif
-    
-    {{-- Referencias Laborales --}}
-    @if(isset($respuestas['referencias_laborales']) && is_array($respuestas['referencias_laborales']))
-        <div class="card mt-4">
-            <div class="card-header">
-                <h6 class="mb-0">Referencias Laborales</h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    @foreach($respuestas['referencias_laborales'] as $referencia)
-                        <div class="col-md-6 mb-3">
-                            <div class="border p-3 rounded">
-                                <h6 class="text-primary">{{ $referencia['nombre'] ?? 'Nombre no proporcionado' }}</h6>
+        
+        @if(isset($respuestas['historial_empleos']) && is_array($respuestas['historial_empleos']))
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Historial de Empleos</h6>
+                </div>
+                <div class="card-body">
+                    @foreach($respuestas['historial_empleos'] as $index => $empleo)
+                        <div class="row mb-4 {{ $index > 0 ? 'border-top pt-4' : '' }}">
+                            <div class="col-md-8">
+                                <h6 class="text-primary">
+                                    {{ $empleo['puesto'] ?? 'Puesto no especificado' }}
+                                    @if($empleo['es_actual'] ?? false)
+                                        <span class="badge bg-success ms-2">Actual</span>
+                                    @endif
+                                </h6>
                                 <p class="mb-1">
-                                    <strong>Puesto:</strong> {{ $referencia['puesto'] ?? 'No especificado' }}
+                                    <i class="bi bi-building"></i> 
+                                    <strong>{{ $empleo['empresa'] ?? 'Empresa no especificada' }}</strong>
                                 </p>
                                 <p class="mb-1">
-                                    <strong>Empresa:</strong> {{ $referencia['empresa'] ?? 'No especificada' }}
-                                </p>
-                                <p class="mb-1">
-                                    <strong>Teléfono:</strong> {{ $referencia['telefono'] ?? 'No proporcionado' }}
-                                </p>
-                                <p class="mb-1">
-                                    <strong>Email:</strong> {{ $referencia['email'] ?? 'No proporcionado' }}
-                                </p>
-                                <p class="mb-0">
-                                    <strong>Relación:</strong> {{ $referencia['relacion'] ?? 'No especificada' }}
+                                    <i class="bi bi-calendar3"></i> 
+                                    {{ $empleo['fecha_inicio'] ?? 'N/A' }} - 
+                                    {{ ($empleo['es_actual'] ?? false) ? 'Presente' : ($empleo['fecha_fin'] ?? 'N/A') }}
                                 </p>
                             </div>
                         </div>
                     @endforeach
                 </div>
             </div>
-        </div>
-    @endif
-    
-    {{-- Expectativas Laborales --}}
-    @if(isset($respuestas['expectativas_laborales']))
-        <div class="card mt-4">
-            <div class="card-header">
-                <h6 class="mb-0">Expectativas Laborales</h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    @if(isset($respuestas['expectativas_laborales']['salario_esperado']))
-                        <div class="col-md-4">
-                            <strong>Salario esperado:</strong>
-                            <p>Q{{ number_format($respuestas['expectativas_laborales']['salario_esperado'], 2) }}</p>
-                        </div>
-                    @endif
-                    
-                    @if(isset($respuestas['expectativas_laborales']['disponibilidad_horario']))
-                        <div class="col-md-4">
-                            <strong>Disponibilidad:</strong>
-                            <p>{{ ucfirst($respuestas['expectativas_laborales']['disponibilidad_horario']) }}</p>
-                        </div>
-                    @endif
-                    
-                    @if(isset($respuestas['expectativas_laborales']['disponibilidad_viajes']))
-                        <div class="col-md-4">
-                            <strong>Disponibilidad para viajar:</strong>
-                            <p>{{ $respuestas['expectativas_laborales']['disponibilidad_viajes'] ? 'Sí' : 'No' }}</p>
-                        </div>
+        @else
+            <div class="card">
+                <div class="card-body">
+                    @if(count($respuestas) > 0)
+                        <table class="table table-borderless">
+                            @foreach($respuestas as $campo => $valor)
+                            <tr>
+                                <td class="fw-bold" style="width: 30%;">{{ ucfirst(str_replace('_', ' ', $campo)) }}:</td>
+                                <td>{{ is_array($valor) ? json_encode($valor) : $valor }}</td>
+                            </tr>
+                            @endforeach
+                        </table>
+                    @else
+                        <p class="text-muted mb-0">No hay información registrada en esta sección.</p>
                     @endif
                 </div>
-                
-                @if(isset($respuestas['expectativas_laborales']['objetivos_profesionales']))
-                    <div class="mt-3">
-                        <strong>Objetivos profesionales:</strong>
-                        <p class="text-muted">{{ $respuestas['expectativas_laborales']['objetivos_profesionales'] }}</p>
-                    </div>
-                @endif
             </div>
-        </div>
+        @endif
     @endif
 </div>

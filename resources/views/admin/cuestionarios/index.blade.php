@@ -11,14 +11,9 @@
                     <h3 class="mb-0">
                         <i class="bi bi-clipboard-check"></i> Gestión de Cuestionarios Socioeconómicos
                     </h3>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-primary" id="btnFiltros">
-                            <i class="bi bi-funnel"></i> Filtros
-                        </button>
-                        <button type="button" class="btn btn-success" onclick="exportarExcel()">
-                            <i class="bi bi-file-earmark-excel"></i> Exportar Excel
-                        </button>
-                    </div>
+                    <button type="button" class="btn btn-light btn-lg" id="btnFiltros">
+                        <i class="bi bi-funnel-fill"></i> Filtrar Resultados
+                    </button>
                 </div>
                 
                 <div class="card-body">
@@ -94,64 +89,101 @@
                     
                     {{-- Estadísticas rápidas --}}
                     <div class="row mb-4">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="card bg-primary text-white">
-                                <div class="card-body">
+                                <div class="card-body py-2">
                                     <div class="d-flex justify-content-between">
                                         <div>
                                             <h5 class="card-title mb-0">{{ $estadisticas['total'] }}</h5>
-                                            <small>Total Cuestionarios</small>
+                                            <small>Total</small>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="bi bi-clipboard-check fs-2"></i>
+                                            <i class="bi bi-clipboard-check fs-3"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="card bg-warning text-white">
-                                <div class="card-body">
+                                <div class="card-body py-2">
                                     <div class="d-flex justify-content-between">
                                         <div>
                                             <h5 class="card-title mb-0">{{ $estadisticas['pendientes'] }}</h5>
                                             <small>Pendientes</small>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="bi bi-clock fs-2"></i>
+                                            <i class="bi bi-clock fs-3"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="card bg-info text-white">
-                                <div class="card-body">
+                                <div class="card-body py-2">
                                     <div class="d-flex justify-content-between">
                                         <div>
                                             <h5 class="card-title mb-0">{{ $estadisticas['en_progreso'] }}</h5>
                                             <small>En Progreso</small>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="bi bi-pencil-square fs-2"></i>
+                                            <i class="bi bi-pencil-square fs-3"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="card bg-success text-white">
-                                <div class="card-body">
+                                <div class="card-body py-2">
                                     <div class="d-flex justify-content-between">
                                         <div>
                                             <h5 class="card-title mb-0">{{ $estadisticas['completados'] }}</h5>
                                             <small>Completados</small>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="bi bi-check-circle fs-2"></i>
+                                            <i class="bi bi-check-circle fs-3"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-secondary text-white">
+                                <div class="card-body py-2">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5 class="card-title mb-0">{{ $estadisticas['completados_hoy'] }}</h5>
+                                            <small>Hoy</small>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="bi bi-calendar-check fs-3"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-purple text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <div class="card-body py-2">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            @php
+                                                $tasaCompletado = $estadisticas['total'] > 0 
+                                                    ? round(($estadisticas['completados'] / $estadisticas['total']) * 100, 1) 
+                                                    : 0;
+                                            @endphp
+                                            <h5 class="card-title mb-0 text-white">{{ $tasaCompletado }}%</h5>
+                                            <small class="text-white">Tasa Completado</small>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="bi bi-percent fs-3 text-white"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -175,9 +207,11 @@
                                             @endif
                                         </a>
                                     </th>
+                                    <th>Orden</th>
                                     <th>Evaluado</th>
+                                    <th>Contacto</th>
                                     <th>Empresa</th>
-                                    <th>Puesto</th>
+                                    <th>Servicio / Formulario</th>
                                     <th>Estado</th>
                                     <th>Progreso</th>
                                     <th>
@@ -198,24 +232,58 @@
                                 @forelse($cuestionarios as $cuestionario)
                                     @php
                                         $evaluado = $cuestionario->evaluadoOrden;
-                                        $empresa = $evaluado->orden->empresa;
+                                        $orden = $evaluado->orden;
+                                        $empresa = $orden->empresa;
                                         $progreso = $cuestionario->calcularProgreso();
                                     @endphp
                                     <tr>
                                         <td class="font-weight-bold">#{{ $cuestionario->id }}</td>
                                         <td>
+                                            <a href="{{ route('ordenes.show', $orden) }}" 
+                                               class="text-decoration-none" 
+                                               title="Ver orden {{ $orden->codigo_orden }}">
+                                                <span class="badge bg-dark">
+                                                    <i class="bi bi-folder2-open"></i> {{ $orden->codigo_orden }}
+                                                </span>
+                                            </a>
+                                        </td>
+                                        <td>
                                             <div class="d-flex flex-column">
                                                 <span class="font-weight-bold">{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</span>
                                                 <small class="text-muted">DPI: {{ $evaluado->dpi }}</small>
+                                                <small class="text-muted">Puesto: {{ $evaluado->puesto_evaluar ?? 'No especificado' }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                @if($evaluado->email)
+                                                    <small><i class="bi bi-envelope"></i> {{ $evaluado->email }}</small>
+                                                @else
+                                                    <small class="text-muted"><i class="bi bi-envelope"></i> Sin email</small>
+                                                @endif
                                                 @if($evaluado->telefono)
-                                                    <small class="text-muted">Tel: {{ $evaluado->telefono }}</small>
+                                                    <small><i class="bi bi-telephone"></i> {{ $evaluado->telefono }}</small>
+                                                @endif
+                                                @if($evaluado->celular && $evaluado->celular != $evaluado->telefono)
+                                                    <small><i class="bi bi-phone"></i> {{ $evaluado->celular }}</small>
                                                 @endif
                                             </div>
                                         </td>
                                         <td>
                                             <span class="badge bg-info">{{ $empresa->nombre }}</span>
                                         </td>
-                                        <td>{{ $evaluado->puesto_evaluar ?? 'No especificado' }}</td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                @if($evaluado->tipo_servicio)
+                                                    <span class="badge bg-primary mb-1">{{ ucfirst(str_replace('_', ' ', $evaluado->tipo_servicio)) }}</span>
+                                                @endif
+                                                @if($evaluado->tipo_formulario)
+                                                    <span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $evaluado->tipo_formulario)) }}</span>
+                                                @else
+                                                    <span class="badge bg-light text-dark">{{ ucfirst(str_replace('_', ' ', $cuestionario->tipo_formulario ?? 'Estándar')) }}</span>
+                                                @endif
+                                            </div>
+                                        </td>
                                         <td>
                                             @switch($cuestionario->estado)
                                                 @case('pendiente')
@@ -308,13 +376,26 @@
                                                             <i class="bi bi-box-arrow-up-right"></i> Enlace Evaluado
                                                         </a>
                                                     </li>
+                                                    @if($evaluado->email && !$cuestionario->completado)
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <form action="{{ route('evaluados.reenviar-correo', $evaluado) }}" 
+                                                                  method="POST" 
+                                                                  onsubmit="return confirm('¿Reenviar correo con enlace del cuestionario a {{ $evaluado->email }}?')">
+                                                                @csrf
+                                                                <button type="submit" class="dropdown-item text-info">
+                                                                    <i class="bi bi-envelope-arrow-up"></i> Reenviar Correo
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    @endif
                                                 </ul>
                                             </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4">
+                                        <td colspan="10" class="text-center py-4">
                                             <div class="text-muted">
                                                 <i class="bi bi-inbox fs-1 mb-3 d-block"></i>
                                                 <p class="mb-0">No se encontraron cuestionarios con los filtros aplicados</p>
@@ -427,12 +508,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
     });
 });
-
-function exportarExcel() {
-    const params = new URLSearchParams(window.location.search);
-    params.set('export', 'excel');
-    
-    window.location.href = `{{ route('admin.cuestionarios.index') }}?${params.toString()}`;
-}
 </script>
 @endpush

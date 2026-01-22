@@ -97,22 +97,23 @@
                                 <div class="row mt-3">
                                     <div class="col-12">
                                         <label class="form-label">Progreso por Secciones:</label>
+                                        @php $seccionesConfig = $cuestionario->getSeccionesConfig(); @endphp
                                         <div class="row">
-                                            @for($i = 1; $i <= 5; $i++)
-                                                <div class="col-md-2">
+                                            @foreach($seccionesConfig as $numSeccion => $nombreSeccion)
+                                                <div class="col-md-4 mb-2">
                                                     <div class="form-check">
                                                         <input class="form-check-input" 
                                                                type="checkbox" 
-                                                               id="seccion_{{ $i }}_completada" 
-                                                               name="progreso_secciones[{{ $i }}]" 
+                                                               id="seccion_{{ $numSeccion }}_completada" 
+                                                               name="progreso_secciones[{{ $numSeccion }}]" 
                                                                value="1"
-                                                               {{ ($cuestionario->progreso_secciones[$i] ?? false) ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="seccion_{{ $i }}_completada">
-                                                            Sección {{ $i }}
+                                                               {{ ($cuestionario->progreso_secciones[$numSeccion] ?? false) ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="seccion_{{ $numSeccion }}_completada">
+                                                            {{ $numSeccion }}. {{ $nombreSeccion }}
                                                         </label>
                                                     </div>
                                                 </div>
-                                            @endfor
+                                            @endforeach
                                         </div>
                                     </div>
                                 </div>
@@ -143,18 +144,20 @@
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="bi bi-list-ul"></i> Editar Contenido del Cuestionario
+                            <span class="badge bg-info ms-2">{{ ucfirst($cuestionario->tipo_formulario) }}</span>
                         </h5>
                     </div>
                     <div class="card-body">
+                        @php $seccionesConfig = $cuestionario->getSeccionesConfig(); @endphp
                         {{-- Pestañas de navegación --}}
                         <ul class="nav nav-tabs" id="seccionesEditarTabs" role="tablist">
-                            @for($i = 1; $i <= 5; $i++)
-                                @php $completada = $cuestionario->progreso_secciones[$i] ?? false; @endphp
+                            @foreach($seccionesConfig as $numSeccion => $nombreSeccion)
+                                @php $completada = $cuestionario->progreso_secciones[$numSeccion] ?? false; @endphp
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link {{ $i == 1 ? 'active' : '' }} {{ $completada ? 'text-success' : 'text-muted' }}" 
-                                            id="editarSeccion{{ $i }}-tab" 
+                                    <button class="nav-link {{ $numSeccion == 1 ? 'active' : '' }} {{ $completada ? 'text-success' : 'text-muted' }}" 
+                                            id="editarSeccion{{ $numSeccion }}-tab" 
                                             data-bs-toggle="tab" 
-                                            data-bs-target="#editarSeccion{{ $i }}" 
+                                            data-bs-target="#editarSeccion{{ $numSeccion }}" 
                                             type="button" 
                                             role="tab">
                                         @if($completada)
@@ -162,24 +165,26 @@
                                         @else
                                             <i class="bi bi-circle"></i>
                                         @endif
-                                        Sección {{ $i }}
+                                        {{ $numSeccion }}. {{ $nombreSeccion }}
                                     </button>
                                 </li>
-                            @endfor
+                            @endforeach
                         </ul>
                         
                         {{-- Contenido de las pestañas --}}
                         <div class="tab-content mt-3" id="seccionesEditarTabContent">
-                            @for($i = 1; $i <= 5; $i++)
-                                <div class="tab-pane fade {{ $i == 1 ? 'show active' : '' }}" 
-                                     id="editarSeccion{{ $i }}" 
+                            @foreach($seccionesConfig as $numSeccion => $nombreSeccion)
+                                <div class="tab-pane fade {{ $numSeccion == 1 ? 'show active' : '' }}" 
+                                     id="editarSeccion{{ $numSeccion }}" 
                                      role="tabpanel">
-                                    @include('admin.cuestionarios.partials.editar_seccion_' . $i, [
-                                        'respuestas' => $cuestionario->obtenerRespuestasSeccion($i),
-                                        'seccion' => $i
+                                    @include('admin.cuestionarios.partials.editar_seccion_' . $numSeccion, [
+                                        'respuestas' => $cuestionario->obtenerRespuestasSeccion($numSeccion),
+                                        'seccion' => $numSeccion,
+                                        'tipoFormulario' => $cuestionario->tipo_formulario,
+                                        'nombreSeccion' => $nombreSeccion
                                     ])
                                 </div>
-                            @endfor
+                            @endforeach
                         </div>
                     </div>
                 </div>

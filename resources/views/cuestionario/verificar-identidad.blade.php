@@ -13,15 +13,78 @@
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --repro-yellow: #ffb000;
+            --repro-blue: #000555;
+            --repro-light-blue: #1a1a6b;
+            --repro-light-yellow: #ffcc33;
+        }
+        
+        .card-header.repro-header {
+            background-color: var(--repro-blue);
+        }
+        
+        .card-header.repro-header h3 {
+            color: var(--repro-yellow);
+        }
+        
+        .logo-container {
+            background-color: #f8f9fa;
+            border: 1px solid var(--repro-blue);
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--repro-yellow) 0%, var(--repro-light-yellow) 100%);
+            border: 2px solid var(--repro-blue);
+            color: var(--repro-blue);
+            font-weight: 700;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--repro-light-yellow) 0%, var(--repro-yellow) 100%);
+            color: var(--repro-blue);
+            border-color: var(--repro-blue);
+        }
+        
+        .btn-primary:disabled {
+            background: #6c757d;
+            border-color: #6c757d;
+            color: white;
+        }
+        
+        .text-primary {
+            color: var(--repro-blue) !important;
+        }
+        
+        .verification-icon i {
+            color: var(--repro-yellow);
+        }
+        
+        .card-footer {
+            background: var(--repro-blue);
+            color: var(--repro-yellow);
+        }
+        
+        .card-footer small {
+            color: var(--repro-light-yellow) !important;
+        }
+    </style>
 </head>
 <body class="bg-light">
     <div class="container">
         <div class="row justify-content-center min-vh-100 align-items-center">
             <div class="col-md-6">
                 <div class="card shadow-lg border-0">
-                    <div class="card-header bg-primary text-white text-center py-4">
+                    <div class="card-header repro-header text-white text-center py-4">
                         <div class="mb-3">
-                            <img src="{{ asset('img/logos/logoreproxelahorizontal.png') }}" alt="Logo REPRO" class="img-fluid" style="max-height: 60px;">
+                            <div class="logo-container">
+                                <img src="{{ asset('img/logos/logoreproxelahorizontal.png') }}" alt="Logo REPRO" class="img-fluid" style="max-height: 45px;">
+                            </div>
                         </div>
                         <h3 class="mb-0">
                             <i class="fas fa-shield-alt me-2"></i>

@@ -2,13 +2,15 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Empresa;
+use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Models\Role;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Mail;
+use Tests\TestCase;
 
 class OrdenesControllerTest extends TestCase
 {
@@ -200,5 +202,69 @@ class OrdenesControllerTest extends TestCase
         $evaluado = $orden->evaluados()->first();
         $this->assertEquals('vsa', $evaluado->tipo_servicio);
         $this->assertEquals('periodica', $evaluado->tipo_formulario);
+    }
+
+    public function test_puede_reenviar_correo_a_evaluado()
+    {
+        Mail::fake();
+
+        // Crear usuario admin
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+        
+        // Crear empresa y orden
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id
+        ]);
+        
+        // Crear evaluado con email
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'email' => 'evaluado@test.com',
+            'cuestionario_completado' => false,
+            'token_expira_at' => now()->addDays(30),
+        ]);
+
+        // Reenviar correo
+        $response = $this->actingAs($admin)
+                         ->post(route('evaluados.reenviar-correo', $evaluado));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        
+        // Verificar que se envió el email (usa assertQueued porque el Mailable implementa ShouldQueue)
+        Mail::assertQueued(\App\Mail\EvaluadoAsignadoMail::class, function ($mail) {
+            return $mail->hasTo('evaluado@test.com');
+        });
+    }
+
+    public function test_no_puede_reenviar_correo_si_evaluado_no_tiene_email()
+    {
+        // Crear usuario admin
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+        
+        // Crear empresa y orden
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id
+        ]);
+        
+        // Crear evaluado con email vacío (no null para evitar constraint)
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'email' => '',
+            'cuestionario_completado' => false,
+        ]);
+
+        // Intentar reenviar correo
+        $response = $this->actingAs($admin)
+                         ->post(route('evaluados.reenviar-correo', $evaluado));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
     }
 }

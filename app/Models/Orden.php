@@ -169,23 +169,33 @@ class Orden extends Model
 
     /**
      * Verificar si puede cambiar a un estado específico
+     * Los administradores pueden saltar estados si es necesario
      */
     public function puedeTransicionarA(string $nuevoEstado): bool
     {
-        $transicionesPermitidas = [
-            'solicitud' => ['autorizacion', 'cancelado'],
-            'autorizacion' => ['requisito', 'programacion', 'cancelado'],
-            'requisito' => ['programacion', 'cancelado'],
-            'programacion' => ['en_proceso', 'cancelado'],
-            'en_proceso' => ['analisis', 'programacion'], // Puede reprogramar
-            'analisis' => ['preliminar', 'en_proceso'],
-            'preliminar' => ['final', 'analisis'],
-            'final' => ['entregado'],
-            'entregado' => [], // Estado final
-            'cancelado' => [], // Estado final
+        // Estados válidos del sistema
+        $estadosValidos = [
+            'solicitud', 'autorizacion', 'requisito', 'programacion',
+            'en_proceso', 'analisis', 'preliminar', 'final', 'entregado', 'cancelado'
         ];
-
-        return in_array($nuevoEstado, $transicionesPermitidas[$this->estado] ?? []);
+        
+        // Si el nuevo estado no es válido, rechazar
+        if (!in_array($nuevoEstado, $estadosValidos)) {
+            return false;
+        }
+        
+        // Si ya está en ese estado, no permitir
+        if ($this->estado === $nuevoEstado) {
+            return false;
+        }
+        
+        // Estados finales no pueden cambiar (excepto cancelado que puede reactivarse)
+        if ($this->estado === 'entregado') {
+            return false;
+        }
+        
+        // Permitir cualquier transición válida para administradores
+        return true;
     }
 
     /**

@@ -5,37 +5,86 @@
     <title>Listado de Empresas</title>
     <style>
         @page {
-            margin: 15px;
+            size: portrait;
+            margin: 12mm 15mm 15mm 15mm;
         }
+
         body {
             font-family: Arial, sans-serif;
             font-size: 10px;
             margin: 0;
-            padding: 5px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .logo-container {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .company-logo {
-            max-height: 60px;
-            max-width: 90%;
-            display: inline-block;
-        }
-        h1 {
-            font-size: 16px;
-            margin: 5px 0;
+            padding: 0;
             color: #333;
         }
-        .date {
-            font-size: 9px;
-            color: #666;
-            margin-top: 5px;
+
+        /* Cabecera estilo REPRO */
+        .repro-header {
+            background-color: #000555;
+            color: white;
+            padding: 12px 20px;
+            margin-bottom: 15px;
+            border-radius: 6px;
         }
+
+        .repro-header-content {
+            display: table;
+            width: 100%;
+        }
+
+        .repro-logo-cell {
+            display: table-cell;
+            vertical-align: middle;
+            width: 180px;
+        }
+
+        .repro-logo-container {
+            background-color: #f8f9fa;
+            border: 1px solid #000555;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: inline-block;
+        }
+
+        .repro-logo {
+            max-height: 40px;
+            max-width: 150px;
+            display: block;
+        }
+
+        .repro-title-cell {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .repro-header h1 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffb000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .repro-header h2 {
+            margin: 4px 0 0 0;
+            font-size: 11px;
+            font-weight: normal;
+            color: #ffcc33;
+        }
+
+        .repro-info-cell {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+            width: 120px;
+            font-size: 9px;
+        }
+
+        .repro-info-cell span {
+            color: #ffcc33;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -47,7 +96,8 @@
             font-size: 9px;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #000555;
+            color: #ffb000;
             text-align: left;
             font-weight: bold;
         }
@@ -71,14 +121,12 @@
             background-color: #dc3545;
         }
         .footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+            margin-top: 20px;
             text-align: center;
             font-size: 8px;
-            color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 5px;
+            color: #000555;
+            border-top: 2px solid #ffb000;
+            padding-top: 10px;
         }
         .text-muted {
             color: #6c757d;
@@ -99,14 +147,22 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        @if(isset($imagen) && $imagen && file_exists($imagen))
-            <div class="logo-container">
-                <img src="{{ $imagen }}" alt="Logo de REPRO" class="company-logo">
+    {{-- Cabecera estilo REPRO --}}
+    <div class="repro-header">
+        <div class="repro-header-content">
+            <div class="repro-logo-cell">
+                <div class="repro-logo-container">
+                    <img src="{{ public_path('img/logos/logoreproxelahorizontal.png') }}" alt="REPRO" class="repro-logo">
+                </div>
             </div>
-        @endif
-        <h1>{{ $titulo }}</h1>
-        <div class="date">Generado el {{ date('d/m/Y H:i:s') }}</div>
+            <div class="repro-title-cell">
+                <h1>{{ $titulo ?? 'Listado de Empresas' }}</h1>
+                <h2>Reporte del Sistema</h2>
+            </div>
+            <div class="repro-info-cell">
+                <span>Fecha:</span> {{ now()->format('d/m/Y') }}
+            </div>
+        </div>
     </div>
 
     <table>
@@ -160,10 +216,9 @@
     </table>
 
     <div class="footer">
-        <p>
-            REPRO - Sistema de Gestión de Evaluaciones de Polígrafo<br>
-            Documento generado automáticamente
-        </p>
+        <p><strong>REPRO Guatemala</strong></p>
+        <p>Documento generado el {{ now()->format('d/m/Y H:i') }}</p>
+        <p style="color: #ffb000;">Este documento es confidencial y de uso exclusivo para fines administrativos.</p>
     </div>
 </body>
 </html>

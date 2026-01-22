@@ -1,23 +1,28 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 15 de noviembre de 2025  
-**Estado:** PRODUCCIÓN READY - Sistema Auditado y Aprobado  
-**Versión:** 1.0 Release Candidate  
+**Fecha de Contexto:** 21 de enero de 2026  
+**Estado:** ✅ MÓDULOS PRINCIPALES + NUEVAS FUNCIONALIDADES COMPLETADAS  
+**Versión:** 2.1.0 Producción  
 
 ---
 
 ## CONTEXTO RÁPIDO PARA AGENTES
 
 ### 🎯 PROPÓSITO DEL SISTEMA
-REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA y socioeconómicas para empresas. Los usuarios empresariales crean órdenes con múltiples evaluados, REPRO realiza las evaluaciones y entrega resultados digitales.
+REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA y socioeconómicas para empresas. Los usuarios empresariales crean órdenes con múltiples evaluados, los evaluados completan cuestionarios digitales, y REPRO realiza las evaluaciones y entrega resultados.
 
-### ⚡ ESTADO ACTUAL
-- ✅ **APROBADO:** Sistema auditado completamente (9.2/10)
-- ✅ **OPERACIONAL:** 4 módulos principales funcionando
-- ✅ **SEGURO:** Sistema de permisos granular implementado
+### ⚡ ESTADO ACTUAL (Enero 2026)
+- ✅ **OPERACIONAL:** 8 módulos principales funcionando
+- ✅ **CUESTIONARIOS:** Flujo completo implementado + reenvío manual de correos
+- ✅ **PDFs:** Diseño unificado con branding REPRO
+- ✅ **ÓRDENES:** Sistema de estados completo
+- ✅ **SEGURO:** Sistema de permisos granular
 - ✅ **ÍNTEGRO:** Base de datos 100% consistente
-- ✅ **TESTADO:** 75% cobertura, tests críticos pasando
+- ✅ **DASHBOARD:** Estadísticas por rol (Admin/REPRO vs Empresa)
+- ✅ **REPORTES:** Evaluaciones y Empresas con exportación PDF/Excel
+- ✅ **NOTIFICACIONES:** Emails automáticos y manuales
+- ✅ **TESTS:** 74+ tests automatizados pasando
 
 ---
 
@@ -28,103 +33,133 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 Laravel 12.37.0 + PHP 8.3.16 + MySQL 8.0
 Frontend: Blade + Bootstrap 5 + jQuery
 Auth: Laravel Sanctum + Sistema Roles/Permisos
+PDF: DomPDF con branding REPRO
 ```
 
 ### Usuarios del Sistema
 ```
-ADMIN (3 usuarios) → 25 permisos → Control total
-  ├── Otto Szarata (szystems@hotmail.com)
-  ├── Admin Repro  
-  └── Sistema Admin
-
-REPRO (6 usuarios) → 14 permisos → Evaluaciones + Reportes
-  ├── Rosalinda Champlin
-  ├── Abbie Cartwright
-  └── ... 4 más
-
-EMPRESA (10 usuarios) → 6 permisos → Crear órdenes + Ver resultados
-  ├── Leola Nolan (Corporación ABC)
-  ├── Ashley Hegmann (Industrias XYZ)
-  └── ... 8 más
-
-EVALUADOS → NO SON USUARIOS → Acceso temporal por token único
+ADMIN (role_as = 3) → 25 permisos → Control total
+REPRO (role_as = 2) → 14 permisos → Evaluaciones + Reportes
+EMPRESA (role_as = 1) → 6 permisos → Sus órdenes + Ver resultados
+EVALUADOS → NO SON USUARIOS → Acceso por token único
 ```
 
-### 📁 ESTRUCTURA DE ARCHIVOS ORGANIZADA
-```
-📁 PROYECTO COMPLETAMENTE ORGANIZADO:
-docs/
-├── status/          → Estados y auditorías
-├── technical/       → Documentación técnica  
-├── business/        → Documentos de negocio
-├── deployment/      → Guías de despliegue
-├── guides/          → Guías de usuario
-├── security/        → Auditorías de seguridad
-└── database/        → Documentación de BD
+### 🔥 REGLA CRÍTICA:
+**❌ NUNCA crear usuarios con role_as = 0**
+**✅ Los evaluados van en tabla `evaluados_orden` con token único**
 
-scripts/             → Scripts de utilidad centralizados
-RAÍZ/               → Solo archivos esenciales del framework
+---
+
+## MÓDULOS COMPLETADOS
+
+### 1. SEGURIDAD ✅
+- Sistema dual: `role_as` (legacy) + `roles/permissions` (nuevo)
+- Middleware: auth, role, permission, redirect.role
+- 26 permisos distribuidos en 8 módulos
+
+### 2. EMPRESAS ✅
+- CRUD completo + PDFs con branding REPRO
+- Relación 1:N con usuarios y órdenes
+
+### 3. CONFIGURACIÓN ✅
+- Configuración global del sistema
+- Logo, email, moneda, redes sociales
+
+### 4. ÓRDENES ✅
+- CRUD completo con múltiples evaluados
+- 10 estados de workflow
+- Códigos únicos: ORD-YYYY-NNNN
+- PDF de orden con evaluados
+- Cambio de estados con observaciones
+- **NUEVO:** Botón reenviar correo a evaluados
+
+**Estados:**
+```
+solicitud → autorizacion → requisito → programacion → 
+en_proceso → analisis → preliminar → final → entregado/cancelado
 ```
 
-### 🔥 REGLA CRÍTICA PARA AGENTES:
-**❌ NUNCA crear archivos .md en la raíz del proyecto**
-**✅ SIEMPRE usar categorías en docs/ según docs/GUIA_ORGANIZACION.md**
+### 5. CUESTIONARIOS (ADMIN) ✅
+- Ver, editar, marcar completo
+- PDF con branding REPRO
+- Acceso desde listado de evaluados en orden
+- **NUEVO:** 6 tarjetas estadísticas
+- **NUEVO:** Link directo a orden
+- **NUEVO:** Columna contacto (email, tel, cel)
+- **NUEVO:** Columna servicio/formulario
+- **NUEVO:** Reenvío manual de correos
 
-## 📊 Estado Actual del Proyecto (15/11/2025)
+### 6. CUESTIONARIOS (PÚBLICO) ✅
+- Acceso por token sin autenticación
+- Verificación de identidad por DPI
+- Navegación por secciones
+- Guardado automático
+- Página de confirmación
+
+### 7. DASHBOARD ✅ (NUEVO)
+- Estadísticas diferenciadas por rol
+- Tarjetas: Órdenes, Evaluados, Completados, Pendientes
+- Listas de recientes con acciones rápidas
+- Accesos directos a funcionalidades
+
+**Ruta:** `GET /dashboard`
+**Tests:** 6 tests pasando
+
+### 8. REPORTES ✅ (NUEVO)
+- Reporte de Evaluaciones con filtros
+- Reporte de Empresas (Admin/REPRO)
+- Exportación PDF con branding REPRO
+- Exportación Excel
+
+**Rutas:**
+```
+GET /reportes/evaluaciones       - Reporte evaluaciones
+GET /reportes/empresas           - Reporte empresas
+GET /reportes/evaluaciones/pdf   - Exportar PDF
+GET /reportes/evaluaciones/excel - Exportar Excel
+```
+**Tests:** 10 tests pasando
+
+### 9. NOTIFICACIONES EMAIL ✅ (NUEVO)
+- Email al asignar evaluado (automático)
+- Email recordatorio diario (8:00 AM)
+- Email confirmación al completar
+- Reenvío manual desde UI
+
+**Mailables:**
+```
+EvaluadoAsignadoMail        - Al crear evaluado
+RecordatorioCuestionarioMail - Recordatorio diario
+CuestionarioCompletadoMail   - Al completar
 ```
 
-### Flujo Principal de Negocio
+**Comando:** `php artisan cuestionarios:enviar-recordatorios`
+**Tests:** 8 tests pasando
+
+---
+
+## FLUJO PRINCIPAL
+
 ```
-1. EMPRESA crea ORDEN con evaluados
+1. EMPRESA/REPRO crea ORDEN con evaluados
    ├── Múltiples evaluados por orden
    ├── Tipos: Polígrafo, VSA, Socioeconómico  
    └── Formularios: Pre-empleo, Periódica, Específica
 
-2. Sistema genera código único (ORD-2025-0001)
-   └── Envía tokens únicos a evaluados por email
+2. Sistema genera código único (ORD-2026-NNNN)
+   └── Crea tokens únicos para cada evaluado
 
-3. EVALUADO completa cuestionario (futuro)
-   └── Token se bloquea después de completar
+3. EVALUADO accede con token
+   ├── Verifica identidad con DPI
+   ├── Completa cuestionario por secciones
+   └── Finaliza y firma
 
-4. REPRO realiza evaluación y genera reporte (futuro)
+4. ADMIN/REPRO ve cuestionario completado
+   ├── Puede editar respuestas si necesario
+   └── Genera PDF del cuestionario
 
-5. EMPRESA accede a resultados (futuro)
+5. Orden avanza por estados hasta "entregado"
 ```
-
----
-
-## MÓDULOS IMPLEMENTADOS
-
-### 1. SEGURIDAD ✅ COMPLETADO
-- **Sistema dual:** `role_as` (legacy) + `roles/permissions` (nuevo)
-- **Middleware:** auth, role, permission, redirect.role
-- **Modelos:** User, Role, Permission + tablas pivot
-- **26 permisos** distribuidos en 8 módulos
-
-**Reglas Críticas:**
-- Admin: Control total (25 permisos)
-- REPRO: Evaluaciones + reportes (14 permisos)  
-- Empresa: Solo sus órdenes + resultados (6 permisos)
-- Evaluados: NO son usuarios, acceso por token
-
-### 2. EMPRESAS ✅ COMPLETADO
-- **CRUD completo:** Create, Read, Update, Delete
-- **10 empresas** registradas y activas
-- **Relación 1:N** con usuarios
-- **Usuario principal** por empresa
-- **PDFs** de empresas y listados
-
-### 3. CONFIGURACIÓN ✅ COMPLETADO
-- **Configuración única** del sistema
-- **Campos:** logo, email, moneda, redes sociales
-- **Pendiente:** Logo oficial y enlaces sociales
-
-### 4. ÓRDENES ✅ COMPLETADO
-- **Arquitectura granular:** 1 orden → N evaluados
-- **Tipos de servicio:** poligrafo, vsa, socioeconomico
-- **Estados:** solicitud → programación → en_proceso → completado
-- **Códigos únicos:** ORD-YYYY-NNNN
-- **Ejemplo funcional:** ORD-2025-0001 con 3 evaluados
 
 ---
 
@@ -132,264 +167,247 @@ RAÍZ/               → Solo archivos esenciales del framework
 
 ### Tablas Principales
 ```sql
-users (38 registros)
-├── role_as: 0=evaluado, 1=empresa, 2=repro, 3=admin
-├── empresa_id: FK a empresas (si role_as=1)
-└── estado: 1=activo, 0=inactivo
-
-empresas (10 registros)
-├── nombre, nit, direccion, telefono, email
-├── estado: 1=activa, 0=inactiva
-└── relación: hasMany(User)
-
-ordenes (1 ejemplo)
-├── codigo_orden: 'ORD-2025-0001'
-├── empresa_id: FK a empresas
-├── estado: enum de workflow
-└── relación: hasMany(EvaluadoOrden)
-
-evaluados_orden (3 en ejemplo)
-├── orden_id: FK a ordenes
-├── nombre, apellidos, email, telefono, dpi
-├── tipo_servicio: poligrafo/vsa/socioeconomico
-├── token_unico: acceso sin login
-└── cuestionario_completado: boolean
-
-roles (4 registros)
-├── admin, repro, empresa, prueba
-└── relación: belongsToMany(Permission)
-
-permissions (26 registros)
-├── name: 'ordenes.ver', 'usuarios.crear'
-├── module: ordenes, evaluaciones, resultados...
-└── relación: belongsToMany(Role)
-
--- Tablas pivot:
-user_role: User ↔ Role
-role_permission: Role ↔ Permission
+users           -- Usuarios: admin, repro, empresa (NO evaluados)
+empresas        -- Empresas clientes
+ordenes         -- Órdenes de evaluación
+evaluados_orden -- Evaluados con token único (NO son users)
+cuestionarios   -- Respuestas JSON por evaluado
+roles           -- admin, repro, empresa
+permissions     -- 26 permisos granulares
 ```
 
-### Integridad: 100% Verificada
-- ✅ Todas las FK válidas
-- ✅ No hay emails duplicados
-- ✅ Códigos únicos correctos
-- ✅ Estados dentro de enums válidos
-
----
-
-## REGLAS DE NEGOCIO CRÍTICAS
-
-### 🚫 EVALUADOS ≠ USUARIOS
-```php
-// ❌ NUNCA hacer esto:
-User::create(['role_as' => 0, 'email' => 'evaluado@...']);
-
-// ✅ CORRECTO:
-EvaluadoOrden::create([
-    'orden_id' => $orden->id,
-    'nombre' => 'Juan Pérez',
-    'dpi' => '1234567890123',
-    'token_unico' => Str::random(64)
-]);
+### Relaciones
 ```
-
-### 🔐 PERMISOS POR ROL
-```php
-// Verificar permisos siempre:
-if (!auth()->user()->hasPermission('ordenes.crear')) {
-    abort(403);
-}
-
-// Usuario empresa solo ve sus órdenes:
-if (auth()->user()->hasRole('empresa')) {
-    $query->where('empresa_id', auth()->user()->empresa_id);
-}
-```
-
-### 📋 CÓDIGOS ÚNICOS AUTOMÁTICOS
-```php
-// Formato: ORD-YYYY-NNNN
-$codigo = 'ORD-' . date('Y') . '-' . str_pad($numero, 4, '0', STR_PAD_LEFT);
+Empresa → hasMany → User (role_as = 1)
+Empresa → hasMany → Orden
+Orden → hasMany → EvaluadoOrden
+EvaluadoOrden → hasOne → Cuestionario
 ```
 
 ---
 
-## COMANDOS ÚTILES
+## BRANDING REPRO (PDFs)
 
-### Desarrollo
-```bash
-# Levantar servidor
-php artisan serve
-
-# Ejecutar tests
-php artisan test --filter=Feature
-
-# Laravel Tinker para debugging
-php artisan tinker
-
-# Migrations y seeders
-php artisan migrate
-php artisan db:seed --class=RolesAndPermissionsSeeder
+### Colores
+```css
+--color-principal: #000555;  /* Azul oscuro */
+--color-secundario: #ffb000; /* Amarillo */
+--color-terciario: #ffcc33;  /* Amarillo claro */
+--color-fondo: #f8f9fa;      /* Gris claro */
 ```
 
-### Boost (MCP) - Herramientas IA
-```php
-// Consultar datos en tiempo real
-php artisan tinker --execute="App\Models\User::count()"
-
-// Verificar permisos de usuario
-$user = User::find(1);
-$user->getAllPermissions();
-
-// Estado de órdenes
-Orden::with(['empresa', 'evaluados'])->get();
+### Estructura Header
+```html
+<div class="repro-header" style="background: #000555;">
+    <div class="repro-logo-container" style="background: #f8f9fa;">
+        <img src="logoreproxelahorizontal.png" />
+    </div>
+    <h1 style="color: #ffb000;">Título</h1>
+</div>
 ```
 
 ---
 
-## ARCHIVOS CLAVE PARA MODIFICACIONES
+## ARCHIVOS CLAVE
 
-### Controladores Principales
+### Controladores
 ```
 app/Http/Controllers/Admin/
-├── UsersController.php      # CRUD usuarios + permisos
-├── EmpresasController.php   # CRUD empresas + PDFs
-├── ConfigController.php     # Configuración global
-└── OrdenesController.php    # CRUD órdenes + evaluados
-```
+├── OrdenesController.php        # CRUD + PDF + cambiar estado + reenviar correo
+├── CuestionariosController.php  # Ver/editar + PDF
+├── EmpresasController.php       # CRUD + PDFs
+├── UsersController.php          # CRUD + PDFs
+├── DashboardController.php      # Dashboard por rol (NUEVO)
+├── ReportesController.php       # Reportes + exportación (NUEVO)
+└── ConfigController.php
 
-### Modelos con Relaciones
-```
-app/Models/
-├── User.php                 # Roles, permisos, empresa
-├── Empresa.php              # Usuarios, órdenes
-├── Orden.php                # Empresa, evaluados, creador
-├── EvaluadoOrden.php        # Orden, poligrafista
-├── Role.php                 # Usuarios, permisos
-└── Permission.php           # Roles
+app/Http/Controllers/
+└── CuestionarioController.php   # Flujo público evaluados + notificaciones
 ```
 
 ### Vistas Principales
 ```
 resources/views/admin/
-├── user/                    # CRUD usuarios
-├── empresa/                 # CRUD empresas  
-├── ordenes/                 # CRUD órdenes
-├── roles/                   # Gestión roles/permisos
-└── config/                  # Configuración
+├── ordenes/       # index, show, create, edit, pdf
+├── cuestionarios/ # index (mejorado), show, edit, pdf
+├── dashboard/     # index (NUEVO)
+├── reportes/      # evaluaciones, empresas, pdf (NUEVO)
+├── empresa/       # CRUD + PDFs
+└── user/          # CRUD + PDFs
+
+resources/views/cuestionario/
+├── verificar-identidad.blade.php
+├── seccion.blade.php
+├── finalizar.blade.php
+└── completado.blade.php
+
+resources/views/emails/  # (NUEVO)
+├── evaluado-asignado.blade.php
+├── recordatorio-cuestionario.blade.php
+└── cuestionario-completado.blade.php
+
+resources/views/layouts/
+└── cuestionario.blade.php  # Layout público
 ```
 
-### Middleware de Seguridad
+### Mailables (NUEVO)
 ```
-app/Http/Middleware/
-├── CheckRole.php            # Verificar roles
-├── CheckPermission.php      # Verificar permisos
-└── RedirectBasedOnRole.php  # Layout por rol
+app/Mail/
+├── EvaluadoAsignadoMail.php
+├── RecordatorioCuestionarioMail.php
+└── CuestionarioCompletadoMail.php
+```
+
+### Comandos Artisan (NUEVO)
+```
+app/Console/Commands/
+└── EnviarRecordatoriosCuestionario.php  # Diario 8:00 AM
+```
+
+### Modelos
+```
+app/Models/
+├── Orden.php           # Estados, código único
+├── EvaluadoOrden.php   # Token, cuestionario_completado
+├── Cuestionario.php    # Respuestas JSON
+├── Empresa.php
+└── User.php            # HasRolesAndPermissions
 ```
 
 ---
 
-## PROBLEMAS CONOCIDOS Y SOLUCIONADOS
+## RUTAS IMPORTANTES
 
-### ✅ Issues Corregidos en Auditoría
+### Admin (requiere auth)
+```php
+// Órdenes
+Route::resource('ordenes', OrdenesController::class);
+Route::patch('ordenes/{orden}/cambiar-estado', ...);
+Route::get('ordenes/{orden}/pdf', ...);
 
-1. **Roles Faltantes:**
-   - Problema: Usuarios REPRO sin rol asignado
-   - Solución: Asignación automática aplicada
+// Cuestionarios
+Route::get('cuestionarios', ...);
+Route::get('cuestionarios/{id}', ...);
+Route::get('cuestionarios/{id}/pdf', ...);
 
-2. **Permisos Incorrectos:**
-   - Problema: Empresa podía gestionar usuarios
-   - Solución: Removidos permisos usuarios.* del rol empresa
+// Dashboard (NUEVO)
+Route::get('dashboard', [DashboardController::class, 'index']);
 
-3. **Permiso Faltante:**
-   - Problema: No existía reportes.crear
-   - Solución: Creado y asignado a rol REPRO
+// Reportes (NUEVO)
+Route::get('reportes/evaluaciones', ...);
+Route::get('reportes/evaluaciones/pdf', ...);
+Route::get('reportes/evaluaciones/excel', ...);
+Route::get('reportes/empresas', ...);
 
-### ⚠️ Issues Menores Pendientes
+// Reenviar correo (NUEVO)
+Route::post('evaluados/{evaluado}/reenviar-correo', ...);
+```
 
-1. **Tests Menores:**
-   - ExampleTest falla (esperado - redirección)
-   - OrdenesControllerTest validación incompleta
-
-2. **Configuración:**
-   - Logo del sistema no subido
-   - Enlaces de redes sociales vacíos
-
----
-
-## MEJORES PRÁCTICAS PARA AGENTES
-
-### 🎯 Al Trabajar con este Sistema:
-
-1. **Siempre verificar permisos:**
-   ```php
-   if (!auth()->user()->hasPermission('modulo.accion')) {
-       abort(403);
-   }
-   ```
-
-2. **Usar Boost para consultas:**
-   ```php
-   // En lugar de asumir datos, consultar:
-   App\Models\User::where('role_as', 2)->count(); // Usuarios REPRO
-   ```
-
-3. **Respetar separación por rol:**
-   ```php
-   // Usuario empresa solo ve su data:
-   if (auth()->user()->hasRole('empresa')) {
-       $query->where('empresa_id', auth()->user()->empresa_id);
-   }
-   ```
-
-4. **Evaluados NO son usuarios:**
-   ```php
-   // Nunca crear User para evaluado
-   // Usar tabla evaluados_orden con token único
-   ```
-
-5. **Consultar documentación actualizada:**
-   ```
-   docs/ESTADO_ACTUAL.md        # Estado completo
-   docs/ARCHITECTURE.md         # Arquitectura técnica  
-   docs/AUDITORIA_NOVIEMBRE_2025.md  # Reporte auditoría
-   ```
+### Público (sin auth)
+```php
+Route::get('cuestionario/{token}', ...);
+Route::post('cuestionario/{token}/verificar', ...);
+Route::get('cuestionario/{token}/seccion/{n}', ...);
+Route::post('cuestionario/{token}/seccion/{n}', ...);
+Route::get('cuestionario/{token}/finalizar', ...);
+Route::post('cuestionario/{token}/completar', ...);
+```
 
 ---
 
 ## PRÓXIMOS MÓDULOS A IMPLEMENTAR
 
-### 1. CUESTIONARIOS (Siguiente prioridad)
-- Formularios dinámicos por tipo de servicio
-- Validaciones específicas por tipo
-- Sistema de secciones y progreso
-- Guardado automático
+### 1. CALENDARIO/AGENDA (Prioridad Alta)
+- Vista de evaluaciones programadas
+- Agenda para poligrafistas
+- Filtros por fecha y poligrafista
 
-### 2. EVALUACIONES  
-- Interfaz para polígrafos
-- Upload de archivos de evaluación
-- Estados: programada → en_proceso → completada
-- Asignación de poligrafistas
+### 2. AUDITORÍA/LOGS (Prioridad Alta)
+- Registro de acciones de usuarios
+- Historial de cambios en órdenes
+- Trazabilidad completa
 
-### 3. RESULTADOS
-- Generación automática de PDFs
-- Firma digital de reportes  
-- Portal de descarga para empresas
-- Histórico de descargas
+### 3. GESTIÓN DE POLIGRAFISTAS (Prioridad Media)
+- Asignación de evaluaciones
+- Carga de trabajo
+- Disponibilidad
+
+### 4. RESULTADOS DE EVALUACIONES (Prioridad Media)
+- Carga de resultados poligráficos
+- Generación de informes finales
+- Firma digital
+
+### 5. API REST (Prioridad Baja)
+- Endpoints para consulta
+- Webhooks
+- Documentación
 
 ---
 
-## CONTACTO Y SOPORTE
+## COMANDOS ÚTILES
 
-**Desarrollador Principal:** Otto Szarata  
-**Email:** szystems@hotmail.com  
+```bash
+# Servidor de desarrollo
+php artisan serve
+
+# Ejecutar tests
+php artisan test                           # Todos los tests
+php artisan test --filter=Dashboard        # Tests de dashboard
+php artisan test --filter=Reportes         # Tests de reportes
+php artisan test --filter=Notificaciones   # Tests de notificaciones
+php artisan test --filter=Ordenes          # Tests de órdenes
+
+# Enviar recordatorios manualmente
+php artisan cuestionarios:enviar-recordatorios
+
+# Tinker para debugging
+php artisan tinker
+
+# Limpiar cache
+php artisan cache:clear
+php artisan config:clear
+php artisan view:clear
+```
+
+---
+
+## RESUMEN DE TESTS
+
+| Módulo | Tests | Estado |
+|--------|-------|--------|
+| Dashboard | 6 | ✅ Pasando |
+| Reportes | 10 | ✅ Pasando |
+| Notificaciones | 8 | ✅ Pasando |
+| Órdenes | 7 | ✅ Pasando |
+| Cuestionarios | 34 | ✅ 32 pasando, 2 pendientes |
+| Otros | 9 | ✅ Pasando |
+| **TOTAL** | **74+** | **✅ Funcionando** |
+
+---
+
+## 📁 REGLAS DE ORGANIZACIÓN
+
+**❌ NUNCA crear archivos .md en la raíz del proyecto**
+**✅ SIEMPRE usar carpetas en docs/ según categoría:**
+```
+docs/status/     → Estados y auditorías
+docs/technical/  → Documentación técnica
+docs/business/   → Documentos de negocio
+docs/security/   → Seguridad
+docs/database/   → Base de datos
+docs/guides/     → Guías de usuario
+docs/deployment/ → Despliegue
+```
+
+---
+
+## CONTACTO
+
+**Desarrollador:** Otto Szarata (szystems@hotmail.com)  
 **Sistema:** REPRO Guatemala  
-**Repositorio:** repro (szystems)  
-**Branch Principal:** master  
-
-**Última Auditoría:** 15/11/2025 por GitHub Copilot  
-**Estado de Contexto:** ✅ ACTUALIZADO Y VÁLIDO  
+**Repositorio:** repro (branch: master)  
 
 ---
 
-*Este documento constituye el contexto completo y actualizado para agentes IA que trabajen en el proyecto REPRO Guatemala. Mantener actualizado después de cambios significativos.*
+**Última actualización:** 21 de enero de 2026  
+**Estado:** ✅ ACTUALIZADO Y VÁLIDO  

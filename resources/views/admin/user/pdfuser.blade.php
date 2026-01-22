@@ -6,48 +6,87 @@
     <style>
         @page {
             size: portrait;
-            margin: 10px;
+            margin: 12mm 15mm 15mm 15mm;
         }
 
         body {
             font-family: Arial, sans-serif;
             font-size: 10px;
             margin: 0;
-            padding: 5px;
+            padding: 0;
+            color: #333;
         }
 
-        .company-logo {
-            max-height: 70px;
-            max-width: 90%;
-            margin: 5px auto;
+        /* Cabecera estilo REPRO */
+        .repro-header {
+            background-color: #000555;
+            color: white;
+            padding: 12px 20px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+
+        .repro-header-content {
+            display: table;
+            width: 100%;
+        }
+
+        .repro-logo-cell {
+            display: table-cell;
+            vertical-align: middle;
+            width: 180px;
+        }
+
+        .repro-logo-container {
+            background-color: #f8f9fa;
+            border: 1px solid #000555;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: inline-block;
+        }
+
+        .repro-logo {
+            max-height: 40px;
+            max-width: 150px;
             display: block;
+        }
+
+        .repro-title-cell {
+            display: table-cell;
+            vertical-align: middle;
             text-align: center;
+        }
+
+        .repro-header h1 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffb000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .repro-header h2 {
+            margin: 4px 0 0 0;
+            font-size: 11px;
+            font-weight: normal;
+            color: #ffcc33;
+        }
+
+        .repro-info-cell {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+            width: 120px;
+            font-size: 9px;
+        }
+
+        .repro-info-cell span {
+            color: #ffcc33;
         }
 
         .content {
             margin-top: 10px;
-        }
-
-        .logo-container {
-            text-align: center;
-            margin-bottom: 10px;
-            padding-top: 5px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .header h1 {
-            margin: 0;
-            color: #2c3e50;
-            font-size: 16px;
-        }
-
-        .header p {
-            margin: 5px 0;
-            font-size: 10px;
         }
 
         table {
@@ -63,8 +102,8 @@
         }
 
         thead {
-            background-color: #007bff;
-            color: white;
+            background-color: #000555;
+            color: #ffb000;
         }
 
         tbody tr:nth-child(even) {
@@ -72,23 +111,26 @@
         }
 
         .section-title {
-            background-color: #007bff;
-            color: white;
+            background-color: #000555;
+            color: #ffb000;
             padding: 5px;
             margin: 10px 0 5px;
             font-weight: bold;
             text-align: center;
             font-size: 12px;
+            border-radius: 4px;
         }
 
         .footer {
-            margin-top: 10px;
+            margin-top: 20px;
             text-align: center;
             font-size: 8px;
-            color: #6c757d;
+            color: #000555;
+            border-top: 2px solid #ffb000;
+            padding-top: 10px;
         }
 
-        .text-primary { color: #007bff; }
+        .text-primary { color: #000555; }
         .text-success { color: #28a745; }
         .text-danger { color: #dc3545; }
         .text-info { color: #17a2b8; }
@@ -131,28 +173,34 @@
 
         .info-table th {
             font-size: 10px;
-            background-color: #17a2b8;
-            color: white;
+            background-color: #000555;
+            color: #ffb000;
             padding: 7px;
+            border-left: 3px solid #ffb000;
         }
     </style>
 </head>
 <body>
+    {{-- Cabecera estilo REPRO --}}
+    <div class="repro-header">
+        <div class="repro-header-content">
+            <div class="repro-logo-cell">
+                <div class="repro-logo-container">
+                    <img src="{{ public_path('img/logos/logoreproxelahorizontal.png') }}" alt="REPRO" class="repro-logo">
+                </div>
+            </div>
+            <div class="repro-title-cell">
+                <h1>Ficha de Usuario</h1>
+                <h2>{{ $usuario->name }}</h2>
+            </div>
+            <div class="repro-info-cell">
+                <span>ID:</span> {{ $usuario->id }}<br>
+                <span>Fecha:</span> {{ now()->format('d/m/Y') }}
+            </div>
+        </div>
+    </div>
+
     <div class="content">
-        <!-- Logo y encabezado -->
-        <div class="logo-container">
-            @if(isset($imagen) && $imagen && file_exists($imagen))
-                <img src="{{ $imagen }}" alt="Logo de la empresa" class="company-logo">
-            @endif
-        </div>
-
-        <!-- Cabecera con título -->
-        <div class="header">
-            <h1>FICHA DE USUARIO</h1>
-            <p>{{ isset($config) ? $config->nombre_negocio : '' }} |
-               {{ isset($config) ? $config->telefono : '' }}</p>
-        </div>
-
         <!-- Información básica del usuario -->
         <div class="section-title">DATOS GENERALES</div>
         <table class="info-table">
@@ -329,7 +377,9 @@
     </div>
 
     <div class="footer">
-        <p>Documento generado el {{ now()->format('d/m/Y H:i:s') }} | {{ isset($config) ? $config->nombre_negocio : 'Sistema de Gestión' }}</p>
+        <p><strong>REPRO Guatemala</strong></p>
+        <p>Documento generado el {{ now()->format('d/m/Y H:i') }} | Usuario ID: {{ $usuario->id }}</p>
+        <p style="color: #ffb000;">Este documento es confidencial y de uso exclusivo para fines administrativos.</p>
     </div>
 </body>
 </html>
