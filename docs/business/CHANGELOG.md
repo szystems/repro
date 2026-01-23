@@ -7,6 +7,49 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [2.2.0] - 2026-01-23
+
+### 🚀 Agregado
+
+#### Portal Empresa ✅ (NUEVO)
+- Dashboard específico para usuarios empresa
+- Listado de órdenes de la empresa del usuario
+- Vista detallada de orden con evaluados
+- Acceso a cuestionarios completados (según `resultadosDisponiblesParaEmpresa()`)
+- Botones "Copiar enlace" para compartir links de cuestionarios
+- Redirección automática después de crear/editar/eliminar órdenes
+
+**Archivos creados/modificados:**
+- `app/Http/Controllers/EmpresaController.php` - Métodos `verOrden()` y `verCuestionario()`
+- `resources/views/empresa/ordenes/show.blade.php`
+- `resources/views/empresa/cuestionarios/show.blade.php`
+
+#### Reporte de Evaluaciones Mejorado ✅
+- Nueva columna "Tipo de Formulario" en vista web, PDF y Excel
+- Reporte muestra TODOS los evaluados (sin filtro `resultados_visibles_empresa`)
+- PDF con logo REPRO horizontal usando `public_path()`
+
+**Archivos modificados:**
+- `app/Http/Controllers/Admin/ReportesController.php`
+- `resources/views/admin/reportes/evaluaciones.blade.php`
+- `resources/views/admin/reportes/pdf/evaluaciones.blade.php`
+- `app/Exports/EvaluacionesExport.php`
+
+### 🔧 Corregido
+- Navegación de usuarios empresa después de CRUD de órdenes
+- Error de Carbon parsing en Excel cuando `cuestionario_completado_at` es null
+- Visibilidad de cuestionarios para empresa controlada correctamente
+
+### 🧹 Limpieza para Producción
+- Eliminada ruta debug `/debug-orden` de `routes/web.php`
+- Eliminado archivo vacío `public/test-busqueda.php`
+- Eliminados todos los `console.log` de JavaScript en:
+  - `admin/ordenes/create.blade.php`
+  - `admin/user/edit.blade.php`
+  - `admin/user/add.blade.php`
+
+---
+
 ## [2.1.0] - 2026-01-21
 
 ### 🚀 Agregado

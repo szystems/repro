@@ -1,8 +1,8 @@
 # ESTADO ACTUAL DEL PROYECTO - ENERO 2026
 
-**Fecha de Actualización:** 21 de enero de 2026  
-**Versión del Sistema:** 2.1.0 - Producción  
-**Estado General:** ✅ MÓDULOS PRINCIPALES COMPLETADOS + NUEVAS FUNCIONALIDADES  
+**Fecha de Actualización:** 23 de enero de 2026  
+**Versión del Sistema:** 2.2.0 - Producción  
+**Estado General:** ✅ MÓDULOS PRINCIPALES COMPLETADOS + PORTAL EMPRESA  
 
 ---
 
@@ -10,15 +10,17 @@
 
 ### 🏆 HITOS COMPLETADOS
 - ✅ **Auditoría Completa:** Sistema aprobado (9.2/10)
-- ✅ **Módulos Principales:** 8/8 operacionales
+- ✅ **Módulos Principales:** 10/10 operacionales
 - ✅ **Base de Datos:** 100% íntegra
 - ✅ **Sistema de Seguridad:** Robusto y funcional
 - ✅ **Cuestionarios:** Flujo completo funcionando
-- ✅ **PDFs:** Diseño unificado REPRO
-- ✅ **Dashboard:** Estadísticas completas
-- ✅ **Reportes:** Evaluaciones y Empresas con exportación
-- ✅ **Notificaciones:** Sistema de emails automáticos
-- ✅ **Tests:** 74+ tests automatizados pasando
+- ✅ **PDFs:** Diseño unificado REPRO con logo horizontal
+- ✅ **Dashboard:** Estadísticas completas por rol
+- ✅ **Reportes:** Evaluaciones y Empresas con exportación PDF/Excel
+- ✅ **Notificaciones:** Sistema de emails automáticos y manuales
+- ✅ **Portal Empresa:** Navegación completa para usuarios empresa
+- ✅ **Tests:** 79+ tests automatizados pasando
+- ✅ **Producción:** Código limpio sin debug/console.log
 
 ---
 
@@ -147,6 +149,33 @@ en_proceso → analisis → preliminar → final → entregado/cancelado
 
 **Tests:** 8 tests pasando
 
+### 10. PORTAL EMPRESA ✅ COMPLETADO (NUEVO)
+**Funcionalidades:**
+- Dashboard específico para usuarios empresa
+- Listado de órdenes de la empresa del usuario
+- Vista detallada de orden con evaluados
+- Acceso a cuestionarios completados (según permisos)
+- Botones "Copiar enlace" para compartir links de cuestionarios
+- Redirección automática después de crear/editar/eliminar órdenes
+- Control de acceso basado en `resultadosDisponiblesParaEmpresa()`
+
+**Controlador:** `EmpresaController.php`
+
+**Rutas:**
+- `GET /empresa/ordenes` - Listado de órdenes
+- `GET /empresa/ordenes/{id}` - Ver orden con evaluados
+- `GET /empresa/cuestionarios/{id}` - Ver cuestionario (si disponible)
+
+**Vistas:**
+```
+resources/views/empresa/
+├── ordenes/
+│   ├── index.blade.php
+│   └── show.blade.php
+└── cuestionarios/
+    └── show.blade.php
+```
+
 ---
 
 ## DISEÑO UNIFICADO DE PDFs
@@ -163,10 +192,17 @@ Todos los PDFs del sistema usan el mismo diseño:
 |--------|---------|-------------|
 | Órdenes | `admin/ordenes/pdf.blade.php` | Detalle de orden con evaluados |
 | Cuestionarios | `admin/cuestionarios/pdf.blade.php` | Cuestionario completado |
+| Evaluaciones | `admin/reportes/pdf/evaluaciones.blade.php` | Reporte de evaluaciones |
 | Usuarios | `admin/user/pdf.blade.php` | Listado de usuarios |
 | Usuarios | `admin/user/pdfuser.blade.php` | Ficha individual |
 | Empresas | `admin/empresa/pdf.blade.php` | Listado de empresas |
 | Empresas | `admin/empresa/pdfempresa.blade.php` | Ficha individual |
+
+### Logo del Sistema
+```
+public/img/logos/logoreproxelahorizontal.png
+```
+Se usa `public_path()` para cargar el logo en PDFs.
 
 ### Estructura del Header
 ```html
@@ -194,8 +230,8 @@ Frontend: Blade Templates + Bootstrap 5 + jQuery
 Backend: Laravel 12.37.0 + PHP 8.3.16
 Database: MySQL 8.0+
 Auth: Laravel Sanctum
-PDF: DomPDF
-Excel: Maatwebsite/Excel
+PDF: DomPDF (con logo desde public_path)
+Excel: Maatwebsite/Excel 3.x
 Email: Laravel Mail (SMTP)
 ```
 
@@ -328,24 +364,32 @@ GET  /cuestionario/{token}/completado   - Confirmación
 ### Controladores
 ```
 app/Http/Controllers/Admin/
-├── OrdenesController.php        # CRUD órdenes + PDF
+├── OrdenesController.php        # CRUD órdenes + PDF + redirección por rol
 ├── CuestionariosController.php  # Ver/editar cuestionarios
 ├── EmpresasController.php       # CRUD empresas
 ├── UsersController.php          # CRUD usuarios
+├── DashboardController.php      # Dashboard por rol
+├── ReportesController.php       # Reportes + exportación PDF/Excel
 └── ConfigController.php         # Configuración
 
 app/Http/Controllers/
-└── CuestionarioController.php   # Flujo público evaluados
+├── CuestionarioController.php   # Flujo público evaluados
+└── EmpresaController.php        # Portal empresa (NUEVO)
 ```
 
 ### Vistas
 ```
 resources/views/admin/
-├── ordenes/      # index, show, create, edit, pdf
+├── ordenes/       # index, show, create, edit, pdf
 ├── cuestionarios/ # index, show, edit, pdf
-├── empresa/      # CRUD + PDFs
-├── user/         # CRUD + PDFs
-└── config/       # Configuración
+├── reportes/      # evaluaciones, empresas, pdf/
+├── empresa/       # CRUD + PDFs
+├── user/          # CRUD + PDFs
+└── config/        # Configuración
+
+resources/views/empresa/  # (NUEVO)
+├── ordenes/       # index, show
+└── cuestionarios/ # show
 
 resources/views/cuestionario/
 ├── acceso.blade.php
@@ -378,5 +422,5 @@ app/Models/
 
 ---
 
-**Última actualización:** 21 de enero de 2026  
+**Última actualización:** 23 de enero de 2026  
 **Estado:** ✅ ACTUALIZADO  

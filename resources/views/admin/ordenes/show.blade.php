@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends(session('layout', 'layouts.admin'))
 @section('content')
 
 <!-- Content wrapper scroll start -->
@@ -58,7 +58,7 @@
                             <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-danger btn-sm me-1" target="_blank">
                                 <i class="bi bi-file-pdf"></i> PDF
                             </a>
-                            
+
                             @if(Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->hasRole('empresa') && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'programacion'])))
                             <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil"></i> Editar
@@ -67,7 +67,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Código de Orden</label>
@@ -172,7 +172,7 @@
                                 <label class="form-label fw-bold">Prioridad</label>
                                 <div>
                                     @if($orden->prioridad)
-                                        <span class="badge 
+                                        <span class="badge
                                             @if($orden->prioridad == 'urgente') bg-danger
                                             @elseif($orden->prioridad == 'alta') bg-warning
                                             @elseif($orden->prioridad == 'normal') bg-info
@@ -209,7 +209,7 @@
                                         </span>
                                         @if($diasRestantes < 0)
                                             <span class="badge bg-danger ms-2 fs-6">
-                                                <i class="bi bi-exclamation-triangle-fill"></i> 
+                                                <i class="bi bi-exclamation-triangle-fill"></i>
                                                 Vencida hace {{ $diasRestantesTexto }} {{ $diasRestantesTexto == 1 ? 'día' : 'días' }}
                                             </span>
                                         @elseif($diasRestantes == 0 && !in_array($orden->estado, ['entregado', 'cancelado']))
@@ -218,17 +218,17 @@
                                             </span>
                                         @elseif($diasRestantes <= 3 && !in_array($orden->estado, ['entregado', 'cancelado']))
                                             <span class="badge bg-warning text-dark ms-2 fs-6">
-                                                <i class="bi bi-hourglass-split"></i> 
+                                                <i class="bi bi-hourglass-split"></i>
                                                 {{ $diasRestantes }} {{ $diasRestantes == 1 ? 'día restante' : 'días restantes' }}
                                             </span>
                                         @elseif($diasRestantes <= 7 && !in_array($orden->estado, ['entregado', 'cancelado']))
                                             <span class="badge bg-info ms-2 fs-6">
-                                                <i class="bi bi-calendar-check"></i> 
+                                                <i class="bi bi-calendar-check"></i>
                                                 {{ $diasRestantes }} {{ $diasRestantes == 1 ? 'día restante' : 'días restantes' }}
                                             </span>
                                         @elseif($diasRestantes > 7)
                                             <span class="badge bg-success ms-2">
-                                                <i class="bi bi-check-circle"></i> 
+                                                <i class="bi bi-check-circle"></i>
                                                 {{ $diasRestantes }} {{ $diasRestantes == 1 ? 'día restante' : 'días restantes' }}
                                             </span>
                                         @endif
@@ -264,37 +264,73 @@
                         <div class="card-title">Control de Estado</div>
                     </div>
                     <div class="card-body">
-                        
+
                         @if(Auth::user()->hasAnyRole(['admin', 'repro']))
                         <form action="{{ route('ordenes.cambiar-estado', ['orden' => $orden]) }}" method="POST">
                             @csrf
                             @method('PATCH')
-                            
+
                             <div class="mb-3">
                                 <label class="form-label">Cambiar Estado</label>
                                 <select class="form-select" name="nuevo_estado" required>
                                     <option value="">Seleccionar nuevo estado...</option>
                                     <option value="solicitud" {{ $orden->estado == 'solicitud' ? 'disabled' : '' }}>Solicitud</option>
-                                    <option value="autorizacion" {{ $orden->estado == 'autorizacion' ? 'disabled' : '' }}>Autorización</option>
-                                    <option value="requisito" {{ $orden->estado == 'requisito' ? 'disabled' : '' }}>Requisito</option>
                                     <option value="programacion" {{ $orden->estado == 'programacion' ? 'disabled' : '' }}>Programación</option>
                                     <option value="en_proceso" {{ $orden->estado == 'en_proceso' ? 'disabled' : '' }}>En Proceso</option>
                                     <option value="analisis" {{ $orden->estado == 'analisis' ? 'disabled' : '' }}>En Análisis</option>
-                                    <option value="preliminar" {{ $orden->estado == 'preliminar' ? 'disabled' : '' }}>Reporte Preliminar</option>
-                                    <option value="final" {{ $orden->estado == 'final' ? 'disabled' : '' }}>Reporte Final</option>
                                     <option value="entregado" {{ $orden->estado == 'entregado' ? 'disabled' : '' }}>Entregado</option>
                                     <option value="cancelado" {{ $orden->estado == 'cancelado' ? 'disabled' : '' }}>Cancelado</option>
                                 </select>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label class="form-label">Observaciones del cambio</label>
                                 <textarea class="form-control" name="observaciones" rows="2" placeholder="Motivo del cambio de estado..."></textarea>
                             </div>
-                            
+
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="bi bi-arrow-repeat"></i> Cambiar Estado
                             </button>
+                        </form>
+
+                        <!-- Control de visibilidad de resultados para empresa -->
+                        <hr>
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-eye{{ $orden->resultados_visibles_empresa ? '' : '-slash' }}"></i>
+                                Resultados para Empresa
+                            </label>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="small {{ $orden->resultadosDisponiblesParaEmpresa() ? 'text-success' : 'text-muted' }}">
+                                    @if($orden->resultadosDisponiblesParaEmpresa())
+                                        <i class="bi bi-check-circle"></i> Disponibles
+                                    @elseif($orden->resultados_visibles_empresa && $orden->estado !== 'entregado')
+                                        <i class="bi bi-hourglass-split"></i> Activo (pendiente entrega)
+                                    @else
+                                        <i class="bi bi-x-circle"></i> Ocultos
+                                    @endif
+                                </span>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                           id="toggleResultados"
+                                           {{ $orden->resultados_visibles_empresa ? 'checked' : '' }}
+                                           onchange="confirmarToggleResultados(this)">
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                @if($orden->resultadosDisponiblesParaEmpresa())
+                                    <i class="bi bi-unlock text-success"></i> La empresa puede ver los resultados.
+                                @elseif($orden->resultados_visibles_empresa && $orden->estado !== 'entregado')
+                                    <i class="bi bi-info-circle text-info"></i> Switch activo. Se mostrarán cuando el estado sea "Entregado".
+                                @else
+                                    <i class="bi bi-lock text-warning"></i> La empresa NO puede ver los resultados.
+                                @endif
+                            </small>
+                        </div>
+
+                        <form id="form-toggle-resultados" action="{{ route('ordenes.toggle-resultados-visibles', $orden) }}" method="POST" class="d-none">
+                            @csrf
+                            @method('PATCH')
                         </form>
                         @else
                         <div class="alert alert-info">
@@ -354,7 +390,7 @@
                                         </td>
                                         <td><code>{{ $evaluado->dpi }}</code></td>
                                         <td>
-                                            <span class="badge 
+                                            <span class="badge
                                                 @if($evaluado->tipo_servicio == 'poligrafo') bg-primary
                                                 @elseif($evaluado->tipo_servicio == 'vsa') bg-info
                                                 @else bg-warning
@@ -388,7 +424,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge 
+                                            <span class="badge
                                                 @if($evaluado->estado_evaluacion == 'completado') bg-success
                                                 @elseif($evaluado->estado_evaluacion == 'en_proceso') bg-primary
                                                 @elseif($evaluado->estado_evaluacion == 'programado') bg-info
@@ -407,23 +443,23 @@
                                                 @php
                                                     $cuestionario = $evaluado->cuestionario;
                                                 @endphp
-                                                
+
                                                 @if($cuestionario)
                                                     {{-- Cuestionario existe --}}
                                                     @if(Auth::user()->hasAnyRole(['admin', 'repro']))
-                                                        <a href="{{ route('admin.cuestionarios.show', $cuestionario->id) }}" 
-                                                           class="btn btn-outline-info btn-sm" 
+                                                        <a href="{{ route('admin.cuestionarios.show', $cuestionario->id) }}"
+                                                           class="btn btn-outline-info btn-sm"
                                                            title="Ver Cuestionario">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
-                                                        <a href="{{ route('admin.cuestionarios.pdf', $cuestionario->id) }}" 
-                                                           class="btn btn-outline-danger btn-sm" 
+                                                        <a href="{{ route('admin.cuestionarios.pdf', $cuestionario->id) }}"
+                                                           class="btn btn-outline-danger btn-sm"
                                                            title="Imprimir PDF"
                                                            target="_blank">
                                                             <i class="bi bi-file-pdf"></i>
                                                         </a>
-                                                        <a href="{{ route('admin.cuestionarios.edit', $cuestionario->id) }}" 
-                                                           class="btn btn-outline-warning btn-sm" 
+                                                        <a href="{{ route('admin.cuestionarios.edit', $cuestionario->id) }}"
+                                                           class="btn btn-outline-warning btn-sm"
                                                            title="Editar Cuestionario">
                                                             <i class="bi bi-pencil"></i>
                                                         </a>
@@ -432,23 +468,29 @@
                                                     {{-- No hay cuestionario --}}
                                                     <span class="text-muted small">Sin cuestionario<br</span>
                                                 @endif
-                                                
+
                                                 @if(!$evaluado->cuestionario_completado)
-                                                    <a href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}" 
-                                                       class="btn btn-outline-primary btn-sm" 
-                                                       title="Enlace del Evaluado" 
+                                                    <a href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}"
+                                                       class="btn btn-outline-primary btn-sm"
+                                                       title="Enlace del Evaluado"
                                                        target="_blank">
                                                         <i class="bi bi-link-45deg"></i>
                                                     </a>
-                                                    
+                                                    <button type="button"
+                                                            class="btn btn-outline-secondary btn-sm"
+                                                            onclick="copiarEnlaceEvaluado('{{ route('cuestionario.mostrar', $evaluado->token_unico) }}')"
+                                                            title="Copiar enlace al portapapeles">
+                                                        <i class="bi bi-clipboard"></i>
+                                                    </button>
+
                                                     @if($evaluado->email)
-                                                    <form action="{{ route('evaluados.reenviar-correo', $evaluado->id) }}" 
-                                                          method="POST" 
+                                                    <form action="{{ route('evaluados.reenviar-correo', $evaluado->id) }}"
+                                                          method="POST"
                                                           class="d-inline"
                                                           onsubmit="return confirm('¿Enviar correo a {{ $evaluado->email }}?');">
                                                         @csrf
-                                                        <button type="submit" 
-                                                                class="btn btn-outline-success btn-sm" 
+                                                        <button type="submit"
+                                                                class="btn btn-outline-success btn-sm"
                                                                 title="Reenviar correo a {{ $evaluado->email }}">
                                                             <i class="bi bi-envelope"></i>
                                                         </button>
@@ -471,7 +513,7 @@
             <div class="col-12">
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle"></i>
-                    No hay evaluados asignados a esta orden. 
+                    No hay evaluados asignados a esta orden.
                     <a href="{{ route('ordenes.edit', $orden) }}" class="alert-link">Haga clic aquí para agregar evaluados</a>.
                 </div>
             </div>
@@ -497,21 +539,6 @@
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
-}
-
-/* Mejores colores para los badges de fecha límite */
-.badge.bg-danger {
-    background-color: #dc3545 !important;
-    color: white !important;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
-}
-
-.badge.bg-warning {
-    background-color: #fd7e14 !important;
-    color: white !important;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(253, 126, 20, 0.3);
 }
 
 .badge.bg-info {
@@ -540,4 +567,48 @@
     transition: all 0.2s ease;
 }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+function confirmarToggleResultados(checkbox) {
+    const estaActivo = checkbox.checked;
+    const mensaje = estaActivo
+        ? '¿Está seguro de ACTIVAR la visibilidad de resultados para la empresa?\n\nLa empresa podrá ver los resultados de los cuestionarios completados.'
+        : '¿Está seguro de DESACTIVAR la visibilidad de resultados para la empresa?\n\nLa empresa NO podrá ver los resultados de los cuestionarios.';
+
+    if (confirm(mensaje)) {
+        document.getElementById('form-toggle-resultados').submit();
+    } else {
+        // Revertir el cambio del checkbox
+        checkbox.checked = !estaActivo;
+    }
+}
+
+// Función para copiar enlace del evaluado al portapapeles
+function copiarEnlaceEvaluado(url) {
+    navigator.clipboard.writeText(url).then(function() {
+        // Mostrar notificación temporal
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed bottom-0 end-0 p-3';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <div class="toast show" role="alert">
+                <div class="toast-header bg-success text-white">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong class="me-auto">Enlace copiado</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    El enlace ha sido copiado al portapapeles.
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }).catch(function(err) {
+        alert('Error al copiar: ' + err);
+    });
+}
+</script>
 @endpush

@@ -377,8 +377,6 @@
     @push('scripts')
     <script>
         $(document).ready(function() {
-            console.log("Document ready");
-
             // Vista previa de imagen
             $("#imageUpload").change(function() {
                 const file = this.files[0];
@@ -410,7 +408,6 @@
             // Mostrar/ocultar campos según el tipo de usuario
             function updateFieldsVisibility() {
                 var role = $("#role_as").val();
-                console.log("Role value:", role);
 
                 // Ocultar todos los campos específicos
                 $(".empresa-fields").hide();
@@ -419,7 +416,6 @@
 
                 // Mostrar campos relevantes según rol seleccionado
                 if (role == "1") {
-                    console.log("Showing empresa fields");
                     $(".empresa-fields").show();
                     $(".principal-check-container").show();
                     $("#empresa_id").prop('required', true);
@@ -436,7 +432,6 @@
             $("#role_as").change(function() {
                 var newRole = $(this).val();
                 var oldRole = "{{ $user->role_as }}";
-                console.log("Role changed from", oldRole, "to", newRole);
 
                 // Mostrar mensaje de advertencia si cambia el rol
                 if (newRole != oldRole) {
@@ -450,7 +445,6 @@
             });
 
             // Inicializar los campos según el rol actual
-            console.log("Initial role:", $("#role_as").val());
             updateFieldsVisibility();
 
             // Validación del formulario
@@ -479,9 +473,7 @@
 
                 // Validar cargo para usuarios tipo Repro
                 if (currentRole == "2") {
-                    // Usar un selector específico para obtener el campo de cargo visible
                     var cargoValue = $("#cargo_repro").val();
-                    console.log("Cargo de Repro:", cargoValue);
 
                     if (!cargoValue || cargoValue.trim() === "") {
                         e.preventDefault();

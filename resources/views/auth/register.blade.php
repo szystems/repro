@@ -64,8 +64,12 @@
                         </div>
 
                         <div class="d-grid pt-3">
-                            <button type="submit" class="btn btn-lg btn-primary">
-                                Registrar cuenta
+                            <button type="submit" class="btn btn-lg btn-primary" id="btn-registrar">
+                                <span class="btn-text">Registrar cuenta</span>
+                                <span class="btn-loading d-none">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    Procesando...
+                                </span>
                             </button>
                         </div>
 
@@ -109,6 +113,27 @@
                     toggleIcon.classList.add('bi-eye');
                 }
             });
+            
+            // Protección contra doble clic en registro
+            const form = document.querySelector('form[action*="register"]');
+            const btnRegistrar = document.getElementById('btn-registrar');
+            let formSubmitting = false;
+            
+            if (form && btnRegistrar) {
+                form.addEventListener('submit', function(e) {
+                    if (formSubmitting) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    formSubmitting = true;
+                    btnRegistrar.disabled = true;
+                    btnRegistrar.querySelector('.btn-text').classList.add('d-none');
+                    btnRegistrar.querySelector('.btn-loading').classList.remove('d-none');
+                    
+                    return true;
+                });
+            }
         </script>
     </body>
 @endsection

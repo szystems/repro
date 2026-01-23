@@ -15,7 +15,7 @@
                         <i class="bi bi-funnel-fill"></i> Filtrar Resultados
                     </button>
                 </div>
-                
+
                 <div class="card-body">
                     {{-- Panel de filtros (colapsable) --}}
                     <div class="collapse" id="filtrosPanel">
@@ -33,7 +33,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="filtro_empresa" class="form-label">Empresa</label>
@@ -47,14 +47,14 @@
                                             </select>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="filtro_fecha_desde" class="form-label">Desde</label>
                                             <input type="date" class="form-control" id="filtro_fecha_desde" name="fecha_desde" value="{{ request('fecha_desde') }}">
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="filtro_fecha_hasta" class="form-label">Hasta</label>
@@ -62,16 +62,16 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="filtro_buscar" class="form-label">Buscar</label>
-                                            <input type="text" class="form-control" id="filtro_buscar" name="buscar" 
+                                            <input type="text" class="form-control" id="filtro_buscar" name="buscar"
                                                    value="{{ request('buscar') }}" placeholder="Nombre, DPI, teléfono...">
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-6 d-flex align-items-end">
                                         <div class="btn-group w-100">
                                             <button type="submit" class="btn btn-primary">
@@ -86,7 +86,7 @@
                             </form>
                         </div>
                     </div>
-                    
+
                     {{-- Estadísticas rápidas --}}
                     <div class="row mb-4">
                         <div class="col-md-2">
@@ -104,7 +104,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-2">
                             <div class="card bg-warning text-white">
                                 <div class="card-body py-2">
@@ -120,7 +120,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-2">
                             <div class="card bg-info text-white">
                                 <div class="card-body py-2">
@@ -136,7 +136,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-2">
                             <div class="card bg-success text-white">
                                 <div class="card-body py-2">
@@ -175,8 +175,8 @@
                                     <div class="d-flex justify-content-between">
                                         <div>
                                             @php
-                                                $tasaCompletado = $estadisticas['total'] > 0 
-                                                    ? round(($estadisticas['completados'] / $estadisticas['total']) * 100, 1) 
+                                                $tasaCompletado = $estadisticas['total'] > 0
+                                                    ? round(($estadisticas['completados'] / $estadisticas['total']) * 100, 1)
                                                     : 0;
                                             @endphp
                                             <h5 class="card-title mb-0 text-white">{{ $tasaCompletado }}%</h5>
@@ -190,14 +190,14 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     {{-- Tabla de cuestionarios --}}
                     <div class="table-responsive">
                         <table class="table table-striped table-hover" id="tablaCuestionarios">
                             <thead class="table-dark">
                                 <tr>
                                     <th>
-                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" 
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}"
                                            class="text-white text-decoration-none">
                                             #ID
                                             @if(request('sort') == 'id')
@@ -215,7 +215,7 @@
                                     <th>Estado</th>
                                     <th>Progreso</th>
                                     <th>
-                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" 
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}"
                                            class="text-white text-decoration-none">
                                             Fecha
                                             @if(request('sort') == 'created_at')
@@ -239,8 +239,8 @@
                                     <tr>
                                         <td class="font-weight-bold">#{{ $cuestionario->id }}</td>
                                         <td>
-                                            <a href="{{ route('ordenes.show', $orden) }}" 
-                                               class="text-decoration-none" 
+                                            <a href="{{ route('ordenes.show', $orden) }}"
+                                               class="text-decoration-none"
                                                title="Ver orden {{ $orden->codigo_orden }}">
                                                 <span class="badge bg-dark">
                                                     <i class="bi bi-folder2-open"></i> {{ $orden->codigo_orden }}
@@ -307,11 +307,11 @@
                                         </td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar 
-                                                    @if($progreso < 25) bg-danger 
-                                                    @elseif($progreso < 75) bg-warning 
-                                                    @else bg-success @endif" 
-                                                     role="progressbar" 
+                                                <div class="progress-bar
+                                                    @if($progreso < 25) bg-danger
+                                                    @elseif($progreso < 75) bg-warning
+                                                    @else bg-success @endif"
+                                                     role="progressbar"
                                                      style="width: {{ $progreso }}%">
                                                     {{ $progreso }}%
                                                 </div>
@@ -331,7 +331,7 @@
                                         </td>
                                         <td>
                                             <div class="btn-group">
-                                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" 
+                                                <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"
                                                         data-bs-toggle="dropdown">
                                                     <i class="bi bi-gear"></i>
                                                 </button>
@@ -343,7 +343,7 @@
                                                     </li>
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('admin.cuestionarios.edit', $cuestionario) }}">
-                                                            <i class="bi bi-pencil"></i> 
+                                                            <i class="bi bi-pencil"></i>
                                                             @if($cuestionario->estado == 'completado')
                                                                 Editar (Completado)
                                                             @else
@@ -359,8 +359,8 @@
                                                     <li><hr class="dropdown-divider"></li>
                                                     @if($cuestionario->estado != 'completado')
                                                         <li>
-                                                            <form action="{{ route('admin.cuestionarios.completar', $cuestionario) }}" 
-                                                                  method="POST" 
+                                                            <form action="{{ route('admin.cuestionarios.completar', $cuestionario) }}"
+                                                                  method="POST"
                                                                   onsubmit="return confirm('¿Marcar como completado manualmente?')">
                                                                 @csrf
                                                                 <button type="submit" class="dropdown-item text-success">
@@ -370,17 +370,23 @@
                                                         </li>
                                                     @endif
                                                     <li>
-                                                        <a class="dropdown-item text-primary" 
-                                                           href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}" 
+                                                        <a class="dropdown-item text-primary"
+                                                           href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}"
                                                            target="_blank">
                                                             <i class="bi bi-box-arrow-up-right"></i> Enlace Evaluado
                                                         </a>
                                                     </li>
+                                                    <li>
+                                                        <button type="button" class="dropdown-item text-secondary"
+                                                                onclick="copiarEnlaceEvaluado('{{ route('cuestionario.mostrar', $evaluado->token_unico) }}')">
+                                                            <i class="bi bi-clipboard"></i> Copiar Enlace
+                                                        </button>
+                                                    </li>
                                                     @if($evaluado->email && !$cuestionario->completado)
                                                         <li><hr class="dropdown-divider"></li>
                                                         <li>
-                                                            <form action="{{ route('evaluados.reenviar-correo', $evaluado) }}" 
-                                                                  method="POST" 
+                                                            <form action="{{ route('evaluados.reenviar-correo', $evaluado) }}"
+                                                                  method="POST"
                                                                   onsubmit="return confirm('¿Reenviar correo con enlace del cuestionario a {{ $evaluado->email }}?')">
                                                                 @csrf
                                                                 <button type="submit" class="dropdown-item text-info">
@@ -406,13 +412,13 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     {{-- Paginación --}}
                     @if($cuestionarios->hasPages())
                         <div class="d-flex justify-content-between align-items-center mt-4">
                             <div>
                                 <small class="text-muted">
-                                    Mostrando {{ $cuestionarios->firstItem() }} a {{ $cuestionarios->lastItem() }} 
+                                    Mostrando {{ $cuestionarios->firstItem() }} a {{ $cuestionarios->lastItem() }}
                                     de {{ $cuestionarios->total() }} resultados
                                 </small>
                             </div>
@@ -474,12 +480,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     const btnFiltros = document.getElementById('btnFiltros');
     const filtrosPanel = document.getElementById('filtrosPanel');
-    
+
     btnFiltros.addEventListener('click', function() {
         const bsCollapse = new bootstrap.Collapse(filtrosPanel);
         bsCollapse.toggle();
     });
-    
+
     // Auto-aplicar filtros cuando cambian
     const filtros = document.querySelectorAll('#formFiltros input, #formFiltros select');
     filtros.forEach(filtro => {
@@ -494,11 +500,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-    
+
     // Búsqueda en tiempo real (con debounce)
     let searchTimeout;
     const buscarInput = document.getElementById('filtro_buscar');
-    
+
     buscarInput.addEventListener('input', function() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
@@ -508,5 +514,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
     });
 });
+
+// Función para copiar enlace del evaluado al portapapeles
+function copiarEnlaceEvaluado(url) {
+    navigator.clipboard.writeText(url).then(function() {
+        // Mostrar notificación temporal
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed bottom-0 end-0 p-3';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <div class="toast show" role="alert">
+                <div class="toast-header bg-success text-white">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong class="me-auto">Enlace copiado</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    El enlace ha sido copiado al portapapeles.
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }).catch(function(err) {
+        alert('Error al copiar: ' + err);
+    });
+}
 </script>
 @endpush

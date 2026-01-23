@@ -1,9 +1,9 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 21 de enero de 2026  
+**Fecha de Contexto:** 23 de enero de 2026  
 **Estado:** ✅ MÓDULOS PRINCIPALES + NUEVAS FUNCIONALIDADES COMPLETADAS  
-**Versión:** 2.1.0 Producción  
+**Versión:** 2.2.0 Producción  
 
 ---
 
@@ -13,16 +13,18 @@
 REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA y socioeconómicas para empresas. Los usuarios empresariales crean órdenes con múltiples evaluados, los evaluados completan cuestionarios digitales, y REPRO realiza las evaluaciones y entrega resultados.
 
 ### ⚡ ESTADO ACTUAL (Enero 2026)
-- ✅ **OPERACIONAL:** 8 módulos principales funcionando
+- ✅ **OPERACIONAL:** 9 módulos principales funcionando
 - ✅ **CUESTIONARIOS:** Flujo completo implementado + reenvío manual de correos
-- ✅ **PDFs:** Diseño unificado con branding REPRO
+- ✅ **PDFs:** Diseño unificado con branding REPRO (logo horizontal)
 - ✅ **ÓRDENES:** Sistema de estados completo
 - ✅ **SEGURO:** Sistema de permisos granular
 - ✅ **ÍNTEGRO:** Base de datos 100% consistente
 - ✅ **DASHBOARD:** Estadísticas por rol (Admin/REPRO vs Empresa)
 - ✅ **REPORTES:** Evaluaciones y Empresas con exportación PDF/Excel
 - ✅ **NOTIFICACIONES:** Emails automáticos y manuales
-- ✅ **TESTS:** 74+ tests automatizados pasando
+- ✅ **PORTAL EMPRESA:** Navegación completa para usuarios empresa
+- ✅ **TESTS:** 79+ tests automatizados pasando
+- ✅ **PRODUCCIÓN:** Listo para despliegue (código limpio)
 
 ---
 
@@ -108,8 +110,8 @@ en_proceso → analisis → preliminar → final → entregado/cancelado
 ### 8. REPORTES ✅ (NUEVO)
 - Reporte de Evaluaciones con filtros
 - Reporte de Empresas (Admin/REPRO)
-- Exportación PDF con branding REPRO
-- Exportación Excel
+- Exportación PDF con branding REPRO (logo horizontal)
+- Exportación Excel con columna Tipo de Formulario
 
 **Rutas:**
 ```
@@ -120,7 +122,20 @@ GET /reportes/evaluaciones/excel - Exportar Excel
 ```
 **Tests:** 10 tests pasando
 
-### 9. NOTIFICACIONES EMAIL ✅ (NUEVO)
+### 9. PORTAL EMPRESA ✅ (NUEVO)
+- Dashboard específico para usuarios empresa
+- Navegación completa: órdenes, evaluados, cuestionarios
+- Visualización de resultados cuando disponibles
+- Redirección automática después de crear/editar órdenes
+- Botones "Copiar enlace" para compartir links de cuestionarios
+- Acceso restringido a cuestionarios según `resultadosDisponiblesParaEmpresa()`
+
+**Controlador:** `EmpresaController.php`
+**Métodos:**
+- `verOrden($id)` - Ver detalle de orden con evaluados
+- `verCuestionario($id)` - Ver cuestionario completado (si disponible)
+
+### 10. NOTIFICACIONES EMAIL ✅
 - Email al asignar evaluado (automático)
 - Email recordatorio diario (8:00 AM)
 - Email confirmación al completar
@@ -217,12 +232,13 @@ app/Http/Controllers/Admin/
 ├── CuestionariosController.php  # Ver/editar + PDF
 ├── EmpresasController.php       # CRUD + PDFs
 ├── UsersController.php          # CRUD + PDFs
-├── DashboardController.php      # Dashboard por rol (NUEVO)
-├── ReportesController.php       # Reportes + exportación (NUEVO)
+├── DashboardController.php      # Dashboard por rol
+├── ReportesController.php       # Reportes + exportación PDF/Excel
 └── ConfigController.php
 
 app/Http/Controllers/
-└── CuestionarioController.php   # Flujo público evaluados + notificaciones
+├── CuestionarioController.php   # Flujo público evaluados + notificaciones
+└── EmpresaController.php        # Portal empresa (verOrden, verCuestionario)
 ```
 
 ### Vistas Principales
@@ -230,10 +246,14 @@ app/Http/Controllers/
 resources/views/admin/
 ├── ordenes/       # index, show, create, edit, pdf
 ├── cuestionarios/ # index (mejorado), show, edit, pdf
-├── dashboard/     # index (NUEVO)
-├── reportes/      # evaluaciones, empresas, pdf (NUEVO)
+├── dashboard/     # index
+├── reportes/      # evaluaciones, empresas, pdf/
 ├── empresa/       # CRUD + PDFs
 └── user/          # CRUD + PDFs
+
+resources/views/empresa/
+├── ordenes/       # index, show (portal empresa)
+└── cuestionarios/ # show (portal empresa)
 
 resources/views/cuestionario/
 ├── verificar-identidad.blade.php
@@ -241,7 +261,7 @@ resources/views/cuestionario/
 ├── finalizar.blade.php
 └── completado.blade.php
 
-resources/views/emails/  # (NUEVO)
+resources/views/emails/
 ├── evaluado-asignado.blade.php
 ├── recordatorio-cuestionario.blade.php
 └── cuestionario-completado.blade.php
@@ -290,17 +310,27 @@ Route::get('cuestionarios', ...);
 Route::get('cuestionarios/{id}', ...);
 Route::get('cuestionarios/{id}/pdf', ...);
 
-// Dashboard (NUEVO)
+// Dashboard
 Route::get('dashboard', [DashboardController::class, 'index']);
 
-// Reportes (NUEVO)
+// Reportes
 Route::get('reportes/evaluaciones', ...);
 Route::get('reportes/evaluaciones/pdf', ...);
 Route::get('reportes/evaluaciones/excel', ...);
 Route::get('reportes/empresas', ...);
 
-// Reenviar correo (NUEVO)
+// Reenviar correo
 Route::post('evaluados/{evaluado}/reenviar-correo', ...);
+```
+
+### Portal Empresa (requiere auth + role empresa)
+```php
+// Órdenes de empresa
+Route::get('empresa/ordenes', [EmpresaController::class, 'ordenes']);
+Route::get('empresa/ordenes/{id}', [EmpresaController::class, 'verOrden']);
+
+// Cuestionarios de empresa (si resultados disponibles)
+Route::get('empresa/cuestionarios/{id}', [EmpresaController::class, 'verCuestionario']);
 ```
 
 ### Público (sin auth)
@@ -380,8 +410,9 @@ php artisan view:clear
 | Notificaciones | 8 | ✅ Pasando |
 | Órdenes | 7 | ✅ Pasando |
 | Cuestionarios | 34 | ✅ 32 pasando, 2 pendientes |
+| Portal Empresa | 5 | ✅ Pasando |
 | Otros | 9 | ✅ Pasando |
-| **TOTAL** | **74+** | **✅ Funcionando** |
+| **TOTAL** | **79+** | **✅ Funcionando** |
 
 ---
 
@@ -401,6 +432,53 @@ docs/deployment/ → Despliegue
 
 ---
 
+## LÓGICA DE NEGOCIO IMPORTANTE
+
+### Visibilidad de Resultados para Empresa
+```php
+// En modelo Orden.php
+public function resultadosDisponiblesParaEmpresa(): bool
+{
+    return $this->resultados_visibles_empresa == 1;
+}
+```
+- El campo `resultados_visibles_empresa` en la tabla `ordenes` controla si los usuarios empresa pueden ver los cuestionarios completados
+- El reporte de evaluaciones NO usa este filtro (muestra todos los evaluados)
+- El acceso al cuestionario individual SÍ usa este filtro
+
+### Redirección por Rol después de CRUD
+```php
+// OrdenesController.php - store(), update(), destroy()
+if (Auth::user()->role_as == 1) {
+    return redirect()->route('empresa.ordenes')->with('status', '...');
+}
+return redirect()->route('ordenes.index')->with('status', '...');
+```
+
+---
+
+## DESPLIEGUE EN PRODUCCIÓN
+
+### Hosting: iPage
+- **URL:** https://reproapp.szystems.com/
+- **Guía:** `docs/deployment/IPAGE_DEPLOY.md`
+- **Archivos especiales:**
+  - `.env_ipage` → Renombrar a `.env` en servidor
+  - `.htaccess_ipage_root` → Renombrar a `.htaccess` en raíz
+
+### Carpetas a subir:
+```
+app/, bootstrap/, config/, database/, public/,
+resources/, routes/, storage/, vendor/
+```
+
+### Archivos raíz a subir:
+```
+artisan, composer.json, composer.lock, server.php
+```
+
+---
+
 ## CONTACTO
 
 **Desarrollador:** Otto Szarata (szystems@hotmail.com)  
@@ -409,5 +487,5 @@ docs/deployment/ → Despliegue
 
 ---
 
-**Última actualización:** 21 de enero de 2026  
+**Última actualización:** 23 de enero de 2026  
 **Estado:** ✅ ACTUALIZADO Y VÁLIDO  

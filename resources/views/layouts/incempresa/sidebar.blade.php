@@ -38,6 +38,7 @@
                     <hr>
                 </li>
 
+                <!-- Dashboard -->
                 <li class="{{ Request::is('dashboard') ? 'active-page-link':''  }}">
                     <a href="{{ url('/dashboard') }}">
                         <i class="bi bi-house-fill"></i>
@@ -45,70 +46,57 @@
                     </a>
                 </li>
 
-                <!-- Módulo de Evaluaciones -->
-                <li class="menu-category">Evaluaciones</li>
-                <li class="{{ Request::is('evaluaciones','show-evaluacion/*') ? 'active-page-link':''  }}">
-                    <a href="{{ url('evaluaciones') }}">
-                        <i class="bi bi-clipboard-data"></i>
-                        <span class="menu-text">Ver Evaluaciones</span>
-                    </a>
-                </li>
-                <li class="{{ Request::is('ordenes','show-orden/*','add-orden','edit-orden/*') ? 'active-page-link':''  }}">
-                    <a href="{{ url('ordenes') }}">
+                <!-- Módulo de Órdenes -->
+                <li class="menu-category">Órdenes</li>
+                <li class="{{ Request::is('ordenes') && !Request::is('ordenes/create') ? 'active-page-link':''  }}">
+                    <a href="{{ route('empresa.ordenes.index') }}">
                         <i class="bi bi-file-earmark-text"></i>
-                        <span class="menu-text">Órdenes de Evaluación</span>
+                        <span class="menu-text">Mis Órdenes</span>
                     </a>
                 </li>
-                <li class="{{ Request::is('add-orden') ? 'active-page-link':''  }}">
-                    <a href="{{ url('add-orden') }}">
+                <li class="{{ Request::is('ordenes/create') ? 'active-page-link':''  }}">
+                    <a href="{{ route('ordenes.create') }}">
                         <i class="bi bi-file-plus-fill"></i>
                         <span class="menu-text">Nueva Orden</span>
                     </a>
                 </li>
 
-                <!-- Módulo de Evaluados -->
-                <li class="menu-category">Personas</li>
-                <li class="{{ Request::is('evaluados','show-evaluado/*','add-evaluado','edit-evaluado/*') ? 'active-page-link':''  }}">
-                    <a href="{{ url('evaluados') }}">
-                        <i class="bi bi-person-vcard"></i>
-                        <span class="menu-text">Personas Evaluadas</span>
-                    </a>
-                </li>
-                <li class="{{ Request::is('add-evaluado') ? 'active-page-link':''  }}">
-                    <a href="{{ url('add-evaluado') }}">
-                        <i class="bi bi-person-plus"></i>
-                        <span class="menu-text">Nuevo Evaluado</span>
+                <!-- Cuestionarios (solo lectura) -->
+                <li class="menu-category">Cuestionarios</li>
+                <li class="{{ Request::is('empresa/cuestionarios*') ? 'active-page-link':''  }}">
+                    <a href="{{ url('empresa/cuestionarios') }}">
+                        <i class="bi bi-clipboard-check"></i>
+                        <span class="menu-text">Estado de Cuestionarios</span>
                     </a>
                 </li>
 
                 <!-- Módulo de Reportes -->
                 <li class="menu-category">Reportes</li>
-                <li class="{{ Request::is('reportes/empresa') ? 'active-page-link':''  }}">
-                    <a href="{{ url('reportes/empresa') }}">
+                <li class="{{ Request::is('reportes/evaluaciones') ? 'active-page-link':''  }}">
+                    <a href="{{ url('reportes/evaluaciones') }}">
                         <i class="bi bi-graph-up"></i>
-                        <span class="menu-text">Estadísticas</span>
+                        <span class="menu-text">Mis Reportes</span>
                     </a>
                 </li>
 
-                <!-- Administradores de empresa (solo para usuarios principales) -->
+                <!-- Mi Empresa -->
+                <li class="menu-category">Mi Empresa</li>
+                <li class="{{ Request::is('empresa/mi-empresa') && !Request::is('empresa/mi-empresa/editar') ? 'active-page-link':''  }}">
+                    <a href="{{ url('empresa/mi-empresa') }}">
+                        <i class="bi bi-building"></i>
+                        <span class="menu-text">Información</span>
+                    </a>
+                </li>
+
+                <!-- Usuarios de empresa (solo para usuarios principales) -->
                 @if(Auth::user()->principal == 1)
-                <li class="menu-category">Administración</li>
-                <li class="{{ Request::is('empresa-users') ? 'active-page-link':''  }}">
-                    <a href="{{ url('empresa-users') }}">
+                <li class="{{ Request::is('empresa/usuarios*') ? 'active-page-link':''  }}">
+                    <a href="{{ url('empresa/usuarios') }}">
                         <i class="bi bi-people"></i>
-                        <span class="menu-text">Usuarios de la Empresa</span>
+                        <span class="menu-text">Usuarios</span>
                     </a>
                 </li>
                 @endif
-
-                <!-- Información de Empresa -->
-                <li class="menu-category">Mi Empresa</li>
-                <li class="{{ Request::is('mi-empresa') ? 'active-page-link':''  }}">
-                    <a href="{{ url('mi-empresa') }}">
-                        <i class="bi bi-building"></i>
-                        <span class="menu-text">Información de Empresa</span>
-                    </a>
-                </li>
             </ul>
         </div>
     </div>

@@ -9,6 +9,16 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckRole
 {
     /**
+     * Mapeo de nombres de rol a role_as
+     */
+    protected array $roleMapping = [
+        'evaluado' => 0,
+        'empresa' => 1,
+        'repro' => 2,
+        'admin' => 3,
+    ];
+
+    /**
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
@@ -27,7 +37,14 @@ class CheckRole
             return $next($request);
         }
 
-        // Verificar si el usuario tiene alguno de los roles especificados
+        // Verificar primero por el campo role_as (sistema heredado)
+        foreach ($roles as $role) {
+            if (isset($this->roleMapping[$role]) && $user->role_as == $this->roleMapping[$role]) {
+                return $next($request);
+            }
+        }
+
+        // Verificar si el usuario tiene alguno de los roles especificados (nuevo sistema)
         if ($user->hasAnyRole($roles)) {
             return $next($request);
         }

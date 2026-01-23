@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends(session('layout', 'layouts.admin'))
 @section('content')
 
 <!-- Content wrapper scroll start -->
@@ -51,7 +51,7 @@
 
                             <div class="row">
                                 <!-- Empresa (solo para admin/repro) -->
-                                @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                                @if(Auth::user()->role_as >= 2)
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Empresa <span class="text-danger">*</span></label>
                                     <select class="form-select @error('empresa_id') is-invalid @enderror" name="empresa_id" required>
@@ -67,7 +67,8 @@
                                     @enderror
                                 </div>
                                 @else
-                                <!-- Usuario empresa: mostrar su empresa -->
+                                <!-- Usuario empresa: enviar su empresa_id como hidden -->
+                                <input type="hidden" name="empresa_id" value="{{ Auth::user()->empresa_id }}">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Empresa</label>
                                     <input type="text" class="form-control" value="{{ Auth::user()->empresa->nombre ?? 'No asignada' }}" readonly>
@@ -91,7 +92,7 @@
                                 <!-- Fecha Límite -->
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Fecha Límite</label>
-                                    <input type="date" class="form-control @error('fecha_limite') is-invalid @enderror" 
+                                    <input type="date" class="form-control @error('fecha_limite') is-invalid @enderror"
                                            name="fecha_limite" value="{{ old('fecha_limite') }}" min="{{ date('Y-m-d') }}">
                                     @error('fecha_limite')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -101,7 +102,7 @@
                                 <!-- Observaciones Generales -->
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Observaciones Generales</label>
-                                    <textarea class="form-control @error('observaciones') is-invalid @enderror" 
+                                    <textarea class="form-control @error('observaciones') is-invalid @enderror"
                                               name="observaciones" rows="2" placeholder="Observaciones generales para esta orden...">{{ old('observaciones') }}</textarea>
                                     @error('observaciones')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -111,7 +112,7 @@
                                 <!-- Instrucciones Generales -->
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Instrucciones Generales</label>
-                                    <textarea class="form-control @error('instrucciones_generales') is-invalid @enderror" 
+                                    <textarea class="form-control @error('instrucciones_generales') is-invalid @enderror"
                                               name="instrucciones_generales" rows="3" placeholder="Instrucciones que aplican a todos los evaluados de esta orden...">{{ old('instrucciones_generales') }}</textarea>
                                     @error('instrucciones_generales')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -131,7 +132,7 @@
                                 </div>
                                 <div class="card-body">
                                     <p class="text-muted mb-3">
-                                        <i class="bi bi-info-circle"></i> 
+                                        <i class="bi bi-info-circle"></i>
                                         Puede agregar los evaluados ahora o hacerlo después. Los evaluados recibirán un token único para completar el cuestionario.
                                     </p>
 
@@ -143,11 +144,17 @@
 
                             <!-- Botones -->
                             <div class="d-flex justify-content-end mt-4">
-                                <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary me-2">
+                                <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary me-2" id="btn-cancelar">
                                     <i class="bi bi-x-circle"></i> Cancelar
                                 </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle"></i> Crear Orden
+                                <button type="submit" class="btn btn-primary" id="btn-crear-orden">
+                                    <span class="btn-text">
+                                        <i class="bi bi-check-circle"></i> Crear Orden
+                                    </span>
+                                    <span class="btn-loading d-none">
+                                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                        Procesando...
+                                    </span>
                                 </button>
                             </div>
 
@@ -169,10 +176,18 @@
 @push('scripts')
 <script>
 let contadorEvaluados = 0;
+const esUsuarioEmpresa = {{ Auth::user()->role_as == 1 ? 'true' : 'false' }};
 
 function agregarEvaluado() {
     contadorEvaluados++;
-    
+
+    // Solo mostrar fecha programada si NO es usuario empresa
+    const fechaProgramadaHtml = esUsuarioEmpresa ? '' : `
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Fecha Programada</label>
+                    <input type="date" class="form-control" name="evaluados[${contadorEvaluados}][fecha_programada]" min="{{ date('Y-m-d') }}">
+                </div>`;
+
     const html = `
         <div class="evaluado-item border rounded p-3 mb-3" id="evaluado-${contadorEvaluados}">
             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -181,7 +196,7 @@ function agregarEvaluado() {
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
-            
+
             <div class="row">
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Nombres</label>
@@ -193,14 +208,14 @@ function agregarEvaluado() {
                 </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">DPI</label>
-                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][dpi]" 
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][dpi]"
                            placeholder="1234567890123" maxlength="13" pattern="[0-9]{13}" required>
                 </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Email</label>
                     <input type="email" class="form-control" name="evaluados[${contadorEvaluados}][email]" placeholder="evaluado@empresa.com" required>
                 </div>
-                
+
                 <!-- Campos específicos por evaluado -->
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Tipo Servicio</label>
@@ -218,10 +233,7 @@ function agregarEvaluado() {
                         <option value="especifica">Específica</option>
                     </select>
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label class="form-label">Fecha Programada</label>
-                    <input type="date" class="form-control" name="evaluados[${contadorEvaluados}][fecha_programada]" min="{{ date('Y-m-d') }}">
-                </div>
+                ${fechaProgramadaHtml}
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Teléfono</label>
                     <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono]" placeholder="23451234">
@@ -229,7 +241,7 @@ function agregarEvaluado() {
             </div>
         </div>
     `;
-    
+
     document.getElementById('evaluados-container').insertAdjacentHTML('beforeend', html);
 }
 
@@ -237,47 +249,50 @@ function removerEvaluado(id) {
     document.getElementById(`evaluado-${id}`).remove();
 }
 
-// JavaScript con logging detallado
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('JavaScript cargado correctamente');
-    
     // Agregar un evaluado por defecto si no hay ninguno
     const container = document.getElementById('evaluados-container');
     if (container && container.children.length === 0) {
-        console.log('Agregando evaluado por defecto...');
         agregarEvaluado();
     }
-    
-    // Interceptar envío del formulario para debugging
+
+    // Prevenir doble envío del formulario
     const form = document.getElementById('form-orden');
-    if (form) {
-        console.log('Formulario encontrado, agregando listener...');
+    const btnCrear = document.getElementById('btn-crear-orden');
+    const btnCancelar = document.getElementById('btn-cancelar');
+    let formSubmitting = false;
+
+    if (form && btnCrear) {
         form.addEventListener('submit', function(e) {
-            console.log('=== ENVÍO DE FORMULARIO ===');
-            
-            // Log de datos del formulario
-            const formData = new FormData(form);
-            console.log('Datos del formulario:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
+            // Prevenir doble envío
+            if (formSubmitting) {
+                e.preventDefault();
+                return false;
             }
-            
+
             // Verificar evaluados
             const evaluados = document.querySelectorAll('#evaluados-container .evaluado-item');
-            console.log(`Número de evaluados: ${evaluados.length}`);
-            
+
             if (evaluados.length === 0) {
-                console.log('❌ Error: No hay evaluados');
                 e.preventDefault();
                 alert('Debe agregar al menos un evaluado.');
                 return false;
             }
-            
-            console.log('✅ Formulario válido, enviando...');
+
+            // Marcar como enviando y bloquear botón
+            formSubmitting = true;
+            btnCrear.disabled = true;
+            btnCrear.querySelector('.btn-text').classList.add('d-none');
+            btnCrear.querySelector('.btn-loading').classList.remove('d-none');
+
+            // También deshabilitar el botón cancelar
+            if (btnCancelar) {
+                btnCancelar.classList.add('disabled');
+                btnCancelar.style.pointerEvents = 'none';
+            }
+
             return true;
         });
-    } else {
-        console.log('❌ No se encontró el formulario');
     }
 });
 </script>

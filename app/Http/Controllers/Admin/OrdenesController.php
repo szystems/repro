@@ -27,9 +27,10 @@ class OrdenesController extends Controller
         $query = Orden::with(['empresa', 'creador', 'poligrafista']);
 
         // Filtros por rol
-        if (Auth::user()->hasRole('empresa')) {
+        if (Auth::user()->role_as == 1) {
+            // Usuario empresa: solo ve sus órdenes
             $query->where('empresa_id', Auth::user()->empresa_id);
-        } elseif ($request->filled('empresa_id') && Auth::user()->hasAnyRole(['admin', 'repro'])) {
+        } elseif ($request->filled('empresa_id') && Auth::user()->role_as >= 2) {
             $query->where('empresa_id', $request->empresa_id);
         }
 
@@ -38,7 +39,7 @@ class OrdenesController extends Controller
             $query->where('estado', $request->estado);
         }
 
-        if ($request->filled('tipo_servicio')) {  
+        if ($request->filled('tipo_servicio')) {
             $query->whereHas('evaluados', function($q) use ($request) {
                 $q->where('tipo_servicio', $request->tipo_servicio);
             });
@@ -69,19 +70,15 @@ class OrdenesController extends Controller
                         ->paginate(15);
 
         // Datos para filtros
-        $empresas = Auth::user()->hasAnyRole(['admin', 'repro'])
+        $empresas = Auth::user()->role_as >= 2
             ? Empresa::orderBy('nombre')->get()
             : collect();
 
         $estados = [
             'solicitud' => 'Solicitud',
-            'autorizacion' => 'Autorización',
-            'requisito' => 'Requisito',
             'programacion' => 'Programación',
             'en_proceso' => 'En Proceso',
             'analisis' => 'En Análisis',
-            'preliminar' => 'Reporte Preliminar',
-            'final' => 'Reporte Final',
             'entregado' => 'Entregado',
             'cancelado' => 'Cancelado'
         ];
@@ -102,18 +99,18 @@ class OrdenesController extends Controller
     {
         // Todas las empresas para admin/repro, solo la propia para empresa
         $empresas = collect();
-        
-        if (Auth::user()->hasAnyRole(['admin', 'repro'])) {
-            // Admin/repro pueden crear órdenes para cualquier empresa
+
+        // Admin (role_as=3) o Repro (role_as=2) pueden crear órdenes para cualquier empresa
+        if (Auth::user()->role_as >= 2) {
             $empresas = Empresa::where('estado', 1)->orderBy('nombre')->get();
-        } elseif (Auth::user()->hasRole('empresa')) {
+        } elseif (Auth::user()->role_as == 1) {
             // Usuario empresa solo ve su propia empresa (pre-seleccionada)
             $empresas = collect([Auth::user()->empresa]);
         }
 
         // Solo admin/repro pueden asignar polígrafos específicos
         $poligrafistas = collect();
-        if (Auth::user()->hasAnyRole(['admin', 'repro'])) {
+        if (Auth::user()->role_as >= 2) {
             $poligrafistas = User::whereHas('roles', function($query) {
                 $query->whereIn('name', ['admin', 'repro', 'poligrafo']);
             })->where('estado', 1)->orderBy('name')->get();
@@ -133,7 +130,7 @@ class OrdenesController extends Controller
         Log::info('User ID: ' . Auth::id());
         Log::info('Method: ' . $request->method());
         Log::info('URL: ' . $request->url());
-        
+
         // Validación manual temporal
         $validated = $request->validate([
             'empresa_id' => 'required|exists:empresas,id',
@@ -143,7 +140,7 @@ class OrdenesController extends Controller
             'instrucciones_generales' => 'nullable|string|max:1000',
             'evaluados' => 'required|array|min:1',
             'evaluados.*.nombre' => 'required|string|max:100',
-            'evaluados.*.apellidos' => 'required|string|max:100', 
+            'evaluados.*.apellidos' => 'required|string|max:100',
             'evaluados.*.dpi' => 'required|string|size:13',
             'evaluados.*.email' => 'required|email|max:100',
             'evaluados.*.telefono' => 'nullable|string|max:20',
@@ -152,11 +149,11 @@ class OrdenesController extends Controller
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
         ]);
-        
+
         Log::info('Validación manual exitosa: ' . json_encode($validated));
 
         DB::beginTransaction();
-        
+
         try {
             // Crear orden con solo los campos permitidos
             $datosOrden = [
@@ -168,15 +165,16 @@ class OrdenesController extends Controller
                 'fecha_solicitud' => now()->toDateString(),
                 'estado' => 'solicitud',
             ];
-            
-            if (Auth::user()->hasRole('empresa')) {
+
+            if (Auth::user()->role_as == 1) {
+                // Usuario empresa: usar su empresa_id
                 $datosOrden['empresa_id'] = Auth::user()->empresa_id;
             } else {
                 $datosOrden['empresa_id'] = $validated['empresa_id'];
             }
-            
+
             Log::info('Datos para crear orden: ' . json_encode($datosOrden));
-            
+
             $orden = Orden::create($datosOrden);
             Log::info('Orden creada con ID: ' . $orden->id);
 
@@ -193,18 +191,25 @@ class OrdenesController extends Controller
                 'evaluados_count' => $orden->evaluados()->count()
             ]);
 
+            // Redirigir según el rol del usuario
+            if (Auth::user()->role_as == 1) {
+                // Usuario empresa: redirigir a módulo empresa
+                return redirect()->route('empresa.ordenes.show', $orden)
+                    ->with('success', 'Orden creada exitosamente.');
+            }
+
             return redirect()->route('ordenes.show', $orden)
                 ->with('success', 'Orden creada exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Error al crear orden:', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'user_id' => Auth::id(),
                 'request_data' => $request->all()
             ]);
-            
+
             return back()->with('error', 'Error al crear la orden: ' . $e->getMessage())
                         ->withInput();
         }
@@ -223,19 +228,15 @@ class OrdenesController extends Controller
             'empresa',
             'creador',
             'evaluados' => function($query) {
-                $query->with('poligrafista')->orderBy('nombre');
+                $query->with(['poligrafista', 'cuestionario'])->orderBy('nombre');
             }
         ]);
 
         $estados = [
             'solicitud' => 'Solicitud',
-            'autorizacion' => 'Autorización',
-            'requisito' => 'Requisito',
             'programacion' => 'Programación',
             'en_proceso' => 'En Proceso',
             'analisis' => 'En Análisis',
-            'preliminar' => 'Reporte Preliminar',
-            'final' => 'Reporte Final',
             'entregado' => 'Entregado',
             'cancelado' => 'Cancelado'
         ];
@@ -255,7 +256,7 @@ class OrdenesController extends Controller
         $orden->load('evaluados');
 
         $empresas = collect();
-        
+
         if (Auth::user()->hasAnyRole(['admin', 'repro'])) {
             $empresas = Empresa::where('estado', 1)->orderBy('nombre')->get();
         }
@@ -266,13 +267,9 @@ class OrdenesController extends Controller
 
         $estados = [
             'solicitud' => 'Solicitud',
-            'autorizacion' => 'Autorización',
-            'requisito' => 'Requisito',
             'programacion' => 'Programación',
             'en_proceso' => 'En Proceso',
             'analisis' => 'En Análisis',
-            'preliminar' => 'Reporte Preliminar',
-            'final' => 'Reporte Final',
             'entregado' => 'Entregado',
             'cancelado' => 'Cancelado'
         ];
@@ -306,7 +303,7 @@ class OrdenesController extends Controller
             'evaluados' => 'required|array|min:1',
             'evaluados.*.id' => 'nullable|exists:evaluados_orden,id',
             'evaluados.*.nombre' => 'required|string|max:100',
-            'evaluados.*.apellidos' => 'required|string|max:100', 
+            'evaluados.*.apellidos' => 'required|string|max:100',
             'evaluados.*.dpi' => 'required|string|size:13',
             'evaluados.*.email' => 'required|email|max:100',
             'evaluados.*.telefono' => 'nullable|string|max:20',
@@ -319,7 +316,7 @@ class OrdenesController extends Controller
         Log::info('Validación exitosa: ' . json_encode($validated));
 
         DB::beginTransaction();
-        
+
         try {
             // Actualizar datos básicos de la orden - solo campos que vienen en el request
             $datosOrden = [
@@ -327,7 +324,7 @@ class OrdenesController extends Controller
                 'prioridad' => $validated['prioridad'] ?? $orden->prioridad ?? 'normal',
                 'instrucciones_generales' => $validated['instrucciones_generales'] ?? $orden->instrucciones_generales,
             ];
-            
+
             // Solo actualizar estos campos si vienen explícitamente en el request
             if (isset($validated['fecha_limite'])) {
                 $datosOrden['fecha_limite'] = $validated['fecha_limite'];
@@ -338,13 +335,13 @@ class OrdenesController extends Controller
             if (isset($validated['poligrafista_id'])) {
                 $datosOrden['poligrafista_id'] = $validated['poligrafista_id'];
             }
-            
+
             if (Auth::user()->hasAnyRole(['admin', 'repro'])) {
                 $datosOrden['empresa_id'] = $validated['empresa_id'];
             }
 
             Log::info('Actualizando orden con datos: ' . json_encode($datosOrden));
-            
+
             $orden->update($datosOrden);
 
             if ($request->has('evaluados')) {
@@ -355,17 +352,24 @@ class OrdenesController extends Controller
 
             Log::info('Orden actualizada exitosamente');
 
+            // Redirigir según el rol del usuario
+            if (Auth::user()->role_as == 1) {
+                // Usuario empresa: redirigir a módulo empresa
+                return redirect()->route('empresa.ordenes.show', $orden)
+                    ->with('success', 'Orden actualizada exitosamente.');
+            }
+
             return redirect()->route('ordenes.show', $orden)
                 ->with('success', 'Orden actualizada exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Error al actualizar orden:', [
                 'error' => $e->getMessage(),
                 'orden_id' => $orden->id,
                 'user_id' => Auth::id()
             ]);
-            
+
             return back()->with('error', 'Error al actualizar la orden: ' . $e->getMessage())
                         ->withInput();
         }
@@ -380,12 +384,18 @@ class OrdenesController extends Controller
             abort(403, 'Solo los administradores pueden eliminar órdenes.');
         }
 
-        if (in_array($orden->estado, ['en_proceso', 'analisis', 'preliminar', 'final', 'entregado'])) {
+        if (in_array($orden->estado, ['en_proceso', 'analisis', 'entregado'])) {
             return back()->with('error', 'No se puede eliminar una orden que está en proceso o completada.');
         }
 
         $codigoOrden = $orden->codigo_orden;
         $orden->delete();
+
+        // Redirigir según el rol del usuario
+        if (Auth::user()->role_as == 1) {
+            return redirect()->route('empresa.ordenes.index')
+                ->with('success', "Orden {$codigoOrden} eliminada exitosamente.");
+        }
 
         return redirect()->route('ordenes.index')
             ->with('success', "Orden {$codigoOrden} eliminada exitosamente.");
@@ -397,7 +407,7 @@ class OrdenesController extends Controller
     public function cambiarEstado(Request $request, Orden $orden)
     {
         $request->validate([
-            'nuevo_estado' => 'required|in:solicitud,autorizacion,requisito,programacion,en_proceso,analisis,preliminar,final,entregado,cancelado',
+            'nuevo_estado' => 'required|in:solicitud,programacion,en_proceso,analisis,entregado,cancelado',
             'observaciones' => 'nullable|string|max:500'
         ]);
 
@@ -407,19 +417,37 @@ class OrdenesController extends Controller
         }
 
         $estadoAnterior = $orden->estado;
-        
+
         if ($orden->cambiarEstado($request->nuevo_estado)) {
             if ($request->filled('observaciones')) {
                 $orden->update(['observaciones' => $request->observaciones]);
             }
-            
+
             return back()->with('success', "Estado cambiado de '{$estadoAnterior}' a '{$request->nuevo_estado}'.");
         }
 
         return back()->with('error', 'No se pudo cambiar el estado de la orden.');
     }
 
+    /**
+     * Toggle visibilidad de resultados para empresa
+     */
+    public function toggleResultadosVisibles(Orden $orden)
+    {
+        // Solo admin y repro pueden cambiar la visibilidad
+        if (Auth::user()->role_as < 2) {
+            return back()->with('error', 'No tiene permisos para realizar esta acción.');
+        }
 
+        $nuevoEstado = !$orden->resultados_visibles_empresa;
+        $orden->update(['resultados_visibles_empresa' => $nuevoEstado]);
+
+        $mensaje = $nuevoEstado
+            ? 'Resultados ahora visibles para la empresa.'
+            : 'Resultados ocultos para la empresa.';
+
+        return back()->with('success', $mensaje);
+    }
 
     /**
      * Procesar evaluados asociados a la orden
@@ -430,7 +458,7 @@ class OrdenesController extends Controller
         Log::info('Orden ID: ' . $orden->id);
         Log::info('Cantidad de evaluados: ' . count($evaluados));
         Log::info('Es actualización: ' . ($esActualizacion ? 'Sí' : 'No'));
-        
+
         if ($esActualizacion) {
             $evaluadosExistentes = $orden->evaluados->pluck('id')->toArray();
         }
@@ -463,12 +491,12 @@ class OrdenesController extends Controller
             } else {
                 $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
                 Log::info('Evaluado creado con ID: ' . $evaluadoCreado->id);
-                
+
                 // Enviar notificación al evaluado si tiene email
                 $this->notificarEvaluadoAsignado($evaluadoCreado);
             }
         }
-        
+
         Log::info('=== FIN PROCESAMIENTO EVALUADOS ===');
         Log::info('Total evaluados en la orden: ' . $orden->evaluados()->count());
 
@@ -515,11 +543,13 @@ class OrdenesController extends Controller
      */
     private function usuarioPuedeVerOrden(Orden $orden): bool
     {
-        if (Auth::user()->hasAnyRole(['admin', 'repro'])) {
+        // Admin y repro pueden ver cualquier orden
+        if (Auth::user()->role_as >= 2) {
             return true;
         }
 
-        if (Auth::user()->hasRole('empresa')) {
+        // Usuarios empresa solo pueden ver órdenes de su empresa
+        if (Auth::user()->role_as == 1) {
             return $orden->empresa_id === Auth::user()->empresa_id;
         }
 
@@ -543,7 +573,7 @@ class OrdenesController extends Controller
 
         // Las empresas pueden editar sus propias órdenes solo si están en estado inicial
         if (Auth::user()->hasRole('empresa')) {
-            return $orden->empresa_id === Auth::user()->empresa_id 
+            return $orden->empresa_id === Auth::user()->empresa_id
                 && in_array($orden->estado, ['pendiente', 'programada']);
         }
 
@@ -560,24 +590,25 @@ class OrdenesController extends Controller
             abort(403, 'No tienes permisos para ver esta orden.');
         }
 
+        // Verificar si es usuario empresa y los resultados no están disponibles
+        if (Auth::user()->role_as == 1 && !$orden->resultadosDisponiblesParaEmpresa()) {
+            return back()->with('error', 'Los resultados de esta orden aún no están disponibles. Estarán visibles cuando la orden sea entregada.');
+        }
+
         // Cargar relaciones necesarias
         $orden->load(['empresa', 'creador', 'evaluados.poligrafista']);
 
         $estados = [
             'solicitud' => 'Solicitud',
-            'autorizacion' => 'Autorización',
-            'requisito' => 'Requisito',
             'programacion' => 'Programación',
             'en_proceso' => 'En Proceso',
             'analisis' => 'En Análisis',
-            'preliminar' => 'Reporte Preliminar',
-            'final' => 'Reporte Final',
             'entregado' => 'Entregado',
             'cancelado' => 'Cancelado'
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf', compact('orden', 'estados'));
-        
+
         return $pdf->stream('orden-' . $orden->codigo_orden . '.pdf');
     }
 

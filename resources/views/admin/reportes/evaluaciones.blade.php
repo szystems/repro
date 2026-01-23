@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends(session('layout', 'layouts.admin'))
 
 @section('content')
 <div class="content-wrapper">
@@ -33,12 +33,12 @@
                         <div class="row g-3">
                             <div class="col-md-2">
                                 <label class="form-label">Fecha Inicio</label>
-                                <input type="date" name="fecha_inicio" class="form-control" 
+                                <input type="date" name="fecha_inicio" class="form-control"
                                        value="{{ request('fecha_inicio') }}">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Fecha Fin</label>
-                                <input type="date" name="fecha_fin" class="form-control" 
+                                <input type="date" name="fecha_fin" class="form-control"
                                        value="{{ request('fecha_fin') }}">
                             </div>
                             @if(Auth::user()->role_as >= 2)
@@ -164,11 +164,11 @@
                         <i class="bi bi-table me-2"></i>Listado de Evaluados
                     </h5>
                     <div class="btn-group">
-                        <a href="{{ route('reportes.evaluaciones.pdf', request()->query()) }}" 
+                        <a href="{{ route('reportes.evaluaciones.pdf', request()->query()) }}"
                            class="btn btn-danger btn-sm" target="_blank">
                             <i class="bi bi-file-pdf me-1"></i>Exportar PDF
                         </a>
-                        <a href="{{ route('reportes.evaluaciones.excel', request()->query()) }}" 
+                        <a href="{{ route('reportes.evaluaciones.excel', request()->query()) }}"
                            class="btn btn-success btn-sm">
                             <i class="bi bi-file-excel me-1"></i>Exportar Excel
                         </a>
@@ -184,6 +184,7 @@
                                     <th>Evaluado</th>
                                     <th>DPI</th>
                                     <th>Servicio</th>
+                                    <th>Formulario</th>
                                     <th>Estado</th>
                                     <th>Fecha</th>
                                 </tr>
@@ -212,6 +213,11 @@
                                             </span>
                                         </td>
                                         <td>
+                                            <span class="badge bg-secondary">
+                                                {{ $evaluado->tipo_formulario_texto ?? 'N/A' }}
+                                            </span>
+                                        </td>
+                                        <td>
                                             @if($evaluado->cuestionario_completado)
                                                 <span class="badge bg-success">Completado</span>
                                             @else
@@ -222,7 +228,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">
+                                        <td colspan="8" class="text-center py-4 text-muted">
                                             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                             No se encontraron evaluados con los filtros seleccionados
                                         </td>

@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -32,6 +33,7 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
             'Apellidos',
             'DPI',
             'Tipo de Servicio',
+            'Tipo de Formulario',
             'Puesto',
             'Estado Cuestionario',
             'Fecha Creación',
@@ -41,6 +43,19 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
 
     public function map($evaluado): array
     {
+        // Convertir cuestionario_completado_at a Carbon si es string
+        $fechaCompletado = '-';
+        if ($evaluado->cuestionario_completado_at) {
+            try {
+                $fecha = $evaluado->cuestionario_completado_at instanceof Carbon
+                    ? $evaluado->cuestionario_completado_at
+                    : Carbon::parse($evaluado->cuestionario_completado_at);
+                $fechaCompletado = $fecha->format('d/m/Y H:i');
+            } catch (\Exception $e) {
+                $fechaCompletado = '-';
+            }
+        }
+
         return [
             $evaluado->orden->codigo_orden ?? 'N/A',
             $evaluado->orden->empresa->nombre ?? 'N/A',
@@ -48,10 +63,11 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
             $evaluado->apellidos,
             $evaluado->dpi,
             ucfirst($evaluado->tipo_servicio),
+            $evaluado->tipo_formulario_texto ?? 'N/A',
             $evaluado->puesto ?? 'N/A',
             $evaluado->cuestionario_completado ? 'Completado' : 'Pendiente',
             $evaluado->created_at?->format('d/m/Y'),
-            $evaluado->cuestionario_completado_at?->format('d/m/Y H:i') ?? '-',
+            $fechaCompletado,
         ];
     }
 

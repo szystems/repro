@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends(session('layout', 'layouts.admin'))
 @section('content')
 
 <!-- Content wrapper scroll start -->

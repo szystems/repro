@@ -103,7 +103,7 @@
          DASHBOARD PARA ADMIN Y REPRO
     ======================================== --}}
     @if(Auth::user()->role_as >= 2)
-    
+
     <!-- Tarjetas de estadísticas principales -->
     <div class="row mb-4">
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
@@ -126,7 +126,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
             <div class="card border-start border-4 border-success">
                 <div class="card-body">
@@ -148,7 +148,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
             <div class="card border-start border-4 border-info">
                 <div class="card-body">
@@ -169,7 +169,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
             <div class="card border-start border-4 border-warning">
                 <div class="card-body">
@@ -210,7 +210,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Estados de órdenes -->
         <div class="col-xl-4 col-lg-5">
             <div class="card h-100">
@@ -223,18 +223,14 @@
                     @php
                         $estadosLabels = [
                             'solicitud' => ['label' => 'Solicitud', 'color' => 'secondary'],
-                            'autorizacion' => ['label' => 'Autorización', 'color' => 'info'],
-                            'requisito' => ['label' => 'Requisito', 'color' => 'primary'],
-                            'programacion' => ['label' => 'Programación', 'color' => 'warning'],
-                            'en_proceso' => ['label' => 'En Proceso', 'color' => 'primary'],
-                            'analisis' => ['label' => 'Análisis', 'color' => 'info'],
-                            'preliminar' => ['label' => 'Preliminar', 'color' => 'warning'],
-                            'final' => ['label' => 'Final', 'color' => 'success'],
+                            'programacion' => ['label' => 'Programación', 'color' => 'info'],
+                            'en_proceso' => ['label' => 'En Proceso', 'color' => 'warning'],
+                            'analisis' => ['label' => 'Análisis', 'color' => 'orange'],
                             'entregado' => ['label' => 'Entregado', 'color' => 'success'],
                             'cancelado' => ['label' => 'Cancelado', 'color' => 'danger'],
                         ];
                     @endphp
-                    
+
                     @forelse($ordenesPorEstado ?? [] as $estado => $total)
                         @php
                             $info = $estadosLabels[$estado] ?? ['label' => ucfirst($estado), 'color' => 'secondary'];
@@ -246,7 +242,7 @@
                                 <span class="small fw-bold">{{ $total }}</span>
                             </div>
                             <div class="progress" style="height: 8px;">
-                                <div class="progress-bar bg-{{ $info['color'] }}" role="progressbar" 
+                                <div class="progress-bar bg-{{ $info['color'] }}" role="progressbar"
                                      style="width: {{ $porcentaje }}%"></div>
                             </div>
                         </div>
@@ -280,7 +276,7 @@
                         ];
                         $totalServicio = array_sum($evaluadosPorServicio ?? []);
                     @endphp
-                    
+
                     <div class="row g-3">
                         @foreach($servicios as $key => $servicio)
                             @php
@@ -312,7 +308,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Últimas órdenes -->
         <div class="col-xl-8 col-lg-7">
             <div class="card h-100">
@@ -415,7 +411,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Accesos rápidos -->
         <div class="col-xl-8 col-lg-7">
             <div class="card h-100">
@@ -479,7 +475,7 @@
          DASHBOARD PARA USUARIOS DE EMPRESA
     ======================================== --}}
     @if(Auth::user()->role_as == 1)
-    
+
     <!-- Tarjetas de estadísticas para empresa -->
     <div class="row mb-4">
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
@@ -502,7 +498,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
             <div class="card border-start border-4 border-warning">
                 <div class="card-body">
@@ -523,7 +519,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
             <div class="card border-start border-4 border-success">
                 <div class="card-body">
@@ -544,7 +540,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
             <div class="card border-start border-4 border-info">
                 <div class="card-body">
@@ -581,21 +577,21 @@
                         <a href="{{ route('ordenes.create') }}" class="btn btn-primary btn-lg">
                             <i class="bi bi-plus-circle me-2"></i>Nueva Orden de Evaluación
                         </a>
-                        <a href="{{ route('ordenes.index') }}" class="btn btn-outline-primary">
+                        <a href="{{ route('empresa.ordenes.index') }}" class="btn btn-outline-primary">
                             <i class="bi bi-list-ul me-2"></i>Ver Mis Órdenes
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-8 col-lg-7">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="bi bi-clock-history me-2"></i>Mis Últimas Órdenes
                     </h5>
-                    <a href="{{ route('ordenes.index') }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ route('empresa.ordenes.index') }}" class="btn btn-sm btn-outline-primary">
                         Ver todas <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
@@ -614,13 +610,9 @@
                                 @php
                                     $estadosLabels = [
                                         'solicitud' => ['label' => 'Solicitud', 'color' => 'secondary'],
-                                        'autorizacion' => ['label' => 'Autorización', 'color' => 'info'],
-                                        'requisito' => ['label' => 'Requisito', 'color' => 'primary'],
-                                        'programacion' => ['label' => 'Programación', 'color' => 'warning'],
-                                        'en_proceso' => ['label' => 'En Proceso', 'color' => 'primary'],
-                                        'analisis' => ['label' => 'Análisis', 'color' => 'info'],
-                                        'preliminar' => ['label' => 'Preliminar', 'color' => 'warning'],
-                                        'final' => ['label' => 'Final', 'color' => 'success'],
+                                        'programacion' => ['label' => 'Programación', 'color' => 'info'],
+                                        'en_proceso' => ['label' => 'En Proceso', 'color' => 'warning'],
+                                        'analisis' => ['label' => 'Análisis', 'color' => 'orange'],
                                         'entregado' => ['label' => 'Entregado', 'color' => 'success'],
                                         'cancelado' => ['label' => 'Cancelado', 'color' => 'danger'],
                                     ];
@@ -628,7 +620,7 @@
                                 @forelse($ultimasOrdenes ?? [] as $orden)
                                     <tr>
                                         <td>
-                                            <a href="{{ route('ordenes.show', $orden) }}" class="fw-bold text-primary">
+                                            <a href="{{ route('empresa.ordenes.show', $orden) }}" class="fw-bold text-primary">
                                                 {{ $orden->codigo_orden }}
                                             </a>
                                         </td>

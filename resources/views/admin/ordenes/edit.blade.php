@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends(session('layout', 'layouts.admin'))
 @section('content')
 
 <!-- Content wrapper scroll start -->
@@ -295,11 +295,17 @@
                         </div>
                         <div class="card-body">
                             
-                            <button type="submit" class="btn btn-success w-100 mb-2">
-                                <i class="bi bi-check-lg"></i> Guardar Cambios
+                            <button type="submit" class="btn btn-success w-100 mb-2" id="btn-guardar-orden">
+                                <span class="btn-text">
+                                    <i class="bi bi-check-lg"></i> Guardar Cambios
+                                </span>
+                                <span class="btn-loading d-none">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    Procesando...
+                                </span>
                             </button>
                             
-                            <a href="{{ route('ordenes.show', $orden) }}" class="btn btn-outline-secondary w-100 mb-2">
+                            <a href="{{ route('ordenes.show', $orden) }}" class="btn btn-outline-secondary w-100 mb-2" id="btn-ver-orden">
                                 <i class="bi bi-eye"></i> Ver Orden
                             </a>
                             
@@ -586,6 +592,21 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!valid) {
             e.preventDefault();
+        } else {
+            // Protección contra doble clic
+            const btnGuardar = document.getElementById('btn-guardar-orden');
+            const btnVerOrden = document.getElementById('btn-ver-orden');
+            
+            if (btnGuardar) {
+                btnGuardar.disabled = true;
+                btnGuardar.querySelector('.btn-text').classList.add('d-none');
+                btnGuardar.querySelector('.btn-loading').classList.remove('d-none');
+            }
+            
+            if (btnVerOrden) {
+                btnVerOrden.classList.add('disabled');
+                btnVerOrden.style.pointerEvents = 'none';
+            }
         }
     });
 });

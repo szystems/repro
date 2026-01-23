@@ -24,19 +24,22 @@ class AdminController extends Controller
 
         // Determinar qué layout usar según el rol del usuario
         $user = Auth::user();
-        $layout = 'admin';
+        $layout = 'layouts.admin';
 
         if ($user->role_as == 0) {
-            $layout = 'evaluado';
+            $layout = 'layouts.evaluado';
         } elseif ($user->role_as == 1) {
-            $layout = 'empresa';
+            $layout = 'layouts.empresa';
             $data = array_merge($data, $this->getEmpresaStats($user));
         } elseif ($user->role_as >= 2) {
-            $layout = 'admin';
+            $layout = 'layouts.admin';
             $data = array_merge($data, $this->getAdminStats());
         }
 
-        return view('admin.index', $data)->with('layout', $layout);
+        // Guardar en sesión para que la vista lo use
+        session(['layout' => $layout]);
+
+        return view('admin.index', $data);
     }
 
     /**

@@ -30,6 +30,7 @@ class Orden extends Model
         'observaciones',
         'instrucciones_generales',
         'prioridad',
+        'resultados_visibles_empresa',
         'documentos_adjuntos',
     ];
 
@@ -40,6 +41,7 @@ class Orden extends Model
         'fecha_solicitud' => 'date',
         'fecha_limite' => 'date',
         'documentos_adjuntos' => 'array',
+        'resultados_visibles_empresa' => 'boolean',
     ];
 
     /**
@@ -154,17 +156,38 @@ class Orden extends Model
     {
         return match ($this->estado) {
             'solicitud' => 'Solicitud',
-            'autorizacion' => 'Esperando Autorización',
-            'requisito' => 'Pendiente Requisitos',
-            'programacion' => 'En Programación',
+            'programacion' => 'Programación',
             'en_proceso' => 'En Proceso',
             'analisis' => 'En Análisis',
-            'preliminar' => 'Informe Preliminar',
-            'final' => 'Informe Final',
             'entregado' => 'Entregado',
             'cancelado' => 'Cancelado',
             default => $this->estado,
         };
+    }
+
+    /**
+     * Obtener color del badge según estado
+     */
+    public function getEstadoColorAttribute(): string
+    {
+        return match ($this->estado) {
+            'solicitud' => 'secondary',
+            'programacion' => 'info',
+            'en_proceso' => 'warning',
+            'analisis' => 'orange',
+            'entregado' => 'success',
+            'cancelado' => 'danger',
+            default => 'secondary',
+        };
+    }
+
+    /**
+     * Verificar si los resultados pueden ser vistos por la empresa
+     * Requiere: resultados_visibles_empresa = true Y estado = entregado
+     */
+    public function resultadosDisponiblesParaEmpresa(): bool
+    {
+        return $this->resultados_visibles_empresa && $this->estado === 'entregado';
     }
 
     /**
@@ -173,10 +196,9 @@ class Orden extends Model
      */
     public function puedeTransicionarA(string $nuevoEstado): bool
     {
-        // Estados válidos del sistema
+        // Estados válidos del sistema (simplificados)
         $estadosValidos = [
-            'solicitud', 'autorizacion', 'requisito', 'programacion',
-            'en_proceso', 'analisis', 'preliminar', 'final', 'entregado', 'cancelado'
+            'solicitud', 'programacion', 'en_proceso', 'analisis', 'entregado', 'cancelado'
         ];
         
         // Si el nuevo estado no es válido, rechazar

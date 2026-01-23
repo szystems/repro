@@ -385,11 +385,17 @@
                                     </div>
 
                                     <div class="d-flex gap-2 justify-content-center mt-4">
-                                        <a href="{{ url('users') }}" class="btn btn-danger">
+                                        <a href="{{ url('users') }}" class="btn btn-danger" id="btn-cancelar">
                                             <i class="bi bi-x-circle"></i> Cancelar
                                         </a>
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="bi bi-check2-square"></i> Guardar Usuario
+                                        <button type="submit" class="btn btn-success" id="btn-guardar-usuario">
+                                            <span class="btn-text">
+                                                <i class="bi bi-check2-square"></i> Guardar Usuario
+                                            </span>
+                                            <span class="btn-loading d-none">
+                                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                                Procesando...
+                                            </span>
                                         </button>
                                     </div>
                                 </form>
@@ -430,7 +436,6 @@
             // Mostrar/ocultar campos según el tipo de usuario
             function updateFieldVisibility() {
                 var role = $("#role_as").val();
-                console.log("Role changed to:", role);
 
                 // Ocultar todos los campos específicos primero
                 $(".empresa-fields").hide();
@@ -497,6 +502,23 @@
                     alert("Por favor ingrese el cargo para el usuario de Repro");
                     $(".repro-fields input[name='cargo']").focus();
                     isValid = false;
+                }
+
+                // Protección contra doble clic si la validación es exitosa
+                if (isValid) {
+                    var btnGuardar = document.getElementById('btn-guardar-usuario');
+                    var btnCancelar = document.getElementById('btn-cancelar');
+
+                    if (btnGuardar) {
+                        btnGuardar.disabled = true;
+                        btnGuardar.querySelector('.btn-text').classList.add('d-none');
+                        btnGuardar.querySelector('.btn-loading').classList.remove('d-none');
+                    }
+
+                    if (btnCancelar) {
+                        btnCancelar.classList.add('disabled');
+                        btnCancelar.style.pointerEvents = 'none';
+                    }
                 }
 
                 return isValid;

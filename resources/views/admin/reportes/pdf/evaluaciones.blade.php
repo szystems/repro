@@ -5,82 +5,158 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Reporte de Evaluaciones</title>
     <style>
+        @page {
+            size: letter landscape;
+            margin: 15mm 20mm 20mm 20mm;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
             font-size: 10px;
             line-height: 1.4;
             color: #333;
+            padding: 10px;
         }
-        .header {
+
+        /* Cabecera estilo REPRO con fondo azul */
+        .repro-header {
             background-color: #000555;
             color: white;
-            padding: 15px 20px;
-            margin-bottom: 20px;
+            padding: 12px 20px;
+            margin-bottom: 15px;
+            border-radius: 6px;
         }
-        .header h1 {
+
+        .repro-header-content {
+            display: table;
+            width: 100%;
+        }
+
+        .repro-logo-cell {
+            display: table-cell;
+            vertical-align: middle;
+            width: 180px;
+        }
+
+        .repro-logo-container {
+            background-color: #f8f9fa;
+            border: 1px solid #000555;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: inline-block;
+        }
+
+        .repro-logo {
+            max-height: 40px;
+            max-width: 150px;
+            display: block;
+        }
+
+        .repro-title-cell {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .repro-header h1 {
+            margin: 0;
             font-size: 18px;
-            margin-bottom: 5px;
+            font-weight: bold;
+            color: #ffb000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .header p {
-            font-size: 10px;
-            opacity: 0.9;
+
+        .repro-header h2 {
+            margin: 4px 0 0 0;
+            font-size: 11px;
+            font-weight: normal;
+            color: #ffcc33;
         }
+
+        .repro-info-cell {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+            width: 180px;
+            font-size: 9px;
+            color: #ffb000;
+        }
+
+        .repro-info-cell strong {
+            color: #ffb000;
+        }
+
         .filters {
             background-color: #f8f9fa;
             padding: 10px 15px;
             margin-bottom: 15px;
             border-radius: 4px;
+            border-left: 4px solid #ffb000;
         }
+
         .filters h3 {
             font-size: 11px;
             color: #000555;
             margin-bottom: 8px;
         }
+
         .filters-grid {
             display: table;
             width: 100%;
         }
+
         .filter-item {
             display: inline-block;
             margin-right: 20px;
             font-size: 9px;
         }
+
         .filter-item strong {
             color: #000555;
         }
+
         .stats {
             margin-bottom: 15px;
         }
+
         .stats-table {
             width: 100%;
             border-collapse: collapse;
         }
+
         .stats-table td {
             padding: 10px;
             text-align: center;
             border: 1px solid #dee2e6;
             width: 25%;
+            background-color: #f8f9fa;
         }
+
         .stats-table .stat-label {
             font-size: 8px;
             color: #6c757d;
             text-transform: uppercase;
         }
+
         .stats-table .stat-value {
             font-size: 18px;
             font-weight: bold;
             color: #000555;
         }
+
         table.data-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
         }
+
         table.data-table th {
             background-color: #000555;
             color: white;
@@ -89,14 +165,17 @@
             font-size: 9px;
             font-weight: bold;
         }
+
         table.data-table td {
             padding: 6px 5px;
             border-bottom: 1px solid #dee2e6;
             font-size: 9px;
         }
+
         table.data-table tr:nth-child(even) {
             background-color: #f8f9fa;
         }
+
         .badge {
             display: inline-block;
             padding: 2px 6px;
@@ -104,22 +183,27 @@
             font-size: 8px;
             font-weight: bold;
         }
+
         .badge-success {
             background-color: #198754;
             color: white;
         }
+
         .badge-warning {
             background-color: #ffc107;
             color: #333;
         }
+
         .badge-primary {
             background-color: #000555;
             color: white;
         }
+
         .badge-info {
             background-color: #0dcaf0;
             color: #333;
         }
+
         .footer {
             position: fixed;
             bottom: 0;
@@ -129,29 +213,48 @@
             border-top: 2px solid #ffb000;
             font-size: 8px;
             color: #6c757d;
+            background-color: white;
         }
+
         .footer-content {
             display: table;
             width: 100%;
         }
+
         .footer-left {
             display: table-cell;
             text-align: left;
         }
+
         .footer-right {
             display: table-cell;
             text-align: right;
         }
+
         .page-break {
             page-break-after: always;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>REPORTE DE EVALUACIONES</h1>
-        <p>REPRO Guatemala - Sistema de Evaluaciones</p>
-        <p>Generado: {{ now()->format('d/m/Y H:i') }}</p>
+    {{-- Cabecera estilo REPRO --}}
+    <div class="repro-header">
+        <div class="repro-header-content">
+            <div class="repro-logo-cell">
+                <div class="repro-logo-container">
+                    <img src="{{ public_path('img/logos/logoreproxelahorizontal.png') }}" alt="REPRO" class="repro-logo">
+                </div>
+            </div>
+            <div class="repro-title-cell">
+                <h1>Reporte de Evaluaciones</h1>
+                <h2>Sistema de Evaluaciones REPRO Guatemala</h2>
+            </div>
+            <div class="repro-info-cell">
+                <strong>Generado:</strong><br>
+                {{ now()->format('d/m/Y') }}<br>
+                {{ now()->format('H:i') }}
+            </div>
+        </div>
     </div>
 
     <div class="filters">
@@ -199,14 +302,15 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 12%;">Código Orden</th>
-                <th style="width: 18%;">Empresa</th>
-                <th style="width: 20%;">Evaluado</th>
-                <th style="width: 12%;">DPI</th>
-                <th style="width: 12%;">Servicio</th>
+                <th style="width: 10%;">Código Orden</th>
+                <th style="width: 15%;">Empresa</th>
+                <th style="width: 17%;">Evaluado</th>
+                <th style="width: 10%;">DPI</th>
+                <th style="width: 10%;">Servicio</th>
+                <th style="width: 10%;">Formulario</th>
                 <th style="width: 10%;">Puesto</th>
                 <th style="width: 8%;">Estado</th>
-                <th style="width: 8%;">Fecha</th>
+                <th style="width: 10%;">Fecha</th>
             </tr>
         </thead>
         <tbody>
@@ -221,6 +325,7 @@
                             {{ ucfirst($evaluado->tipo_servicio) }}
                         </span>
                     </td>
+                    <td>{{ $evaluado->tipo_formulario_texto ?? 'N/A' }}</td>
                     <td>{{ Str::limit($evaluado->puesto ?? 'N/A', 15) }}</td>
                     <td>
                         <span class="badge badge-{{ $evaluado->cuestionario_completado ? 'success' : 'warning' }}">
@@ -231,7 +336,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 20px;">
+                    <td colspan="9" style="text-align: center; padding: 20px;">
                         No se encontraron evaluados con los filtros seleccionados
                     </td>
                 </tr>
@@ -245,7 +350,7 @@
                 REPRO Guatemala - Reporte de Evaluaciones
             </div>
             <div class="footer-right">
-                Página 1 | Generado: {{ now()->format('d/m/Y H:i') }}
+                Generado: {{ now()->format('d/m/Y H:i') }}
             </div>
         </div>
     </div>

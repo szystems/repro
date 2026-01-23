@@ -27,6 +27,8 @@ class ReportesController extends Controller
             $query->whereHas('orden', function ($q) {
                 $q->where('empresa_id', Auth::user()->empresa_id);
             });
+            // Empresa puede ver el listado de evaluados sin restricción de resultados_visibles_empresa
+            // La restricción aplica solo al acceso a los datos del cuestionario
         }
 
         // Filtros
@@ -71,8 +73,8 @@ class ReportesController extends Controller
         $evaluados = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         // Empresas para filtro
-        $empresas = Auth::user()->role_as >= 2 
-            ? Empresa::where('estado', 1)->orderBy('nombre')->get() 
+        $empresas = Auth::user()->role_as >= 2
+            ? Empresa::where('estado', 1)->orderBy('nombre')->get()
             : collect();
 
         return view('admin.reportes.evaluaciones', compact('evaluados', 'stats', 'empresas'));
@@ -135,6 +137,8 @@ class ReportesController extends Controller
             $query->whereHas('orden', function ($q) {
                 $q->where('empresa_id', Auth::user()->empresa_id);
             });
+            // Empresa puede ver el listado de evaluados sin restricción de resultados_visibles_empresa
+            // La restricción aplica solo al acceso a los datos del cuestionario
         }
 
         // Aplicar mismos filtros
@@ -176,7 +180,14 @@ class ReportesController extends Controller
             'estado' => $request->estado ?? 'Todos',
         ];
 
-        $pdf = Pdf::loadView('admin.reportes.pdf.evaluaciones', compact('evaluados', 'stats', 'filtros'));
+        // Obtener logo de REPRO desde configuración
+        $config = \App\Models\Config::first();
+        $imagen = null;
+        if ($config && $config->logo && file_exists(public_path('assets/imgs/logos/'.$config->logo))) {
+            $imagen = public_path('assets/imgs/logos/'.$config->logo);
+        }
+
+        $pdf = Pdf::loadView('admin.reportes.pdf.evaluaciones', compact('evaluados', 'stats', 'filtros', 'imagen'));
         $pdf->setPaper('letter', 'landscape');
 
         return $pdf->download('reporte-evaluaciones-' . now()->format('Y-m-d') . '.pdf');
@@ -238,6 +249,8 @@ class ReportesController extends Controller
             $query->whereHas('orden', function ($q) {
                 $q->where('empresa_id', Auth::user()->empresa_id);
             });
+            // Empresa puede ver el listado de evaluados sin restricción de resultados_visibles_empresa
+            // La restricción aplica solo al acceso a los datos del cuestionario
         }
 
         if ($request->filled('fecha_inicio')) {

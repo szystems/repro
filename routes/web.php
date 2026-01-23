@@ -13,6 +13,9 @@ use App\Http\Controllers\Admin\RolesController;
 //cuestionarios
 use App\Http\Controllers\CuestionarioController;
 
+//empresa
+use App\Http\Controllers\Empresa\EmpresaController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -49,19 +52,6 @@ Route::get('/password/reset', function () {
 
 // Ruta para enviar el correo de restablecimiento de contraseña
 Route::post('/password/email', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
-
-// Ruta de debug temporal
-Route::post('/debug-orden', function (Illuminate\Http\Request $request) {
-    \Illuminate\Support\Facades\Log::info('=== DEBUG ORDEN ===');
-    \Illuminate\Support\Facades\Log::info('Request all:', $request->all());
-    \Illuminate\Support\Facades\Log::info('User:', Auth::user() ? Auth::user()->name : 'NO USER');
-    
-    return response()->json([
-        'status' => 'received',
-        'data' => $request->all(),
-        'user' => Auth::user() ? Auth::user()->name : 'NO USER'
-    ]);
-})->middleware('auth');
 
 // Rutas protegidas
 Route::middleware(['auth', 'redirect.role'])->group(function () {
@@ -101,14 +91,15 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
 
     // Rutas para el módulo de Órdenes - Disponible para admin, repro y empresas
     Route::resource('ordenes', OrdenesController::class)->parameters(['ordenes' => 'orden']);
-    
+
     // Rutas adicionales para órdenes
     Route::patch('ordenes/{orden}/cambiar-estado', [OrdenesController::class, 'cambiarEstado'])->name('ordenes.cambiar-estado');
+    Route::patch('ordenes/{orden}/toggle-resultados-visibles', [OrdenesController::class, 'toggleResultadosVisibles'])->name('ordenes.toggle-resultados-visibles');
     Route::get('ordenes/{orden}/pdf', [OrdenesController::class, 'pdf'])->name('ordenes.pdf');
-    
+
     // Reenviar correo a evaluado
     Route::post('evaluados/{evaluado}/reenviar-correo', [OrdenesController::class, 'reenviarCorreo'])->name('evaluados.reenviar-correo');
-    
+
     // Rutas para diferentes tipos de usuario con middleware específico
     Route::middleware(['role:admin,repro'])->group(function () {
         // Solo admin y repro pueden acceder a todas las órdenes y estadísticas
@@ -123,7 +114,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         Route::get('evaluaciones', [App\Http\Controllers\Admin\ReportesController::class, 'evaluaciones'])->name('evaluaciones');
         Route::get('evaluaciones/pdf', [App\Http\Controllers\Admin\ReportesController::class, 'evaluacionesPdf'])->name('evaluaciones.pdf');
         Route::get('evaluaciones/excel', [App\Http\Controllers\Admin\ReportesController::class, 'evaluacionesExcel'])->name('evaluaciones.excel');
-        
+
         // Reporte de Empresas - Solo para admin y repro
         Route::middleware(['role:admin,repro'])->group(function () {
             Route::get('empresas', [App\Http\Controllers\Admin\ReportesController::class, 'empresas'])->name('empresas');
@@ -131,7 +122,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
             Route::get('empresas/excel', [App\Http\Controllers\Admin\ReportesController::class, 'empresasExcel'])->name('empresas.excel');
         });
     });
-    
+
     // ========================================
     // ADMINISTRACIÓN DE CUESTIONARIOS (ADMIN Y REPRO)
     // ========================================
@@ -142,6 +133,33 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         Route::put('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'update'])->name('update');
         Route::get('/{cuestionario}/pdf', [App\Http\Controllers\Admin\CuestionariosController::class, 'generarPDF'])->name('pdf');
         Route::post('/{cuestionario}/completar', [App\Http\Controllers\Admin\CuestionariosController::class, 'marcarCompleto'])->name('completar');
+    });
+
+    // ========================================
+    // MÓDULO EMPRESA (USUARIOS TIPO EMPRESA)
+    // ========================================
+    Route::middleware(['role:empresa'])->prefix('empresa')->name('empresa.')->group(function () {
+            // Listado de órdenes para empresa
+            Route::get('ordenes', [EmpresaController::class, 'indexOrdenesEmpresa'])->name('ordenes.index');
+        // Mi Empresa
+        Route::get('mi-empresa', [EmpresaController::class, 'miEmpresa'])->name('mi-empresa');
+        Route::get('mi-empresa/editar', [EmpresaController::class, 'editarEmpresa'])->name('mi-empresa.edit');
+        Route::put('mi-empresa', [EmpresaController::class, 'actualizarEmpresa'])->name('mi-empresa.update');
+
+        // Usuarios de empresa (solo usuario principal)
+        Route::get('usuarios', [EmpresaController::class, 'usuarios'])->name('usuarios');
+        Route::get('usuarios/crear', [EmpresaController::class, 'crearUsuario'])->name('usuarios.create');
+        Route::post('usuarios', [EmpresaController::class, 'guardarUsuario'])->name('usuarios.store');
+        Route::get('usuarios/{usuario}/editar', [EmpresaController::class, 'editarUsuario'])->name('usuarios.edit');
+        Route::put('usuarios/{usuario}', [EmpresaController::class, 'actualizarUsuario'])->name('usuarios.update');
+        Route::delete('usuarios/{usuario}', [EmpresaController::class, 'eliminarUsuario'])->name('usuarios.destroy');
+
+        // Órdenes (solo lectura para empresa)
+        Route::get('ordenes/{orden}', [EmpresaController::class, 'verOrden'])->name('ordenes.show');
+        // Cuestionarios (solo lectura)
+            Route::get('cuestionarios', [EmpresaController::class, 'cuestionarios'])->name('cuestionarios');
+            Route::get('cuestionarios/{evaluado}', [EmpresaController::class, 'verCuestionario'])->name('cuestionarios.show');
+            Route::get('cuestionarios/{evaluado}/pdf', [EmpresaController::class, 'generarPDFCuestionarioEmpresa'])->name('cuestionarios.pdf');
     });
 });
 
@@ -181,23 +199,23 @@ Route::get('/test-cuestionario/{token}', function($token) {
 Route::prefix('cuestionario')->name('cuestionario.')->group(function () {
     // Acceso inicial con token
     Route::get('/{token}', [CuestionarioController::class, 'mostrar'])->name('mostrar');
-    
+
     // Verificación de identidad
     Route::post('/{token}/verificar', [CuestionarioController::class, 'verificarIdentidad'])->name('verificar');
-    
+
     // Navegación por secciones
     Route::get('/{token}/seccion/{numero}', [CuestionarioController::class, 'seccion'])
         ->name('seccion')
         ->where('numero', '[0-9]+');
-    
+
     Route::post('/{token}/seccion/{numero}', [CuestionarioController::class, 'guardarSeccion'])
         ->name('guardar-seccion')
         ->where('numero', '[0-9]+');
-    
+
     // Finalización y firma
     Route::get('/{token}/finalizar', [CuestionarioController::class, 'finalizar'])->name('finalizar');
     Route::post('/{token}/completar', [CuestionarioController::class, 'completar'])->name('completar');
-    
+
     // Página de completado
     Route::get('/{token}/completado', [CuestionarioController::class, 'completado'])->name('completado');
 });

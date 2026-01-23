@@ -1,8 +1,8 @@
 # ÍNDICE DE DOCUMENTACIÓN - PROYECTO REPRO
 
-**Fecha de Actualización:** 21 de enero de 2026  
-**Estado del Proyecto:** ✅ MÓDULOS PRINCIPALES + NUEVAS FUNCIONALIDADES COMPLETADAS  
-**Versión:** 2.1.0 Producción  
+**Fecha de Actualización:** 23 de enero de 2026  
+**Estado del Proyecto:** ✅ MÓDULOS PRINCIPALES + PORTAL EMPRESA COMPLETADOS  
+**Versión:** 2.2.0 Producción  
 
 ---
 
@@ -26,8 +26,8 @@ docs/
 
 | Documento | Propósito | Actualizado | Estado |
 |-----------|-----------|-------------|--------|
-| **ESTADO_ACTUAL.md** | Estado completo del proyecto | 21/01/2026 | ✅ CURRENT |
-| **CONTEXTO_AGENTES.md** | Contexto rápido para agentes IA | 21/01/2026 | ✅ CURRENT |
+| **ESTADO_ACTUAL.md** | Estado completo del proyecto | 23/01/2026 | ✅ CURRENT |
+| **CONTEXTO_AGENTES.md** | Contexto rápido para agentes IA | 23/01/2026 | ✅ CURRENT |
 | **AUDITORIA_NOVIEMBRE_2025.md** | Reporte de auditoría | 15/11/2025 | ✅ HISTÓRICO |
 
 ## 🏗️ DOCUMENTOS TÉCNICOS (`technical/`)
@@ -47,14 +47,15 @@ docs/
 |-----------|-----------|-------------|--------|
 | **PRD.md** | Product Requirements Document | 08/11/2025 | ✅ VÁLIDO |
 | **CAMBIOS_MODELO_NEGOCIO.md** | Evolución del modelo | 08/11/2025 | ✅ VÁLIDO |
-| **CHANGELOG.md** | Historial de cambios | 21/01/2026 | ✅ CURRENT |
+| **CHANGELOG.md** | Historial de cambios | 23/01/2026 | ✅ CURRENT |
 | **ACTUALIZACION_USUARIOS.md** | Cambios en usuarios | 15/11/2025 | ✅ VÁLIDO |
 
 ## 🚀 DOCUMENTOS DE DEPLOYMENT (`deployment/`)
 
 | Documento | Propósito | Actualizado | Estado |
 |-----------|-----------|-------------|--------|
-| **DEPLOYMENT.md** | Guía de despliegue | 15/11/2025 | ✅ VÁLIDO |
+| **DEPLOYMENT.md** | Guía de despliegue general | 15/11/2025 | ✅ VÁLIDO |
+| **IPAGE_DEPLOY.md** | Guía específica para iPage | 23/01/2026 | ✅ NUEVO |
 
 ## 📖 GUÍAS DE USUARIO (`guides/`)
 
@@ -112,6 +113,7 @@ docs/
 | **Dashboard** | Estadísticas por rol | N/A | ✅ 6 |
 | **Reportes** | Evaluaciones, Empresas, PDF, Excel | ✅ | ✅ 10 |
 | **Notificaciones** | Emails automáticos y manuales | N/A | ✅ 8 |
+| **Portal Empresa** | Navegación, órdenes, cuestionarios | N/A | ✅ 5 |
 
 ### 🔄 PRÓXIMOS
 | Módulo | Prioridad | Descripción |
@@ -133,8 +135,9 @@ docs/
 | Notificaciones | 8 | ✅ Pasando |
 | Órdenes | 7 | ✅ Pasando |
 | Cuestionarios | 34 | ✅ 32 pasando |
+| Portal Empresa | 5 | ✅ Pasando |
 | Otros | 9 | ✅ Pasando |
-| **TOTAL** | **74+** | **✅ Funcionando** |
+| **TOTAL** | **79+** | **✅ Funcionando** |
 
 ---
 
@@ -171,4 +174,4 @@ php artisan db:seed
 
 ---
 
-**Última actualización:** 21 de enero de 2026  
+**Última actualización:** 23 de enero de 2026  
