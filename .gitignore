@@ -1,0 +1,33 @@
+# Laravel estándar
+/vendor/
+/node_modules/
+/public/assets/
+/public/js/
+/public/css/
+/storage/
+/bootstrap/cache/
+.env
+.env.*
+.phpunit.result.cache
+.DS_Store
+Thumbs.db
+*.sql
+*.backup
+*.bat
+*.sh
+*.log
+/.venv/
+/.vscode/
+# Archivos temporales
+*.swp
+*.swo
+# Backups y configuraciones locales
+composer.json.backup
+.htaccess_ipage_root
+.htaccess_ipage_v2
+# Ignorar archivos de pruebas y deployment
+scripts/
+
+# Permitir carpetas necesarias
+!storage/framework/.gitignore
+!database/.gitignore

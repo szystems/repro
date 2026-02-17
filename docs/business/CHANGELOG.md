@@ -7,6 +7,60 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [2.3.0] - 2026-02-XX (En Desarrollo)
+
+### 📋 Planificado
+
+#### Reunión con Cliente - 4 de febrero 2026
+- Sistema validado por el cliente ✅
+- Identificados cambios necesarios para alinear con flujo de trabajo real
+- Documentación creada: Plan de Trabajo y Cotización de Extras
+
+#### Cambios Contemplados (Sin costo)
+- [ ] Nuevos estados según diagrama de flujo
+- [ ] Campo observaciones por evaluado (texto libre, editable solo por REPRO, visible para empresa)
+- [ ] Quitar código postal (no aplica en Guatemala)
+- [ ] Simplificar estado civil
+- [ ] Ajustes de permisos (prioridad, fecha límite solo REPRO)
+- [ ] Separar estado_formulario y estado_evaluacion
+- [ ] Regla: socioeconómico → solo formulario preempleo
+- [ ] Agregar requerimientos_generales en empresas
+- [ ] Notificación email a empresa al activar switch de resultados visibles
+- [ ] Rehabilitar cuestionario completado (REPRO puede desbloquear para que evaluado corrija datos)
+- [ ] Dos campos de archivo por evaluado: resultado final + resultado preliminar (visibles si switch activo)
+- [ ] Clasificación de colores de resultados reservados (NO usar en calendario ni otros estados):
+  - Polígrafo/VSA: Verde (Aprobado/Sin Observaciones), Amarillo (Aprobado con Observación Leve / Aprobado con Excepción), Rojo (No Aprobado/Indicación de Mentira)
+  - Socioeconómico: Verde (Tipo A), Amarillo (A-Condicionado), Naranja (Tipo B), Rojo (Tipo C)
+
+#### Extras Cotizados (Pendiente Aprobación)
+- [ ] E1: Sistema de Documentos del Evaluado (Q3,500)
+- [ ] E2: Módulo Calendario de Programación (Q4,500)
+- [ ] E3: Términos y Condiciones Digitales (Q1,500)
+- [ ] E4: Sistema de Resultados con Archivo (Q1,200)
+- [ ] E5: Módulo de Sedes REPRO + Integración Calendario/Evaluados (Q3,500)
+  - CRUD de sedes (nombre, dirección, capacidad, estado activo/inactivo)
+  - Campos sede_id y evaluador_id en evaluados/programaciones
+  - Validación anti-traslape: misma sede + misma hora = conflicto
+  - Permitir misma hora en diferente sede
+  - Permitir misma sede + misma hora con diferente evaluador
+  - Integración completa con módulo de Calendario de Programación
+
+### 🔧 Corregido
+- Vulnerabilidades de seguridad resueltas:
+  - PHPUnit actualizado a 11.5.50 (CVE-2026-24765)
+  - PsySH actualizado a 0.12.19 (CVE-2026-25129)
+- Error PSR-4 en AdminControllerTest corregido
+- Laravel Boost actualizado a 1.8.10 (fix protocolo MCP)
+
+### 📦 Actualizaciones de Dependencias
+- laravel/framework: 12.37.0 → 12.50.0
+- laravel/boost: 1.8.0 → 1.8.10
+- laravel/mcp: 0.3.2 → 0.5.4
+- phpunit/phpunit: 11.5.43 → 11.5.50
+- psy/psysh: 0.12.14 → 0.12.19
+
+---
+
 ## [2.2.0] - 2026-01-23
 
 ### 🚀 Agregado
