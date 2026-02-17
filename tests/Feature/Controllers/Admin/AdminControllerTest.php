@@ -1,6 +1,8 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
+namespace Tests\Feature\Controllers\Admin;
+
+use Tests\TestCase;
 
 class AdminControllerTest extends TestCase
 {
