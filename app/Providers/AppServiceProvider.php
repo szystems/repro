@@ -31,9 +31,9 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
         Paginator::useBootstrap();
 
-        // Register Blade Components
-        Blade::component('page-header', PageHeader::class);
-        Blade::component('stats-card', StatsCard::class);
+        // Register Blade Components (classes removed — commented to avoid build errors)
+        // Blade::component('page-header', PageHeader::class);
+        // Blade::component('stats-card', StatsCard::class);
 
         // Aplicar layout según el rol del usuario
         View::composer('*', function ($view) {
