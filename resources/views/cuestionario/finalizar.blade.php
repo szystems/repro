@@ -123,6 +123,63 @@
                     </div>
                 </div>
                 
+                {{-- Documentos del Evaluado --}}
+                <div class="mt-4">
+                    <div class="section-title">
+                        <i class="fas fa-folder-open"></i> Documentos Adjuntos
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Documentos opcionales:</strong> Si tiene documentos relevantes (DPI, constancias, etc.) puede subirlos aquí.
+                        Los documentos serán verificados por REPRO.
+                    </div>
+
+                    {{-- Documentos ya subidos --}}
+                    @if($evaluadoOrden->documentos->count() > 0)
+                        <div class="mb-3">
+                            <h6>Documentos cargados:</h6>
+                            <ul class="list-group list-group-flush">
+                                @foreach($evaluadoOrden->documentos as $doc)
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                        <span>
+                                            <i class="fas fa-file"></i>
+                                            {{ $doc->tipo_documento_texto }} — <small class="text-muted">{{ $doc->nombre_original }}</small>
+                                        </span>
+                                        <span class="badge bg-{{ $doc->estado_verificacion_color }}">{{ $doc->estado_verificacion_texto }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    {{-- Formulario de subida --}}
+                    <form action="{{ route('cuestionario.subir-documento', $token) }}" method="POST" enctype="multipart/form-data" class="border rounded p-3 bg-light">
+                        @csrf
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label">Tipo de Documento</label>
+                                <select name="tipo_documento" class="form-select form-select-sm" required>
+                                    <option value="">Seleccione...</option>
+                                    @foreach(\App\Models\DocumentoEvaluado::tiposDocumento() as $key => $label)
+                                        <option value="{{ $key }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">Archivo <small class="text-muted">(máx. 10 MB)</small></label>
+                                <input type="file" name="archivo" class="form-control form-control-sm"
+                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="fas fa-upload"></i> Subir
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 {{-- Firma digital --}}
                 <div class="mt-4">
                     <div class="section-title">

@@ -19,6 +19,10 @@ class Cuestionario extends Model
         'progreso_porcentaje',
         'completado',
         'bloqueado',
+        'acepta_terminos',
+        'acepta_terminos_at',
+        'firma_autorizacion',
+        'ip_terminos',
         'firma_digital',
         'ip_completado',
         'completado_at',
@@ -28,6 +32,8 @@ class Cuestionario extends Model
     protected $casts = [
         'completado' => 'boolean',
         'bloqueado' => 'boolean',
+        'acepta_terminos' => 'boolean',
+        'acepta_terminos_at' => 'datetime',
         'progreso_porcentaje' => 'decimal:2',
         'completado_at' => 'datetime'
     ];

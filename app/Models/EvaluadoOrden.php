@@ -50,9 +50,15 @@ class EvaluadoOrden extends Model
         'token_expira_at',
         'cuestionario_completado',
         'cuestionario_completado_at',
+        'completado_at',
         'ip_acceso',
         'observaciones',
         'notas',
+        'archivo_resultado_preliminar',
+        'archivo_resultado_final',
+        'resultado_preliminar_at',
+        'resultado_final_at',
+        'resultado_subido_por',
     ];
 
     /**
@@ -65,6 +71,8 @@ class EvaluadoOrden extends Model
         'token_usado_at',
         'completado_at',
         'notificado_at',
+        'resultado_preliminar_at',
+        'resultado_final_at',
         'created_at',
         'updated_at',
     ];
@@ -82,6 +90,8 @@ class EvaluadoOrden extends Model
             'token_usado_at' => 'datetime',
             'completado_at' => 'datetime',
             'notificado_at' => 'datetime',
+            'resultado_preliminar_at' => 'datetime',
+            'resultado_final_at' => 'datetime',
         ];
     }
 
@@ -146,6 +156,26 @@ class EvaluadoOrden extends Model
     public function cuestionario()
     {
         return $this->hasOne(Cuestionario::class, 'evaluado_orden_id');
+    }
+
+    /**
+     * Documentos adjuntos del evaluado.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function documentos()
+    {
+        return $this->hasMany(DocumentoEvaluado::class, 'evaluado_orden_id');
+    }
+
+    /**
+     * Usuario que subió el archivo de resultado.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function resultadoSubidoPor(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'resultado_subido_por');
     }
 
     /**
@@ -489,6 +519,22 @@ class EvaluadoOrden extends Model
         $this->poligrafista_id = $poligrafistaid;
         $this->estado_evaluacion = 'programado';
         return $this->save();
+    }
+
+    /**
+     * Verificar si tiene archivo de resultado preliminar.
+     */
+    public function tieneResultadoPreliminar(): bool
+    {
+        return !empty($this->archivo_resultado_preliminar);
+    }
+
+    /**
+     * Verificar si tiene archivo de resultado final.
+     */
+    public function tieneResultadoFinal(): bool
+    {
+        return !empty($this->archivo_resultado_final);
     }
 
     /**

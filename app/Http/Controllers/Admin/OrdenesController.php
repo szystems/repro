@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -235,7 +236,7 @@ class OrdenesController extends Controller
             'empresa',
             'creador',
             'evaluados' => function($query) {
-                $query->with(['poligrafista', 'cuestionario'])->orderBy('nombre');
+                $query->with(['poligrafista', 'cuestionario', 'documentos'])->orderBy('nombre');
             }
         ]);
 
@@ -455,11 +456,53 @@ class OrdenesController extends Controller
         $nuevoEstado = !$orden->resultados_visibles_empresa;
         $orden->update(['resultados_visibles_empresa' => $nuevoEstado]);
 
+        // Enviar email a la empresa cuando se hacen visibles
+        if ($nuevoEstado) {
+            $this->notificarResultadosDisponibles($orden);
+        }
+
         $mensaje = $nuevoEstado
-            ? 'Resultados ahora visibles para la empresa.'
+            ? 'Resultados ahora visibles para la empresa. Se envió notificación por correo.'
             : 'Resultados ocultos para la empresa.';
 
         return back()->with('success', $mensaje);
+    }
+
+    /**
+     * Enviar notificación por email cuando resultados están disponibles.
+     */
+    private function notificarResultadosDisponibles(Orden $orden): void
+    {
+        try {
+            $orden->load(['empresa', 'evaluados']);
+            $empresa = $orden->empresa;
+
+            if (!$empresa) {
+                return;
+            }
+
+            // Obtener emails de usuarios de la empresa
+            $emailsEmpresa = \App\Models\User::where('empresa_id', $empresa->id)
+                ->where('role_as', 1)
+                ->pluck('email')
+                ->filter()
+                ->unique();
+
+            foreach ($emailsEmpresa as $email) {
+                Mail::to($email)->send(new \App\Mail\ResultadosDisponiblesMail($orden));
+            }
+
+            Log::info('Notificación de resultados enviada', [
+                'orden_id' => $orden->id,
+                'empresa' => $empresa->nombre,
+                'emails' => $emailsEmpresa->toArray(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error enviando notificación de resultados', [
+                'orden_id' => $orden->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -681,6 +724,174 @@ class OrdenesController extends Controller
             ]);
 
             return back()->with('error', 'Error al enviar el correo. Intente nuevamente.');
+        }
+    }
+
+    /**
+     * Subir archivo de resultado (preliminar o final) para un evaluado.
+     */
+    public function subirResultadoArchivo(Request $request, EvaluadoOrden $evaluado)
+    {
+        // Solo REPRO y admin
+        if (Auth::user()->role_as < 2) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        $request->validate([
+            'tipo_resultado' => 'required|in:preliminar,final',
+            'archivo' => 'required|file|max:20480|mimes:pdf,doc,docx',
+        ], [
+            'tipo_resultado.required' => 'Debe indicar el tipo de resultado.',
+            'tipo_resultado.in'       => 'Tipo de resultado inválido.',
+            'archivo.required'        => 'Debe seleccionar un archivo.',
+            'archivo.max'             => 'El archivo no puede superar 20MB.',
+            'archivo.mimes'           => 'Solo se permiten archivos PDF, DOC o DOCX.',
+        ]);
+
+        $tipo = $request->tipo_resultado;
+        $campo = $tipo === 'preliminar' ? 'archivo_resultado_preliminar' : 'archivo_resultado_final';
+        $campoFecha = $tipo === 'preliminar' ? 'resultado_preliminar_at' : 'resultado_final_at';
+
+        // Eliminar archivo anterior si existe
+        if ($evaluado->$campo) {
+            Storage::disk('local')->delete($evaluado->$campo);
+        }
+
+        $path = $request->file('archivo')->store(
+            "resultados/{$evaluado->id}",
+            'local'
+        );
+
+        $evaluado->update([
+            $campo         => $path,
+            $campoFecha    => now(),
+            'resultado_subido_por' => Auth::id(),
+        ]);
+
+        return back()->with('success', "Archivo de resultado {$tipo} subido correctamente.");
+    }
+
+    /**
+     * Descargar archivo de resultado de un evaluado.
+     */
+    public function descargarResultadoArchivo(EvaluadoOrden $evaluado, string $tipo)
+    {
+        if (!in_array($tipo, ['preliminar', 'final'])) {
+            abort(404);
+        }
+
+        if (!$this->usuarioPuedeVerOrden($evaluado->orden)) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        // Empresa solo puede ver si resultados están disponibles
+        if (Auth::user()->role_as == 1 && !$evaluado->orden->resultadosDisponiblesParaEmpresa()) {
+            return back()->with('error', 'Los resultados aún no están disponibles.');
+        }
+
+        $campo = $tipo === 'preliminar' ? 'archivo_resultado_preliminar' : 'archivo_resultado_final';
+
+        if (!$evaluado->$campo || !Storage::disk('local')->exists($evaluado->$campo)) {
+            return back()->with('error', "No hay archivo de resultado {$tipo}.");
+        }
+
+        $extension = pathinfo($evaluado->$campo, PATHINFO_EXTENSION);
+        $nombreDescarga = "resultado_{$tipo}_{$evaluado->nombre}_{$evaluado->apellidos}.{$extension}";
+
+        return Storage::disk('local')->download($evaluado->$campo, $nombreDescarga);
+    }
+
+    /**
+     * Eliminar archivo de resultado de un evaluado.
+     */
+    public function eliminarResultadoArchivo(EvaluadoOrden $evaluado, string $tipo)
+    {
+        // Solo REPRO y admin
+        if (Auth::user()->role_as < 2) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        if (!in_array($tipo, ['preliminar', 'final'])) {
+            abort(404);
+        }
+
+        $campo = $tipo === 'preliminar' ? 'archivo_resultado_preliminar' : 'archivo_resultado_final';
+        $campoFecha = $tipo === 'preliminar' ? 'resultado_preliminar_at' : 'resultado_final_at';
+
+        if ($evaluado->$campo) {
+            Storage::disk('local')->delete($evaluado->$campo);
+        }
+
+        $evaluado->update([
+            $campo      => null,
+            $campoFecha => null,
+        ]);
+
+        return back()->with('success', "Archivo de resultado {$tipo} eliminado correctamente.");
+    }
+
+    /**
+     * Rehabilitar cuestionario de un evaluado (permite que vuelva a llenarlo).
+     * Solo REPRO/admin pueden hacer esto.
+     */
+    public function rehabilitarCuestionario(EvaluadoOrden $evaluado)
+    {
+        // Solo REPRO y admin
+        if (Auth::user()->role_as < 2) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        if (!$evaluado->cuestionario_completado) {
+            return back()->with('warning', 'El cuestionario de este evaluado no está completado.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $cuestionario = $evaluado->cuestionario;
+
+            if ($cuestionario) {
+                $cuestionario->update([
+                    'completado'          => false,
+                    'bloqueado'           => false,
+                    'progreso_porcentaje' => 0,
+                    'completado_at'       => null,
+                    'ip_completado'       => null,
+                    'firma_digital'       => null,
+                    'acepta_terminos'     => false,
+                    'acepta_terminos_at'  => null,
+                    'firma_autorizacion'  => null,
+                    'ip_terminos'         => null,
+                ]);
+            }
+
+            // Regenerar token y resetear estado del evaluado
+            $evaluado->update([
+                'cuestionario_completado'    => false,
+                'cuestionario_completado_at' => null,
+                'completado_at'              => null,
+                'estado_evaluacion'          => 'pendiente',
+                'token_unico'                => EvaluadoOrden::generarToken(),
+                'token_expira_at'            => now()->addDays(30),
+            ]);
+
+            DB::commit();
+
+            Log::info('Cuestionario rehabilitado', [
+                'evaluado_id' => $evaluado->id,
+                'evaluado'    => $evaluado->nombre . ' ' . $evaluado->apellidos,
+                'usuario'     => Auth::user()->name,
+            ]);
+
+            return back()->with('success', "Cuestionario rehabilitado para {$evaluado->nombre} {$evaluado->apellidos}. Se generó un nuevo enlace de acceso.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error rehabilitando cuestionario', [
+                'evaluado_id' => $evaluado->id,
+                'error'       => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Error al rehabilitar el cuestionario. Intente nuevamente.');
         }
     }
 }

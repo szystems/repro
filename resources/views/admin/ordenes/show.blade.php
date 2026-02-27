@@ -504,6 +504,20 @@
                                                     </form>
                                                     @endif
                                                 @endif
+
+                                                @if($evaluado->cuestionario_completado && Auth::user()->role_as >= 2)
+                                                <form action="{{ route('evaluados.rehabilitar-cuestionario', $evaluado->id) }}"
+                                                      method="POST"
+                                                      class="d-inline"
+                                                      onsubmit="return confirm('¿Rehabilitar el cuestionario de {{ $evaluado->nombre }}? Esto permitirá que vuelva a llenarlo con un nuevo enlace.');">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            class="btn btn-outline-warning btn-sm"
+                                                            title="Rehabilitar cuestionario">
+                                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                                    </button>
+                                                </form>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -515,6 +529,142 @@
                 </div>
             </div>
         </div>
+
+        {{-- Documentos por evaluado --}}
+        <div class="row gx-3 mt-3">
+            <div class="col-12">
+                <h5 class="mb-3"><i class="bi bi-folder2-open"></i> Documentos por Evaluado</h5>
+                @foreach($orden->evaluados as $evaluado)
+                    @include('admin.ordenes._documentos_evaluado', ['evaluado' => $evaluado])
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Archivos de Resultados --}}
+        <div class="row gx-3 mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="bi bi-file-earmark-check"></i> Archivos de Resultado por Evaluado</div>
+                    </div>
+                    <div class="card-body">
+                        @foreach($orden->evaluados as $evaluado)
+                        <div class="border rounded p-3 mb-3">
+                            <h6 class="mb-3">
+                                <i class="bi bi-person"></i> {{ $evaluado->nombre }} {{ $evaluado->apellidos }}
+                                @if($evaluado->resultado)
+                                    <span class="badge bg-{{ $evaluado->resultado_color }}">{{ $evaluado->resultado_texto }}</span>
+                                @endif
+                            </h6>
+
+                            <div class="row">
+                                {{-- Resultado Preliminar --}}
+                                <div class="col-md-6">
+                                    <div class="card border-info mb-2">
+                                        <div class="card-body py-2 px-3">
+                                            <h6 class="card-subtitle mb-2 text-info"><i class="bi bi-file-earmark-arrow-up"></i> Resultado Preliminar</h6>
+                                            @if($evaluado->tieneResultadoPreliminar())
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <i class="bi bi-check-circle text-success"></i> Subido
+                                                        @if($evaluado->resultado_preliminar_at)
+                                                            <small class="text-muted">{{ $evaluado->resultado_preliminar_at->format('d/m/Y H:i') }}</small>
+                                                        @endif
+                                                    </div>
+                                                    <div>
+                                                        <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado->id, 'preliminar']) }}"
+                                                           class="btn btn-sm btn-outline-info" title="Descargar">
+                                                            <i class="bi bi-download"></i>
+                                                        </a>
+                                                        @if(Auth::user()->role_as >= 2)
+                                                        <form action="{{ route('evaluados.eliminar-resultado-archivo', [$evaluado->id, 'preliminar']) }}"
+                                                              method="POST" class="d-inline"
+                                                              onsubmit="return confirm('¿Eliminar resultado preliminar?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @else
+                                                @if(Auth::user()->role_as >= 2)
+                                                <form action="{{ route('evaluados.subir-resultado-archivo', $evaluado->id) }}"
+                                                      method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
+                                                    @csrf
+                                                    <input type="hidden" name="tipo_resultado" value="preliminar">
+                                                    <input type="file" name="archivo" class="form-control form-control-sm" accept=".pdf,.doc,.docx" required>
+                                                    <button type="submit" class="btn btn-sm btn-info text-white">
+                                                        <i class="bi bi-upload"></i>
+                                                    </button>
+                                                </form>
+                                                @else
+                                                    <span class="text-muted"><i class="bi bi-dash-circle"></i> No disponible</span>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Resultado Final --}}
+                                <div class="col-md-6">
+                                    <div class="card border-success mb-2">
+                                        <div class="card-body py-2 px-3">
+                                            <h6 class="card-subtitle mb-2 text-success"><i class="bi bi-file-earmark-check"></i> Resultado Final</h6>
+                                            @if($evaluado->tieneResultadoFinal())
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <i class="bi bi-check-circle text-success"></i> Subido
+                                                        @if($evaluado->resultado_final_at)
+                                                            <small class="text-muted">{{ $evaluado->resultado_final_at->format('d/m/Y H:i') }}</small>
+                                                        @endif
+                                                    </div>
+                                                    <div>
+                                                        <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado->id, 'final']) }}"
+                                                           class="btn btn-sm btn-outline-success" title="Descargar">
+                                                            <i class="bi bi-download"></i>
+                                                        </a>
+                                                        @if(Auth::user()->role_as >= 2)
+                                                        <form action="{{ route('evaluados.eliminar-resultado-archivo', [$evaluado->id, 'final']) }}"
+                                                              method="POST" class="d-inline"
+                                                              onsubmit="return confirm('¿Eliminar resultado final?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @else
+                                                @if(Auth::user()->role_as >= 2)
+                                                <form action="{{ route('evaluados.subir-resultado-archivo', $evaluado->id) }}"
+                                                      method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
+                                                    @csrf
+                                                    <input type="hidden" name="tipo_resultado" value="final">
+                                                    <input type="file" name="archivo" class="form-control form-control-sm" accept=".pdf,.doc,.docx" required>
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="bi bi-upload"></i>
+                                                    </button>
+                                                </form>
+                                                @else
+                                                    <span class="text-muted"><i class="bi bi-dash-circle"></i> No disponible</span>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
         @else
         <div class="row gx-3 mt-3">
             <div class="col-12">

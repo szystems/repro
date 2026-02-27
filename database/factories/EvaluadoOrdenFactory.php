@@ -60,9 +60,6 @@ class EvaluadoOrdenFactory extends Factory
             'completado_at' => now()->subDays(rand(1, 10)),
             'firma_digital' => 'data:image/png;base64,iVBORw0KGgo...',
             'ip_completado' => $this->faker->ipv4(),
-            'user_agent' => $this->faker->userAgent(),
-            'intentos_acceso' => rand(1, 3),
-            'token_usado_at' => now()->subDays(rand(1, 10)),
         ]);
     }
 
@@ -83,8 +80,6 @@ class EvaluadoOrdenFactory extends Factory
     public function enProgreso(): static
     {
         return $this->state(fn (array $attributes) => [
-            'intentos_acceso' => rand(1, 5),
-            'token_usado_at' => now()->subHours(rand(1, 48)),
             'cuestionario_completado' => false,
         ]);
     }

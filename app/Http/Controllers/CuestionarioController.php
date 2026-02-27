@@ -117,6 +117,74 @@ class CuestionarioController extends Controller
             ]);
         }
         
+        // Si ya aceptó términos, ir a la sección; si no, ir a términos
+        if ($cuestionario->acepta_terminos) {
+            return redirect()->route('cuestionario.seccion', [
+                'token' => $token,
+                'numero' => $cuestionario->seccion_actual
+            ]);
+        }
+
+        return redirect()->route('cuestionario.terminos', ['token' => $token]);
+    }
+
+    /**
+     * Mostrar pantalla de Términos y Condiciones con firma de autorización.
+     */
+    public function terminos(string $token)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->with(['orden.empresa'])
+            ->firstOrFail();
+
+        if ($evaluado->cuestionario_completado) {
+            return view('cuestionario.completado', compact('evaluado'));
+        }
+
+        $cuestionario = $evaluado->cuestionario;
+
+        // Si ya aceptó, redirigir a secciones
+        if ($cuestionario && $cuestionario->acepta_terminos) {
+            return redirect()->route('cuestionario.seccion', [
+                'token' => $token,
+                'numero' => $cuestionario->seccion_actual
+            ]);
+        }
+
+        $tipoServicio = $evaluado->tipo_servicio;
+
+        return view('cuestionario.terminos', compact('evaluado', 'cuestionario', 'token', 'tipoServicio'));
+    }
+
+    /**
+     * Procesar aceptación de términos con firma digital.
+     */
+    public function aceptarTerminos(Request $request, string $token)
+    {
+        $request->validate([
+            'acepta_terminos'    => 'required|accepted',
+            'firma_autorizacion' => 'required|string',
+            'tipo_proceso'       => 'nullable|string',
+        ], [
+            'acepta_terminos.required' => 'Debe aceptar los términos y condiciones.',
+            'acepta_terminos.accepted' => 'Debe aceptar los términos y condiciones.',
+            'firma_autorizacion.required' => 'Debe proporcionar su firma de autorización.',
+        ]);
+
+        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        $cuestionario = $evaluado->cuestionario;
+
+        if (!$cuestionario) {
+            return back()->with('error', 'Cuestionario no encontrado.');
+        }
+
+        $cuestionario->update([
+            'acepta_terminos'    => true,
+            'acepta_terminos_at' => now(),
+            'firma_autorizacion' => $request->firma_autorizacion,
+            'ip_terminos'        => $request->ip(),
+        ]);
+
         return redirect()->route('cuestionario.seccion', [
             'token' => $token,
             'numero' => $cuestionario->seccion_actual
@@ -311,6 +379,7 @@ class CuestionarioController extends Controller
         
         // Alias para compatibilidad con la vista
         $evaluadoOrden = $evaluado;
+        $evaluadoOrden->load('documentos');
 
         return view('cuestionario.finalizar', compact(
             'evaluado', 
@@ -605,5 +674,41 @@ class CuestionarioController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Subir un documento desde el cuestionario (ruta pública con token).
+     */
+    public function subirDocumento(Request $request, string $token)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->where('token_expira_at', '>', now())
+            ->firstOrFail();
+
+        if ($evaluado->cuestionario_completado) {
+            return back()->with('error', 'El cuestionario ya fue completado. No se pueden subir más documentos.');
+        }
+
+        $request->validate([
+            'tipo_documento' => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Models\DocumentoEvaluado::tiposDocumento()))],
+            'archivo'        => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,doc,docx'],
+        ]);
+
+        $archivo = $request->file('archivo');
+        $ruta = $archivo->store('documentos_evaluados/' . $evaluado->id, 'local');
+
+        \App\Models\DocumentoEvaluado::create([
+            'evaluado_orden_id'   => $evaluado->id,
+            'tipo_documento'      => $request->tipo_documento,
+            'nombre_original'     => $archivo->getClientOriginalName(),
+            'ruta_archivo'        => $ruta,
+            'mime_type'           => $archivo->getMimeType(),
+            'tamano'              => $archivo->getSize(),
+            'subido_por_tipo'     => 'evaluado',
+            'subido_por_user_id'  => null,
+            'estado_verificacion' => 'pendiente',
+        ]);
+
+        return back()->with('success', 'Documento subido correctamente.');
     }
 }

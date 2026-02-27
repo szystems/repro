@@ -338,7 +338,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
 | 2026-02-25 | Fase 3 completada | Módulo Sedes REPRO (E5) — commit `b8caf8e5` |
-| 2026-02-26 | Fase 1 completada | Estructura y Datos — 16 tests, 40 assertions — commit `(pendiente)` |
+| 2026-02-26 | Fase 1 completada | Estructura y Datos — 16 tests, 40 assertions — commit `59f11c25` |
 | 2026-02-26 | Inicio Fase 1 | Ajustes de campos, localización, reglas de negocio |
 | 2026-02-04 | Documento creado | Reunión con cliente, plan inicial |
 

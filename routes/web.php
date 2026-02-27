@@ -110,6 +110,20 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // Reenviar correo a evaluado
     Route::post('evaluados/{evaluado}/reenviar-correo', [OrdenesController::class, 'reenviarCorreo'])->name('evaluados.reenviar-correo');
 
+    // Documentos de evaluados
+    Route::post('documentos-evaluado', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'store'])->name('documentos-evaluado.store');
+    Route::get('documentos-evaluado/{documento}/download', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'download'])->name('documentos-evaluado.download');
+    Route::patch('documentos-evaluado/{documento}/verificar', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'verificar'])->name('documentos-evaluado.verificar');
+    Route::delete('documentos-evaluado/{documento}', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'destroy'])->name('documentos-evaluado.destroy');
+
+    // Archivos de resultado (preliminar / final) — solo REPRO/admin
+    Route::post('evaluados/{evaluado}/resultado-archivo', [OrdenesController::class, 'subirResultadoArchivo'])->name('evaluados.subir-resultado-archivo');
+    Route::get('evaluados/{evaluado}/resultado-archivo/{tipo}', [OrdenesController::class, 'descargarResultadoArchivo'])->name('evaluados.descargar-resultado-archivo');
+    Route::delete('evaluados/{evaluado}/resultado-archivo/{tipo}', [OrdenesController::class, 'eliminarResultadoArchivo'])->name('evaluados.eliminar-resultado-archivo');
+
+    // Rehabilitación de cuestionario — solo REPRO/admin
+    Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');
+
     // Rutas para diferentes tipos de usuario con middleware específico
     Route::middleware(['role:admin,repro'])->group(function () {
         // Solo admin y repro pueden acceder a todas las órdenes y estadísticas
@@ -213,6 +227,10 @@ Route::prefix('cuestionario')->name('cuestionario.')->group(function () {
     // Verificación de identidad
     Route::post('/{token}/verificar', [CuestionarioController::class, 'verificarIdentidad'])->name('verificar');
 
+    // Términos y condiciones (autorización)
+    Route::get('/{token}/terminos', [CuestionarioController::class, 'terminos'])->name('terminos');
+    Route::post('/{token}/aceptar-terminos', [CuestionarioController::class, 'aceptarTerminos'])->name('aceptar-terminos');
+
     // Navegación por secciones
     Route::get('/{token}/seccion/{numero}', [CuestionarioController::class, 'seccion'])
         ->name('seccion')
@@ -225,6 +243,9 @@ Route::prefix('cuestionario')->name('cuestionario.')->group(function () {
     // Finalización y firma
     Route::get('/{token}/finalizar', [CuestionarioController::class, 'finalizar'])->name('finalizar');
     Route::post('/{token}/completar', [CuestionarioController::class, 'completar'])->name('completar');
+
+    // Subida de documentos por evaluado
+    Route::post('/{token}/subir-documento', [CuestionarioController::class, 'subirDocumento'])->name('subir-documento');
 
     // Página de completado
     Route::get('/{token}/completado', [CuestionarioController::class, 'completado'])->name('completado');
