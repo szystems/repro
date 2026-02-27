@@ -46,7 +46,6 @@ class DatosPersonalesRequest extends FormRequest
             'direccion_residencia' => 'required|string|max:500',
             'departamento' => 'required|string|max:100',
             'municipio' => 'required|string|max:100',
-            'codigo_postal' => 'nullable|string|max:10',
             'telefono_alternativo' => 'nullable|string|max:15|regex:/^[0-9\-\+\(\)\s]+$/',
             'telefono_personal' => 'required|string|max:15|regex:/^[0-9\-\+\(\)\s]+$/',
             'email_personal' => 'required|email|max:100',

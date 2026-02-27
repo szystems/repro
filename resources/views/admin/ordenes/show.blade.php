@@ -246,10 +246,17 @@
                         </div>
                         @endif
 
-                        @if($orden->observaciones)
+                        @if($orden->observaciones_internas && Auth::user()->role_as >= 2)
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Observaciones</label>
-                            <div class="bg-light p-3 rounded border-start border-4 border-warning">{{ $orden->observaciones }}</div>
+                            <label class="form-label fw-bold">Observaciones Internas <small class="text-muted">(solo REPRO)</small></label>
+                            <div class="bg-light p-3 rounded border-start border-4 border-warning">{{ $orden->observaciones_internas }}</div>
+                        </div>
+                        @endif
+
+                        @if($orden->requerimientos_generales)
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Requerimientos del Cliente</label>
+                            <div class="bg-light p-3 rounded border-start border-4 border-primary">{{ $orden->requerimientos_generales }}</div>
                         </div>
                         @endif
 

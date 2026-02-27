@@ -134,10 +134,11 @@ class OrdenesController extends Controller
         // Validación manual temporal
         $validated = $request->validate([
             'empresa_id' => 'required|exists:empresas,id',
-            'observaciones' => 'nullable|string|max:500',
+            'observaciones_internas' => 'nullable|string|max:500',
             'prioridad' => 'nullable|in:baja,normal,alta,urgente',
             'fecha_limite' => 'nullable|date|after:today',
             'instrucciones_generales' => 'nullable|string|max:1000',
+            'requerimientos_generales' => 'nullable|string|max:1000',
             'evaluados' => 'required|array|min:1',
             'evaluados.*.nombre' => 'required|string|max:100',
             'evaluados.*.apellidos' => 'required|string|max:100',
@@ -157,14 +158,20 @@ class OrdenesController extends Controller
         try {
             // Crear orden con solo los campos permitidos
             $datosOrden = [
-                'observaciones' => $validated['observaciones'] ?? null,
-                'prioridad' => $validated['prioridad'] ?? 'normal',
-                'fecha_limite' => $validated['fecha_limite'] ?? null,
                 'instrucciones_generales' => $validated['instrucciones_generales'] ?? null,
+                'tipo_creador' => Auth::user()->role_as >= 2 ? 'repro' : 'empresa',
                 'creado_por' => Auth::id(),
                 'fecha_solicitud' => now()->toDateString(),
                 'estado' => 'solicitud',
             ];
+
+            // Campos exclusivos REPRO (role_as >= 2)
+            if (Auth::user()->role_as >= 2) {
+                $datosOrden['observaciones_internas'] = $validated['observaciones_internas'] ?? null;
+                $datosOrden['prioridad'] = $validated['prioridad'] ?? 'normal';
+                $datosOrden['fecha_limite'] = $validated['fecha_limite'] ?? null;
+                $datosOrden['requerimientos_generales'] = $validated['requerimientos_generales'] ?? null;
+            }
 
             if (Auth::user()->role_as == 1) {
                 // Usuario empresa: usar su empresa_id
@@ -294,11 +301,12 @@ class OrdenesController extends Controller
         // Validación manual
         $validated = $request->validate([
             'empresa_id' => 'required|exists:empresas,id',
-            'observaciones' => 'nullable|string|max:500',
+            'observaciones_internas' => 'nullable|string|max:500',
             'prioridad' => 'nullable|in:baja,normal,alta,urgente',
             'fecha_limite' => 'nullable|date|after:today',
             'fecha_solicitud' => 'nullable|date',
             'instrucciones_generales' => 'nullable|string|max:1000',
+            'requerimientos_generales' => 'nullable|string|max:1000',
             'poligrafista_id' => 'nullable|exists:users,id',
             'evaluados' => 'required|array|min:1',
             'evaluados.*.id' => 'nullable|exists:evaluados_orden,id',
@@ -320,13 +328,18 @@ class OrdenesController extends Controller
         try {
             // Actualizar datos básicos de la orden - solo campos que vienen en el request
             $datosOrden = [
-                'observaciones' => $validated['observaciones'] ?? $orden->observaciones,
-                'prioridad' => $validated['prioridad'] ?? $orden->prioridad ?? 'normal',
                 'instrucciones_generales' => $validated['instrucciones_generales'] ?? $orden->instrucciones_generales,
             ];
 
+            // Campos exclusivos REPRO (role_as >= 2)
+            if (Auth::user()->role_as >= 2) {
+                $datosOrden['observaciones_internas'] = $validated['observaciones_internas'] ?? $orden->observaciones_internas;
+                $datosOrden['prioridad'] = $validated['prioridad'] ?? $orden->prioridad ?? 'normal';
+                $datosOrden['requerimientos_generales'] = $validated['requerimientos_generales'] ?? $orden->requerimientos_generales;
+            }
+
             // Solo actualizar estos campos si vienen explícitamente en el request
-            if (isset($validated['fecha_limite'])) {
+            if (isset($validated['fecha_limite']) && Auth::user()->role_as >= 2) {
                 $datosOrden['fecha_limite'] = $validated['fecha_limite'];
             }
             if (isset($validated['fecha_solicitud'])) {
@@ -476,9 +489,13 @@ class OrdenesController extends Controller
                 'token_expira_at' => now()->addDays(30),
                 // Nuevos campos granulares
                 'tipo_servicio' => $evaluadoData['tipo_servicio'],
-                'tipo_formulario' => $evaluadoData['tipo_formulario'],
+                // Regla de negocio: socioeconómico siempre usa formulario preempleo
+                'tipo_formulario' => $evaluadoData['tipo_servicio'] === 'socioeconomico'
+                    ? 'preempleo'
+                    : $evaluadoData['tipo_formulario'],
                 'fecha_programada' => $evaluadoData['fecha_programada'] ?? null,
                 'poligrafista_id' => $evaluadoData['poligrafista_id'] ?? null,
+                'observaciones' => $evaluadoData['observaciones'] ?? null,
                 'estado_evaluacion' => 'pendiente'
             ];
 

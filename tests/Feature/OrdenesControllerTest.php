@@ -90,7 +90,7 @@ class OrdenesControllerTest extends TestCase
         // Datos de la orden
         $ordenData = [
             'empresa_id' => $empresa->id,
-            'observaciones' => 'Test de creación de orden',
+            'observaciones_internas' => 'Test de creación de orden',
             'prioridad' => 'normal',
             'evaluados' => [
                 [
@@ -175,7 +175,7 @@ class OrdenesControllerTest extends TestCase
         // Actualizar orden
         $datosActualizados = [
             'empresa_id' => $empresa->id,
-            'observaciones' => 'Orden actualizada',
+            'observaciones_internas' => 'Orden actualizada',
             'evaluados' => [
                 [
                     'nombre' => 'Juan Pérez Actualizado',
@@ -196,7 +196,7 @@ class OrdenesControllerTest extends TestCase
         
         // Verificar actualización
         $orden->refresh();
-        $this->assertEquals('Orden actualizada', $orden->observaciones);
+        $this->assertEquals('Orden actualizada', $orden->observaciones_internas);
         
         // Verificar evaluado actualizado
         $evaluado = $orden->evaluados()->first();

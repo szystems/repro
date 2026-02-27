@@ -311,24 +311,6 @@
         </div>
     </div>
     
-    <div class="col-lg-4">
-        <div class="form-group">
-            <label for="codigo_postal" class="form-label">
-                Código Postal
-            </label>
-            <input type="text" 
-                   class="form-control @error('codigo_postal') is-invalid @enderror" 
-                   id="codigo_postal" 
-                   name="codigo_postal" 
-                   value="{{ old('codigo_postal', $respuestasExistentes['codigo_postal'] ?? '') }}"
-                   maxlength="10"
-                   pattern="[0-9]{5}"
-                   placeholder="01001">
-            @error('codigo_postal')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
-    </div>
 </div>
 
 <div class="row">

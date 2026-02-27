@@ -51,6 +51,7 @@ class EvaluadoOrden extends Model
         'cuestionario_completado',
         'cuestionario_completado_at',
         'ip_acceso',
+        'observaciones',
         'notas',
     ];
 
@@ -415,11 +416,68 @@ class EvaluadoOrden extends Model
     {
         return match($this->resultado) {
             'pendiente' => 'Pendiente',
-            'aprobado' => 'Aprobado',
-            'no_aprobado' => 'No Aprobado',
+            // Polígrafo / VSA
+            'aprobado' => 'Aprobado / Sin Observaciones',
+            'aprobado_con_obs' => 'Aprobado / Con Observación Leve',
+            'aprobado_excepcion' => 'Aprobado con Excepción',
+            'no_aprobado' => 'No Aprobado / Indicación de Mentira',
             'inconcluso' => 'Inconcluso',
+            // Socioeconómico
+            'tipo_a' => 'Tipo A',
+            'a_condicionado' => 'A - Condicionado',
+            'tipo_b' => 'Tipo B',
+            'tipo_c' => 'Tipo C',
             default => 'Sin resultado'
         };
+    }
+
+    /**
+     * Obtener color del badge según resultado (clasificación REPRO)
+     */
+    public function getResultadoColorAttribute(): string
+    {
+        return match($this->resultado) {
+            'pendiente' => 'secondary',
+            // Polígrafo / VSA
+            'aprobado' => 'success',             // Verde
+            'aprobado_con_obs' => 'warning',     // Amarillo
+            'aprobado_excepcion' => 'warning',   // Amarillo
+            'no_aprobado' => 'danger',           // Rojo
+            'inconcluso' => 'secondary',
+            // Socioeconómico
+            'tipo_a' => 'success',               // Verde
+            'a_condicionado' => 'warning',       // Amarillo
+            'tipo_b' => 'orange',                // Naranja
+            'tipo_c' => 'danger',                // Rojo
+            default => 'secondary'
+        };
+    }
+
+    /**
+     * Obtener opciones de resultado según tipo de servicio
+     */
+    public static function resultadosPorTipoServicio(string $tipoServicio): array
+    {
+        if ($tipoServicio === 'socioeconomico') {
+            return [
+                'pendiente' => 'Pendiente',
+                'tipo_a' => 'Tipo A (cumple requisitos)',
+                'a_condicionado' => 'A - Condicionado (info pendiente)',
+                'tipo_b' => 'Tipo B (requiere análisis)',
+                'tipo_c' => 'Tipo C (no cumple criterios)',
+                'inconcluso' => 'Inconcluso',
+            ];
+        }
+
+        // Polígrafo y VSA
+        return [
+            'pendiente' => 'Pendiente',
+            'aprobado' => 'Aprobado / Sin Observaciones',
+            'aprobado_con_obs' => 'Aprobado / Con Observación Leve',
+            'aprobado_excepcion' => 'Aprobado con Excepción',
+            'no_aprobado' => 'No Aprobado / Indicación de Mentira',
+            'inconcluso' => 'Inconcluso',
+        ];
     }
 
     /**

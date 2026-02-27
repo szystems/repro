@@ -26,8 +26,10 @@ class OrdenFactory extends Factory
             'creado_por' => User::factory(),
             'estado' => 'solicitud',
             'fecha_solicitud' => $this->faker->dateTimeBetween('-30 days', '+30 days'),
-            'observaciones' => $this->faker->optional()->paragraph(),
+            'observaciones_internas' => $this->faker->optional()->paragraph(),
             'instrucciones_generales' => $this->faker->optional()->paragraph(),
+            'requerimientos_generales' => $this->faker->optional()->paragraph(),
+            'tipo_creador' => $this->faker->randomElement(['empresa', 'repro']),
             'prioridad' => $this->faker->randomElement(['baja', 'normal', 'alta', 'urgente']),
             'fecha_limite' => $this->faker->optional()->dateTimeBetween('+1 day', '+60 days'),
         ];

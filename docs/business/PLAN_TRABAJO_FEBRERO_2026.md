@@ -240,38 +240,87 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 ---
 
-## 📅 Plan de Trabajo Priorizado
+## 📅 Plan de Trabajo Priorizado (Según Cotización v2)
 
-### FASE 1: Crítica (Semana 1-2)
-**Prioridad: Diagrama de Flujo + Calendario**
+### FASE 1: Estructura y Datos (Semana 1) ✅ COMPLETADA
+**Ajustes de campos, localización, reglas de negocio, trazabilidad, colores resultado**
 
-| Día | Tarea | Estado |
-|-----|-------|--------|
-| 1-2 | Migraciones: nuevos estados orden/evaluado | ⬜ |
-| 3-4 | Actualizar modelos y controladores con nuevos estados | ⬜ |
-| 5-6 | Crear tabla `programaciones` para calendario | ⬜ |
-| 7-8 | Vista mensual del calendario | ⬜ |
-| 9-10 | Vista diaria por horas | ⬜ |
-| 11-12 | CRUD de programaciones | ⬜ |
-| 13-14 | Pruebas y ajustes calendario | ⬜ |
+| # | Tarea | Estado | Commit |
+|---|-------|--------|--------|
+| 1.1 | Quitar campo `codigo_postal` (4 archivos: vista, request, admin, pdf) | ✅ | `fase1` |
+| 1.2 | Simplificar `estado_civil_detalle` (merge casado_civil/religioso → casado, quitar separado) | ✅ | `fase1` |
+| 1.3 | Campo `observaciones` por evaluado — agregar a `$fillable` de EvaluadoOrden + hacer funcional | ✅ | `fase1` |
+| 1.4 | Agregar `tipo_creador` (empresa/repro) a tabla `ordenes` — migración + modelo + auto-fill | ✅ | `fase1` |
+| 1.5 | Renombrar `observaciones` → `observaciones_internas` en `ordenes` — migración + modelo + controller + vistas | ✅ | `fase1` |
+| 1.6 | `prioridad` y `fecha_limite` solo visibles/editables para REPRO (role_as >= 2) | ✅ | `fase1` |
+| 1.7 | Clasificación de colores de resultados (polígrafo/VSA + socioeconómico) — accessor + vistas | ✅ | `fase1` |
+| 1.8 | Regla socioeconómico → solo formulario preempleo (validación en controller/request) | ✅ | `fase1` |
+| 1.9 | Tests para todos los cambios de Fase 1 (16 tests, 40 assertions) | ✅ | `fase1` |
 
-### FASE 2: Documentos y Términos (Semana 3)
+### FASE 2: Gestión de Documentación (Semana 2)
+**Documentos, términos, archivos resultado, email, rehabilitación**
 
-| Día | Tarea | Estado |
-|-----|-------|--------|
-| 15-16 | Crear tabla `evaluado_documentos` | ⬜ |
-| 17-18 | Subida de documentos (empresa/repro) | ⬜ |
-| 19-20 | Subida de documentos (evaluado en cuestionario) | ⬜ |
-| 21 | Pantalla de términos y condiciones | ⬜ |
+| # | Tarea | Estado | Commit |
+|---|-------|--------|--------|
+| 2.1 | Crear tabla `evaluado_documentos` + modelo + factory | ⬜ | |
+| 2.2 | Subida de documentos desde Empresa y REPRO | ⬜ | |
+| 2.3 | Subida de documentos desde Evaluado (en cuestionario) | ⬜ | |
+| 2.4 | Pantalla de Términos y Condiciones con firma digital | ⬜ | |
+| 2.5 | Archivos de resultado doble (preliminar + final) | ⬜ | |
+| 2.6 | Notificación email al activar resultados visibles | ⬜ | |
+| 2.7 | Rehabilitación de cuestionario completado | ⬜ | |
+| 2.8 | Tests para Fase 2 | ⬜ | |
 
-### FASE 3: Resultados y Ajustes (Semana 4)
+### FASE 3: Módulo de Sedes (Semana 3) ✅ COMPLETADA
+**CRUD completo de sedes, integración con evaluados**
 
-| Día | Tarea | Estado |
-|-----|-------|--------|
-| 22-23 | Sistema de resultados con archivo | ⬜ |
-| 24-25 | Ajustes en formularios (campos faltantes) | ⬜ |
-| 26-27 | Ajustes de permisos y nomenclatura | ⬜ |
-| 28 | Pruebas integrales | ⬜ |
+| # | Tarea | Estado | Commit |
+|---|-------|--------|--------|
+| 3.1 | Migración tabla `sedes` + FK `sede_id` en evaluados_orden | ✅ | `b8caf8e5` |
+| 3.2 | Modelo Sede con relaciones, scopes, tieneTraslape | ✅ | `b8caf8e5` |
+| 3.3 | SedeFormRequest + SedesController CRUD completo | ✅ | `b8caf8e5` |
+| 3.4 | 5 vistas Blade (index, create, edit, show, _form) | ✅ | `b8caf8e5` |
+| 3.5 | Rutas (8) + Sidebar link | ✅ | `b8caf8e5` |
+| 3.6 | EvaluadoOrden: sede_id fillable + relación | ✅ | `b8caf8e5` |
+| 3.7 | Factory + 15 tests (33 assertions) | ✅ | `b8caf8e5` |
+
+### FASE 4: Calendario y Agenda (Semana 4) — Extra E2 (Q4,500)
+**Calendario de programación + integración sedes + anti-traslape**
+
+| # | Tarea | Estado | Commit |
+|---|-------|--------|--------|
+| 4.1 | Crear tabla `programaciones` + modelo + factory | ⬜ | |
+| 4.2 | Vista mensual del calendario (estilo Google Calendar) | ⬜ | |
+| 4.3 | Vista diaria por horas (8AM-6PM) | ⬜ | |
+| 4.4 | CRUD de programaciones con integración evaluados | ⬜ | |
+| 4.5 | Filtros por tipo servicio, sede, poligrafista | ⬜ | |
+| 4.6 | Sistema anti-traslape (validación Sede.tieneTraslape) | ⬜ | |
+| 4.7 | Colores por tipo servicio (azul polígrafo, teal VSA, púrpura socio) | ⬜ | |
+| 4.8 | Tests para Fase 4 | ⬜ | |
+
+### FASE 5: Flujos y Cierre (Semana 5)
+**Estados según diagrama de flujo, separación estados, QA final**
+
+| # | Tarea | Estado | Commit |
+|---|-------|--------|--------|
+| 5.1 | Nuevos estados ordenes: `validacion`, `registrado`, `operaciones` | ⬜ | |
+| 5.2 | Nuevos estados evaluados: `contactando`, `link_enviado`, `confirmado`, `en_sede`, `docs_pendientes`, `inasistencia`, `desistio` | ⬜ | |
+| 5.3 | Lógica de transición de estados (máquina de estados) | ⬜ | |
+| 5.4 | Separar `estado_formulario` / `estado_evaluacion` | ⬜ | |
+| 5.5 | Actualizar vistas con nuevos estados y transiciones | ⬜ | |
+| 5.6 | Pruebas integrales de todo el sistema | ⬜ | |
+
+---
+
+## 📈 Progreso General
+
+| Fase | Semana | Estado | Progreso |
+|------|--------|--------|----------|
+| Fase 1: Estructura y Datos | Semana 1 | **✅ Completada** | **9/9** |
+| Fase 2: Documentación | Semana 2 | ⬜ Pendiente | 0/8 |
+| **Fase 3: Sedes** | **Semana 3** | **✅ Completada** | **7/7** |
+| Fase 4: Calendario (E2) | Semana 4 | ⬜ Pendiente | 0/8 |
+| Fase 5: Flujos y Cierre | Semana 5 | ⬜ Pendiente | 0/6 |
 
 ---
 
@@ -279,17 +328,21 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 - [Diagrama de Flujo](../diagrama%20de%20flujo/PROCESO%20DE%20CITACION%20Y%20PROGRAMACION%20(1).pdf)
 - [Autorización General](../formularios/autorizacion-general.pdf)
+- [Cotización v2](cotizacion_actualizada_v2_2026.md)
 - **PENDIENTE:** Formularios actuales del cliente (para campos faltantes)
 
 ---
 
-## ✅ Próximos Pasos
+## ✅ Historial de Cambios
 
-1. **Aprobación del cliente** de la cotización de extras
-2. **Recibir formularios** del cliente para identificar campos faltantes
-3. **Iniciar Fase 1** con migraciones y calendario
+| Fecha | Acción | Detalle |
+|-------|--------|---------|
+| 2026-02-25 | Fase 3 completada | Módulo Sedes REPRO (E5) — commit `b8caf8e5` |
+| 2026-02-26 | Fase 1 completada | Estructura y Datos — 16 tests, 40 assertions — commit `(pendiente)` |
+| 2026-02-26 | Inicio Fase 1 | Ajustes de campos, localización, reglas de negocio |
+| 2026-02-04 | Documento creado | Reunión con cliente, plan inicial |
 
 ---
 
 *Documento creado: 4 de febrero de 2026*
-*Última actualización: 4 de febrero de 2026*
+*Última actualización: 26 de febrero de 2026*

@@ -15,7 +15,7 @@ class InformacionFamiliarRequest extends FormRequest
     {
         return [
             // Estado civil y pareja
-            'estado_civil_detalle' => 'required|string|in:soltero,casado_civil,casado_religioso,union_libre,divorciado,separado,viudo',
+            'estado_civil_detalle' => 'required|string|in:soltero,casado,union_libre,divorciado,viudo',
             'vive_con_pareja' => 'required|in:si,no',
             'pareja_trabaja' => 'nullable|in:si,no',
             

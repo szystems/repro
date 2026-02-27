@@ -109,6 +109,7 @@
                             </div>
                             @endif
 
+                            @if(Auth::user()->role_as >= 2)
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="prioridad" class="form-label">Prioridad</label>
@@ -132,6 +133,7 @@
                                     @enderror
                                 </div>
                             </div>
+                            @endif
 
                             <div class="mb-3">
                                 <label for="fecha_solicitud" class="form-label">Fecha de Solicitud</label>
@@ -153,15 +155,27 @@
                                 @enderror
                             </div>
 
+                            @if(Auth::user()->role_as >= 2)
                             <div class="mb-3">
-                                <label for="observaciones" class="form-label">Observaciones</label>
-                                <textarea class="form-control @error('observaciones') is-invalid @enderror" 
-                                          name="observaciones" id="observaciones" rows="3" 
-                                          placeholder="Detalles adicionales de la orden...">{{ old('observaciones', $orden->observaciones) }}</textarea>
-                                @error('observaciones')
+                                <label for="observaciones" class="form-label">Observaciones Internas <small class="text-muted">(solo visible para REPRO)</small></label>
+                                <textarea class="form-control @error('observaciones_internas') is-invalid @enderror" 
+                                          name="observaciones_internas" id="observaciones" rows="3" 
+                                          placeholder="Detalles adicionales de la orden...">{{ old('observaciones_internas', $orden->observaciones_internas) }}</textarea>
+                                @error('observaciones_internas')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+
+                            <div class="mb-3">
+                                <label for="requerimientos_generales" class="form-label">Requerimientos del Cliente <small class="text-muted">(solo editable por REPRO)</small></label>
+                                <textarea class="form-control @error('requerimientos_generales') is-invalid @enderror" 
+                                          name="requerimientos_generales" id="requerimientos_generales" rows="2" 
+                                          placeholder="Requerimientos específicos del cliente...">{{ old('requerimientos_generales', $orden->requerimientos_generales) }}</textarea>
+                                @error('requerimientos_generales')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            @endif
 
                         </div>
                     </div>

@@ -75,7 +75,8 @@
                                 </div>
                                 @endif
 
-                                <!-- Prioridad -->
+                                <!-- Prioridad (Solo REPRO) -->
+                                @if(Auth::user()->role_as >= 2)
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Prioridad</label>
                                     <select class="form-select @error('prioridad') is-invalid @enderror" name="prioridad">
@@ -89,7 +90,7 @@
                                     @enderror
                                 </div>
 
-                                <!-- Fecha Límite -->
+                                <!-- Fecha Límite (Solo REPRO) -->
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Fecha Límite</label>
                                     <input type="date" class="form-control @error('fecha_limite') is-invalid @enderror"
@@ -98,16 +99,19 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+                                @endif
 
-                                <!-- Observaciones Generales -->
+                                <!-- Observaciones Internas (Solo REPRO) -->
+                                @if(Auth::user()->role_as >= 2)
                                 <div class="col-12 mb-3">
-                                    <label class="form-label">Observaciones Generales</label>
-                                    <textarea class="form-control @error('observaciones') is-invalid @enderror"
-                                              name="observaciones" rows="2" placeholder="Observaciones generales para esta orden...">{{ old('observaciones') }}</textarea>
-                                    @error('observaciones')
+                                    <label class="form-label">Observaciones Internas <small class="text-muted">(solo visible para REPRO)</small></label>
+                                    <textarea class="form-control @error('observaciones_internas') is-invalid @enderror"
+                                              name="observaciones_internas" rows="2" placeholder="Observaciones internas de esta orden...">{{ old('observaciones_internas') }}</textarea>
+                                    @error('observaciones_internas')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+                                @endif
 
                                 <!-- Instrucciones Generales -->
                                 <div class="col-12 mb-3">
@@ -118,6 +122,18 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+
+                                <!-- Requerimientos Generales (Solo REPRO) -->
+                                @if(Auth::user()->role_as >= 2)
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Requerimientos del Cliente <small class="text-muted">(solo editable por REPRO)</small></label>
+                                    <textarea class="form-control @error('requerimientos_generales') is-invalid @enderror"
+                                              name="requerimientos_generales" rows="2" placeholder="Requerimientos específicos del cliente para esta orden...">{{ old('requerimientos_generales') }}</textarea>
+                                    @error('requerimientos_generales')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                @endif
                             </div>
 
                             <!-- Sección de Evaluados (Opcional) -->

@@ -9,7 +9,7 @@
     <div class="col-lg-6">
         <div class="form-group">
             <label for="estado_civil_detalle" class="form-label">
-                Estado Civil Detallado <span class="required">*</span>
+                Estado Civil <span class="required">*</span>
             </label>
             <select class="form-control @error('estado_civil_detalle') is-invalid @enderror" 
                     id="estado_civil_detalle" 
@@ -17,11 +17,9 @@
                     required>
                 <option value="">Seleccione...</option>
                 <option value="soltero" {{ old('estado_civil_detalle', $respuestas['estado_civil_detalle'] ?? '') == 'soltero' ? 'selected' : '' }}>Soltero(a)</option>
-                <option value="casado_civil" {{ old('estado_civil_detalle', $respuestas['estado_civil_detalle'] ?? '') == 'casado_civil' ? 'selected' : '' }}>Casado(a) por lo Civil</option>
-                <option value="casado_religioso" {{ old('estado_civil_detalle', $respuestas['estado_civil_detalle'] ?? '') == 'casado_religioso' ? 'selected' : '' }}>Casado(a) por la Iglesia</option>
+                <option value="casado" {{ old('estado_civil_detalle', $respuestas['estado_civil_detalle'] ?? '') == 'casado' ? 'selected' : '' }}>Casado(a)</option>
                 <option value="union_libre" {{ old('estado_civil_detalle', $respuestas['estado_civil_detalle'] ?? '') == 'union_libre' ? 'selected' : '' }}>Unión Libre</option>
                 <option value="divorciado" {{ old('estado_civil_detalle', $respuestas['estado_civil_detalle'] ?? '') == 'divorciado' ? 'selected' : '' }}>Divorciado(a)</option>
-                <option value="separado" {{ old('estado_civil_detalle', $respuestas['estado_civil_detalle'] ?? '') == 'separado' ? 'selected' : '' }}>Separado(a)</option>
                 <option value="viudo" {{ old('estado_civil_detalle', $respuestas['estado_civil_detalle'] ?? '') == 'viudo' ? 'selected' : '' }}>Viudo(a)</option>
             </select>
             @error('estado_civil_detalle')

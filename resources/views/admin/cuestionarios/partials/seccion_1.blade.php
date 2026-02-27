@@ -10,7 +10,7 @@
     $lugarNacimiento = $respuestas['lugar_nacimiento'] ?? null;
     $nivelEducativo = $respuestas['nivel_educativo'] ?? null;
     $profesion = $respuestas['profesion_oficio'] ?? $respuestas['profesion'] ?? null;
-    $codigoPostal = $respuestas['codigo_postal'] ?? null;
+    // Campo codigo_postal removido — no aplica en Guatemala
     
     // Calcular edad si hay fecha de nacimiento
     $edad = null;
@@ -129,12 +129,7 @@
                             <td class="fw-bold">Municipio:</td>
                             <td>{{ $respuestas['municipio'] ?? 'No especificado' }}</td>
                         </tr>
-                        @if($codigoPostal)
-                        <tr>
-                            <td class="fw-bold">Código Postal:</td>
-                            <td>{{ $codigoPostal }}</td>
-                        </tr>
-                        @endif
+
                         <tr>
                             <td class="fw-bold">Nacionalidad:</td>
                             <td>{{ $respuestas['nacionalidad'] ?? 'No especificada' }}</td>

@@ -126,7 +126,7 @@ class NotificacionesEmailTest extends TestCase
         
         $response = $this->actingAs($admin)->post(route('ordenes.store'), [
             'empresa_id' => $empresa->id,
-            'observaciones' => 'Test orden',
+            'observaciones_internas' => 'Test orden',
             'prioridad' => 'normal',
             'evaluados' => [
                 [
@@ -160,7 +160,7 @@ class NotificacionesEmailTest extends TestCase
         
         $response = $this->actingAs($admin)->post(route('ordenes.store'), [
             'empresa_id' => $empresa->id,
-            'observaciones' => 'Test orden sin email',
+            'observaciones_internas' => 'Test orden sin email',
             'prioridad' => 'normal',
             'evaluados' => [
                 [

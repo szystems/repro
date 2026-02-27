@@ -363,14 +363,14 @@
     </div>
     @endif
 
-    {{-- Observaciones --}}
-    @if($orden->observaciones)
+    {{-- Observaciones Internas --}}
+    @if($orden->observaciones_internas)
     <div class="seccion">
         <div class="observaciones-box">
             <div class="observaciones-titulo">
-                Observaciones
+                Observaciones Internas
             </div>
-            <div>{{ $orden->observaciones }}</div>
+            <div>{{ $orden->observaciones_internas }}</div>
         </div>
     </div>
     @endif

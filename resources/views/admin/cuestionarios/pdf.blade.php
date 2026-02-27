@@ -334,7 +334,7 @@
             'direccion_residencia' => 'Dirección de residencia',
             'departamento' => 'Departamento',
             'municipio' => 'Municipio',
-            'codigo_postal' => 'Código postal',
+
             'nivel_educativo' => 'Nivel educativo',
             'profesion_oficio' => 'Profesión u oficio',
             

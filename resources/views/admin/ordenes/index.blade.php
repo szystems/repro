@@ -131,7 +131,9 @@
                                         <th>Estado</th>
                                         <th>Evaluados</th>
                                         <th>Fechas</th>
+                                        @if(Auth::user()->role_as >= 2)
                                         <th>Prioridad</th>
+                                        @endif
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -179,7 +181,7 @@
                                         <td>
                                             <div class="small">
                                                 <strong>Solicitud:</strong> {{ $orden->fecha_solicitud ? \Carbon\Carbon::parse($orden->fecha_solicitud)->format('d/m/Y') : 'N/A' }}<br>
-                                                @if($orden->fecha_limite)
+                                                @if($orden->fecha_limite && Auth::user()->role_as >= 2)
                                                     @php
                                                         $fechaLimite = \Carbon\Carbon::parse($orden->fecha_limite);
                                                         $diasRestantes = now()->diffInDays($fechaLimite, false);
@@ -201,6 +203,7 @@
                                                 @endif
                                             </div>
                                         </td>
+                                        @if(Auth::user()->role_as >= 2)
                                         <td>
                                             @if($orden->prioridad)
                                                 <span class="badge 
@@ -215,6 +218,7 @@
                                                 <span class="badge bg-secondary">Normal</span>
                                             @endif
                                         </td>
+                                        @endif
                                         <td>
                                             <div class="btn-group btn-group-sm" role="group">
                                                 <a href="{{ route('ordenes.show', $orden) }}" class="btn btn-outline-info" title="Ver detalles">
