@@ -79,6 +79,16 @@
                 </li>
                 @endif
 
+                <!-- Módulo de Sedes (solo REPRO, role_as >= 3) -->
+                @if(Auth::user()->role_as >= 3)
+                <li class="{{ Request::is('sedes','show-sede/*','add-sede','edit-sede/*') ? 'active-page-link':''  }}">
+                    <a href="{{ url('sedes') }}">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span class="menu-text">Sedes REPRO</span>
+                    </a>
+                </li>
+                @endif
+
                 <!-- Módulo de Reportes -->
                 @if(Auth::user()->role_as >= 1)
                 <li class="menu-category">Reportes</li>

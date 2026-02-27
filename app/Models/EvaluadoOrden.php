@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Models\Sede;
 
 /**
  * Modelo para evaluados vinculados a órdenes.
@@ -39,6 +40,7 @@ class EvaluadoOrden extends Model
         'tipo_servicio',
         'tipo_formulario',
         'poligrafista_id',
+        'sede_id',
         'fecha_programada',
         'fecha_realizada',
         'estado_evaluacion',
@@ -123,6 +125,16 @@ class EvaluadoOrden extends Model
     public function poligrafista()
     {
         return $this->poligrafo();
+    }
+
+    /**
+     * Sede donde se realiza la evaluación.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class, 'sede_id');
     }
 
     /**

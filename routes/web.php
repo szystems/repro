@@ -89,6 +89,16 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('pdf-empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'pdf']);
     Route::get('pdf-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'pdfEmpresa']);
 
+    // Módulo de Sedes - Solo REPRO (role_as >= 3)
+    Route::get('sedes', [App\Http\Controllers\Admin\SedesController::class, 'index'])->name('sedes.index');
+    Route::get('add-sede', [App\Http\Controllers\Admin\SedesController::class, 'create'])->name('sedes.create');
+    Route::post('insert-sede', [App\Http\Controllers\Admin\SedesController::class, 'store'])->name('sedes.store');
+    Route::get('show-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'show'])->name('sedes.show');
+    Route::get('edit-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'edit'])->name('sedes.edit');
+    Route::put('update-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'update'])->name('sedes.update');
+    Route::get('cambiar-estado-sede/{id}/{estado}', [App\Http\Controllers\Admin\SedesController::class, 'cambiarEstado'])->name('sedes.cambiar-estado');
+    Route::delete('delete-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'destroy'])->name('sedes.destroy');
+
     // Rutas para el módulo de Órdenes - Disponible para admin, repro y empresas
     Route::resource('ordenes', OrdenesController::class)->parameters(['ordenes' => 'orden']);
 
