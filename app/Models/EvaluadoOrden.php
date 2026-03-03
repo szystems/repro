@@ -42,6 +42,7 @@ class EvaluadoOrden extends Model
         'poligrafista_id',
         'sede_id',
         'fecha_programada',
+        'fecha_hora_fin',
         'fecha_realizada',
         'estado_evaluacion',
         'resultado',
@@ -66,6 +67,7 @@ class EvaluadoOrden extends Model
      */
     protected $dates = [
         'fecha_programada',
+        'fecha_hora_fin',
         'fecha_realizada',
         'token_expira_at',
         'token_usado_at',
@@ -86,6 +88,8 @@ class EvaluadoOrden extends Model
             'cuestionario_completado' => 'boolean',
             'notificado' => 'boolean',
             'intentos_acceso' => 'integer',
+            'fecha_programada' => 'datetime',
+            'fecha_hora_fin' => 'datetime',
             'token_expira_at' => 'datetime',
             'token_usado_at' => 'datetime',
             'completado_at' => 'datetime',
@@ -218,6 +222,49 @@ class EvaluadoOrden extends Model
     {
         return $query->where('cuestionario_completado', false)
             ->where('token_expira_at', '<', now());
+    }
+
+    /**
+     * Scope: Evaluados programados (con fecha_programada asignada)
+     */
+    public function scopeProgramados($query)
+    {
+        return $query->whereNotNull('fecha_programada')
+            ->whereNotIn('estado_evaluacion', ['cancelado', 'desistio', 'inasistencia']);
+    }
+
+    /**
+     * Scope: Evaluados pendientes de programar (sin fecha_programada)
+     */
+    public function scopePendientesProgramar($query)
+    {
+        return $query->whereNull('fecha_programada')
+            ->whereNotIn('estado_evaluacion', ['cancelado', 'completado', 'desistio', 'inasistencia']);
+    }
+
+    /**
+     * Scope: Evaluados programados en un rango de fechas.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $desde  Formato Y-m-d o Y-m-d H:i:s
+     * @param string $hasta  Formato Y-m-d o Y-m-d H:i:s
+     */
+    public function scopeEnRangoFechas($query, string $desde, string $hasta)
+    {
+        return $query->programados()
+            ->where('fecha_programada', '>=', $desde)
+            ->where('fecha_programada', '<', $hasta);
+    }
+
+    /**
+     * Scope: Evaluados programados en un día específico.
+     */
+    public function scopeEnDia($query, string $fecha)
+    {
+        return $query->enRangoFechas(
+            $fecha . ' 00:00:00',
+            $fecha . ' 23:59:59'
+        );
     }
 
     /**
@@ -511,13 +558,48 @@ class EvaluadoOrden extends Model
     }
 
     /**
-     * Programar evaluación
+     * Programar evaluación con hora inicio y fin.
+     *
+     * @param string $inicio       Fecha-hora inicio (Y-m-d H:i:s)
+     * @param string $fin           Fecha-hora fin (Y-m-d H:i:s)
+     * @param int    $poligrafistaId
+     * @param int|null $sedeId
      */
-    public function programarEvaluacion(string $fecha, int $poligrafistaid): bool
+    public function programarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null): bool
     {
-        $this->fecha_programada = $fecha;
-        $this->poligrafista_id = $poligrafistaid;
+        $this->fecha_programada = $inicio;
+        $this->fecha_hora_fin = $fin;
+        $this->poligrafista_id = $poligrafistaId;
+        if ($sedeId) {
+            $this->sede_id = $sedeId;
+        }
         $this->estado_evaluacion = 'programado';
+        return $this->save();
+    }
+
+    /**
+     * Reprogramar evaluación (actualizar fecha/hora).
+     */
+    public function reprogramarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null): bool
+    {
+        $this->fecha_programada = $inicio;
+        $this->fecha_hora_fin = $fin;
+        $this->poligrafista_id = $poligrafistaId;
+        if ($sedeId) {
+            $this->sede_id = $sedeId;
+        }
+        $this->estado_evaluacion = 'programado';
+        return $this->save();
+    }
+
+    /**
+     * Cancelar cita programada.
+     */
+    public function cancelarCita(): bool
+    {
+        $this->fecha_programada = null;
+        $this->fecha_hora_fin = null;
+        $this->estado_evaluacion = 'cancelado';
         return $this->save();
     }
 

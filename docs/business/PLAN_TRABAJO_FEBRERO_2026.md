@@ -293,18 +293,22 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | 3.7 | Factory + 15 tests (33 assertions) | ✅ | `b8caf8e5` |
 
 ### FASE 4: Calendario y Agenda (Semana 4) — Extra E2 (Q4,500)
-**Calendario de programación + integración sedes + anti-traslape**
+**Calendario de programación sobre `evaluados_orden` (sin tabla nueva) + slots de 30 min + anti-traslape**
+
+> **Decisión arquitectónica:** Se usa directamente `evaluados_orden.fecha_programada` (convertida de `date` a `datetime`) en lugar de crear una tabla `programaciones` separada. Esto evita duplicación de datos y riesgo de desincronización. La programación se puede hacer desde el calendario Y desde la vista de la orden.
 
 | # | Tarea | Estado | Commit |
 |---|-------|--------|--------|
-| 4.1 | Crear tabla `programaciones` + modelo + factory | ⬜ | |
-| 4.2 | Vista mensual del calendario (estilo Google Calendar) | ⬜ | |
-| 4.3 | Vista diaria por horas (8AM-6PM) | ⬜ | |
-| 4.4 | CRUD de programaciones con integración evaluados | ⬜ | |
-| 4.5 | Filtros por tipo servicio, sede, poligrafista | ⬜ | |
-| 4.6 | Sistema anti-traslape (validación Sede.tieneTraslape) | ⬜ | |
-| 4.7 | Colores por tipo servicio (azul polígrafo, teal VSA, púrpura socio) | ⬜ | |
-| 4.8 | Tests para Fase 4 | ⬜ | |
+| 4.1 | Migración: `fecha_programada` de `date` → `datetime` + `fecha_hora_fin` + índices | ✅ | |
+| 4.2 | Modelo: scopes calendario + `programarEvaluacion()` con inicio/fin/sede | ✅ | |
+| 4.3 | `User::scopePoligrafistas()` + CalendarioController + ProgramarCitaRequest | ✅ | |
+| 4.4 | Rutas calendario + sidebar + modal programar cita en vista orden | ✅ | |
+| 4.5 | Vista mensual del calendario (contador por día, colores por tipo) | ✅ | |
+| 4.6 | Vista diaria por horas (8AM-6PM, slots 30 min, colores por tipo servicio) | ✅ | |
+| 4.7 | Programar desde calendario (click slot → modal asignar evaluado) | ✅ | |
+| 4.8 | Filtros por tipo servicio, sede, poligrafista | ✅ | |
+| 4.9 | Reprogramar + cancelar cita (ambas vistas) | ✅ | |
+| 4.10 | Tests para Fase 4 (31 tests, 74 assertions) | ✅ | |
 
 ### FASE 5: Flujos y Cierre (Semana 5)
 **Estados según diagrama de flujo, separación estados, QA final**
@@ -327,7 +331,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | Fase 1: Estructura y Datos | Semana 1 | **✅ Completada** | **9/9** |
 | Fase 2: Documentación | Semana 2 | **✅ Completada** | **12/12** |
 | **Fase 3: Sedes** | **Semana 3** | **✅ Completada** | **7/7** |
-| Fase 4: Calendario (E2) | Semana 4 | ⬜ Pendiente | 0/8 |
+| Fase 4: Calendario (E2) | Semana 4 | **✅ Completada** | **10/10** |
 | Fase 5: Flujos y Cierre | Semana 5 | ⬜ Pendiente | 0/6 |
 
 ---
@@ -345,6 +349,8 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
+| 2026-03-03 | Fase 4 completada | Calendario y Agenda — 31 tests, 74 assertions — hora inicio/fin, anti-traslape rangos, dual entry |
+| 2026-03-03 | Inicio Fase 4 | Calendario y Agenda — decisión: usar evaluados_orden directo, slots 30 min, dual entry |
 | 2026-03-02 | Ajustes UI/UX Fase 2 | Firma solo al final, acordeón evaluados, docs en cuestionario admin, botón deshabilitar |
 | 2026-02-27 | Fase 2 completada | Gestión de Documentación — 31 tests, 92 assertions — commit `34639bed` |
 | 2026-02-25 | Fase 3 completada | Módulo Sedes REPRO (E5) — commit `b8caf8e5` |
@@ -355,4 +361,4 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 ---
 
 *Documento creado: 4 de febrero de 2026*
-*Última actualización: 2 de marzo de 2026*
+*Última actualización: 3 de marzo de 2026*

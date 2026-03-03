@@ -89,6 +89,17 @@
                 </li>
                 @endif
 
+                <!-- Módulo de Calendario de Programación (role_as >= 2) -->
+                @if(Auth::user()->role_as >= 2)
+                <li class="menu-category">Programación</li>
+                <li class="{{ Request::is('calendario','calendario/*') ? 'active-page-link':''  }}">
+                    <a href="{{ url('calendario') }}">
+                        <i class="bi bi-calendar3"></i>
+                        <span class="menu-text">Calendario</span>
+                    </a>
+                </li>
+                @endif
+
                 <!-- Módulo de Reportes -->
                 @if(Auth::user()->role_as >= 1)
                 <li class="menu-category">Reportes</li>

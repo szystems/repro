@@ -1,0 +1,386 @@
+@extends('layouts.admin')
+@section('content')
+
+<div class="content-wrapper-scroll">
+
+    <div class="main-header d-flex align-items-center justify-content-between position-relative">
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="page-icon">
+                <i class="bi bi-calendar-day"></i>
+            </div>
+            <div class="page-title">
+                <h5>Agenda del {{ $fechaCarbon->translatedFormat('l j \d\e F Y') }}</h5>
+            </div>
+        </div>
+        <div class="d-flex align-items-end d-none d-sm-block">
+            <h6 class="float-end text-light" id="reloj"></h6>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+
+        {{-- Mensajes de sesión --}}
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                @foreach($errors->all() as $error)
+                    {{ $error }}<br>
+                @endforeach
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        {{-- Navegación día + botón volver --}}
+        @php
+            $diaAnterior = $fechaCarbon->copy()->subDay()->format('Y-m-d');
+            $diaSiguiente = $fechaCarbon->copy()->addDay()->format('Y-m-d');
+            $filtrosQuery = http_build_query(array_filter([
+                'sede_id' => $sedeId,
+                'poligrafista_id' => $poligrafistaId,
+                'tipo_servicio' => $tipoServicio,
+            ]));
+        @endphp
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <a href="{{ route('calendario.index', ['mes' => $fechaCarbon->month, 'anio' => $fechaCarbon->year]) }}{{ $filtrosQuery ? '&'.$filtrosQuery : '' }}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver al mes
+                </a>
+                <a href="{{ route('calendario.dia', ['fecha' => $diaAnterior]) }}{{ $filtrosQuery ? '?'.$filtrosQuery : '' }}"
+                   class="btn btn-sm btn-outline-secondary ms-1">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                <a href="{{ route('calendario.dia', ['fecha' => $diaSiguiente]) }}{{ $filtrosQuery ? '?'.$filtrosQuery : '' }}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalProgramar"
+                    onclick="prepararModalDesdeCalendario()">
+                <i class="bi bi-plus-circle"></i> Programar cita
+            </button>
+        </div>
+
+        {{-- Filtros --}}
+        <div class="row gx-3 mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header py-2">
+                        <div class="card-title mb-0"><i class="bi bi-funnel"></i> Filtros</div>
+                    </div>
+                    <div class="card-body py-2">
+                        <form action="{{ route('calendario.dia', ['fecha' => $fecha]) }}" method="GET" class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label form-label-sm mb-0">Sede</label>
+                                <select name="sede_id" class="form-select form-select-sm">
+                                    <option value="">Todas</option>
+                                    @foreach($sedes as $sede)
+                                        <option value="{{ $sede->id }}" {{ $sedeId == $sede->id ? 'selected' : '' }}>{{ $sede->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label form-label-sm mb-0">Poligrafista</label>
+                                <select name="poligrafista_id" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    @foreach($poligrafistas as $pol)
+                                        <option value="{{ $pol->id }}" {{ $poligrafistaId == $pol->id ? 'selected' : '' }}>{{ $pol->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label form-label-sm mb-0">Tipo</label>
+                                <select name="tipo_servicio" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <option value="poligrafo" {{ $tipoServicio == 'poligrafo' ? 'selected' : '' }}>Polígrafo</option>
+                                    <option value="vsa" {{ $tipoServicio == 'vsa' ? 'selected' : '' }}>VSA</option>
+                                    <option value="socioeconomico" {{ $tipoServicio == 'socioeconomico' ? 'selected' : '' }}>Socioeconómico</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i> Filtrar</button>
+                                <a href="{{ route('calendario.dia', ['fecha' => $fecha]) }}" class="btn btn-sm btn-outline-secondary">Limpiar</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Leyenda --}}
+        <div class="d-flex gap-3 mb-2">
+            <small><span class="badge bg-primary">&nbsp;</span> Polígrafo</small>
+            <small><span class="badge bg-info">&nbsp;</span> VSA</small>
+            <small><span class="badge bg-warning text-dark">&nbsp;</span> Socioeconómico</small>
+        </div>
+
+        {{-- Agenda por slots --}}
+        <div class="row gx-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <table class="table table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 100px;" class="text-center">Hora</th>
+                                    <th>Citas programadas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($slots as $slot)
+                                @php
+                                    $slotInicio = $fecha . ' ' . $slot['hora'] . ':00';
+                                    $slotFin = \Carbon\Carbon::parse($slotInicio)->addMinutes(30)->format('Y-m-d H:i:s');
+                                    // Citas que cubren este slot (su inicio < fin del slot Y su fin > inicio del slot)
+                                    $citasEnSlot = $citas->filter(function ($c) use ($slotInicio, $slotFin) {
+                                        $cInicio = \Carbon\Carbon::parse($c->fecha_programada);
+                                        $cFin = $c->fecha_hora_fin ? \Carbon\Carbon::parse($c->fecha_hora_fin) : $cInicio->copy()->addHours(2);
+                                        return $cInicio->format('Y-m-d H:i:s') < $slotFin && $cFin->format('Y-m-d H:i:s') > $slotInicio;
+                                    });
+                                    $tieneSlotPasado = \Carbon\Carbon::parse($slotInicio)->isPast();
+                                @endphp
+                                <tr class="{{ $tieneSlotPasado ? 'bg-light' : '' }}">
+                                    <td class="text-center align-middle fw-bold {{ $tieneSlotPasado ? 'text-muted' : '' }}">
+                                        {{ $slot['label'] }}
+                                    </td>
+                                    <td class="p-2">
+                                        @if($citasEnSlot->count() > 0)
+                                            @foreach($citasEnSlot as $cita)
+                                            @php
+                                                $colorClase = match($cita->tipo_servicio) {
+                                                    'poligrafo' => 'bg-primary',
+                                                    'vsa' => 'bg-info',
+                                                    'socioeconomico' => 'bg-warning text-dark',
+                                                    default => 'bg-secondary',
+                                                };
+                                                $horaInicioCita = \Carbon\Carbon::parse($cita->fecha_programada)->format('h:i A');
+                                                $horaFinCita = $cita->fecha_hora_fin ? \Carbon\Carbon::parse($cita->fecha_hora_fin)->format('h:i A') : '--';
+                                                // Solo mostrar detalle si este es el slot de inicio
+                                                $esSlotInicio = \Carbon\Carbon::parse($cita->fecha_programada)->format('H:i') == $slot['hora'];
+                                            @endphp
+                                                @if($esSlotInicio)
+                                                <div class="d-flex align-items-center justify-content-between mb-1 p-2 rounded {{ $colorClase }} bg-opacity-10 border-start border-4 {{ str_replace('bg-', 'border-', explode(' ', $colorClase)[0]) }}">
+                                                    <div>
+                                                        <strong>{{ $cita->nombre }} {{ $cita->apellidos }}</strong>
+                                                        <small class="text-muted ms-2">{{ $horaInicioCita }} - {{ $horaFinCita }}</small>
+                                                        <br>
+                                                        <small>
+                                                            <span class="badge {{ $colorClase }} badge-sm">{{ $cita->tipo_servicio_texto }}</span>
+                                                            @if($cita->sede)
+                                                                <i class="bi bi-geo-alt"></i> {{ $cita->sede->nombre }}
+                                                            @endif
+                                                            @if($cita->poligrafo)
+                                                                <i class="bi bi-person ms-1"></i> {{ $cita->poligrafo->name }}
+                                                            @endif
+                                                            @if($cita->orden && $cita->orden->empresa)
+                                                                <i class="bi bi-building ms-1"></i> {{ $cita->orden->empresa->nombre }}
+                                                            @endif
+                                                        </small>
+                                                    </div>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary btn-sm" title="Reprogramar"
+                                                                data-bs-toggle="modal" data-bs-target="#modalProgramar"
+                                                                onclick="prepararModalReprogramar({{ $cita->id }}, '{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->format('Y-m-d') : '' }}', '{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->format('H:i') : '' }}', '{{ $cita->fecha_hora_fin ? \Carbon\Carbon::parse($cita->fecha_hora_fin)->format('H:i') : '' }}', {{ $cita->poligrafista_id ?? 'null' }}, {{ $cita->sede_id ?? 'null' }})">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <form action="{{ route('calendario.cancelar', $cita->id) }}" method="POST"
+                                                              onsubmit="return confirm('¿Cancelar esta cita?');" class="d-inline">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Cancelar cita">
+                                                                <i class="bi bi-x-circle"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                                @else
+                                                {{-- Slot de continuación: indicador sutil --}}
+                                                <div class="p-1 rounded {{ $colorClase }} bg-opacity-10 border-start border-4 {{ str_replace('bg-', 'border-', explode(' ', $colorClase)[0]) }} mb-1">
+                                                    <small class="text-muted"><i class="bi bi-arrow-up"></i> {{ $cita->nombre }} {{ $cita->apellidos }} (cont.)</small>
+                                                </div>
+                                                @endif
+                                            @endforeach
+                                        @else
+                                            @if(!$tieneSlotPasado)
+                                            <button class="btn btn-sm btn-outline-success w-100 py-0"
+                                                    data-bs-toggle="modal" data-bs-target="#modalProgramar"
+                                                    onclick="prepararModalDesdeSlot('{{ $slot['hora'] }}')">
+                                                <small><i class="bi bi-plus"></i> Agendar</small>
+                                            </button>
+                                            @else
+                                            <small class="text-muted">—</small>
+                                            @endif
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{{-- Modal Programar / Reprogramar Cita --}}
+<div class="modal fade" id="modalProgramar" tabindex="-1" aria-labelledby="modalProgramarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formProgramar" method="POST" action="{{ route('calendario.programar') }}">
+                @csrf
+                <input type="hidden" name="_method" id="formMethod" value="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalProgramarLabel">
+                        <i class="bi bi-calendar-plus"></i> Programar Cita
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {{-- Evaluado --}}
+                    <div class="mb-3" id="divEvaluado">
+                        <label class="form-label fw-bold">Evaluado</label>
+                        <select name="evaluado_orden_id" id="evaluado_orden_id" class="form-select" required>
+                            <option value="">Seleccionar evaluado...</option>
+                            @foreach($evaluadosPendientes as $ev)
+                                <option value="{{ $ev->id }}">
+                                    {{ $ev->nombre }} {{ $ev->apellidos }} — DPI: {{ $ev->dpi }}
+                                    @if($ev->orden && $ev->orden->empresa)
+                                        ({{ $ev->orden->empresa->nombre }})
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Solo evaluados pendientes de programar.</small>
+                    </div>
+
+                    {{-- Fecha --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fecha</label>
+                        <input type="date" name="fecha" id="modalFecha" class="form-control"
+                               value="{{ $fecha }}" required min="{{ now()->format('Y-m-d') }}">
+                    </div>
+
+                    {{-- Hora inicio / fin --}}
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Hora inicio</label>
+                            <select name="hora_inicio" id="modalHoraInicio" class="form-select" required>
+                                @for($h = 8; $h < 18; $h++)
+                                    @for($m = 0; $m < 60; $m += 30)
+                                        @php $hora = sprintf('%02d:%02d', $h, $m); @endphp
+                                        <option value="{{ $hora }}">{{ \Carbon\Carbon::parse($hora)->format('h:i A') }}</option>
+                                    @endfor
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Hora fin</label>
+                            <select name="hora_fin" id="modalHoraFin" class="form-select" required>
+                                @for($h = 8; $h <= 18; $h++)
+                                    @for($m = 0; $m < 60; $m += 30)
+                                        @php
+                                            $hora = sprintf('%02d:%02d', $h, $m);
+                                            if ($h == 18 && $m > 0) continue;
+                                        @endphp
+                                        <option value="{{ $hora }}">{{ \Carbon\Carbon::parse($hora)->format('h:i A') }}</option>
+                                    @endfor
+                                @endfor
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Sede --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Sede</label>
+                        <select name="sede_id" id="modalSedeId" class="form-select" required>
+                            <option value="">Seleccionar sede...</option>
+                            @foreach($sedes as $sede)
+                                <option value="{{ $sede->id }}">{{ $sede->nombre }} (Cap: {{ $sede->capacidad ?? 'N/A' }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Poligrafista --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Poligrafista / Evaluador</label>
+                        <select name="poligrafista_id" id="modalPoligrafistaId" class="form-select" required>
+                            <option value="">Seleccionar evaluador...</option>
+                            @foreach($poligrafistas as $pol)
+                                <option value="{{ $pol->id }}">{{ $pol->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success" id="btnSubmitProgramar">
+                        <i class="bi bi-check-circle"></i> Programar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Preparar modal desde el botón general "Programar cita"
+     */
+    function prepararModalDesdeCalendario() {
+        document.getElementById('formProgramar').action = '{{ route("calendario.programar") }}';
+        document.getElementById('formMethod').value = 'POST';
+        document.getElementById('modalProgramarLabel').innerHTML = '<i class="bi bi-calendar-plus"></i> Programar Cita';
+        document.getElementById('btnSubmitProgramar').innerHTML = '<i class="bi bi-check-circle"></i> Programar';
+        document.getElementById('divEvaluado').style.display = 'block';
+        document.getElementById('evaluado_orden_id').required = true;
+        document.getElementById('modalFecha').value = '{{ $fecha }}';
+        document.getElementById('modalHoraInicio').value = '08:00';
+        document.getElementById('modalHoraFin').value = '10:00';
+        document.getElementById('modalSedeId').value = '{{ $sedeId ?? "" }}';
+        document.getElementById('modalPoligrafistaId').value = '{{ $poligrafistaId ?? "" }}';
+    }
+
+    /**
+     * Preparar modal desde un slot vacío
+     */
+    function prepararModalDesdeSlot(hora) {
+        prepararModalDesdeCalendario();
+        document.getElementById('modalHoraInicio').value = hora;
+        // Calcular hora fin (+2h por defecto)
+        var parts = hora.split(':');
+        var h = parseInt(parts[0]) + 2;
+        if (h > 18) h = 18;
+        var fin = (h < 10 ? '0' : '') + h + ':' + parts[1];
+        document.getElementById('modalHoraFin').value = fin;
+    }
+
+    /**
+     * Preparar modal para reprogramar una cita existente
+     */
+    function prepararModalReprogramar(evaluadoId, fecha, horaInicio, horaFin, poligrafistaId, sedeId) {
+        document.getElementById('formProgramar').action = '/calendario/evaluados/' + evaluadoId + '/reprogramar';
+        document.getElementById('formMethod').value = 'PATCH';
+        document.getElementById('modalProgramarLabel').innerHTML = '<i class="bi bi-pencil"></i> Reprogramar Cita';
+        document.getElementById('btnSubmitProgramar').innerHTML = '<i class="bi bi-check-circle"></i> Reprogramar';
+        // Ocultar selector de evaluado (ya está seleccionado)
+        document.getElementById('divEvaluado').style.display = 'none';
+        document.getElementById('evaluado_orden_id').required = false;
+        document.getElementById('evaluado_orden_id').value = evaluadoId;
+        document.getElementById('modalFecha').value = fecha;
+        document.getElementById('modalHoraInicio').value = horaInicio;
+        document.getElementById('modalHoraFin').value = horaFin;
+        if (poligrafistaId) document.getElementById('modalPoligrafistaId').value = poligrafistaId;
+        if (sedeId) document.getElementById('modalSedeId').value = sedeId;
+    }
+</script>
+
+@endsection

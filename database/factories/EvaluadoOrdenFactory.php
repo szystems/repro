@@ -94,4 +94,22 @@ class EvaluadoOrdenFactory extends Factory
             'notificado_at' => now()->subHours(rand(1, 24)),
         ]);
     }
+
+    /**
+     * State: Programado (con cita agendada — inicio, fin, sede, poligrafista)
+     */
+    public function programado(): static
+    {
+        return $this->state(function (array $attributes) {
+            $inicio = $this->faker->dateTimeBetween('+1 day', '+30 days');
+            $inicio->setTime($this->faker->numberBetween(8, 15), $this->faker->randomElement([0, 30]));
+            $fin = (clone $inicio)->modify('+2 hours');
+
+            return [
+                'fecha_programada' => $inicio,
+                'fecha_hora_fin' => $fin,
+                'estado_evaluacion' => 'programado',
+            ];
+        });
+    }
 }

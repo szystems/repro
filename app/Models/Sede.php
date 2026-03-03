@@ -43,21 +43,26 @@ class Sede extends Model
     }
 
     /**
-     * Verifica si hay traslape: misma sede + mismo poligrafista + misma fecha = conflicto.
+     * Verifica si hay traslape de horario usando solapamiento de rangos.
+     *
      * Reglas de negocio:
-     *   - Misma sede + misma hora + mismo evaluador  → NO permitido
-     *   - Misma hora + diferente sede                → Permitido
-     *   - Misma sede + misma hora + diferente eval.  → Permitido
+     *   - Misma sede + mismo poligrafista + rango que se cruza → NO permitido
+     *   - Diferente sede o diferente poligrafista             → Permitido
+     *   - Citas canceladas/desistió/inasistencia              → Ignoradas
+     *
+     * Fórmula de solapamiento: existente.inicio < nuevo.fin AND existente.fin > nuevo.inicio
      *
      * @param int      $poligrafistaId
-     * @param string   $fechaProgramada  formato Y-m-d H:i:s
-     * @param int|null $excludeEvaluadoId  excluir al editar
+     * @param string   $inicio           Fecha-hora inicio (Y-m-d H:i:s)
+     * @param string   $fin              Fecha-hora fin (Y-m-d H:i:s)
+     * @param int|null $excludeEvaluadoId  Excluir al reprogramar
      */
-    public function tieneTraslape(int $poligrafistaId, string $fechaProgramada, ?int $excludeEvaluadoId = null): bool
+    public function tieneTraslape(int $poligrafistaId, string $inicio, string $fin, ?int $excludeEvaluadoId = null): bool
     {
         $query = $this->evaluados()
             ->where('poligrafista_id', $poligrafistaId)
-            ->where('fecha_programada', $fechaProgramada)
+            ->where('fecha_programada', '<', $fin)
+            ->where('fecha_hora_fin', '>', $inicio)
             ->whereNotIn('estado_evaluacion', ['cancelado', 'desistio', 'inasistencia']);
 
         if ($excludeEvaluadoId) {
@@ -65,5 +70,20 @@ class Sede extends Model
         }
 
         return $query->exists();
+    }
+
+    /**
+     * Obtener evaluados programados para un día específico en esta sede.
+     *
+     * @param string $fecha  Formato Y-m-d
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function evaluadosDelDia(string $fecha)
+    {
+        return $this->evaluados()
+            ->enDia($fecha)
+            ->with(['poligrafo', 'orden.empresa'])
+            ->orderBy('fecha_programada')
+            ->get();
     }
 }

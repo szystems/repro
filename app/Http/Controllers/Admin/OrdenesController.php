@@ -8,6 +8,7 @@ use App\Mail\EvaluadoAsignadoMail;
 use App\Models\Orden;
 use App\Models\EvaluadoOrden;
 use App\Models\Empresa;
+use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -236,7 +237,7 @@ class OrdenesController extends Controller
             'empresa',
             'creador',
             'evaluados' => function($query) {
-                $query->with(['poligrafista', 'cuestionario', 'documentos'])->orderBy('nombre');
+                $query->with(['poligrafista', 'sede', 'cuestionario', 'documentos'])->orderBy('nombre');
             }
         ]);
 
@@ -249,7 +250,11 @@ class OrdenesController extends Controller
             'cancelado' => 'Cancelado'
         ];
 
-        return view('admin.ordenes.show', compact('orden', 'estados'));
+        // Datos para modal de programar cita
+        $sedes = Sede::activas()->orderBy('nombre')->get();
+        $poligrafistas = User::poligrafistas()->get();
+
+        return view('admin.ordenes.show', compact('orden', 'estados', 'sedes', 'poligrafistas'));
     }
 
     /**

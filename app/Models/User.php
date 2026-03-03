@@ -168,6 +168,19 @@ class User extends Authenticatable
         })->get();
     }
 
+    // ==================== Scopes ====================
+
+    /**
+     * Scope: Usuarios que pueden ser poligrafistas (admin y repro).
+     * Los poligrafistas son usuarios REPRO (role_as >= 2) con estado activo.
+     */
+    public function scopePoligrafistas($query)
+    {
+        return $query->where('role_as', '>=', 2)
+            ->where('estado', 1)
+            ->orderBy('name');
+    }
+
     // ==================== Métodos de compatibilidad con role_as ====================
 
     /**

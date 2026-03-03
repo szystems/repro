@@ -99,6 +99,13 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('cambiar-estado-sede/{id}/{estado}', [App\Http\Controllers\Admin\SedesController::class, 'cambiarEstado'])->name('sedes.cambiar-estado');
     Route::delete('delete-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'destroy'])->name('sedes.destroy');
 
+    // Módulo Calendario de Programación - REPRO (role_as >= 2)
+    Route::get('calendario', [App\Http\Controllers\Admin\CalendarioController::class, 'index'])->name('calendario.index');
+    Route::get('calendario/dia/{fecha}', [App\Http\Controllers\Admin\CalendarioController::class, 'dia'])->name('calendario.dia');
+    Route::post('calendario/programar', [App\Http\Controllers\Admin\CalendarioController::class, 'programar'])->name('calendario.programar');
+    Route::patch('calendario/evaluados/{evaluado}/reprogramar', [App\Http\Controllers\Admin\CalendarioController::class, 'reprogramar'])->name('calendario.reprogramar');
+    Route::delete('calendario/evaluados/{evaluado}/cancelar', [App\Http\Controllers\Admin\CalendarioController::class, 'cancelar'])->name('calendario.cancelar');
+
     // Rutas para el módulo de Órdenes - Disponible para admin, repro y empresas
     Route::resource('ordenes', OrdenesController::class)->parameters(['ordenes' => 'orden']);
 

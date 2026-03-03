@@ -157,11 +157,11 @@
                                 <label class="form-label fw-bold">Polígrafos Asignados</label>
                                 <div>
                                     @php
-                                        $poligrafistas = $orden->evaluados->whereNotNull('poligrafista_id')->pluck('poligrafista.name')->unique();
+                                        $poligrafistasAsignados = $orden->evaluados->whereNotNull('poligrafista_id')->pluck('poligrafista.name')->unique();
                                     @endphp
-                                    @if($poligrafistas->isNotEmpty())
-                                        @foreach($poligrafistas as $poligrafista)
-                                            <span class="badge bg-info me-1">{{ $poligrafista }}</span>
+                                    @if($poligrafistasAsignados->isNotEmpty())
+                                        @foreach($poligrafistasAsignados as $polAsignado)
+                                            <span class="badge bg-info me-1">{{ $polAsignado }}</span>
                                         @endforeach
                                     @else
                                         <span class="text-muted">Sin asignar</span>
@@ -446,11 +446,35 @@
                                                 <small class="text-muted d-block">Programación</small>
                                                 @if($evaluado->fecha_programada)
                                                     <i class="bi bi-calendar"></i> {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('d/m/Y') }}
+                                                    <br><small class="text-muted">
+                                                        <i class="bi bi-clock"></i>
+                                                        {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('h:i A') }}
+                                                        @if($evaluado->fecha_hora_fin)
+                                                            - {{ \Carbon\Carbon::parse($evaluado->fecha_hora_fin)->format('h:i A') }}
+                                                        @endif
+                                                    </small>
+                                                    @if($evaluado->sede)
+                                                        <br><small class="text-muted"><i class="bi bi-geo-alt"></i> {{ $evaluado->sede->nombre }}</small>
+                                                    @endif
                                                 @else
                                                     <span class="text-muted">Sin programar</span>
                                                 @endif
                                                 @if($evaluado->poligrafista)
                                                     <br><small class="text-muted"><i class="bi bi-person"></i> {{ $evaluado->poligrafista->name }}</small>
+                                                @endif
+                                                @if(Auth::user()->role_as >= 2)
+                                                    <br>
+                                                    @if($evaluado->fecha_programada)
+                                                        <a href="{{ route('calendario.dia', ['fecha' => \Carbon\Carbon::parse($evaluado->fecha_programada)->format('Y-m-d')]) }}"
+                                                           class="btn btn-outline-info btn-sm mt-1" title="Ver en calendario">
+                                                            <i class="bi bi-calendar3"></i> Ver en calendario
+                                                        </a>
+                                                    @endif
+                                                    <button type="button" class="btn btn-outline-success btn-sm mt-1"
+                                                            data-bs-toggle="modal" data-bs-target="#modalProgramarEv{{ $evaluado->id }}"
+                                                            title="{{ $evaluado->fecha_programada ? 'Reprogramar cita' : 'Programar cita' }}">
+                                                        <i class="bi bi-calendar-plus"></i> {{ $evaluado->fecha_programada ? 'Reprogramar' : 'Programar cita' }}
+                                                    </button>
                                                 @endif
                                             </div>
                                             <div class="col-md-4">
@@ -667,6 +691,97 @@
                                         </div>
 
                                     </div>
+
+                                    {{-- Modal Programar/Reprogramar cita --}}
+                                    @if(Auth::user()->role_as >= 2)
+                                    <div class="modal fade" id="modalProgramarEv{{ $evaluado->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form action="{{ route('calendario.programar') }}" method="POST">
+                                                    @csrf
+                                                    <input type="hidden" name="evaluado_orden_id" value="{{ $evaluado->id }}">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">
+                                                            <i class="bi bi-calendar-plus"></i>
+                                                            {{ $evaluado->fecha_programada ? 'Reprogramar' : 'Programar' }} cita — {{ $evaluado->nombre }} {{ $evaluado->apellidos }}
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold">Fecha</label>
+                                                            <input type="date" name="fecha" class="form-control" required
+                                                                   min="{{ now()->format('Y-m-d') }}"
+                                                                   value="{{ $evaluado->fecha_programada ? \Carbon\Carbon::parse($evaluado->fecha_programada)->format('Y-m-d') : '' }}">
+                                                        </div>
+                                                        <div class="row mb-3">
+                                                            <div class="col-6">
+                                                                <label class="form-label fw-bold">Hora inicio</label>
+                                                                <select name="hora_inicio" class="form-select" required>
+                                                                    @for($h = 8; $h < 18; $h++)
+                                                                        @for($m = 0; $m < 60; $m += 30)
+                                                                            @php $horaOpt = sprintf('%02d:%02d', $h, $m); @endphp
+                                                                            <option value="{{ $horaOpt }}"
+                                                                                {{ $evaluado->fecha_programada && \Carbon\Carbon::parse($evaluado->fecha_programada)->format('H:i') == $horaOpt ? 'selected' : '' }}>
+                                                                                {{ \Carbon\Carbon::parse($horaOpt)->format('h:i A') }}
+                                                                            </option>
+                                                                        @endfor
+                                                                    @endfor
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <label class="form-label fw-bold">Hora fin</label>
+                                                                <select name="hora_fin" class="form-select" required>
+                                                                    @for($h = 8; $h <= 18; $h++)
+                                                                        @for($m = 0; $m < 60; $m += 30)
+                                                                            @php
+                                                                                $horaOpt = sprintf('%02d:%02d', $h, $m);
+                                                                                if ($h == 18 && $m > 0) continue;
+                                                                            @endphp
+                                                                            <option value="{{ $horaOpt }}"
+                                                                                {{ $evaluado->fecha_hora_fin && \Carbon\Carbon::parse($evaluado->fecha_hora_fin)->format('H:i') == $horaOpt ? 'selected' : '' }}>
+                                                                                {{ \Carbon\Carbon::parse($horaOpt)->format('h:i A') }}
+                                                                            </option>
+                                                                        @endfor
+                                                                    @endfor
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold">Sede</label>
+                                                            <select name="sede_id" class="form-select" required>
+                                                                <option value="">Seleccionar sede...</option>
+                                                                @foreach($sedes as $sede)
+                                                                    <option value="{{ $sede->id }}" {{ $evaluado->sede_id == $sede->id ? 'selected' : '' }}>
+                                                                        {{ $sede->nombre }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold">Poligrafista / Evaluador</label>
+                                                            <select name="poligrafista_id" class="form-select" required>
+                                                                <option value="">Seleccionar evaluador...</option>
+                                                                @foreach($poligrafistas as $pol)
+                                                                    <option value="{{ $pol->id }}" {{ $evaluado->poligrafista_id == $pol->id ? 'selected' : '' }}>
+                                                                        {{ $pol->name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                        <button type="submit" class="btn btn-success">
+                                                            <i class="bi bi-check-circle"></i> {{ $evaluado->fecha_programada ? 'Reprogramar' : 'Programar' }}
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+
                                 </div>
                             </div>
                             @endforeach
