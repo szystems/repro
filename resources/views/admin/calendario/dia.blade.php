@@ -207,16 +207,16 @@
                                                 </div>
                                                 @endif
                                             @endforeach
-                                        @else
-                                            @if(!$tieneSlotPasado)
-                                            <button class="btn btn-sm btn-outline-success w-100 py-0"
-                                                    data-bs-toggle="modal" data-bs-target="#modalProgramar"
-                                                    onclick="prepararModalDesdeSlot('{{ $slot['hora'] }}')">
-                                                <small><i class="bi bi-plus"></i> Agendar</small>
-                                            </button>
-                                            @else
-                                            <small class="text-muted">—</small>
-                                            @endif
+                                        @endif
+                                        {{-- Botón Agendar: siempre visible en slots futuros (el anti-traslape se valida en backend) --}}
+                                        @if(!$tieneSlotPasado)
+                                        <button class="btn btn-sm btn-outline-success {{ $citasEnSlot->count() > 0 ? 'mt-1' : 'w-100' }} py-0"
+                                                data-bs-toggle="modal" data-bs-target="#modalProgramar"
+                                                onclick="prepararModalDesdeSlot('{{ $slot['hora'] }}')">
+                                            <small><i class="bi bi-plus"></i> Agendar</small>
+                                        </button>
+                                        @elseif($citasEnSlot->count() === 0)
+                                        <small class="text-muted">—</small>
                                         @endif
                                     </td>
                                 </tr>

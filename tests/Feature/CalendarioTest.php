@@ -215,6 +215,27 @@ class CalendarioTest extends TestCase
             });
     }
 
+    public function test_dia_muestra_boton_agendar_en_slot_con_citas_de_otro_evaluador(): void
+    {
+        $sede = Sede::factory()->create(['estado' => 1]);
+        $polA = $this->usuarioRepro();
+
+        // Cita existente de polA a las 09:00
+        $this->crearEvaluado([
+            'fecha_programada' => '2026-03-15 09:00:00',
+            'fecha_hora_fin' => '2026-03-15 11:00:00',
+            'sede_id' => $sede->id,
+            'poligrafista_id' => $polA->id,
+            'estado_evaluacion' => 'programado',
+        ]);
+
+        // Sin filtro de evaluador, el botón Agendar debe seguir visible en ese slot
+        $this->actingAs($polA)
+            ->get('/calendario/dia/2026-03-15')
+            ->assertOk()
+            ->assertSee('Agendar');
+    }
+
     // -------------------------------------------------------
     // Programar Cita
     // -------------------------------------------------------
