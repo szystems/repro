@@ -163,12 +163,10 @@ class CuestionarioController extends Controller
     {
         $request->validate([
             'acepta_terminos'    => 'required|accepted',
-            'firma_autorizacion' => 'required|string',
             'tipo_proceso'       => 'nullable|string',
         ], [
             'acepta_terminos.required' => 'Debe aceptar los términos y condiciones.',
             'acepta_terminos.accepted' => 'Debe aceptar los términos y condiciones.',
-            'firma_autorizacion.required' => 'Debe proporcionar su firma de autorización.',
         ]);
 
         $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
@@ -181,7 +179,6 @@ class CuestionarioController extends Controller
         $cuestionario->update([
             'acepta_terminos'    => true,
             'acepta_terminos_at' => now(),
-            'firma_autorizacion' => $request->firma_autorizacion,
             'ip_terminos'        => $request->ip(),
         ]);
 

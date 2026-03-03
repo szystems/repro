@@ -252,7 +252,6 @@ class Fase2DocumentacionTest extends TestCase
 
         $response = $this->post(route('cuestionario.aceptar-terminos', $this->evaluado->token_unico), [
             'acepta_terminos' => '1',
-            'firma_autorizacion' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==',
             'tipo_proceso' => 'socioeconomico',
         ]);
 
@@ -260,11 +259,10 @@ class Fase2DocumentacionTest extends TestCase
         $cuestionario->refresh();
         $this->assertTrue($cuestionario->acepta_terminos);
         $this->assertNotNull($cuestionario->acepta_terminos_at);
-        $this->assertNotNull($cuestionario->firma_autorizacion);
         $this->assertNotNull($cuestionario->ip_terminos);
     }
 
-    public function test_aceptar_terminos_requiere_firma(): void
+    public function test_aceptar_terminos_requiere_checkbox(): void
     {
         $cuestionario = Cuestionario::create([
             'evaluado_orden_id' => $this->evaluado->id,
@@ -276,11 +274,10 @@ class Fase2DocumentacionTest extends TestCase
         ]);
 
         $response = $this->post(route('cuestionario.aceptar-terminos', $this->evaluado->token_unico), [
-            'acepta_terminos' => '1',
-            // Sin firma
+            // Sin checkbox de aceptación
         ]);
 
-        $response->assertSessionHasErrors('firma_autorizacion');
+        $response->assertSessionHasErrors('acepta_terminos');
     }
 
     public function test_redirige_a_seccion_si_ya_acepto_terminos(): void
@@ -499,6 +496,82 @@ class Fase2DocumentacionTest extends TestCase
     {
         $response = $this->actingAs($this->adminUser)->post(
             route('evaluados.rehabilitar-cuestionario', $this->evaluado->id)
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHas('warning');
+    }
+
+    // ══════════════════════════════════════════
+    // DESHABILITAR CUESTIONARIO
+    // ══════════════════════════════════════════
+
+    public function test_admin_puede_deshabilitar_cuestionario(): void
+    {
+        // Crear evaluado pendiente con cuestionario (como si se hubiera rehabilitado)
+        $evaluadoPendiente = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->orden->id,
+            'cuestionario_completado' => false,
+            'estado_evaluacion' => 'pendiente',
+        ]);
+
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluadoPendiente->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 1,
+            'total_secciones' => 5,
+            'completado' => false,
+            'bloqueado' => false,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->post(
+            route('evaluados.deshabilitar-cuestionario', $evaluadoPendiente->id)
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $evaluadoPendiente->refresh();
+        $cuestionario->refresh();
+
+        $this->assertTrue($evaluadoPendiente->cuestionario_completado);
+        $this->assertEquals('completado', $evaluadoPendiente->estado_evaluacion);
+        $this->assertTrue($cuestionario->completado);
+        $this->assertTrue($cuestionario->bloqueado);
+    }
+
+    public function test_empresa_no_puede_deshabilitar_cuestionario(): void
+    {
+        $evaluadoPendiente = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->orden->id,
+            'cuestionario_completado' => false,
+        ]);
+
+        Cuestionario::create([
+            'evaluado_orden_id' => $evaluadoPendiente->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 1,
+            'total_secciones' => 5,
+            'completado' => false,
+            'bloqueado' => false,
+        ]);
+
+        $response = $this->actingAs($this->empresaUser)->post(
+            route('evaluados.deshabilitar-cuestionario', $evaluadoPendiente->id)
+        );
+
+        $response->assertForbidden();
+    }
+
+    public function test_no_se_puede_deshabilitar_cuestionario_ya_completado(): void
+    {
+        $evaluadoCompletado = EvaluadoOrden::factory()->completado()->create([
+            'orden_id' => $this->orden->id,
+            'estado_evaluacion' => 'completado',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->post(
+            route('evaluados.deshabilitar-cuestionario', $evaluadoCompletado->id)
         );
 
         $response->assertRedirect();

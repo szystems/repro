@@ -257,19 +257,27 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | 1.8 | Regla socioeconómico → solo formulario preempleo (validación en controller/request) | ✅ | `fase1` |
 | 1.9 | Tests para todos los cambios de Fase 1 (16 tests, 40 assertions) | ✅ | `fase1` |
 
-### FASE 2: Gestión de Documentación (Semana 2)
+### FASE 2: Gestión de Documentación (Semana 2) ✅ COMPLETADA
 **Documentos, términos, archivos resultado, email, rehabilitación**
 
 | # | Tarea | Estado | Commit |
 |---|-------|--------|--------|
-| 2.1 | Crear tabla `evaluado_documentos` + modelo + factory | ⬜ | |
-| 2.2 | Subida de documentos desde Empresa y REPRO | ⬜ | |
-| 2.3 | Subida de documentos desde Evaluado (en cuestionario) | ⬜ | |
-| 2.4 | Pantalla de Términos y Condiciones con firma digital | ⬜ | |
-| 2.5 | Archivos de resultado doble (preliminar + final) | ⬜ | |
-| 2.6 | Notificación email al activar resultados visibles | ⬜ | |
-| 2.7 | Rehabilitación de cuestionario completado | ⬜ | |
-| 2.8 | Tests para Fase 2 | ⬜ | |
+| 2.1 | Crear tabla `documento_evaluados` + modelo DocumentoEvaluado + factory (12 tipos) | ✅ | `34639bed` |
+| 2.2 | Subida de documentos desde Empresa y REPRO (admin controller + vistas) | ✅ | `34639bed` |
+| 2.3 | Subida de documentos desde Evaluado (en cuestionario, página de finalización) | ✅ | `34639bed` |
+| 2.4 | Pantalla de Términos y Condiciones con checkbox de aceptación | ✅ | `34639bed` |
+| 2.5 | Archivos de resultado doble (preliminar + final) por evaluado | ✅ | `34639bed` |
+| 2.6 | Notificación email al activar resultados visibles para empresa | ✅ | `34639bed` |
+| 2.7 | Rehabilitación + deshabilitación de cuestionario completado | ✅ | `34639bed` |
+| 2.8 | Tests para Fase 2 (31 tests, 92 assertions) | ✅ | `34639bed` |
+
+#### Ajustes post-Fase 2 (mejoras UI/UX)
+| # | Tarea | Estado | Detalle |
+|---|-------|--------|--------|
+| 2.9 | Firma solo en página de finalización (quitada de términos) | ✅ | Obs. 1 |
+| 2.10 | Vista orden: evaluados + docs + resultados en acordeón unificado | ✅ | Obs. 2 |
+| 2.11 | Vista cuestionario admin: sección de documentos con verificación | ✅ | Obs. 3 |
+| 2.12 | Botón "Deshabilitar" cuestionario (reversa de rehabilitar) | ✅ | Obs. 4 |
 
 ### FASE 3: Módulo de Sedes (Semana 3) ✅ COMPLETADA
 **CRUD completo de sedes, integración con evaluados**
@@ -317,7 +325,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | Fase | Semana | Estado | Progreso |
 |------|--------|--------|----------|
 | Fase 1: Estructura y Datos | Semana 1 | **✅ Completada** | **9/9** |
-| Fase 2: Documentación | Semana 2 | ⬜ Pendiente | 0/8 |
+| Fase 2: Documentación | Semana 2 | **✅ Completada** | **12/12** |
 | **Fase 3: Sedes** | **Semana 3** | **✅ Completada** | **7/7** |
 | Fase 4: Calendario (E2) | Semana 4 | ⬜ Pendiente | 0/8 |
 | Fase 5: Flujos y Cierre | Semana 5 | ⬜ Pendiente | 0/6 |
@@ -337,6 +345,8 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
+| 2026-03-02 | Ajustes UI/UX Fase 2 | Firma solo al final, acordeón evaluados, docs en cuestionario admin, botón deshabilitar |
+| 2026-02-27 | Fase 2 completada | Gestión de Documentación — 31 tests, 92 assertions — commit `34639bed` |
 | 2026-02-25 | Fase 3 completada | Módulo Sedes REPRO (E5) — commit `b8caf8e5` |
 | 2026-02-26 | Fase 1 completada | Estructura y Datos — 16 tests, 40 assertions — commit `59f11c25` |
 | 2026-02-26 | Inicio Fase 1 | Ajustes de campos, localización, reglas de negocio |
@@ -345,4 +355,4 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 ---
 
 *Documento creado: 4 de febrero de 2026*
-*Última actualización: 26 de febrero de 2026*
+*Última actualización: 2 de marzo de 2026*

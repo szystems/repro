@@ -369,122 +369,144 @@
         <div class="row gx-3 mt-3">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Evaluados Asignados ({{ $orden->evaluados->count() }})</div>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="card-title mb-0">Evaluados Asignados ({{ $orden->evaluados->count() }})</div>
+                        <div>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="toggleAllAccordions(true)">
+                                <i class="bi bi-arrows-expand"></i> Expandir todos
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="toggleAllAccordions(false)">
+                                <i class="bi bi-arrows-collapse"></i> Colapsar todos
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre</th>
-                                        <th>DPI</th>
-                                        <th>Servicio/Formulario</th>
-                                        <th>Programación</th>
-                                        <th>Contacto</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($orden->evaluados as $evaluado)
-                                    <tr>
-                                        <td>
-                                            <strong>{{ $evaluado->nombre }}</strong>
-                                            @if($evaluado->apellidos)
-                                                <br><small class="text-muted">{{ $evaluado->apellidos }}</small>
-                                            @endif
-                                        </td>
-                                        <td><code>{{ $evaluado->dpi }}</code></td>
-                                        <td>
-                                            <span class="badge
-                                                @if($evaluado->tipo_servicio == 'poligrafo') bg-primary
-                                                @elseif($evaluado->tipo_servicio == 'vsa') bg-info
-                                                @else bg-warning
-                                                @endif">
-                                                @if($evaluado->tipo_servicio == 'poligrafo') Polígrafo
-                                                @elseif($evaluado->tipo_servicio == 'vsa') VSA
-                                                @else Socioeconómico
+                        <div class="accordion" id="accordionEvaluados">
+                            @foreach($orden->evaluados as $index => $evaluado)
+                            @php $cuestionario = $evaluado->cuestionario; @endphp
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading-evaluado-{{ $evaluado->id }}">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#collapse-evaluado-{{ $evaluado->id }}"
+                                            aria-expanded="false"
+                                            aria-controls="collapse-evaluado-{{ $evaluado->id }}">
+                                        <div class="d-flex align-items-center justify-content-between w-100 me-3">
+                                            <div>
+                                                <strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong>
+                                                <span class="text-muted ms-2">DPI: <code>{{ $evaluado->dpi }}</code></span>
+                                            </div>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <span class="badge
+                                                    @if($evaluado->tipo_servicio == 'poligrafo') bg-primary
+                                                    @elseif($evaluado->tipo_servicio == 'vsa') bg-info
+                                                    @else bg-warning
+                                                    @endif">
+                                                    @if($evaluado->tipo_servicio == 'poligrafo') Polígrafo
+                                                    @elseif($evaluado->tipo_servicio == 'vsa') VSA
+                                                    @else Socioeconómico
+                                                    @endif
+                                                </span>
+                                                <span class="badge
+                                                    @if($evaluado->estado_evaluacion == 'completado') bg-success
+                                                    @elseif($evaluado->estado_evaluacion == 'en_proceso') bg-primary
+                                                    @elseif($evaluado->estado_evaluacion == 'programado') bg-info
+                                                    @else bg-warning
+                                                    @endif">
+                                                    {{ ucfirst($evaluado->estado_evaluacion ?? 'pendiente') }}
+                                                </span>
+                                                @if($evaluado->documentos->count() > 0)
+                                                    <span class="badge bg-secondary" title="Documentos"><i class="bi bi-folder2-open"></i> {{ $evaluado->documentos->count() }}</span>
                                                 @endif
-                                            </span><br>
-                                            <small class="text-muted">
-                                                @if($evaluado->tipo_formulario == 'preempleo') Pre-empleo
-                                                @elseif($evaluado->tipo_formulario == 'periodica') Periódica
-                                                @else Específica
+                                                @if($evaluado->resultado)
+                                                    <span class="badge bg-{{ $evaluado->resultado_color }}">{{ $evaluado->resultado_texto }}</span>
                                                 @endif
-                                            </small>
-                                        </td>
-                                        <td>
-                                            @if($evaluado->fecha_programada)
-                                                <i class="bi bi-calendar"></i> {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('d/m/Y') }}<br>
-                                            @endif
-                                            @if($evaluado->poligrafista)
-                                                <small class="text-muted"><i class="bi bi-person"></i> {{ $evaluado->poligrafista->name }}</small>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($evaluado->email)
-                                                <i class="bi bi-envelope"></i> {{ $evaluado->email }}<br>
-                                            @endif
-                                            @if($evaluado->telefono)
-                                                <i class="bi bi-telephone"></i> {{ $evaluado->telefono }}
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge
-                                                @if($evaluado->estado_evaluacion == 'completado') bg-success
-                                                @elseif($evaluado->estado_evaluacion == 'en_proceso') bg-primary
-                                                @elseif($evaluado->estado_evaluacion == 'programado') bg-info
-                                                @else bg-warning
-                                                @endif">
-                                                {{ ucfirst($evaluado->estado_evaluacion ?? 'pendiente') }}
-                                            </span>
-                                            @if($evaluado->cuestionario_completado)
-                                                <br><small class="text-muted">{{ $evaluado->completado_at ? \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') : '' }}</small>
-                                            @else
-                                                <br><small class="text-muted">Expira: {{ $evaluado->token_expira_at ? \Carbon\Carbon::parse($evaluado->token_expira_at)->format('d/m/Y') : '' }}</small>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                @php
-                                                    $cuestionario = $evaluado->cuestionario;
-                                                @endphp
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse-evaluado-{{ $evaluado->id }}"
+                                     class="accordion-collapse collapse"
+                                     aria-labelledby="heading-evaluado-{{ $evaluado->id }}"
+                                     data-bs-parent="#accordionEvaluados">
+                                    <div class="accordion-body">
 
+                                        {{-- Información general del evaluado --}}
+                                        <div class="row mb-3">
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Formulario</small>
+                                                <span class="badge bg-secondary">
+                                                    @if($evaluado->tipo_formulario == 'preempleo') Pre-empleo
+                                                    @elseif($evaluado->tipo_formulario == 'periodica') Periódica
+                                                    @else Específica
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Programación</small>
+                                                @if($evaluado->fecha_programada)
+                                                    <i class="bi bi-calendar"></i> {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('d/m/Y') }}
+                                                @else
+                                                    <span class="text-muted">Sin programar</span>
+                                                @endif
+                                                @if($evaluado->poligrafista)
+                                                    <br><small class="text-muted"><i class="bi bi-person"></i> {{ $evaluado->poligrafista->name }}</small>
+                                                @endif
+                                            </div>
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Contacto</small>
+                                                @if($evaluado->email)
+                                                    <i class="bi bi-envelope"></i> {{ $evaluado->email }}<br>
+                                                @endif
+                                                @if($evaluado->telefono)
+                                                    <i class="bi bi-telephone"></i> {{ $evaluado->telefono }}
+                                                @endif
+                                                @if(!$evaluado->email && !$evaluado->telefono)
+                                                    <span class="text-muted">Sin contacto</span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- Estado del cuestionario --}}
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block">Estado del Cuestionario</small>
+                                            @if($evaluado->cuestionario_completado)
+                                                <span class="text-success"><i class="bi bi-check-circle"></i> Completado</span>
+                                                <small class="text-muted ms-1">{{ $evaluado->completado_at ? \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') : '' }}</small>
+                                            @else
+                                                <span class="text-warning"><i class="bi bi-clock"></i> Pendiente</span>
+                                                <small class="text-muted ms-1">Expira: {{ $evaluado->token_expira_at ? \Carbon\Carbon::parse($evaluado->token_expira_at)->format('d/m/Y') : '' }}</small>
+                                            @endif
+                                        </div>
+
+                                        {{-- Acciones del evaluado --}}
+                                        <div class="mb-3">
+                                            <div class="btn-group" role="group">
                                                 @if($cuestionario)
-                                                    {{-- Cuestionario existe --}}
                                                     @if(Auth::user()->hasAnyRole(['admin', 'repro']))
                                                         <a href="{{ route('admin.cuestionarios.show', $cuestionario->id) }}"
-                                                           class="btn btn-outline-info btn-sm"
-                                                           title="Ver Cuestionario">
-                                                            <i class="bi bi-eye"></i>
+                                                           class="btn btn-outline-info btn-sm" title="Ver Cuestionario">
+                                                            <i class="bi bi-eye"></i> Ver Cuestionario
                                                         </a>
                                                         <a href="{{ route('admin.cuestionarios.pdf', $cuestionario->id) }}"
-                                                           class="btn btn-outline-danger btn-sm"
-                                                           title="Imprimir PDF"
-                                                           target="_blank">
-                                                            <i class="bi bi-file-pdf"></i>
+                                                           class="btn btn-outline-danger btn-sm" title="Imprimir PDF" target="_blank">
+                                                            <i class="bi bi-file-pdf"></i> PDF
                                                         </a>
                                                         <a href="{{ route('admin.cuestionarios.edit', $cuestionario->id) }}"
-                                                           class="btn btn-outline-warning btn-sm"
-                                                           title="Editar Cuestionario">
-                                                            <i class="bi bi-pencil"></i>
+                                                           class="btn btn-outline-warning btn-sm" title="Editar Cuestionario">
+                                                            <i class="bi bi-pencil"></i> Editar
                                                         </a>
                                                     @endif
                                                 @else
-                                                    {{-- No hay cuestionario --}}
-                                                    <span class="text-muted small">Sin cuestionario<br</span>
+                                                    <span class="btn btn-outline-secondary btn-sm disabled">Sin cuestionario</span>
                                                 @endif
 
                                                 @if(!$evaluado->cuestionario_completado)
                                                     <a href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}"
-                                                       class="btn btn-outline-primary btn-sm"
-                                                       title="Enlace del Evaluado"
-                                                       target="_blank">
-                                                        <i class="bi bi-link-45deg"></i>
+                                                       class="btn btn-outline-primary btn-sm" title="Enlace del Evaluado" target="_blank">
+                                                        <i class="bi bi-link-45deg"></i> Enlace
                                                     </a>
-                                                    <button type="button"
-                                                            class="btn btn-outline-secondary btn-sm"
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm"
                                                             onclick="copiarEnlaceEvaluado('{{ route('cuestionario.mostrar', $evaluado->token_unico) }}')"
                                                             title="Copiar enlace al portapapeles">
                                                         <i class="bi bi-clipboard"></i>
@@ -492,14 +514,12 @@
 
                                                     @if($evaluado->email)
                                                     <form action="{{ route('evaluados.reenviar-correo', $evaluado->id) }}"
-                                                          method="POST"
-                                                          class="d-inline"
+                                                          method="POST" class="d-inline"
                                                           onsubmit="return confirm('¿Enviar correo a {{ $evaluado->email }}?');">
                                                         @csrf
-                                                        <button type="submit"
-                                                                class="btn btn-outline-success btn-sm"
+                                                        <button type="submit" class="btn btn-outline-success btn-sm"
                                                                 title="Reenviar correo a {{ $evaluado->email }}">
-                                                            <i class="bi bi-envelope"></i>
+                                                            <i class="bi bi-envelope"></i> Correo
                                                         </button>
                                                     </form>
                                                     @endif
@@ -507,159 +527,150 @@
 
                                                 @if($evaluado->cuestionario_completado && Auth::user()->role_as >= 2)
                                                 <form action="{{ route('evaluados.rehabilitar-cuestionario', $evaluado->id) }}"
-                                                      method="POST"
-                                                      class="d-inline"
+                                                      method="POST" class="d-inline"
                                                       onsubmit="return confirm('¿Rehabilitar el cuestionario de {{ $evaluado->nombre }}? Esto permitirá que vuelva a llenarlo con un nuevo enlace.');">
                                                     @csrf
-                                                    <button type="submit"
-                                                            class="btn btn-outline-warning btn-sm"
-                                                            title="Rehabilitar cuestionario">
-                                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                                    <button type="submit" class="btn btn-outline-warning btn-sm" title="Rehabilitar cuestionario">
+                                                        <i class="bi bi-arrow-counterclockwise"></i> Rehabilitar
+                                                    </button>
+                                                </form>
+                                                @elseif(!$evaluado->cuestionario_completado && $cuestionario && Auth::user()->role_as >= 2)
+                                                <form action="{{ route('evaluados.deshabilitar-cuestionario', $evaluado->id) }}"
+                                                      method="POST" class="d-inline"
+                                                      onsubmit="return confirm('¿Deshabilitar el cuestionario de {{ $evaluado->nombre }}? Esto bloqueará el acceso y marcará el cuestionario como completado.');">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Deshabilitar cuestionario">
+                                                        <i class="bi bi-lock"></i> Deshabilitar
                                                     </button>
                                                 </form>
                                                 @endif
                                             </div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                        </div>
 
-        {{-- Documentos por evaluado --}}
-        <div class="row gx-3 mt-3">
-            <div class="col-12">
-                <h5 class="mb-3"><i class="bi bi-folder2-open"></i> Documentos por Evaluado</h5>
-                @foreach($orden->evaluados as $evaluado)
-                    @include('admin.ordenes._documentos_evaluado', ['evaluado' => $evaluado])
-                @endforeach
-            </div>
-        </div>
+                                        <hr>
 
-        {{-- Archivos de Resultados --}}
-        <div class="row gx-3 mt-3">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="bi bi-file-earmark-check"></i> Archivos de Resultado por Evaluado</div>
-                    </div>
-                    <div class="card-body">
-                        @foreach($orden->evaluados as $evaluado)
-                        <div class="border rounded p-3 mb-3">
-                            <h6 class="mb-3">
-                                <i class="bi bi-person"></i> {{ $evaluado->nombre }} {{ $evaluado->apellidos }}
-                                @if($evaluado->resultado)
-                                    <span class="badge bg-{{ $evaluado->resultado_color }}">{{ $evaluado->resultado_texto }}</span>
-                                @endif
-                            </h6>
+                                        {{-- Documentos del evaluado --}}
+                                        @include('admin.ordenes._documentos_evaluado', ['evaluado' => $evaluado])
 
-                            <div class="row">
-                                {{-- Resultado Preliminar --}}
-                                <div class="col-md-6">
-                                    <div class="card border-info mb-2">
-                                        <div class="card-body py-2 px-3">
-                                            <h6 class="card-subtitle mb-2 text-info"><i class="bi bi-file-earmark-arrow-up"></i> Resultado Preliminar</h6>
-                                            @if($evaluado->tieneResultadoPreliminar())
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <div>
-                                                        <i class="bi bi-check-circle text-success"></i> Subido
-                                                        @if($evaluado->resultado_preliminar_at)
-                                                            <small class="text-muted">{{ $evaluado->resultado_preliminar_at->format('d/m/Y H:i') }}</small>
-                                                        @endif
-                                                    </div>
-                                                    <div>
-                                                        <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado->id, 'preliminar']) }}"
-                                                           class="btn btn-sm btn-outline-info" title="Descargar">
-                                                            <i class="bi bi-download"></i>
-                                                        </a>
-                                                        @if(Auth::user()->role_as >= 2)
-                                                        <form action="{{ route('evaluados.eliminar-resultado-archivo', [$evaluado->id, 'preliminar']) }}"
-                                                              method="POST" class="d-inline"
-                                                              onsubmit="return confirm('¿Eliminar resultado preliminar?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                        @endif
+                                        <hr>
+
+                                        {{-- Archivos de Resultado --}}
+                                        <div class="mt-3">
+                                            <h6 class="mb-3">
+                                                <i class="bi bi-file-earmark-check"></i> Archivos de Resultado
+                                                @if($evaluado->resultado)
+                                                    — <span class="badge bg-{{ $evaluado->resultado_color }}">{{ $evaluado->resultado_texto }}</span>
+                                                @endif
+                                            </h6>
+
+                                            <div class="row">
+                                                {{-- Resultado Preliminar --}}
+                                                <div class="col-md-6">
+                                                    <div class="card border-info mb-2">
+                                                        <div class="card-body py-2 px-3">
+                                                            <h6 class="card-subtitle mb-2 text-info"><i class="bi bi-file-earmark-arrow-up"></i> Resultado Preliminar</h6>
+                                                            @if($evaluado->tieneResultadoPreliminar())
+                                                                <div class="d-flex align-items-center justify-content-between">
+                                                                    <div>
+                                                                        <i class="bi bi-check-circle text-success"></i> Subido
+                                                                        @if($evaluado->resultado_preliminar_at)
+                                                                            <small class="text-muted">{{ $evaluado->resultado_preliminar_at->format('d/m/Y H:i') }}</small>
+                                                                        @endif
+                                                                    </div>
+                                                                    <div>
+                                                                        <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado->id, 'preliminar']) }}"
+                                                                           class="btn btn-sm btn-outline-info" title="Descargar">
+                                                                            <i class="bi bi-download"></i>
+                                                                        </a>
+                                                                        @if(Auth::user()->role_as >= 2)
+                                                                        <form action="{{ route('evaluados.eliminar-resultado-archivo', [$evaluado->id, 'preliminar']) }}"
+                                                                              method="POST" class="d-inline"
+                                                                              onsubmit="return confirm('¿Eliminar resultado preliminar?')">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                                                <i class="bi bi-trash"></i>
+                                                                            </button>
+                                                                        </form>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            @else
+                                                                @if(Auth::user()->role_as >= 2)
+                                                                <form action="{{ route('evaluados.subir-resultado-archivo', $evaluado->id) }}"
+                                                                      method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
+                                                                    @csrf
+                                                                    <input type="hidden" name="tipo_resultado" value="preliminar">
+                                                                    <input type="file" name="archivo" class="form-control form-control-sm" accept=".pdf,.doc,.docx" required>
+                                                                    <button type="submit" class="btn btn-sm btn-info text-white">
+                                                                        <i class="bi bi-upload"></i>
+                                                                    </button>
+                                                                </form>
+                                                                @else
+                                                                    <span class="text-muted"><i class="bi bi-dash-circle"></i> No disponible</span>
+                                                                @endif
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            @else
-                                                @if(Auth::user()->role_as >= 2)
-                                                <form action="{{ route('evaluados.subir-resultado-archivo', $evaluado->id) }}"
-                                                      method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
-                                                    @csrf
-                                                    <input type="hidden" name="tipo_resultado" value="preliminar">
-                                                    <input type="file" name="archivo" class="form-control form-control-sm" accept=".pdf,.doc,.docx" required>
-                                                    <button type="submit" class="btn btn-sm btn-info text-white">
-                                                        <i class="bi bi-upload"></i>
-                                                    </button>
-                                                </form>
-                                                @else
-                                                    <span class="text-muted"><i class="bi bi-dash-circle"></i> No disponible</span>
-                                                @endif
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
 
-                                {{-- Resultado Final --}}
-                                <div class="col-md-6">
-                                    <div class="card border-success mb-2">
-                                        <div class="card-body py-2 px-3">
-                                            <h6 class="card-subtitle mb-2 text-success"><i class="bi bi-file-earmark-check"></i> Resultado Final</h6>
-                                            @if($evaluado->tieneResultadoFinal())
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <div>
-                                                        <i class="bi bi-check-circle text-success"></i> Subido
-                                                        @if($evaluado->resultado_final_at)
-                                                            <small class="text-muted">{{ $evaluado->resultado_final_at->format('d/m/Y H:i') }}</small>
-                                                        @endif
-                                                    </div>
-                                                    <div>
-                                                        <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado->id, 'final']) }}"
-                                                           class="btn btn-sm btn-outline-success" title="Descargar">
-                                                            <i class="bi bi-download"></i>
-                                                        </a>
-                                                        @if(Auth::user()->role_as >= 2)
-                                                        <form action="{{ route('evaluados.eliminar-resultado-archivo', [$evaluado->id, 'final']) }}"
-                                                              method="POST" class="d-inline"
-                                                              onsubmit="return confirm('¿Eliminar resultado final?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                        @endif
+                                                {{-- Resultado Final --}}
+                                                <div class="col-md-6">
+                                                    <div class="card border-success mb-2">
+                                                        <div class="card-body py-2 px-3">
+                                                            <h6 class="card-subtitle mb-2 text-success"><i class="bi bi-file-earmark-check"></i> Resultado Final</h6>
+                                                            @if($evaluado->tieneResultadoFinal())
+                                                                <div class="d-flex align-items-center justify-content-between">
+                                                                    <div>
+                                                                        <i class="bi bi-check-circle text-success"></i> Subido
+                                                                        @if($evaluado->resultado_final_at)
+                                                                            <small class="text-muted">{{ $evaluado->resultado_final_at->format('d/m/Y H:i') }}</small>
+                                                                        @endif
+                                                                    </div>
+                                                                    <div>
+                                                                        <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado->id, 'final']) }}"
+                                                                           class="btn btn-sm btn-outline-success" title="Descargar">
+                                                                            <i class="bi bi-download"></i>
+                                                                        </a>
+                                                                        @if(Auth::user()->role_as >= 2)
+                                                                        <form action="{{ route('evaluados.eliminar-resultado-archivo', [$evaluado->id, 'final']) }}"
+                                                                              method="POST" class="d-inline"
+                                                                              onsubmit="return confirm('¿Eliminar resultado final?')">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                                                <i class="bi bi-trash"></i>
+                                                                            </button>
+                                                                        </form>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            @else
+                                                                @if(Auth::user()->role_as >= 2)
+                                                                <form action="{{ route('evaluados.subir-resultado-archivo', $evaluado->id) }}"
+                                                                      method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
+                                                                    @csrf
+                                                                    <input type="hidden" name="tipo_resultado" value="final">
+                                                                    <input type="file" name="archivo" class="form-control form-control-sm" accept=".pdf,.doc,.docx" required>
+                                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                                        <i class="bi bi-upload"></i>
+                                                                    </button>
+                                                                </form>
+                                                                @else
+                                                                    <span class="text-muted"><i class="bi bi-dash-circle"></i> No disponible</span>
+                                                                @endif
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            @else
-                                                @if(Auth::user()->role_as >= 2)
-                                                <form action="{{ route('evaluados.subir-resultado-archivo', $evaluado->id) }}"
-                                                      method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
-                                                    @csrf
-                                                    <input type="hidden" name="tipo_resultado" value="final">
-                                                    <input type="file" name="archivo" class="form-control form-control-sm" accept=".pdf,.doc,.docx" required>
-                                                    <button type="submit" class="btn btn-sm btn-success">
-                                                        <i class="bi bi-upload"></i>
-                                                    </button>
-                                                </form>
-                                                @else
-                                                    <span class="text-muted"><i class="bi bi-dash-circle"></i> No disponible</span>
-                                                @endif
-                                            @endif
+                                            </div>
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
+                            @endforeach
                         </div>
-                        @endforeach
                     </div>
                 </div>
             </div>
@@ -740,6 +751,19 @@ function confirmarToggleResultados(checkbox) {
         // Revertir el cambio del checkbox
         checkbox.checked = !estaActivo;
     }
+}
+
+// Función para expandir/colapsar todos los accordions de evaluados
+function toggleAllAccordions(expand) {
+    const accordionItems = document.querySelectorAll('#accordionEvaluados .accordion-collapse');
+    accordionItems.forEach(function(item) {
+        const bsCollapse = new bootstrap.Collapse(item, { toggle: false });
+        if (expand) {
+            bsCollapse.show();
+        } else {
+            bsCollapse.hide();
+        }
+    });
 }
 
 // Función para copiar enlace del evaluado al portapapeles

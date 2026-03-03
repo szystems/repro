@@ -123,6 +123,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
 
     // Rehabilitación de cuestionario — solo REPRO/admin
     Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');
+    Route::post('evaluados/{evaluado}/deshabilitar-cuestionario', [OrdenesController::class, 'deshabilitarCuestionario'])->name('evaluados.deshabilitar-cuestionario');
 
     // Rutas para diferentes tipos de usuario con middleware específico
     Route::middleware(['role:admin,repro'])->group(function () {

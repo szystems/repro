@@ -894,4 +894,61 @@ class OrdenesController extends Controller
             return back()->with('error', 'Error al rehabilitar el cuestionario. Intente nuevamente.');
         }
     }
+
+    /**
+     * Deshabilitar cuestionario de un evaluado (revierte una rehabilitación).
+     * Bloquea el cuestionario y marca al evaluado como completado nuevamente.
+     * Solo REPRO/admin pueden hacer esto.
+     */
+    public function deshabilitarCuestionario(EvaluadoOrden $evaluado): \Illuminate\Http\RedirectResponse
+    {
+        if (Auth::user()->role_as < 2) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        if ($evaluado->cuestionario_completado) {
+            return back()->with('warning', 'El cuestionario de este evaluado ya está completado/bloqueado.');
+        }
+
+        $cuestionario = $evaluado->cuestionario;
+        if (!$cuestionario) {
+            return back()->with('warning', 'Este evaluado no tiene un cuestionario asociado.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $cuestionario->update([
+                'completado'          => true,
+                'bloqueado'           => true,
+                'completado_at'       => now(),
+            ]);
+
+            $evaluado->update([
+                'cuestionario_completado'    => true,
+                'cuestionario_completado_at' => now(),
+                'completado_at'              => now(),
+                'estado_evaluacion'          => 'completado',
+                'token_expira_at'            => now(), // Expirar token inmediatamente
+            ]);
+
+            DB::commit();
+
+            Log::info('Cuestionario deshabilitado', [
+                'evaluado_id' => $evaluado->id,
+                'evaluado'    => $evaluado->nombre . ' ' . $evaluado->apellidos,
+                'usuario'     => Auth::user()->name,
+            ]);
+
+            return back()->with('success', "Cuestionario deshabilitado para {$evaluado->nombre} {$evaluado->apellidos}. El enlace fue invalidado.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deshabilitando cuestionario', [
+                'evaluado_id' => $evaluado->id,
+                'error'       => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Error al deshabilitar el cuestionario. Intente nuevamente.');
+        }
+    }
 }

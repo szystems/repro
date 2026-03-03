@@ -150,8 +150,8 @@ class CuestionarioModuloCompletoTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHasNoErrors();
         
-        // Debería redirigir a sección 1
-        $this->assertStringContainsString('seccion', $response->headers->get('Location'));
+        // Debería redirigir a términos (primer paso después de verificar DPI)
+        $this->assertStringContainsString('terminos', $response->headers->get('Location'));
     }
 
     /**
@@ -541,11 +541,19 @@ class CuestionarioModuloCompletoTest extends TestCase
     {
         $this->completarTodasLasSecciones();
 
+        // Aceptar términos para que no redirija a la página de términos
+        $cuestionario = Cuestionario::where('evaluado_orden_id', $this->evaluado->id)->first();
+        if ($cuestionario) {
+            $cuestionario->update([
+                'acepta_terminos' => true,
+                'acepta_terminos_at' => now(),
+            ]);
+        }
+
         $response = $this->get("/cuestionario/{$this->evaluado->token_unico}/finalizar");
 
-        // Si redirige, significa que el cuestionario no llegó al estado final
-        // Esto es comportamiento esperado si las secciones no actualizan seccion_actual
-        $response->assertRedirect();
+        // La página de finalización se muestra correctamente
+        $response->assertStatus(200);
     }
 
     /**
@@ -579,16 +587,16 @@ class CuestionarioModuloCompletoTest extends TestCase
     /**
      * Test: No puede completar sin aceptar términos
      */
-    public function test_no_puede_completar_sin_aceptar_terminos(): void
+    public function test_no_puede_completar_sin_confirmacion_final(): void
     {
         $this->completarTodasLasSecciones();
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/completar", [
             'firma_digital' => 'data:image/png;base64,test',
-            // Falta acepta_terminos
+            // Falta confirmacion_final
         ]);
 
-        $response->assertSessionHasErrors(['acepta_terminos']);
+        $response->assertSessionHasErrors(['confirmacion_final']);
     }
 
     // =========================================================================
@@ -620,12 +628,17 @@ class CuestionarioModuloCompletoTest extends TestCase
     }
 
     /**
-     * Completar verificación y sección 1
+     * Completar verificación, aceptar términos y sección 1
      */
     protected function completarSeccion1(): void
     {
         $this->post("/cuestionario/{$this->evaluado->token_unico}/verificar", [
             'dpi_ingresado' => '1234567890101'
+        ]);
+
+        // Aceptar términos y condiciones
+        $this->post(route('cuestionario.aceptar-terminos', $this->evaluado->token_unico), [
+            'acepta_terminos' => '1',
         ]);
 
         $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/1", $this->getDatosSeccion1Validos());

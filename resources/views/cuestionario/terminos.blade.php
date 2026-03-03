@@ -95,32 +95,6 @@
                         @enderror
                     </div>
 
-                    {{-- Firma de autorización --}}
-                    <div class="section-title">
-                        <i class="fas fa-signature"></i> Firma de Autorización
-                    </div>
-
-                    <div class="alert alert-secondary">
-                        <i class="fas fa-info-circle"></i> Dibuje su firma en el recuadro. Esta firma certifica su aceptación de los términos anteriores.
-                    </div>
-
-                    <div class="form-group">
-                        <div class="signature-pad-container" style="border: 2px solid #ddd; border-radius: 8px; background: white;">
-                            <canvas id="firma_canvas" width="600" height="200" style="border-radius: 6px; cursor: crosshair; width: 100%;"></canvas>
-                        </div>
-
-                        <input type="hidden" id="firma_data" name="firma_autorizacion" required>
-                        @error('firma_autorizacion')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-
-                        <div class="d-flex gap-2 mt-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="limpiarFirma">
-                                <i class="fas fa-eraser"></i> Limpiar Firma
-                            </button>
-                        </div>
-                    </div>
-
                     <div class="form-actions mt-4">
                         <button type="submit" class="btn btn-primary btn-lg w-100" id="btnAceptar" disabled>
                             <i class="fas fa-check-circle"></i> Acepto y Continuar al Cuestionario
@@ -136,82 +110,12 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Firma digital ---
-    const canvas = document.getElementById('firma_canvas');
-    const ctx = canvas.getContext('2d');
-    const firmaInput = document.getElementById('firma_data');
-    const btnLimpiar = document.getElementById('limpiarFirma');
     const btnAceptar = document.getElementById('btnAceptar');
     const checkTerminos = document.getElementById('acepta_terminos');
-    let isDrawing = false;
-    let hasFirma = false;
-
-    // Ajustar resolución
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * 2;
-    canvas.height = 200 * 2;
-    ctx.scale(2, 2);
-    canvas.style.height = '200px';
-
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    function getPosition(e) {
-        const r = canvas.getBoundingClientRect();
-        const touch = e.touches ? e.touches[0] : e;
-        return { x: touch.clientX - r.left, y: touch.clientY - r.top };
-    }
-
-    function startDraw(e) {
-        isDrawing = true;
-        const pos = getPosition(e);
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
-        e.preventDefault();
-    }
-
-    function draw(e) {
-        if (!isDrawing) return;
-        const pos = getPosition(e);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-        hasFirma = true;
-        updateFirmaData();
-        e.preventDefault();
-    }
-
-    function stopDraw(e) {
-        isDrawing = false;
-        updateFirmaData();
-        toggleSubmit();
-    }
-
-    function updateFirmaData() {
-        if (hasFirma) {
-            firmaInput.value = canvas.toDataURL('image/png');
-        }
-    }
 
     function toggleSubmit() {
-        btnAceptar.disabled = !(checkTerminos.checked && hasFirma);
+        btnAceptar.disabled = !checkTerminos.checked;
     }
-
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDraw);
-    canvas.addEventListener('mouseleave', stopDraw);
-    canvas.addEventListener('touchstart', startDraw, { passive: false });
-    canvas.addEventListener('touchmove', draw, { passive: false });
-    canvas.addEventListener('touchend', stopDraw);
-
-    btnLimpiar.addEventListener('click', function() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        firmaInput.value = '';
-        hasFirma = false;
-        toggleSubmit();
-    });
 
     checkTerminos.addEventListener('change', toggleSubmit);
 });

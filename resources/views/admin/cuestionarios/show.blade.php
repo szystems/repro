@@ -302,6 +302,13 @@
                     </div>
                 </div>
             @endif
+
+            {{-- Documentos del evaluado --}}
+            <div class="row mt-4">
+                <div class="col-12">
+                    @include('admin.ordenes._documentos_evaluado', ['evaluado' => $cuestionario->evaluadoOrden])
+                </div>
+            </div>
             
             {{-- Observaciones administrativas --}}
             <div class="row mt-4">
