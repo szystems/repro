@@ -183,7 +183,7 @@ class SedesTest extends TestCase
         $sede = Sede::factory()->create();
 
         // Simular el método tieneTraslape para lógica de negocio
-        $this->assertFalse($sede->tieneTraslape(999, '2026-01-01 09:00:00'));
+        $this->assertFalse($sede->tieneTraslape(999, '2026-01-01 09:00:00', '2026-01-01 11:00:00'));
     }
 
     // -------------------------------------------------------
@@ -194,7 +194,7 @@ class SedesTest extends TestCase
     {
         $sede = Sede::factory()->create();
 
-        $this->assertFalse($sede->tieneTraslape(1, '2026-03-01 09:00:00'));
+        $this->assertFalse($sede->tieneTraslape(1, '2026-03-01 09:00:00', '2026-03-01 11:00:00'));
     }
 }
 
