@@ -389,13 +389,15 @@
                         <div class="accordion" id="accordionEvaluados">
                             @foreach($orden->evaluados as $index => $evaluado)
                             @php $cuestionario = $evaluado->cuestionario; @endphp
-                            <div class="accordion-item">
+                            @php $bgAlt = $index % 2 !== 0 ? 'background-color: #f4f5f7;' : ''; @endphp
+                            <div class="accordion-item" style="{{ $bgAlt }}">
                                 <h2 class="accordion-header" id="heading-evaluado-{{ $evaluado->id }}">
                                     <button class="accordion-button collapsed" type="button"
                                             data-bs-toggle="collapse"
                                             data-bs-target="#collapse-evaluado-{{ $evaluado->id }}"
                                             aria-expanded="false"
-                                            aria-controls="collapse-evaluado-{{ $evaluado->id }}">
+                                            aria-controls="collapse-evaluado-{{ $evaluado->id }}"
+                                            style="{{ $bgAlt }}">
                                         <div class="d-flex align-items-center justify-content-between w-100 me-3">
                                             <div>
                                                 <strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong>
