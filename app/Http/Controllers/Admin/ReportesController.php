@@ -175,16 +175,16 @@ class ReportesController extends Controller
     }
 
     /**
-     * Exportar reporte de empresas a PDF
+     * Construir query base de empresas para reportes con filtros.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  array<string>  $extraCounts  Relaciones withCount adicionales
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function empresasPdf(Request $request)
+    private function buildEmpresasReportQuery(Request $request, array $extraCounts = []): \Illuminate\Database\Eloquent\Builder
     {
-        $query = Empresa::withCount([
-            'ordenes',
-            'ordenes as ordenes_completadas_count' => function ($q) {
-                $q->where('estado', 'entregado');
-            },
-        ]);
+        $counts = array_merge(['ordenes'], $extraCounts);
+        $query = Empresa::withCount($counts);
 
         if ($request->filled('fecha_inicio')) {
             $query->whereHas('ordenes', function ($q) use ($request) {
@@ -200,7 +200,19 @@ class ReportesController extends Controller
             $query->where('estado', $request->estado);
         }
 
-        $empresas = $query->orderBy('nombre')->get();
+        return $query->orderBy('nombre');
+    }
+
+    /**
+     * Exportar reporte de empresas a PDF
+     */
+    public function empresasPdf(Request $request)
+    {
+        $empresas = $this->buildEmpresasReportQuery($request, [
+            'ordenes as ordenes_completadas_count' => function ($q) {
+                $q->where('estado', 'entregado');
+            },
+        ])->get();
 
         $stats = [
             'total_empresas' => $empresas->count(),
@@ -239,23 +251,7 @@ class ReportesController extends Controller
      */
     public function empresasExcel(Request $request)
     {
-        $query = Empresa::withCount(['ordenes']);
-
-        if ($request->filled('fecha_inicio')) {
-            $query->whereHas('ordenes', function ($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->fecha_inicio);
-            });
-        }
-        if ($request->filled('fecha_fin')) {
-            $query->whereHas('ordenes', function ($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->fecha_fin);
-            });
-        }
-        if ($request->filled('estado')) {
-            $query->where('estado', $request->estado);
-        }
-
-        $empresas = $query->orderBy('nombre')->get();
+        $empresas = $this->buildEmpresasReportQuery($request)->get();
 
         return Excel::download(
             new \App\Exports\EmpresasExport($empresas),

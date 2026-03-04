@@ -358,6 +358,23 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | 6.7 | Extraer `buildEvaluacionesQuery()` en `ReportesController` — eliminada duplicación 3× | ✅ | |
 | 6.8 | Tests de seguridad: 20 tests, 23 assertions (rutas PATCH, middleware roles, debug eliminado) | ✅ | |
 
+### FASE 7: Optimización y Limpieza (Semana 7)
+**Named routes, índices, limpieza imports, refactoring queries, N+1, error handling**
+
+> **Principio:** Optimización quirúrgica — mejorar calidad sin alterar comportamiento existente.
+> **Excluidos deliberadamente:** Migración de validación inline a FormRequest (riesgo alto en OrdenesController), reestructuración de URLs (rompe bookmarks).
+
+| # | Tarea | Estado | Commit |
+|---|-------|--------|--------|
+| 7.1 | Agregar `->name()` a 18 rutas sin nombre (users, config, empresas) | ✅ | |
+| 7.2 | Migración: índices en `empresas.estado` y `sedes.estado` | ✅ | |
+| 7.3 | Eliminar imports no usados (`use DB;`, `use PDF;`) y optimizar `$filterUsers` | ✅ | |
+| 7.4 | Eliminar checks de permisos redundantes en `EmpresasController` (6 métodos, cubiertos por middleware) | ✅ | |
+| 7.5 | Error handling: catches silenciosos → `Log::error()`, eliminar datos sensibles de logs, imports correctos | ✅ | |
+| 7.6 | Extraer `buildEmpresasQuery()` (EmpresasController) + `buildUsersQuery()` (UsersController) + `buildEmpresasReportQuery()` (ReportesController) | ✅ | |
+| 7.7 | Fix N+1: eager loading en `users()`, consolidar stats queries en `CuestionariosController` | ✅ | |
+| 7.8 | Tests para cambios de Fase 7 | ✅ | |
+
 ---
 
 ## 📈 Progreso General
@@ -370,6 +387,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | Fase 4: Calendario (E2) | Semana 4 | **✅ Completada** | **10/10** |
 | Fase 5: Flujos y Cierre | Semana 5 | **✅ Completada** | **7/7** |
 | **Fase 6: Seguridad y Calidad** | **Semana 6** | **✅ Completada** | **8/8** |
+| **Fase 7: Optimización y Limpieza** | **Semana 7** | **✅ Completada** | **8/8** |
 
 ---
 
@@ -386,6 +404,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
+| 2026-03-03 | Fase 7 completada | Optimización y Limpieza — 13 tests, 34 assertions — named routes, índices BD, imports limpios, checks redundantes, error handling, query builders extraídos, N+1 fix, código muerto eliminado |
 | 2026-03-03 | Fase 6 completada | Seguridad y Calidad — 20 tests, 23 assertions — eliminado test-db.php, ruta debug, rutas GET→PATCH/DELETE, middleware roles, logs sensibles, mailables ShouldQueue, refactor ReportesController |
 | 2026-03-03 | Fase 5 completada | Flujos y Cierre — 55 tests, 181 assertions — 3 migraciones (estado_formulario, ENUM→VARCHAR×2), transiciones, dropdowns contextuales, commit `361f3a7d` |
 | 2026-03-03 | Fase 4 completada | Calendario y Agenda — 31 tests, 74 assertions — hora inicio/fin, anti-traslape rangos, dual entry |

@@ -9,6 +9,7 @@ use App\Models\EvaluadoOrden;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Controlador administrativo para gestión de cuestionarios
@@ -68,24 +69,36 @@ class CuestionariosController extends Controller
 
         $cuestionarios = $query->paginate(20)->appends($request->query());
 
-        // Estadísticas para el dashboard
+        // Estadísticas consolidadas en una sola query
+        $statsRaw = Cuestionario::select([
+            DB::raw('COUNT(*) as total'),
+            DB::raw("SUM(CASE WHEN completado = 1 THEN 1 ELSE 0 END) as completados"),
+            DB::raw("SUM(CASE WHEN completado = 0 AND seccion_actual > 1 THEN 1 ELSE 0 END) as en_progreso"),
+            DB::raw("SUM(CASE WHEN completado = 0 AND seccion_actual <= 1 THEN 1 ELSE 0 END) as pendientes"),
+            DB::raw("SUM(CASE WHEN seccion_actual = 1 THEN 1 ELSE 0 END) as iniciados"),
+            DB::raw("SUM(CASE WHEN completado = 1 AND DATE(completado_at) = CURDATE() THEN 1 ELSE 0 END) as completados_hoy"),
+            DB::raw('ROUND(AVG(progreso_porcentaje), 1) as progreso_promedio'),
+        ])->first();
+
+        $porTipo = Cuestionario::select('tipo_formulario', DB::raw('count(*) as total'))
+            ->groupBy('tipo_formulario')
+            ->pluck('total', 'tipo_formulario')
+            ->toArray();
+
         $estadisticas = [
-            'total' => Cuestionario::count(),
-            'completados' => Cuestionario::where('completado', 1)->count(),
-            'en_progreso' => Cuestionario::where('completado', 0)->where('seccion_actual', '>', 1)->count(),
-            'pendientes' => Cuestionario::where('completado', 0)->where('seccion_actual', '<=', 1)->count(),
-            'iniciados' => Cuestionario::where('seccion_actual', 1)->count(),
-            'completados_hoy' => Cuestionario::where('completado', 1)->whereDate('completado_at', today())->count(),
-            'progreso_promedio' => round(Cuestionario::avg('progreso_porcentaje') ?? 0, 1),
-            'por_tipo' => Cuestionario::select('tipo_formulario', DB::raw('count(*) as total'))
-                ->groupBy('tipo_formulario')
-                ->pluck('total', 'tipo_formulario')
-                ->toArray(),
+            'total' => (int) $statsRaw->total,
+            'completados' => (int) $statsRaw->completados,
+            'en_progreso' => (int) $statsRaw->en_progreso,
+            'pendientes' => (int) $statsRaw->pendientes,
+            'iniciados' => (int) $statsRaw->iniciados,
+            'completados_hoy' => (int) $statsRaw->completados_hoy,
+            'progreso_promedio' => (float) ($statsRaw->progreso_promedio ?? 0),
+            'por_tipo' => $porTipo,
             'por_estado' => [
-                'completados' => Cuestionario::where('completado', 1)->count(),
-                'en_progreso' => Cuestionario::where('completado', 0)->where('seccion_actual', '>', 1)->count(),
-                'pendientes' => Cuestionario::where('completado', 0)->where('seccion_actual', '<=', 1)->count(),
-                'iniciados' => Cuestionario::where('seccion_actual', 1)->count(),
+                'completados' => (int) $statsRaw->completados,
+                'en_progreso' => (int) $statsRaw->en_progreso,
+                'pendientes' => (int) $statsRaw->pendientes,
+                'iniciados' => (int) $statsRaw->iniciados,
             ]
         ];
 
@@ -189,7 +202,7 @@ class CuestionariosController extends Controller
             if ($request->has('respuestas') && is_array($request->respuestas)) {
                 // Log especial para ediciones de cuestionarios completados
                 if ($cuestionario->estado === 'completado') {
-                    \Illuminate\Support\Facades\Log::info('Editando cuestionario completado', [
+                    Log::info('Editando cuestionario completado', [
                         'cuestionario_id' => $cuestionario->id,
                         'usuario' => Auth::user()->name,
                         'usuario_id' => Auth::id(),
@@ -222,7 +235,7 @@ class CuestionariosController extends Controller
 
                 // Log detallado de cambios para cuestionarios completados
                 if ($cuestionario->estado === 'completado' && !empty($cambiosRealizados)) {
-                    \Illuminate\Support\Facades\Log::info('Cambios detallados en cuestionario completado', [
+                    Log::info('Cambios detallados en cuestionario completado', [
                         'cuestionario_id' => $cuestionario->id,
                         'usuario' => Auth::user()->name,
                         'cambios' => $cambiosRealizados,
@@ -243,6 +256,11 @@ class CuestionariosController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Error al actualizar cuestionario', [
+                'cuestionario_id' => $id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+            ]);
             return back()
                 ->withErrors(['error' => 'Error al actualizar el cuestionario.'])
                 ->withInput();
@@ -383,7 +401,7 @@ class CuestionariosController extends Controller
             ]);
 
             // Log de la acción manual
-            \Illuminate\Support\Facades\Log::info('Cuestionario marcado como completado manualmente', [
+            Log::info('Cuestionario marcado como completado manualmente', [
                 'cuestionario_id' => $cuestionario->id,
                 'usuario' => Auth::user()->name,
                 'usuario_id' => Auth::id(),
@@ -397,6 +415,11 @@ class CuestionariosController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Error al marcar cuestionario como completado', [
+                'cuestionario_id' => $id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+            ]);
             return back()->with('error', 'Error al marcar el cuestionario como completado.');
         }
     }

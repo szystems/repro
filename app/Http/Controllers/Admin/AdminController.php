@@ -13,7 +13,6 @@ use App\Models\EvaluadoOrden;
 use App\Models\Cuestionario;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use PDF;
 
 class AdminController extends Controller
 {

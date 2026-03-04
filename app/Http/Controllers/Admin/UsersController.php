@@ -14,49 +14,60 @@ use Illuminate\Support\Facades\File;
 use App\Models\Config;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
-use PDF;
-use DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\UserMail;
 use App\Mail\UserResetPasswordMail;
 
 class UsersController extends Controller
 {
+    /**
+     * Construir query base de usuarios con filtros.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function buildUsersQuery(array $filters): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = User::where('estado', 1);
+
+        $search = $filters['fuser'] ?? null;
+        $roleFilter = $filters['role_filter'] ?? null;
+        $empresaFilter = $filters['empresa_filter'] ?? null;
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', '%'.$search.'%')
+                  ->orWhere('email', 'LIKE', '%'.$search.'%')
+                  ->orWhere('telefono', 'LIKE', '%'.$search.'%')
+                  ->orWhere('celular', 'LIKE', '%'.$search.'%');
+            });
+        }
+
+        if ($roleFilter !== null && $roleFilter !== '') {
+            $query->where('role_as', $roleFilter);
+        }
+
+        if ($empresaFilter !== null && $empresaFilter !== '') {
+            $query->where('empresa_id', $empresaFilter);
+        }
+
+        if (Auth::user()->role_as == 1) {
+            $query->where('empresa_id', Auth::user()->empresa_id);
+        }
+
+        return $query->orderBy('name', 'asc');
+    }
+
     public function users(Request $request)
     {
         $queryUser = $request->input('fuser');
         $role_filter = $request->input('role_filter');
         $empresa_filter = $request->input('empresa_filter');
 
-        $usersQuery = User::where('estado', '=', 1);
-
-        // Aplicar filtro de búsqueda por nombre, email, teléfono o celular
-        if($queryUser) {
-            $usersQuery->where(function ($query) use ($queryUser) {
-                $query->where('name', 'LIKE', '%' . $queryUser . '%')
-                    ->orWhere('email', 'LIKE', '%' . $queryUser . '%')
-                    ->orWhere('telefono', 'LIKE', '%' . $queryUser . '%')
-                    ->orWhere('celular', 'LIKE', '%' . $queryUser . '%');
-            });
-        }
-
-        // Aplicar filtro por rol si está definido
-        if($role_filter !== null && $role_filter !== '') {
-            $usersQuery->where('role_as', '=', $role_filter);
-        }
-
-        // Filtro por empresa para usuarios tipo empresa (role_as = 1)
-        if($empresa_filter !== null && $empresa_filter !== '') {
-            $usersQuery->where('empresa_id', '=', $empresa_filter);
-        }
-
-        // Si el usuario actual es de tipo empresa, solo puede ver usuarios de su empresa
-        if(Auth::user()->role_as == 1) {
-            $usersQuery->where('empresa_id', '=', Auth::user()->empresa_id);
-        }
-
-        $users = $usersQuery->orderBy('name', 'asc')->paginate(20);
-        $filterUsers = User::all();
+        $users = $this->buildUsersQuery($request->all())->with('empresa')->paginate(20);
+        $filterUsers = User::select('name', 'email')->where('estado', 1)->orderBy('name')->get();
         $empresas = Empresa::where('estado', 1)->orderBy('nombre', 'asc')->get();
 
         return view('admin.user.index', compact('users', 'queryUser', 'filterUsers', 'role_filter', 'empresa_filter', 'empresas'));
@@ -208,8 +219,10 @@ class UsersController extends Controller
         try {
             Mail::to($user->email)->send(new UserMail($user, $tempPassword));
         } catch (\Exception $e) {
-            // Log el error pero continúa
-            \Log::error("Error enviando email: " . $e->getMessage());
+            Log::error('Error enviando email de bienvenida', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         return redirect('users')->with('status', __('Usuario agregado correctamente'));
@@ -334,7 +347,10 @@ class UsersController extends Controller
             try {
                 Mail::to($user->email)->send(new UserResetPasswordMail($user, $tempPassword));
             } catch (\Exception $e) {
-                \Log::error("Error enviando email de reset: " . $e->getMessage());
+                Log::error('Error enviando email de reset', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 
@@ -389,46 +405,16 @@ class UsersController extends Controller
         $role_filter = $request->input('role_filter');
         $empresa_filter = $request->input('empresa_filter');
 
-        $currentUser = Auth::user();
-        $usuariosQuery = User::where('estado', 1);
-
-        // Aplicar filtros
-        if($queryUser) {
-            $usuariosQuery->where(function ($query) use ($queryUser) {
-                $query->where('name', 'LIKE', '%' . $queryUser . '%')
-                    ->orWhere('email', 'LIKE', '%' . $queryUser . '%')
-                    ->orWhere('telefono', 'LIKE', '%' . $queryUser . '%')
-                    ->orWhere('celular', 'LIKE', '%' . $queryUser . '%');
-            });
-        }
-
-        if($role_filter !== null && $role_filter !== '') {
-            $usuariosQuery->where('role_as', '=', $role_filter);
-        }
-
-        if($empresa_filter !== null && $empresa_filter !== '') {
-            $usuariosQuery->where('empresa_id', '=', $empresa_filter);
-        }
-
-        // Restricciones por rol
-        if($currentUser->role_as == 1) {
-            $usuariosQuery->where('empresa_id', '=', $currentUser->empresa_id);
-        }
-
-        $usuarios = $usuariosQuery->with('empresa')->orderBy('name', 'asc')->get();
-        $verpdf = "Browser";
+        $usuarios = $this->buildUsersQuery($request->all())->with('empresa')->get();
         $nompdf = date('m/d/Y g:ia');
         $path = public_path('assets/imgs/');
 
         $config = Config::first();
         $currency = $config->currency_simbol;
 
-        if ($config->logo == null) {
-            $logo = null;
-            $imagen = null;
-        } else {
-            $logo = $config->logo;
-            $imagen = public_path('assets/imgs/logos/'.$logo);
+        $imagen = null;
+        if ($config->logo && file_exists(public_path('assets/imgs/logos/'.$config->logo))) {
+            $imagen = public_path('assets/imgs/logos/'.$config->logo);
         }
 
         // Título del PDF
@@ -457,35 +443,18 @@ class UsersController extends Controller
             }
         }
 
-        if ($verpdf == "Download") {
-            $pdf = PDF::loadView('admin.user.pdf', [
-                'usuarios' => $usuarios,
-                'path' => $path,
-                'config' => $config,
-                'imagen' => $imagen,
-                'currency' => $currency,
-                'titulo' => $titulo,
-                'queryUser' => $queryUser,
-                'role_filter' => $role_filter,
-                'empresa_filter' => $empresa_filter
-            ]);
-            return $pdf->download($titulo.' '.$nompdf.'.pdf');
-        }
-
-        if ($verpdf == "Browser") {
-            $pdf = PDF::loadView('admin.user.pdf', [
-                'usuarios' => $usuarios,
-                'path' => $path,
-                'config' => $config,
-                'imagen' => $imagen,
-                'currency' => $currency,
-                'titulo' => $titulo,
-                'queryUser' => $queryUser,
-                'role_filter' => $role_filter,
-                'empresa_filter' => $empresa_filter
-            ]);
-            return $pdf->stream($titulo.' '.$nompdf.'.pdf');
-        }
+        $pdf = Pdf::loadView('admin.user.pdf', [
+            'usuarios' => $usuarios,
+            'path' => $path,
+            'config' => $config,
+            'imagen' => $imagen,
+            'currency' => $currency,
+            'titulo' => $titulo,
+            'queryUser' => $queryUser,
+            'role_filter' => $role_filter,
+            'empresa_filter' => $empresa_filter
+        ]);
+        return $pdf->stream($titulo.' '.$nompdf.'.pdf');
     }
 
     public function pdfuser($id)
@@ -515,35 +484,14 @@ class UsersController extends Controller
             $imagen = public_path('assets/imgs/logos/'.$config->logo);
         }
 
-        // Establecer tamaño de papel y orientación
-        $pdftamaño = 'Letter';
-        $pdfhorientacion = 'portrait';
+        $pdf = Pdf::loadView('admin.user.pdfuser', compact('usuario', 'pathuser', 'defaultImagePath', 'config', 'imagen', 'currency'));
 
-        if ($verpdf == "Download") {
-            $pdf = PDF::loadView('admin.user.pdfuser', compact('usuario', 'pathuser', 'defaultImagePath', 'config', 'imagen', 'currency'));
+        $pdf->getDomPDF()->set_option("enable_html5_parser", true);
+        $pdf->getDomPDF()->set_option("isHtml5ParserEnabled", true);
+        $pdf->getDomPDF()->set_option("isRemoteEnabled", true);
+        $pdf->setPaper('Letter', 'portrait');
 
-            // Configuración adicional para DOMPDF
-            $pdf->getDomPDF()->set_option("enable_html5_parser", true);
-            $pdf->getDomPDF()->set_option("isHtml5ParserEnabled", true);
-            $pdf->getDomPDF()->set_option("isRemoteEnabled", true);
-
-            $pdf->setPaper($pdftamaño, $pdfhorientacion);
-
-            return $pdf->download('Usuario_'.$usuario->name.'_'.$nompdf.'.pdf');
-        }
-
-        if ($verpdf == "Browser") {
-            $pdf = PDF::loadView('admin.user.pdfuser', compact('usuario', 'pathuser', 'defaultImagePath', 'config', 'imagen', 'currency'));
-
-            // Configuración adicional para DOMPDF
-            $pdf->getDomPDF()->set_option("enable_html5_parser", true);
-            $pdf->getDomPDF()->set_option("isHtml5ParserEnabled", true);
-            $pdf->getDomPDF()->set_option("isRemoteEnabled", true);
-
-            $pdf->setPaper($pdftamaño, $pdfhorientacion);
-
-            return $pdf->stream('Usuario_'.$usuario->name.'_'.$nompdf.'.pdf');
-        }
+        return $pdf->stream('Usuario_'.$usuario->name.'_'.$nompdf.'.pdf');
     }
 
     // Método para cambiar contraseña por el propio usuario

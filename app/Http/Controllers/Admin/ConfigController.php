@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use App\Models\Config;
 use App\Http\Requests\ConfigFormRequest;
 use Illuminate\Support\Facades\File;
-use DB;
 
 class ConfigController extends Controller
 {

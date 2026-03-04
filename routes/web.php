@@ -58,15 +58,15 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
     //Admin Users — empresas acceden filtrado por su empresa_id (controller self-filters)
-    Route::get('users', [UsersController::class, 'users']);
-    Route::get('show-user/{id}', [UsersController::class, 'showuser']);
-    Route::get('add-user', [UsersController::class, 'adduser']);
-    Route::post('insert-user', [UsersController::class, 'insertuser']);
-    Route::get('edit-user/{id}',[UsersController::class,'edituser']);
-    Route::put('update-user/{id}', [UsersController::class, 'updateuser']);
+    Route::get('users', [UsersController::class, 'users'])->name('users.index');
+    Route::get('show-user/{id}', [UsersController::class, 'showuser'])->name('users.show');
+    Route::get('add-user', [UsersController::class, 'adduser'])->name('users.create');
+    Route::post('insert-user', [UsersController::class, 'insertuser'])->name('users.store');
+    Route::get('edit-user/{id}',[UsersController::class,'edituser'])->name('users.edit');
+    Route::put('update-user/{id}', [UsersController::class, 'updateuser'])->name('users.update');
     Route::delete('delete-user/{id}', [UsersController::class, 'destroyuser'])->name('users.destroy');
-    Route::get('pdf-users', [UsersController::class, 'pdf']);
-    Route::get('pdf-user/{id}', [UsersController::class, 'pdfuser']);
+    Route::get('pdf-users', [UsersController::class, 'pdf'])->name('users.pdf');
+    Route::get('pdf-user/{id}', [UsersController::class, 'pdfuser'])->name('users.pdf.show');
 
     // ========================================
     // RUTAS SOLO ADMIN (role_as == 3)
@@ -79,8 +79,8 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         });
 
         //config
-        Route::get('config', [ConfigController::class, 'index']);
-        Route::put('update-config', [ConfigController::class, 'update']);
+        Route::get('config', [ConfigController::class, 'index'])->name('config.index');
+        Route::put('update-config', [ConfigController::class, 'update'])->name('config.update');
     });
 
     // ========================================
@@ -88,15 +88,15 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // ========================================
     Route::middleware(['role:admin,repro'])->group(function () {
         // Módulo de Empresas
-        Route::get('empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'index']);
-        Route::get('add-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'create']);
-        Route::post('insert-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'store']);
-        Route::get('edit-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'edit']);
-        Route::put('update-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'update']);
-        Route::get('show-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'show']);
+        Route::get('empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'index'])->name('empresas.index');
+        Route::get('add-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'create'])->name('empresas.create');
+        Route::post('insert-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'store'])->name('empresas.store');
+        Route::get('edit-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'edit'])->name('empresas.edit');
+        Route::put('update-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'update'])->name('empresas.update');
+        Route::get('show-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'show'])->name('empresas.show');
         Route::patch('cambiar-estado-empresa/{id}/{estado}', [App\Http\Controllers\Admin\EmpresasController::class, 'cambiarEstado'])->name('empresas.cambiar-estado');
-        Route::get('pdf-empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'pdf']);
-        Route::get('pdf-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'pdfEmpresa']);
+        Route::get('pdf-empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'pdf'])->name('empresas.pdf');
+        Route::get('pdf-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'pdfEmpresa'])->name('empresas.pdf.show');
 
         // Módulo de Sedes
         Route::get('sedes', [App\Http\Controllers\Admin\SedesController::class, 'index'])->name('sedes.index');

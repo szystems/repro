@@ -191,7 +191,6 @@ class OrdenesController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'user_id' => Auth::id(),
-                'request_data' => $request->all()
             ]);
 
             return back()->with('error', 'Error al crear la orden: ' . $e->getMessage())
