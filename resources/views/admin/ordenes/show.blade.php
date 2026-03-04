@@ -412,8 +412,11 @@
                                                     @else Socioeconómico
                                                     @endif
                                                 </span>
-                                                <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">
-                                                    {{ $evaluado->estado_evaluacion_texto }}
+                                                <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}" title="Estado Evaluación">
+                                                    <i class="bi bi-clipboard-check"></i> {{ $evaluado->estado_evaluacion_texto }}
+                                                </span>
+                                                <span class="badge bg-{{ $evaluado->estado_formulario_color }}" title="Estado Formulario">
+                                                    <i class="bi bi-file-text"></i> {{ \App\Models\EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->estado_formulario] ?? ucfirst($evaluado->estado_formulario) }}
                                                 </span>
                                                 @if($evaluado->documentos->count() > 0)
                                                     <span class="badge bg-secondary" title="Documentos"><i class="bi bi-folder2-open"></i> {{ $evaluado->documentos->count() }}</span>

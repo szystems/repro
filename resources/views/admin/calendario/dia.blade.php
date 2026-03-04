@@ -173,6 +173,7 @@
                                                         <br>
                                                         <small>
                                                             <span class="badge {{ $colorClase }} badge-sm">{{ $cita->tipo_servicio_texto }}</span>
+                                                            <span class="badge bg-{{ $cita->estado_evaluacion_color }} badge-sm" title="Estado evaluación">{{ $cita->estado_evaluacion_texto }}</span>
                                                             @if($cita->sede)
                                                                 <i class="bi bi-geo-alt"></i> {{ $cita->sede->nombre }}
                                                             @endif
@@ -183,6 +184,26 @@
                                                                 <i class="bi bi-building ms-1"></i> {{ $cita->orden->empresa->nombre }}
                                                             @endif
                                                         </small>
+                                                        @php
+                                                            $transEval = \App\Models\EvaluadoOrden::transicionesEvaluacion()[$cita->estado_evaluacion] ?? [];
+                                                            $nombresEval = \App\Models\EvaluadoOrden::estadosEvaluacionDisponibles();
+                                                        @endphp
+                                                        @if(count($transEval) > 0)
+                                                        <form action="{{ route('evaluados.cambiar-estado', $cita->id) }}" method="POST" class="d-inline-flex align-items-center gap-1 mt-1">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="tipo_estado" value="evaluacion">
+                                                            <select name="nuevo_estado" class="form-select form-select-sm py-0" style="max-width: 155px; font-size: 0.75rem;" required>
+                                                                <option value="">Estado...</option>
+                                                                @foreach($transEval as $est)
+                                                                    <option value="{{ $est }}">{{ $nombresEval[$est] ?? ucfirst($est) }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            <button type="submit" class="btn btn-outline-primary btn-sm py-0" title="Cambiar estado">
+                                                                <i class="bi bi-arrow-right-circle"></i>
+                                                            </button>
+                                                        </form>
+                                                        @endif
                                                     </div>
                                                     <div class="btn-group btn-group-sm">
                                                         <button class="btn btn-outline-primary btn-sm" title="Reprogramar"
