@@ -129,16 +129,20 @@
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
                                                 @if($sede->estado)
-                                                    <a href="{{ route('sedes.cambiar-estado', [$sede->id, 0]) }}"
-                                                       class="btn btn-outline-secondary" title="Desactivar"
-                                                       onclick="return confirm('¿Desactivar esta sede?')">
-                                                        <i class="bi bi-toggle-off"></i>
-                                                    </a>
+                                                    <form action="{{ route('sedes.cambiar-estado', [$sede->id, 0]) }}" method="POST" class="d-inline">
+                                                        @csrf @method('PATCH')
+                                                        <button type="submit" class="btn btn-outline-secondary" title="Desactivar"
+                                                                onclick="return confirm('¿Desactivar esta sede?')">
+                                                            <i class="bi bi-toggle-off"></i>
+                                                        </button>
+                                                    </form>
                                                 @else
-                                                    <a href="{{ route('sedes.cambiar-estado', [$sede->id, 1]) }}"
-                                                       class="btn btn-outline-success" title="Activar">
-                                                        <i class="bi bi-toggle-on"></i>
-                                                    </a>
+                                                    <form action="{{ route('sedes.cambiar-estado', [$sede->id, 1]) }}" method="POST" class="d-inline">
+                                                        @csrf @method('PATCH')
+                                                        <button type="submit" class="btn btn-outline-success" title="Activar">
+                                                            <i class="bi bi-toggle-on"></i>
+                                                        </button>
+                                                    </form>
                                                 @endif
                                                 @if($sede->evaluados_count === 0)
                                                     <form action="{{ route('sedes.destroy', $sede->id) }}" method="POST" class="d-inline">

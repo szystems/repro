@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class AdminMiddleware
 {
     /**
-     * Handle an incoming request.
+     * Verifica que el usuario sea administrador (role_as >= 2: repro o admin).
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
@@ -18,21 +18,14 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        if(Auth::check())
-        {
-            if(Auth::user()->role_as == '1' or Auth::user()->role_as == '0')
-            {
-                return $next($request);
-            }
-            else
-            {
-                return redirect('/dashboard')->with('status','Acceso denegado no eres Usuario de Repro');
-            }
+        if (!Auth::check()) {
+            return redirect('/login')->with('status', 'Por favor inicie sesión para acceder.');
         }
-        else
-        {
-            return redirect('/dashboard')->with('status','Porfavor inicie sesión para acceder');
-        }
-    }
 
+        if (Auth::user()->role_as >= 2) {
+            return $next($request);
+        }
+
+        return redirect('/dashboard')->with('status', 'Acceso denegado. No tiene permisos de administrador.');
+    }
 }

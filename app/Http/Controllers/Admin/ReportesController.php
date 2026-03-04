@@ -16,9 +16,12 @@ use Maatwebsite\Excel\Facades\Excel;
 class ReportesController extends Controller
 {
     /**
-     * Reporte de Evaluaciones/Cuestionarios
+     * Construir query base de evaluaciones con filtros aplicados.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function evaluaciones(Request $request)
+    private function buildEvaluacionesQuery(array $filters): \Illuminate\Database\Eloquent\Builder
     {
         $query = EvaluadoOrden::with(['orden.empresa']);
 
@@ -31,28 +34,37 @@ class ReportesController extends Controller
             });
         }
 
-        // Filtros
-        if ($request->filled('fecha_inicio')) {
-            $query->whereDate('created_at', '>=', $request->fecha_inicio);
+        if (!empty($filters['fecha_inicio'])) {
+            $query->whereDate('created_at', '>=', $filters['fecha_inicio']);
         }
-        if ($request->filled('fecha_fin')) {
-            $query->whereDate('created_at', '<=', $request->fecha_fin);
+        if (!empty($filters['fecha_fin'])) {
+            $query->whereDate('created_at', '<=', $filters['fecha_fin']);
         }
-        if ($request->filled('empresa_id') && Auth::user()->role_as >= 2) {
-            $query->whereHas('orden', function ($q) use ($request) {
-                $q->where('empresa_id', $request->empresa_id);
+        if (!empty($filters['empresa_id']) && Auth::user()->role_as >= 2) {
+            $query->whereHas('orden', function ($q) use ($filters) {
+                $q->where('empresa_id', $filters['empresa_id']);
             });
         }
-        if ($request->filled('tipo_servicio')) {
-            $query->where('tipo_servicio', $request->tipo_servicio);
+        if (!empty($filters['tipo_servicio'])) {
+            $query->where('tipo_servicio', $filters['tipo_servicio']);
         }
-        if ($request->filled('estado')) {
-            if ($request->estado == 'completado') {
+        if (!empty($filters['estado'])) {
+            if ($filters['estado'] == 'completado') {
                 $query->where('cuestionario_completado', true);
-            } elseif ($request->estado == 'pendiente') {
+            } elseif ($filters['estado'] == 'pendiente') {
                 $query->where('cuestionario_completado', false);
             }
         }
+
+        return $query;
+    }
+
+    /**
+     * Reporte de Evaluaciones/Cuestionarios
+     */
+    public function evaluaciones(Request $request)
+    {
+        $query = $this->buildEvaluacionesQuery($request->all());
 
         // Clonar query para estadísticas
         $statsQuery = clone $query;
@@ -131,38 +143,7 @@ class ReportesController extends Controller
      */
     public function evaluacionesPdf(Request $request)
     {
-        $query = EvaluadoOrden::with(['orden.empresa']);
-
-        if (Auth::user()->role_as == 1) {
-            $query->whereHas('orden', function ($q) {
-                $q->where('empresa_id', Auth::user()->empresa_id)
-                  ->where('resultados_visibles_empresa', true)
-                  ->where('estado', 'entregado');
-            });
-        }
-
-        // Aplicar mismos filtros
-        if ($request->filled('fecha_inicio')) {
-            $query->whereDate('created_at', '>=', $request->fecha_inicio);
-        }
-        if ($request->filled('fecha_fin')) {
-            $query->whereDate('created_at', '<=', $request->fecha_fin);
-        }
-        if ($request->filled('empresa_id') && Auth::user()->role_as >= 2) {
-            $query->whereHas('orden', function ($q) use ($request) {
-                $q->where('empresa_id', $request->empresa_id);
-            });
-        }
-        if ($request->filled('tipo_servicio')) {
-            $query->where('tipo_servicio', $request->tipo_servicio);
-        }
-        if ($request->filled('estado')) {
-            if ($request->estado == 'completado') {
-                $query->where('cuestionario_completado', true);
-            } elseif ($request->estado == 'pendiente') {
-                $query->where('cuestionario_completado', false);
-            }
-        }
+        $query = $this->buildEvaluacionesQuery($request->all());
 
         $evaluados = $query->orderBy('created_at', 'desc')->get();
 
@@ -243,39 +224,9 @@ class ReportesController extends Controller
      */
     public function evaluacionesExcel(Request $request)
     {
-        $query = EvaluadoOrden::with(['orden.empresa']);
-
-        if (Auth::user()->role_as == 1) {
-            $query->whereHas('orden', function ($q) {
-                $q->where('empresa_id', Auth::user()->empresa_id)
-                  ->where('resultados_visibles_empresa', true)
-                  ->where('estado', 'entregado');
-            });
-        }
-
-        if ($request->filled('fecha_inicio')) {
-            $query->whereDate('created_at', '>=', $request->fecha_inicio);
-        }
-        if ($request->filled('fecha_fin')) {
-            $query->whereDate('created_at', '<=', $request->fecha_fin);
-        }
-        if ($request->filled('empresa_id') && Auth::user()->role_as >= 2) {
-            $query->whereHas('orden', function ($q) use ($request) {
-                $q->where('empresa_id', $request->empresa_id);
-            });
-        }
-        if ($request->filled('tipo_servicio')) {
-            $query->where('tipo_servicio', $request->tipo_servicio);
-        }
-        if ($request->filled('estado')) {
-            if ($request->estado == 'completado') {
-                $query->where('cuestionario_completado', true);
-            } elseif ($request->estado == 'pendiente') {
-                $query->where('cuestionario_completado', false);
-            }
-        }
-
-        $evaluados = $query->orderBy('created_at', 'desc')->get();
+        $evaluados = $this->buildEvaluacionesQuery($request->all())
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return Excel::download(
             new \App\Exports\EvaluacionesExport($evaluados),

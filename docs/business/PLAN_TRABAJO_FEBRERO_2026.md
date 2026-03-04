@@ -341,6 +341,23 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | ResultadosVisibilidadTest::enProceso | FIX_CODE | Controller aborta 403 en lugar de dejar vista manejar "en proceso" |
 | ResultadosVisibilidadTest::filtroEmpresa | FIX_CODE | ReportesController no filtra por visibilidad para empresa |
 
+### FASE 6: Seguridad y Calidad (Semana 6)
+**Auditoría de seguridad, eliminación de debug, rutas seguras, middleware, refactoring, mailables**
+
+> **Principio:** Hardening del sistema — cerrar vulnerabilidades sin afectar funcionalidad existente.
+> **Alcance:** Seguridad crítica + calidad de código + mailables + refactoring de lógica duplicada.
+
+| # | Tarea | Estado | Commit |
+|---|-------|--------|--------|
+| 6.1 | Eliminar `public/test-db.php` + ruta `/test-cuestionario/{token}` (exposición de datos) | ✅ | |
+| 6.2 | Convertir rutas GET destructivas a DELETE/PATCH con CSRF (`delete-user`, `cambiar-estado-empresa`, `cambiar-estado-sede`) | ✅ | |
+| 6.3 | Agregar middleware `role:admin` (config, roles) y `role:admin,repro` (empresas, sedes, calendario) a rutas desprotegidas | ✅ | |
+| 6.4 | Fix `AdminMiddleware` lógica invertida — corregido para permitir `role_as >= 2` | ✅ | |
+| 6.5 | Eliminar ~20 `Log::info()` con datos sensibles en `OrdenesController::store()/update()/procesarEvaluados()` | ✅ | |
+| 6.6 | Mailables: `UserMail` y `UserResetPasswordMail` → `implements ShouldQueue` + API moderna `envelope()/content()` | ✅ | |
+| 6.7 | Extraer `buildEvaluacionesQuery()` en `ReportesController` — eliminada duplicación 3× | ✅ | |
+| 6.8 | Tests de seguridad: 20 tests, 23 assertions (rutas PATCH, middleware roles, debug eliminado) | ✅ | |
+
 ---
 
 ## 📈 Progreso General
@@ -352,6 +369,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | **Fase 3: Sedes** | **Semana 3** | **✅ Completada** | **7/7** |
 | Fase 4: Calendario (E2) | Semana 4 | **✅ Completada** | **10/10** |
 | Fase 5: Flujos y Cierre | Semana 5 | **✅ Completada** | **7/7** |
+| **Fase 6: Seguridad y Calidad** | **Semana 6** | **✅ Completada** | **8/8** |
 
 ---
 
@@ -368,6 +386,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
+| 2026-03-03 | Fase 6 completada | Seguridad y Calidad — 20 tests, 23 assertions — eliminado test-db.php, ruta debug, rutas GET→PATCH/DELETE, middleware roles, logs sensibles, mailables ShouldQueue, refactor ReportesController |
 | 2026-03-03 | Fase 5 completada | Flujos y Cierre — 55 tests, 181 assertions — 3 migraciones (estado_formulario, ENUM→VARCHAR×2), transiciones, dropdowns contextuales, commit `361f3a7d` |
 | 2026-03-03 | Fase 4 completada | Calendario y Agenda — 31 tests, 74 assertions — hora inicio/fin, anti-traslape rangos, dual entry |
 | 2026-03-03 | Inicio Fase 4 | Calendario y Agenda — decisión: usar evaluados_orden directo, slots 30 min, dual entry |

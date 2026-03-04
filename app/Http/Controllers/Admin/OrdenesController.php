@@ -119,12 +119,6 @@ class OrdenesController extends Controller
      */
     public function store(Request $request)
     {
-        // Debug: Log de entrada
-        Log::info('=== INICIO STORE ORDEN (Sin FormRequest) ===');
-        Log::info('Request data: ' . json_encode($request->all()));
-        Log::info('User ID: ' . Auth::id());
-        Log::info('Method: ' . $request->method());
-        Log::info('URL: ' . $request->url());
 
         // Validación manual temporal
         $validated = $request->validate([
@@ -145,8 +139,6 @@ class OrdenesController extends Controller
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
         ]);
-
-        Log::info('Validación manual exitosa: ' . json_encode($validated));
 
         DB::beginTransaction();
 
@@ -175,23 +167,13 @@ class OrdenesController extends Controller
                 $datosOrden['empresa_id'] = $validated['empresa_id'];
             }
 
-            Log::info('Datos para crear orden: ' . json_encode($datosOrden));
-
             $orden = Orden::create($datosOrden);
-            Log::info('Orden creada con ID: ' . $orden->id);
 
             if ($request->has('evaluados')) {
                 $this->procesarEvaluados($orden, $request->evaluados);
             }
 
             DB::commit();
-
-            // Log temporal para debug
-            Log::info('Orden creada exitosamente', [
-                'orden_id' => $orden->id,
-                'codigo' => $orden->codigo_orden,
-                'evaluados_count' => $orden->evaluados()->count()
-            ]);
 
             // Redirigir según el rol del usuario
             if (Auth::user()->role_as == 1) {
@@ -278,12 +260,7 @@ class OrdenesController extends Controller
             abort(403);
         }
 
-        // Debug: Log de entrada
-        Log::info('=== INICIO UPDATE ORDEN ===');
-        Log::info('Orden ID: ' . $orden->id);
-        Log::info('Request data: ' . json_encode($request->all()));
-
-        // Validación manual
+        // Validación
         $validated = $request->validate([
             'empresa_id' => 'required|exists:empresas,id',
             'observaciones_internas' => 'nullable|string|max:500',
@@ -306,12 +283,10 @@ class OrdenesController extends Controller
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
         ]);
 
-        Log::info('Validación exitosa: ' . json_encode($validated));
-
         DB::beginTransaction();
 
         try {
-            // Actualizar datos básicos de la orden - solo campos que vienen en el request
+            // Actualizar datos básicos de la orden
             $datosOrden = [
                 'instrucciones_generales' => $validated['instrucciones_generales'] ?? $orden->instrucciones_generales,
             ];
@@ -338,8 +313,6 @@ class OrdenesController extends Controller
                 $datosOrden['empresa_id'] = $validated['empresa_id'];
             }
 
-            Log::info('Actualizando orden con datos: ' . json_encode($datosOrden));
-
             $orden->update($datosOrden);
 
             if ($request->has('evaluados')) {
@@ -347,8 +320,6 @@ class OrdenesController extends Controller
             }
 
             DB::commit();
-
-            Log::info('Orden actualizada exitosamente');
 
             // Redirigir según el rol del usuario
             if (Auth::user()->role_as == 1) {
@@ -540,17 +511,11 @@ class OrdenesController extends Controller
      */
     private function procesarEvaluados(Orden $orden, array $evaluados, bool $esActualizacion = false): void
     {
-        Log::info('=== PROCESANDO EVALUADOS ===');
-        Log::info('Orden ID: ' . $orden->id);
-        Log::info('Cantidad de evaluados: ' . count($evaluados));
-        Log::info('Es actualización: ' . ($esActualizacion ? 'Sí' : 'No'));
-
         if ($esActualizacion) {
             $evaluadosExistentes = $orden->evaluados->pluck('id')->toArray();
         }
 
         foreach ($evaluados as $index => $evaluadoData) {
-            Log::info('Procesando evaluado ' . ($index + 1) . ': ' . json_encode($evaluadoData));
             $datosEvaluado = [
                 'nombre' => $evaluadoData['nombre'],
                 'apellidos' => $evaluadoData['apellidos'] ?? null,
@@ -580,15 +545,11 @@ class OrdenesController extends Controller
                 }
             } else {
                 $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
-                Log::info('Evaluado creado con ID: ' . $evaluadoCreado->id);
 
                 // Enviar notificación al evaluado si tiene email
                 $this->notificarEvaluadoAsignado($evaluadoCreado);
             }
         }
-
-        Log::info('=== FIN PROCESAMIENTO EVALUADOS ===');
-        Log::info('Total evaluados en la orden: ' . $orden->evaluados()->count());
 
         if ($esActualizacion && !empty($evaluadosExistentes)) {
             EvaluadoOrden::whereIn('id', $evaluadosExistentes)->delete();

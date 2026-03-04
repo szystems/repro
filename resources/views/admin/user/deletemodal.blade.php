@@ -15,9 +15,12 @@
               <button type="button" class="btn btn-info" data-bs-dismiss="modal">
                 <i class="bi bi-x-circle"></i> Cancelar
               </button>
-              <a href="{{ url('delete-user/'.$user->id) }}" type="button" class="btn btn-danger">
-                <i class="bi bi-trash"></i> Eliminar
-              </a>
+              <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn btn-danger">
+                  <i class="bi bi-trash"></i> Eliminar
+                </button>
+              </form>
           </div>
       </div>
   </div>

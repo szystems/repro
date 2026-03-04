@@ -71,13 +71,12 @@ class CalendarioTest extends TestCase
             ->assertOk();
     }
 
-    public function test_calendario_accesible_para_empresa(): void
+    public function test_calendario_no_accesible_para_empresa(): void
     {
-        // Las empresas sí pueden ver (role_as >= 1, rutas dentro de middleware auth)
-        // pero la programación de citas requiere role_as >= 2
+        // Empresas no pueden acceder al calendario — protegido por middleware role:admin,repro
         $this->actingAs($this->usuarioEmpresa())
             ->get('/calendario')
-            ->assertOk();
+            ->assertForbidden();
     }
 
     // -------------------------------------------------------

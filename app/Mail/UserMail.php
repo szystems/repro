@@ -6,40 +6,47 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class UserMail extends Mailable
+/**
+ * Email de bienvenida con datos de acceso para nuevos usuarios.
+ */
+class UserMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public $user;
-    public $password;
+    public User $user;
+    public string $password;
 
-    /**
-     * Create a new message instance.
-     *
-     * @param User $user
-     * @param string $password
-     * @return void
-     */
-    public function __construct(User $user, $password)
+    public function __construct(User $user, string $password)
     {
         $this->user = $user;
         $this->password = $password;
     }
 
-    /**
-     * Build the message.
-     *
-     * @return $this
-     */
-    public function build()
+    public function envelope(): Envelope
     {
-        return $this->subject('Bienvenido a REPRO - Datos de acceso')
-                    ->view('emails.user')
-                    ->with([
-                        'user' => $this->user,
-                        'password' => $this->password
-                    ]);
+        return new Envelope(
+            subject: 'Bienvenido a REPRO - Datos de acceso',
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.user',
+            with: [
+                'user' => $this->user,
+                'password' => $this->password,
+            ],
+        );
+    }
+
+    /** @return array<int, \Illuminate\Mail\Mailables\Attachment> */
+    public function attachments(): array
+    {
+        return [];
     }
 }

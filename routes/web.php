@@ -57,54 +57,64 @@ Route::post('/password/email', [\App\Http\Controllers\Auth\ForgotPasswordControl
 Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
-    //Admin Users
+    //Admin Users — empresas acceden filtrado por su empresa_id (controller self-filters)
     Route::get('users', [UsersController::class, 'users']);
     Route::get('show-user/{id}', [UsersController::class, 'showuser']);
     Route::get('add-user', [UsersController::class, 'adduser']);
     Route::post('insert-user', [UsersController::class, 'insertuser']);
     Route::get('edit-user/{id}',[UsersController::class,'edituser']);
     Route::put('update-user/{id}', [UsersController::class, 'updateuser']);
-    Route::get('delete-user/{id}', [UsersController::class, 'destroyuser']);
+    Route::delete('delete-user/{id}', [UsersController::class, 'destroyuser'])->name('users.destroy');
     Route::get('pdf-users', [UsersController::class, 'pdf']);
     Route::get('pdf-user/{id}', [UsersController::class, 'pdfuser']);
 
-    //Roles y Permisos (solo para administradores)
-    Route::prefix('admin')->group(function () {
-        Route::get('roles/permissions', [RolesController::class, 'permissions'])->name('roles.permissions');
-        Route::resource('roles', RolesController::class);
+    // ========================================
+    // RUTAS SOLO ADMIN (role_as == 3)
+    // ========================================
+    Route::middleware(['role:admin'])->group(function () {
+        //Roles y Permisos
+        Route::prefix('admin')->group(function () {
+            Route::get('roles/permissions', [RolesController::class, 'permissions'])->name('roles.permissions');
+            Route::resource('roles', RolesController::class);
+        });
+
+        //config
+        Route::get('config', [ConfigController::class, 'index']);
+        Route::put('update-config', [ConfigController::class, 'update']);
     });
 
-    //config
-    Route::get('config', [ConfigController::class, 'index']);
-    Route::put('update-config', [ConfigController::class, 'update']);
+    // ========================================
+    // RUTAS ADMIN + REPRO (role_as >= 2)
+    // ========================================
+    Route::middleware(['role:admin,repro'])->group(function () {
+        // Módulo de Empresas
+        Route::get('empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'index']);
+        Route::get('add-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'create']);
+        Route::post('insert-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'store']);
+        Route::get('edit-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'edit']);
+        Route::put('update-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'update']);
+        Route::get('show-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'show']);
+        Route::patch('cambiar-estado-empresa/{id}/{estado}', [App\Http\Controllers\Admin\EmpresasController::class, 'cambiarEstado'])->name('empresas.cambiar-estado');
+        Route::get('pdf-empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'pdf']);
+        Route::get('pdf-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'pdfEmpresa']);
 
-    // Rutas para el módulo de Empresas
-    Route::get('empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'index']);
-    Route::get('add-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'create']);
-    Route::post('insert-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'store']);
-    Route::get('edit-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'edit']);
-    Route::put('update-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'update']);
-    Route::get('show-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'show']);
-    Route::get('cambiar-estado-empresa/{id}/{estado}', [App\Http\Controllers\Admin\EmpresasController::class, 'cambiarEstado']);
-    Route::get('pdf-empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'pdf']);
-    Route::get('pdf-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'pdfEmpresa']);
+        // Módulo de Sedes
+        Route::get('sedes', [App\Http\Controllers\Admin\SedesController::class, 'index'])->name('sedes.index');
+        Route::get('add-sede', [App\Http\Controllers\Admin\SedesController::class, 'create'])->name('sedes.create');
+        Route::post('insert-sede', [App\Http\Controllers\Admin\SedesController::class, 'store'])->name('sedes.store');
+        Route::get('show-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'show'])->name('sedes.show');
+        Route::get('edit-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'edit'])->name('sedes.edit');
+        Route::put('update-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'update'])->name('sedes.update');
+        Route::patch('cambiar-estado-sede/{id}/{estado}', [App\Http\Controllers\Admin\SedesController::class, 'cambiarEstado'])->name('sedes.cambiar-estado');
+        Route::delete('delete-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'destroy'])->name('sedes.destroy');
 
-    // Módulo de Sedes - Solo REPRO (role_as >= 3)
-    Route::get('sedes', [App\Http\Controllers\Admin\SedesController::class, 'index'])->name('sedes.index');
-    Route::get('add-sede', [App\Http\Controllers\Admin\SedesController::class, 'create'])->name('sedes.create');
-    Route::post('insert-sede', [App\Http\Controllers\Admin\SedesController::class, 'store'])->name('sedes.store');
-    Route::get('show-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'show'])->name('sedes.show');
-    Route::get('edit-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'edit'])->name('sedes.edit');
-    Route::put('update-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'update'])->name('sedes.update');
-    Route::get('cambiar-estado-sede/{id}/{estado}', [App\Http\Controllers\Admin\SedesController::class, 'cambiarEstado'])->name('sedes.cambiar-estado');
-    Route::delete('delete-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'destroy'])->name('sedes.destroy');
-
-    // Módulo Calendario de Programación - REPRO (role_as >= 2)
-    Route::get('calendario', [App\Http\Controllers\Admin\CalendarioController::class, 'index'])->name('calendario.index');
-    Route::get('calendario/dia/{fecha}', [App\Http\Controllers\Admin\CalendarioController::class, 'dia'])->name('calendario.dia');
-    Route::post('calendario/programar', [App\Http\Controllers\Admin\CalendarioController::class, 'programar'])->name('calendario.programar');
-    Route::patch('calendario/evaluados/{evaluado}/reprogramar', [App\Http\Controllers\Admin\CalendarioController::class, 'reprogramar'])->name('calendario.reprogramar');
-    Route::delete('calendario/evaluados/{evaluado}/cancelar', [App\Http\Controllers\Admin\CalendarioController::class, 'cancelar'])->name('calendario.cancelar');
+        // Módulo Calendario de Programación
+        Route::get('calendario', [App\Http\Controllers\Admin\CalendarioController::class, 'index'])->name('calendario.index');
+        Route::get('calendario/dia/{fecha}', [App\Http\Controllers\Admin\CalendarioController::class, 'dia'])->name('calendario.dia');
+        Route::post('calendario/programar', [App\Http\Controllers\Admin\CalendarioController::class, 'programar'])->name('calendario.programar');
+        Route::patch('calendario/evaluados/{evaluado}/reprogramar', [App\Http\Controllers\Admin\CalendarioController::class, 'reprogramar'])->name('calendario.reprogramar');
+        Route::delete('calendario/evaluados/{evaluado}/cancelar', [App\Http\Controllers\Admin\CalendarioController::class, 'cancelar'])->name('calendario.cancelar');
+    });
 
     // Rutas para el módulo de Órdenes - Disponible para admin, repro y empresas
     Route::resource('ordenes', OrdenesController::class)->parameters(['ordenes' => 'orden']);
@@ -213,23 +223,6 @@ Route::post('/logout', function () {
 // ========================================
 // RUTAS PÚBLICAS DE CUESTIONARIOS (SIN AUTENTICACIÓN)
 // ========================================
-
-// Ruta de prueba para verificar cuestionarios
-Route::get('/test-cuestionario/{token}', function($token) {
-    $evaluado = \App\Models\EvaluadoOrden::where('token_unico', $token)->first();
-    if ($evaluado) {
-        return response()->json([
-            'status' => 'success',
-            'token' => $token,
-            'evaluado' => $evaluado->nombre . ' ' . $evaluado->apellidos,
-            'dpi' => $evaluado->dpi,
-            'expira' => $evaluado->token_expira_at,
-            'completado' => $evaluado->cuestionario_completado
-        ]);
-    } else {
-        return response()->json(['status' => 'error', 'message' => 'Token no encontrado']);
-    }
-});
 
 Route::prefix('cuestionario')->name('cuestionario.')->group(function () {
     // Acceso inicial con token

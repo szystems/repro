@@ -165,9 +165,12 @@
                                                                 <i class="bi bi-slash-circle"></i>
                                                             </button>
                                                         @else
-                                                            <a href="{{ url('cambiar-estado-empresa/'.$empresa->id.'/1') }}" class="btn btn-success" data-bs-toggle="tooltip" title="Activar">
-                                                                <i class="bi bi-check-circle"></i>
-                                                            </a>
+                                                            <form action="{{ route('empresas.cambiar-estado', [$empresa->id, 1]) }}" method="POST" class="d-inline">
+                                                                @csrf @method('PATCH')
+                                                                <button type="submit" class="btn btn-success" data-bs-toggle="tooltip" title="Activar">
+                                                                    <i class="bi bi-check-circle"></i>
+                                                                </button>
+                                                            </form>
                                                         @endif
                                                     @endif
                                                 </div>
@@ -186,7 +189,10 @@
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                                <a href="{{ url('cambiar-estado-empresa/'.$empresa->id.'/0') }}" class="btn btn-warning">Desactivar</a>
+                                                                <form action="{{ route('empresas.cambiar-estado', [$empresa->id, 0]) }}" method="POST" class="d-inline">
+                                                                    @csrf @method('PATCH')
+                                                                    <button type="submit" class="btn btn-warning">Desactivar</button>
+                                                                </form>
                                                             </div>
                                                         </div>
                                                     </div>

@@ -144,7 +144,7 @@ class SedesTest extends TestCase
         $sede = Sede::factory()->create(['estado' => 1]);
 
         $this->actingAs($this->usuarioRepro())
-            ->get("/cambiar-estado-sede/{$sede->id}/0")
+            ->patch("/cambiar-estado-sede/{$sede->id}/0")
             ->assertRedirect();
 
         $this->assertDatabaseHas('sedes', ['id' => $sede->id, 'estado' => 0]);
@@ -155,7 +155,7 @@ class SedesTest extends TestCase
         $sede = Sede::factory()->inactiva()->create();
 
         $this->actingAs($this->usuarioRepro())
-            ->get("/cambiar-estado-sede/{$sede->id}/1")
+            ->patch("/cambiar-estado-sede/{$sede->id}/1")
             ->assertRedirect();
 
         $this->assertDatabaseHas('sedes', ['id' => $sede->id, 'estado' => 1]);

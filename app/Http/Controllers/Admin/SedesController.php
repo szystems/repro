@@ -15,9 +15,6 @@ class SedesController extends Controller
     /** Listar sedes con búsqueda y filtro de estado. */
     public function index(Request $request): View
     {
-        if (Auth::user()->role_as < 3) {
-            abort(403);
-        }
 
         $searchTerm = $request->input('search');
         $estado     = $request->input('estado');
@@ -46,10 +43,6 @@ class SedesController extends Controller
     /** Formulario para crear nueva sede. */
     public function create(): View
     {
-        if (Auth::user()->role_as < 3) {
-            abort(403);
-        }
-
         return view('admin.sedes.create');
     }
 
@@ -64,10 +57,6 @@ class SedesController extends Controller
     /** Mostrar detalle de una sede. */
     public function show(int $id): View
     {
-        if (Auth::user()->role_as < 3) {
-            abort(403);
-        }
-
         $sede = Sede::withCount('evaluados')->findOrFail($id);
 
         return view('admin.sedes.show', compact('sede'));
@@ -76,10 +65,6 @@ class SedesController extends Controller
     /** Formulario para editar una sede. */
     public function edit(int $id): View
     {
-        if (Auth::user()->role_as < 3) {
-            abort(403);
-        }
-
         $sede = Sede::findOrFail($id);
 
         return view('admin.sedes.edit', compact('sede'));
