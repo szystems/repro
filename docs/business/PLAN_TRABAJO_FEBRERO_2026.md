@@ -349,14 +349,14 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 | # | Tarea | Estado | Commit |
 |---|-------|--------|--------|
-| 6.1 | Eliminar `public/test-db.php` + ruta `/test-cuestionario/{token}` (exposición de datos) | ✅ | |
-| 6.2 | Convertir rutas GET destructivas a DELETE/PATCH con CSRF (`delete-user`, `cambiar-estado-empresa`, `cambiar-estado-sede`) | ✅ | |
-| 6.3 | Agregar middleware `role:admin` (config, roles) y `role:admin,repro` (empresas, sedes, calendario) a rutas desprotegidas | ✅ | |
-| 6.4 | Fix `AdminMiddleware` lógica invertida — corregido para permitir `role_as >= 2` | ✅ | |
-| 6.5 | Eliminar ~20 `Log::info()` con datos sensibles en `OrdenesController::store()/update()/procesarEvaluados()` | ✅ | |
-| 6.6 | Mailables: `UserMail` y `UserResetPasswordMail` → `implements ShouldQueue` + API moderna `envelope()/content()` | ✅ | |
-| 6.7 | Extraer `buildEvaluacionesQuery()` en `ReportesController` — eliminada duplicación 3× | ✅ | |
-| 6.8 | Tests de seguridad: 20 tests, 23 assertions (rutas PATCH, middleware roles, debug eliminado) | ✅ | |
+| 6.1 | Eliminar `public/test-db.php` + ruta `/test-cuestionario/{token}` (exposición de datos) | ✅ | `e189738b` |
+| 6.2 | Convertir rutas GET destructivas a DELETE/PATCH con CSRF (`delete-user`, `cambiar-estado-empresa`, `cambiar-estado-sede`) | ✅ | `e189738b` |
+| 6.3 | Agregar middleware `role:admin` (config, roles) y `role:admin,repro` (empresas, sedes, calendario) a rutas desprotegidas | ✅ | `e189738b` |
+| 6.4 | Fix `AdminMiddleware` lógica invertida — corregido para permitir `role_as >= 2` | ✅ | `e189738b` |
+| 6.5 | Eliminar ~20 `Log::info()` con datos sensibles en `OrdenesController::store()/update()/procesarEvaluados()` | ✅ | `e189738b` |
+| 6.6 | Mailables: `UserMail` y `UserResetPasswordMail` → `implements ShouldQueue` + API moderna `envelope()/content()` | ✅ | `e189738b` |
+| 6.7 | Extraer `buildEvaluacionesQuery()` en `ReportesController` — eliminada duplicación 3× | ✅ | `e189738b` |
+| 6.8 | Tests de seguridad: 20 tests, 23 assertions (rutas PATCH, middleware roles, debug eliminado) | ✅ | `e189738b` |
 
 ### FASE 7: Optimización y Limpieza (Semana 7)
 **Named routes, índices, limpieza imports, refactoring queries, N+1, error handling**
@@ -366,14 +366,14 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 | # | Tarea | Estado | Commit |
 |---|-------|--------|--------|
-| 7.1 | Agregar `->name()` a 18 rutas sin nombre (users, config, empresas) | ✅ | |
-| 7.2 | Migración: índices en `empresas.estado` y `sedes.estado` | ✅ | |
-| 7.3 | Eliminar imports no usados (`use DB;`, `use PDF;`) y optimizar `$filterUsers` | ✅ | |
-| 7.4 | Eliminar checks de permisos redundantes en `EmpresasController` (6 métodos, cubiertos por middleware) | ✅ | |
-| 7.5 | Error handling: catches silenciosos → `Log::error()`, eliminar datos sensibles de logs, imports correctos | ✅ | |
-| 7.6 | Extraer `buildEmpresasQuery()` (EmpresasController) + `buildUsersQuery()` (UsersController) + `buildEmpresasReportQuery()` (ReportesController) | ✅ | |
-| 7.7 | Fix N+1: eager loading en `users()`, consolidar stats queries en `CuestionariosController` | ✅ | |
-| 7.8 | Tests para cambios de Fase 7 | ✅ | |
+| 7.1 | Agregar `->name()` a 18 rutas sin nombre (users, config, empresas) | ✅ | `3b75ea21` |
+| 7.2 | Migración: índices en `empresas.estado` y `sedes.estado` | ✅ | `3b75ea21` |
+| 7.3 | Eliminar imports no usados (`use DB;`, `use PDF;`) y optimizar `$filterUsers` | ✅ | `3b75ea21` |
+| 7.4 | Eliminar checks de permisos redundantes en `EmpresasController` (6 métodos, cubiertos por middleware) | ✅ | `3b75ea21` |
+| 7.5 | Error handling: catches silenciosos → `Log::error()`, eliminar datos sensibles de logs, imports correctos | ✅ | `3b75ea21` |
+| 7.6 | Extraer `buildEmpresasQuery()` (EmpresasController) + `buildUsersQuery()` (UsersController) + `buildEmpresasReportQuery()` (ReportesController) | ✅ | `3b75ea21` |
+| 7.7 | Fix N+1: eager loading en `users()`, consolidar stats queries en `CuestionariosController` | ✅ | `3b75ea21` |
+| 7.8 | Tests para cambios de Fase 7 | ✅ | `3b75ea21` |
 
 ---
 
@@ -418,5 +418,53 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 ---
 
+## 🏁 Resumen Final del Proyecto
+
+### Métricas de Calidad
+
+| Métrica | Valor |
+|---------|-------|
+| **Total de tests** | 285 |
+| **Total de assertions** | 730 |
+| **Tests fallidos** | 0 |
+| **Clases de test** | 23 |
+| **Fases completadas** | 7/7 |
+| **Tareas completadas** | 61/61 |
+
+### Tests por Fase
+
+| Fase | Tests | Assertions |
+|------|-------|------------|
+| Fase 1: Estructura y Datos | 16 | 40 |
+| Fase 2: Documentación | 31 | 92 |
+| Fase 3: Sedes | 15 | 33 |
+| Fase 4: Calendario | 31 | 74 |
+| Fase 5: Flujos y Cierre | 55 | 181 |
+| Fase 6: Seguridad y Calidad | 20 | 23 |
+| Fase 7: Optimización y Limpieza | 13 | 34 |
+| Pre-existentes | 104 | 253 |
+| **Total** | **285** | **730** |
+
+### Infraestructura
+
+| Servicio | Contenedor | Puerto |
+|----------|------------|--------|
+| Nginx | repro-nginx | :8000 |
+| PHP-FPM | repro-app | :9000 |
+| MySQL 5.7 | repro-db | :3306 |
+| phpMyAdmin | repro-phpmyadmin | :8080 |
+
+### Items Excluidos (Potencial Fase 8)
+
+Los siguientes items se excluyeron deliberadamente de Fase 7 por riesgo alto o bajo impacto:
+
+| Item | Razón de Exclusión |
+|------|-------------------|
+| Migrar validación inline a FormRequest en OrdenesController | 40+ líneas de validación, OrdenFormRequest existente sin uso — riesgo alto de regresión |
+| Reestructurar URLs a patrón RESTful | Rompe bookmarks y enlaces externos existentes |
+| N+1 en EmpresaController (cuestionarios, verCuestionario) | Queries complejas con aggregates, poco beneficio para el volumen actual |
+
+---
+
 *Documento creado: 4 de febrero de 2026*
-*Última actualización: 3 de marzo de 2026*
+*Última actualización: 3 de marzo de 2026 — Verificación post Fase 7*
