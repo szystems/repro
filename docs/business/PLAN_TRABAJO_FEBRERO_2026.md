@@ -311,16 +311,35 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | 4.10 | Tests para Fase 4 (31 tests, 74 assertions) | ✅ | |
 
 ### FASE 5: Flujos y Cierre (Semana 5)
-**Estados según diagrama de flujo, separación estados, QA final**
+**Separación estado_formulario, nuevos estados, transiciones flexibles, fix tests, QA**
+
+> **Principio:** Intervención quirúrgica — no romper funcionalidad existente. Cada cambio es aditivo.
+> **Decisión clave:** `estado_formulario` es INDEPENDIENTE de `estado_evaluacion` porque el formulario es obligatorio siempre, la evaluación solo cuando se programa cita.
+> **Transiciones:** Flexibles (admin puede saltar pasos) pero lógicamente coherentes con diagrama de flujo.
 
 | # | Tarea | Estado | Commit |
 |---|-------|--------|--------|
-| 5.1 | Nuevos estados ordenes: `validacion`, `registrado`, `operaciones` | ⬜ | |
-| 5.2 | Nuevos estados evaluados: `contactando`, `link_enviado`, `confirmado`, `en_sede`, `docs_pendientes`, `inasistencia`, `desistio` | ⬜ | |
-| 5.3 | Lógica de transición de estados (máquina de estados) | ⬜ | |
-| 5.4 | Separar `estado_formulario` / `estado_evaluacion` | ⬜ | |
-| 5.5 | Actualizar vistas con nuevos estados y transiciones | ⬜ | |
-| 5.6 | Pruebas integrales de todo el sistema | ⬜ | |
+| 5.1 | Migración `estado_formulario` en `evaluados_orden` + migrar datos desde `cuestionario_completado` | ⬜ | |
+| 5.2 | Nuevos estados `estado_evaluacion`: `contactando`, `link_enviado`, `confirmado`, `en_sede`, `docs_pendientes`, `inasistencia`, `desistio` | ⬜ | |
+| 5.3 | Nuevos estados ordenes: `validacion`, `registrado`, `operaciones` + transiciones en `puedeTransicionarA()` | ⬜ | |
+| 5.4 | Lógica transiciones flexibles — arrays de transiciones válidas en cada modelo | ⬜ | |
+| 5.5 | Botones de transición en vistas (Marcar en sede, Inasistencia, Desistió, etc.) | ⬜ | |
+| 5.6 | Fix 7 tests pre-existentes (3 FIX_CODE + 4 FIX_TEST) | ⬜ | |
+| 5.7 | Tests integrales Fase 5 (transiciones, estado_formulario, estados nuevos) | ⬜ | |
+
+#### Detalle 5.1 — estado_formulario (nueva columna)
+- Valores: `pendiente`, `link_enviado`, `en_progreso`, `completado`, `expirado`
+- Migración: columna nueva + migrar datos existentes (`cuestionario_completado` → `estado_formulario`)
+- Accessor `getEstadoCuestionarioAttribute()` se adapta para leer desde nueva columna
+
+#### Detalle 5.6 — Fix 7 tests pre-existentes
+| Test | Tipo | Fix |
+|------|------|-----|
+| EmpresaModulosTest::editarEmpresa | FIX_CODE | Crear método `editarEmpresa()` en EmpresaController |
+| EmpresaModulosTest::resultadosVisibles | FIX_TEST | Orden necesita `resultados_visibles_empresa=true` + `estado=entregado` |
+| OrdenesControllerTest (3 tests) | FIX_TEST | UserFactory `role_as` random — tests deben especificar rol |
+| ResultadosVisibilidadTest::enProceso | FIX_CODE | Controller aborta 403 en lugar de dejar vista manejar "en proceso" |
+| ResultadosVisibilidadTest::filtroEmpresa | FIX_CODE | ReportesController no filtra por visibilidad para empresa |
 
 ---
 
@@ -332,7 +351,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | Fase 2: Documentación | Semana 2 | **✅ Completada** | **12/12** |
 | **Fase 3: Sedes** | **Semana 3** | **✅ Completada** | **7/7** |
 | Fase 4: Calendario (E2) | Semana 4 | **✅ Completada** | **10/10** |
-| Fase 5: Flujos y Cierre | Semana 5 | ⬜ Pendiente | 0/6 |
+| Fase 5: Flujos y Cierre | Semana 5 | 🔄 En progreso | 0/7 |
 
 ---
 

@@ -158,9 +158,14 @@ class Orden extends Model
     {
         return match ($this->estado) {
             'solicitud' => 'Solicitud',
+            'validacion' => 'Validación',
+            'registrado' => 'Registrado',
             'programacion' => 'Programación',
             'en_proceso' => 'En Proceso',
+            'operaciones' => 'En Operaciones',
             'analisis' => 'En Análisis',
+            'preliminar' => 'Resultado Preliminar',
+            'final' => 'Resultado Final',
             'entregado' => 'Entregado',
             'cancelado' => 'Cancelado',
             default => $this->estado,
@@ -174,9 +179,14 @@ class Orden extends Model
     {
         return match ($this->estado) {
             'solicitud' => 'secondary',
-            'programacion' => 'info',
+            'validacion' => 'info',
+            'registrado' => 'info',
+            'programacion' => 'primary',
             'en_proceso' => 'warning',
+            'operaciones' => 'warning',
             'analisis' => 'orange',
+            'preliminar' => 'orange',
+            'final' => 'orange',
             'entregado' => 'success',
             'cancelado' => 'danger',
             default => 'secondary',
@@ -198,10 +208,8 @@ class Orden extends Model
      */
     public function puedeTransicionarA(string $nuevoEstado): bool
     {
-        // Estados válidos del sistema (simplificados)
-        $estadosValidos = [
-            'solicitud', 'programacion', 'en_proceso', 'analisis', 'entregado', 'cancelado'
-        ];
+        // Estados válidos del sistema
+        $estadosValidos = array_keys(self::estadosDisponibles());
         
         // Si el nuevo estado no es válido, rechazar
         if (!in_array($nuevoEstado, $estadosValidos)) {
@@ -213,12 +221,32 @@ class Orden extends Model
             return false;
         }
         
-        // Estados finales no pueden cambiar (excepto cancelado que puede reactivarse)
+        // Estados finales no pueden cambiar
         if ($this->estado === 'entregado') {
             return false;
         }
+
+        // Transiciones recomendadas (flujo normal)
+        // Admin puede saltar pasos, pero no ir hacia atrás de entregado
+        // y cancelado solo puede ir a solicitud (reactivar)
+        $transicionesLogicas = [
+            'solicitud'    => ['validacion', 'registrado', 'programacion', 'cancelado'],
+            'validacion'   => ['registrado', 'programacion', 'cancelado'],
+            'registrado'   => ['programacion', 'cancelado'],
+            'programacion' => ['en_proceso', 'cancelado'],
+            'en_proceso'   => ['operaciones', 'analisis', 'completado', 'cancelado'],
+            'operaciones'  => ['analisis', 'cancelado'],
+            'analisis'     => ['preliminar', 'final', 'entregado', 'cancelado'],
+            'preliminar'   => ['final', 'entregado', 'cancelado'],
+            'final'        => ['entregado', 'cancelado'],
+            'cancelado'    => ['solicitud'], // reactivar
+        ];
         
-        // Permitir cualquier transición válida para administradores
+        // Flexible: si hay transiciones definidas, verificar; si no, permitir
+        if (isset($transicionesLogicas[$this->estado])) {
+            return in_array($nuevoEstado, $transicionesLogicas[$this->estado]);
+        }
+        
         return true;
     }
 
@@ -233,5 +261,27 @@ class Orden extends Model
 
         $this->estado = $nuevoEstado;
         return $this->save();
+    }
+
+    /**
+     * Obtener todos los estados válidos con sus etiquetas humanas.
+     *
+     * @return array<string, string>
+     */
+    public static function estadosDisponibles(): array
+    {
+        return [
+            'solicitud' => 'Solicitud',
+            'validacion' => 'Validación',
+            'registrado' => 'Registrado',
+            'programacion' => 'Programación',
+            'en_proceso' => 'En Proceso',
+            'operaciones' => 'En Operaciones',
+            'analisis' => 'En Análisis',
+            'preliminar' => 'Resultado Preliminar',
+            'final' => 'Resultado Final',
+            'entregado' => 'Entregado',
+            'cancelado' => 'Cancelado',
+        ];
     }
 }

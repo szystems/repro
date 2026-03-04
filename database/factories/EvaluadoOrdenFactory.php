@@ -45,6 +45,7 @@ class EvaluadoOrdenFactory extends Factory
             'fecha_programada' => $this->faker->optional()->dateTimeBetween('+1 day', '+30 days'),
             'poligrafista_id' => null,
             'estado_evaluacion' => 'pendiente',
+            'estado_formulario' => 'pendiente',
             'resultado' => null,
             'notas_poligrafo' => null,
         ];
@@ -57,6 +58,7 @@ class EvaluadoOrdenFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'cuestionario_completado' => true,
+            'estado_formulario' => 'completado',
             'completado_at' => now()->subDays(rand(1, 10)),
             'firma_digital' => 'data:image/png;base64,iVBORw0KGgo...',
             'ip_completado' => $this->faker->ipv4(),
@@ -71,6 +73,7 @@ class EvaluadoOrdenFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'token_expira_at' => now()->subDays(rand(1, 30)),
             'cuestionario_completado' => false,
+            'estado_formulario' => 'expirado',
         ]);
     }
 
@@ -81,6 +84,7 @@ class EvaluadoOrdenFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'cuestionario_completado' => false,
+            'estado_formulario' => 'en_progreso',
         ]);
     }
 

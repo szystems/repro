@@ -76,14 +76,7 @@ class OrdenesController extends Controller
             ? Empresa::orderBy('nombre')->get()
             : collect();
 
-        $estados = [
-            'solicitud' => 'Solicitud',
-            'programacion' => 'Programación',
-            'en_proceso' => 'En Proceso',
-            'analisis' => 'En Análisis',
-            'entregado' => 'Entregado',
-            'cancelado' => 'Cancelado'
-        ];
+        $estados = Orden::estadosDisponibles();
 
         $tiposServicio = [
             'poligrafo' => 'Polígrafo',
@@ -241,14 +234,7 @@ class OrdenesController extends Controller
             }
         ]);
 
-        $estados = [
-            'solicitud' => 'Solicitud',
-            'programacion' => 'Programación',
-            'en_proceso' => 'En Proceso',
-            'analisis' => 'En Análisis',
-            'entregado' => 'Entregado',
-            'cancelado' => 'Cancelado'
-        ];
+        $estados = Orden::estadosDisponibles();
 
         // Datos para modal de programar cita
         $sedes = Sede::activas()->orderBy('nombre')->get();
@@ -278,14 +264,7 @@ class OrdenesController extends Controller
             $query->whereIn('name', ['admin', 'repro', 'poligrafo']);
         })->where('estado', 1)->orderBy('name')->get();
 
-        $estados = [
-            'solicitud' => 'Solicitud',
-            'programacion' => 'Programación',
-            'en_proceso' => 'En Proceso',
-            'analisis' => 'En Análisis',
-            'entregado' => 'Entregado',
-            'cancelado' => 'Cancelado'
-        ];
+        $estados = Orden::estadosDisponibles();
 
         return view('admin.ordenes.edit', compact('orden', 'empresas', 'poligrafistas', 'estados'));
     }
@@ -426,12 +405,12 @@ class OrdenesController extends Controller
     public function cambiarEstado(Request $request, Orden $orden)
     {
         $request->validate([
-            'nuevo_estado' => 'required|in:solicitud,programacion,en_proceso,analisis,entregado,cancelado',
+            'nuevo_estado' => 'required|in:solicitud,validacion,registrado,programacion,en_proceso,operaciones,analisis,preliminar,final,entregado,cancelado',
             'observaciones' => 'nullable|string|max:500'
         ]);
 
         if (!$orden->puedeTransicionarA($request->nuevo_estado)) {
-            $estadoActualTexto = $orden->getEstadoTexto();
+            $estadoActualTexto = $orden->estado_human;
             return back()->with('error', "No se puede cambiar de '{$estadoActualTexto}' a '{$request->nuevo_estado}'. Transición no permitida.");
         }
 
@@ -446,6 +425,52 @@ class OrdenesController extends Controller
         }
 
         return back()->with('error', 'No se pudo cambiar el estado de la orden.');
+    }
+
+    /**
+     * Cambiar estado de evaluación o formulario de un evaluado.
+     */
+    public function cambiarEstadoEvaluado(Request $request, EvaluadoOrden $evaluado): \Illuminate\Http\RedirectResponse
+    {
+        if (Auth::user()->role_as < 2) {
+            return back()->with('error', 'No tiene permisos para realizar esta acción.');
+        }
+
+        $estadosEvaluacion = implode(',', array_keys(EvaluadoOrden::estadosEvaluacionDisponibles()));
+        $estadosFormulario = implode(',', array_keys(EvaluadoOrden::estadosFormularioDisponibles()));
+
+        $request->validate([
+            'tipo_estado' => 'required|in:evaluacion,formulario',
+            'nuevo_estado' => "required|string",
+        ]);
+
+        $tipo = $request->tipo_estado;
+        $nuevoEstado = $request->nuevo_estado;
+        $nombre = "{$evaluado->nombre} {$evaluado->apellidos}";
+
+        if ($tipo === 'evaluacion') {
+            if (!$evaluado->puedeTransicionarEstadoEvaluacion($nuevoEstado)) {
+                $estadoActual = $evaluado->estado_evaluacion_texto;
+                return back()->with('error', "No se puede cambiar evaluación de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.");
+            }
+            $estadoAnterior = $evaluado->estado_evaluacion_texto;
+            $evaluado->cambiarEstadoEvaluacion($nuevoEstado);
+            $estadoNuevoTexto = $evaluado->fresh()->estado_evaluacion_texto;
+            return back()->with('success', "Estado evaluación de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
+        }
+
+        if ($tipo === 'formulario') {
+            if (!$evaluado->puedeTransicionarEstadoFormulario($nuevoEstado)) {
+                $estadoActual = EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->estado_formulario] ?? $evaluado->estado_formulario;
+                return back()->with('error', "No se puede cambiar formulario de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.");
+            }
+            $estadoAnterior = EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->estado_formulario] ?? $evaluado->estado_formulario;
+            $evaluado->cambiarEstadoFormulario($nuevoEstado);
+            $estadoNuevoTexto = EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->fresh()->estado_formulario] ?? $nuevoEstado;
+            return back()->with('success', "Estado formulario de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
+        }
+
+        return back()->with('error', 'Tipo de estado no válido.');
     }
 
     /**
@@ -663,14 +688,7 @@ class OrdenesController extends Controller
         // Cargar relaciones necesarias
         $orden->load(['empresa', 'creador', 'evaluados.poligrafista']);
 
-        $estados = [
-            'solicitud' => 'Solicitud',
-            'programacion' => 'Programación',
-            'en_proceso' => 'En Proceso',
-            'analisis' => 'En Análisis',
-            'entregado' => 'Entregado',
-            'cancelado' => 'Cancelado'
-        ];
+        $estados = Orden::estadosDisponibles();
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf', compact('orden', 'estados'));
 

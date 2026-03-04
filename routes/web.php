@@ -128,6 +128,9 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('evaluados/{evaluado}/resultado-archivo/{tipo}', [OrdenesController::class, 'descargarResultadoArchivo'])->name('evaluados.descargar-resultado-archivo');
     Route::delete('evaluados/{evaluado}/resultado-archivo/{tipo}', [OrdenesController::class, 'eliminarResultadoArchivo'])->name('evaluados.eliminar-resultado-archivo');
 
+    // Cambio de estado evaluado — solo REPRO/admin
+    Route::patch('evaluados/{evaluado}/cambiar-estado', [OrdenesController::class, 'cambiarEstadoEvaluado'])->name('evaluados.cambiar-estado');
+
     // Rehabilitación de cuestionario — solo REPRO/admin
     Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');
     Route::post('evaluados/{evaluado}/deshabilitar-cuestionario', [OrdenesController::class, 'deshabilitarCuestionario'])->name('evaluados.deshabilitar-cuestionario');

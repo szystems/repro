@@ -25,7 +25,7 @@ class OrdenesCreateFormTest extends TestCase
     public function test_admin_puede_ver_formulario_creacion_con_empresas()
     {
         // Crear admin
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role_as' => 3]);
         $adminRole = Role::where('name', 'admin')->first();
         $admin->roles()->attach($adminRole->id);
 
@@ -48,7 +48,7 @@ class OrdenesCreateFormTest extends TestCase
     {
         // Crear empresa y usuario empresa
         $empresa = Empresa::factory()->create(['nombre' => 'Mi Empresa', 'estado' => 1]);
-        $userEmpresa = User::factory()->create(['empresa_id' => $empresa->id]);
+        $userEmpresa = User::factory()->create(['role_as' => 1, 'empresa_id' => $empresa->id]);
         $empresaRole = Role::where('name', 'empresa')->first();
         $userEmpresa->roles()->attach($empresaRole->id);
 

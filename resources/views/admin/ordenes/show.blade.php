@@ -282,9 +282,14 @@
                                 <select class="form-select" name="nuevo_estado" required>
                                     <option value="">Seleccionar nuevo estado...</option>
                                     <option value="solicitud" {{ $orden->estado == 'solicitud' ? 'disabled' : '' }}>Solicitud</option>
+                                    <option value="validacion" {{ $orden->estado == 'validacion' ? 'disabled' : '' }}>Validación</option>
+                                    <option value="registrado" {{ $orden->estado == 'registrado' ? 'disabled' : '' }}>Registrado</option>
                                     <option value="programacion" {{ $orden->estado == 'programacion' ? 'disabled' : '' }}>Programación</option>
                                     <option value="en_proceso" {{ $orden->estado == 'en_proceso' ? 'disabled' : '' }}>En Proceso</option>
+                                    <option value="operaciones" {{ $orden->estado == 'operaciones' ? 'disabled' : '' }}>En Operaciones</option>
                                     <option value="analisis" {{ $orden->estado == 'analisis' ? 'disabled' : '' }}>En Análisis</option>
+                                    <option value="preliminar" {{ $orden->estado == 'preliminar' ? 'disabled' : '' }}>Resultado Preliminar</option>
+                                    <option value="final" {{ $orden->estado == 'final' ? 'disabled' : '' }}>Resultado Final</option>
                                     <option value="entregado" {{ $orden->estado == 'entregado' ? 'disabled' : '' }}>Entregado</option>
                                     <option value="cancelado" {{ $orden->estado == 'cancelado' ? 'disabled' : '' }}>Cancelado</option>
                                 </select>
@@ -407,13 +412,8 @@
                                                     @else Socioeconómico
                                                     @endif
                                                 </span>
-                                                <span class="badge
-                                                    @if($evaluado->estado_evaluacion == 'completado') bg-success
-                                                    @elseif($evaluado->estado_evaluacion == 'en_proceso') bg-primary
-                                                    @elseif($evaluado->estado_evaluacion == 'programado') bg-info
-                                                    @else bg-warning
-                                                    @endif">
-                                                    {{ ucfirst($evaluado->estado_evaluacion ?? 'pendiente') }}
+                                                <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">
+                                                    {{ $evaluado->estado_evaluacion_texto }}
                                                 </span>
                                                 @if($evaluado->documentos->count() > 0)
                                                     <span class="badge bg-secondary" title="Documentos"><i class="bi bi-folder2-open"></i> {{ $evaluado->documentos->count() }}</span>
@@ -491,16 +491,68 @@
                                             </div>
                                         </div>
 
-                                        {{-- Estado del cuestionario --}}
-                                        <div class="mb-3">
-                                            <small class="text-muted d-block">Estado del Cuestionario</small>
-                                            @if($evaluado->cuestionario_completado)
-                                                <span class="text-success"><i class="bi bi-check-circle"></i> Completado</span>
-                                                <small class="text-muted ms-1">{{ $evaluado->completado_at ? \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') : '' }}</small>
-                                            @else
-                                                <span class="text-warning"><i class="bi bi-clock"></i> Pendiente</span>
-                                                <small class="text-muted ms-1">Expira: {{ $evaluado->token_expira_at ? \Carbon\Carbon::parse($evaluado->token_expira_at)->format('d/m/Y') : '' }}</small>
-                                            @endif
+                                        {{-- Estados del evaluado --}}
+                                        <div class="row mb-3">
+                                            {{-- Estado de Evaluación --}}
+                                            <div class="col-md-6">
+                                                <small class="text-muted d-block mb-1">Estado Evaluación</small>
+                                                <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">{{ $evaluado->estado_evaluacion_texto }}</span>
+                                                @if(Auth::user()->role_as >= 2)
+                                                    @php
+                                                        $transicionesEval = \App\Models\EvaluadoOrden::transicionesEvaluacion()[$evaluado->estado_evaluacion] ?? [];
+                                                        $nombresEval = \App\Models\EvaluadoOrden::estadosEvaluacionDisponibles();
+                                                    @endphp
+                                                    @if(count($transicionesEval) > 0)
+                                                    <form action="{{ route('evaluados.cambiar-estado', $evaluado->id) }}" method="POST" class="mt-1 d-flex gap-1 align-items-center">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="tipo_estado" value="evaluacion">
+                                                        <select name="nuevo_estado" class="form-select form-select-sm" style="max-width: 180px;" required>
+                                                            <option value="">Cambiar a...</option>
+                                                            @foreach($transicionesEval as $estado)
+                                                                <option value="{{ $estado }}">{{ $nombresEval[$estado] ?? ucfirst($estado) }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <button type="submit" class="btn btn-outline-primary btn-sm" title="Cambiar estado evaluación">
+                                                            <i class="bi bi-arrow-right-circle"></i>
+                                                        </button>
+                                                    </form>
+                                                    @endif
+                                                @endif
+                                            </div>
+
+                                            {{-- Estado del Formulario --}}
+                                            <div class="col-md-6">
+                                                <small class="text-muted d-block mb-1">Estado Formulario</small>
+                                                <span class="badge bg-{{ $evaluado->estado_formulario_color }}">{{ \App\Models\EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->estado_formulario] ?? ucfirst($evaluado->estado_formulario) }}</span>
+                                                @if($evaluado->completado_at)
+                                                    <small class="text-muted ms-1">{{ \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') }}</small>
+                                                @elseif($evaluado->token_expira_at)
+                                                    <small class="text-muted ms-1">Expira: {{ \Carbon\Carbon::parse($evaluado->token_expira_at)->format('d/m/Y') }}</small>
+                                                @endif
+                                                @if(Auth::user()->role_as >= 2)
+                                                    @php
+                                                        $transicionesForm = \App\Models\EvaluadoOrden::transicionesFormulario()[$evaluado->estado_formulario] ?? [];
+                                                        $nombresForm = \App\Models\EvaluadoOrden::estadosFormularioDisponibles();
+                                                    @endphp
+                                                    @if(count($transicionesForm) > 0)
+                                                    <form action="{{ route('evaluados.cambiar-estado', $evaluado->id) }}" method="POST" class="mt-1 d-flex gap-1 align-items-center">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="tipo_estado" value="formulario">
+                                                        <select name="nuevo_estado" class="form-select form-select-sm" style="max-width: 180px;" required>
+                                                            <option value="">Cambiar a...</option>
+                                                            @foreach($transicionesForm as $estado)
+                                                                <option value="{{ $estado }}">{{ $nombresForm[$estado] ?? ucfirst($estado) }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <button type="submit" class="btn btn-outline-primary btn-sm" title="Cambiar estado formulario">
+                                                            <i class="bi bi-arrow-right-circle"></i>
+                                                        </button>
+                                                    </form>
+                                                    @endif
+                                                @endif
+                                            </div>
                                         </div>
 
                                         {{-- Acciones del evaluado --}}

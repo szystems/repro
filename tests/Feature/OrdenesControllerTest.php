@@ -29,7 +29,7 @@ class OrdenesControllerTest extends TestCase
     public function test_admin_puede_acceder_a_listado_de_ordenes()
     {
         // Crear usuario admin
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role_as' => 3]);
         $admin->roles()->attach(Role::where('name', 'admin')->first());
         
         // Crear empresa
@@ -56,7 +56,7 @@ class OrdenesControllerTest extends TestCase
         $empresa2 = Empresa::factory()->create();
         
         // Crear usuario empresa
-        $userEmpresa = User::factory()->create(['empresa_id' => $empresa1->id]);
+        $userEmpresa = User::factory()->create(['role_as' => 1, 'empresa_id' => $empresa1->id]);
         $userEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
         
         // Crear órdenes
@@ -82,7 +82,7 @@ class OrdenesControllerTest extends TestCase
     public function test_puede_crear_nueva_orden()
     {
         // Crear admin y empresa
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role_as' => 3]);
         $admin->roles()->attach(Role::where('name', 'admin')->first());
         
         $empresa = Empresa::factory()->create();
@@ -129,7 +129,7 @@ class OrdenesControllerTest extends TestCase
     public function test_puede_ver_detalle_de_orden()
     {
         // Crear usuario admin
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role_as' => 3]);
         $admin->roles()->attach(Role::where('name', 'admin')->first());
         
         // Crear empresa
@@ -153,7 +153,7 @@ class OrdenesControllerTest extends TestCase
     public function test_puede_editar_orden()
     {
         // Crear usuario admin
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role_as' => 3]);
         $admin->roles()->attach(Role::where('name', 'admin')->first());
         
         // Crear empresa
@@ -209,7 +209,7 @@ class OrdenesControllerTest extends TestCase
         Mail::fake();
 
         // Crear usuario admin
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role_as' => 3]);
         $admin->roles()->attach(Role::where('name', 'admin')->first());
         
         // Crear empresa y orden
@@ -243,7 +243,7 @@ class OrdenesControllerTest extends TestCase
     public function test_no_puede_reenviar_correo_si_evaluado_no_tiene_email()
     {
         // Crear usuario admin
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['role_as' => 3]);
         $admin->roles()->attach(Role::where('name', 'admin')->first());
         
         // Crear empresa y orden

@@ -25,10 +25,10 @@ class ReportesController extends Controller
         // Filtrar por empresa si el usuario es de empresa
         if (Auth::user()->role_as == 1) {
             $query->whereHas('orden', function ($q) {
-                $q->where('empresa_id', Auth::user()->empresa_id);
+                $q->where('empresa_id', Auth::user()->empresa_id)
+                  ->where('resultados_visibles_empresa', true)
+                  ->where('estado', 'entregado');
             });
-            // Empresa puede ver el listado de evaluados sin restricción de resultados_visibles_empresa
-            // La restricción aplica solo al acceso a los datos del cuestionario
         }
 
         // Filtros
@@ -135,10 +135,10 @@ class ReportesController extends Controller
 
         if (Auth::user()->role_as == 1) {
             $query->whereHas('orden', function ($q) {
-                $q->where('empresa_id', Auth::user()->empresa_id);
+                $q->where('empresa_id', Auth::user()->empresa_id)
+                  ->where('resultados_visibles_empresa', true)
+                  ->where('estado', 'entregado');
             });
-            // Empresa puede ver el listado de evaluados sin restricción de resultados_visibles_empresa
-            // La restricción aplica solo al acceso a los datos del cuestionario
         }
 
         // Aplicar mismos filtros
@@ -247,10 +247,10 @@ class ReportesController extends Controller
 
         if (Auth::user()->role_as == 1) {
             $query->whereHas('orden', function ($q) {
-                $q->where('empresa_id', Auth::user()->empresa_id);
+                $q->where('empresa_id', Auth::user()->empresa_id)
+                  ->where('resultados_visibles_empresa', true)
+                  ->where('estado', 'entregado');
             });
-            // Empresa puede ver el listado de evaluados sin restricción de resultados_visibles_empresa
-            // La restricción aplica solo al acceso a los datos del cuestionario
         }
 
         if ($request->filled('fecha_inicio')) {

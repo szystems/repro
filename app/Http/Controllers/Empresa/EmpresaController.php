@@ -69,13 +69,13 @@ class EmpresaController extends Controller
             return back()->with('error', 'No tiene una empresa asociada');
         }
 
-        // Estados agrupados según flujo simplificado:
-        // Pendientes: solicitud, programacion
-        // En proceso: en_proceso, analisis
+        // Estados agrupados según flujo:
+        // Pendientes: solicitud, validacion, registrado, programacion
+        // En proceso: en_proceso, operaciones, analisis, preliminar, final
         // Completadas: entregado
 
-        $estadosPendientes = ['solicitud', 'programacion'];
-        $estadosProceso = ['en_proceso', 'analisis'];
+        $estadosPendientes = ['solicitud', 'validacion', 'registrado', 'programacion'];
+        $estadosProceso = ['en_proceso', 'operaciones', 'analisis', 'preliminar', 'final'];
 
 
         // Estadísticas de la empresa
@@ -94,6 +94,25 @@ class EmpresaController extends Controller
         ];
 
         return view('empresa.mi-empresa.index', compact('empresa', 'stats'));
+    }
+
+    /**
+     * Mostrar formulario de edición de empresa
+     */
+    public function editarEmpresa()
+    {
+        $empresa = Auth::user()->empresa;
+
+        if (!$empresa) {
+            return back()->with('error', 'No tiene una empresa asociada');
+        }
+
+        // Solo el usuario principal puede editar
+        if (Auth::user()->principal != 1) {
+            return back()->with('error', 'Solo el usuario principal puede editar la información de la empresa');
+        }
+
+        return view('empresa.mi-empresa.edit', compact('empresa'));
     }
 
     /**
@@ -378,10 +397,8 @@ class EmpresaController extends Controller
             abort(403, 'Acceso no autorizado');
         }
 
-        // Verificar que los resultados estén disponibles para la empresa
-        if (!$evaluado->orden->resultadosDisponiblesParaEmpresa()) {
-            abort(403, 'Los resultados de este cuestionario aún no están disponibles para su empresa');
-        }
+        // La vista maneja la visualización según el estado de los resultados
+        // (muestra "en proceso" si no están disponibles)
 
         return view('empresa.cuestionarios.show', compact('evaluado'));
     }

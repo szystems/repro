@@ -45,6 +45,7 @@ class EvaluadoOrden extends Model
         'fecha_hora_fin',
         'fecha_realizada',
         'estado_evaluacion',
+        'estado_formulario',
         'resultado',
         'notas_poligrafo',
         'token_unico',
@@ -318,6 +319,7 @@ class EvaluadoOrden extends Model
     {
         return $this->update([
             'cuestionario_completado' => true,
+            'estado_formulario' => 'completado',
             'completado_at' => now(),
             'firma_digital' => $firmaDigital,
             'ip_completado' => $ip ?? request()->ip(),
@@ -387,23 +389,19 @@ class EvaluadoOrden extends Model
     }
 
     /**
-     * Accessor: Estado del cuestionario en texto
+     * Accessor: Estado del cuestionario en texto.
+     * Lee desde estado_formulario si existe, sino calcula de campos legacy.
      */
     public function getEstadoCuestionarioAttribute(): string
     {
-        if ($this->cuestionario_completado) {
-            return 'Completado';
-        }
-        
-        if ($this->tokenExpirado()) {
-            return 'Expirado';
-        }
-        
-        if ($this->intentos_acceso > 0) {
-            return 'En Progreso';
-        }
-        
-        return 'Pendiente';
+        return match($this->estado_formulario) {
+            'completado' => 'Completado',
+            'expirado' => 'Expirado',
+            'en_progreso' => 'En Progreso',
+            'link_enviado' => 'Link Enviado',
+            'pendiente' => 'Pendiente',
+            default => 'Pendiente',
+        };
     }
 
     /**
@@ -476,13 +474,59 @@ class EvaluadoOrden extends Model
     {
         return match($this->estado_evaluacion) {
             'pendiente' => 'Pendiente',
+            'contactando' => 'Contactando',
             'contactado' => 'Contactado',
+            'link_enviado' => 'Link Enviado',
+            'confirmado' => 'Confirmado',
             'programado' => 'Programado',
+            'en_sede' => 'En Sede',
+            'docs_pendientes' => 'Documentos Pendientes',
             'en_proceso' => 'En Proceso',
             'completado' => 'Completado',
-            'cancelado' => 'Cancelado',
+            'inasistencia' => 'Inasistencia',
             'reprogramado' => 'Reprogramado',
+            'cancelado' => 'Cancelado',
+            'desistio' => 'Desistió',
             default => 'Estado desconocido'
+        };
+    }
+
+    /**
+     * Obtener color del badge según estado de evaluación
+     */
+    public function getEstadoEvaluacionColorAttribute(): string
+    {
+        return match($this->estado_evaluacion) {
+            'pendiente' => 'secondary',
+            'contactando' => 'info',
+            'contactado' => 'info',
+            'link_enviado' => 'primary',
+            'confirmado' => 'primary',
+            'programado' => 'primary',
+            'en_sede' => 'warning',
+            'docs_pendientes' => 'warning',
+            'en_proceso' => 'warning',
+            'completado' => 'success',
+            'inasistencia' => 'danger',
+            'reprogramado' => 'orange',
+            'cancelado' => 'danger',
+            'desistio' => 'dark',
+            default => 'secondary'
+        };
+    }
+
+    /**
+     * Obtener color del badge según estado del formulario
+     */
+    public function getEstadoFormularioColorAttribute(): string
+    {
+        return match($this->estado_formulario) {
+            'pendiente' => 'secondary',
+            'link_enviado' => 'info',
+            'en_progreso' => 'warning',
+            'completado' => 'success',
+            'expirado' => 'danger',
+            default => 'secondary'
         };
     }
 
@@ -601,6 +645,163 @@ class EvaluadoOrden extends Model
         $this->fecha_hora_fin = null;
         $this->estado_evaluacion = 'cancelado';
         return $this->save();
+    }
+
+    // ========================================
+    // Transiciones de Estado
+    // ========================================
+
+    /**
+     * Transiciones válidas para estado_evaluacion.
+     * Flexible: admin puede saltar pasos pero no ir a estados ilógicos.
+     *
+     * @return array<string, string[]>
+     */
+    public static function transicionesEvaluacion(): array
+    {
+        return [
+            'pendiente'      => ['contactando', 'contactado', 'programado', 'cancelado', 'desistio'],
+            'contactando'    => ['contactado', 'link_enviado', 'programado', 'cancelado', 'desistio'],
+            'contactado'     => ['link_enviado', 'confirmado', 'programado', 'cancelado', 'desistio'],
+            'link_enviado'   => ['confirmado', 'programado', 'cancelado', 'desistio'],
+            'confirmado'     => ['programado', 'cancelado', 'desistio'],
+            'programado'     => ['en_sede', 'en_proceso', 'inasistencia', 'reprogramado', 'cancelado', 'desistio'],
+            'en_sede'        => ['docs_pendientes', 'en_proceso', 'cancelado'],
+            'docs_pendientes'=> ['en_proceso', 'cancelado'],
+            'en_proceso'     => ['completado', 'cancelado'],
+            'inasistencia'   => ['reprogramado', 'contactando', 'cancelado', 'desistio'],
+            'reprogramado'   => ['contactando', 'programado', 'cancelado', 'desistio'],
+            'completado'     => [], // estado final
+            'cancelado'      => ['pendiente'], // reactivar
+            'desistio'       => [], // estado final
+        ];
+    }
+
+    /**
+     * Verificar si puede transicionar a un nuevo estado de evaluación.
+     */
+    public function puedeTransicionarEstadoEvaluacion(string $nuevoEstado): bool
+    {
+        if ($this->estado_evaluacion === $nuevoEstado) {
+            return false;
+        }
+
+        $transiciones = self::transicionesEvaluacion();
+
+        if (!isset($transiciones[$this->estado_evaluacion])) {
+            return false;
+        }
+
+        return in_array($nuevoEstado, $transiciones[$this->estado_evaluacion]);
+    }
+
+    /**
+     * Cambiar estado de evaluación con validación.
+     */
+    public function cambiarEstadoEvaluacion(string $nuevoEstado): bool
+    {
+        if (!$this->puedeTransicionarEstadoEvaluacion($nuevoEstado)) {
+            return false;
+        }
+
+        $this->estado_evaluacion = $nuevoEstado;
+        return $this->save();
+    }
+
+    /**
+     * Transiciones válidas para estado_formulario.
+     *
+     * @return array<string, string[]>
+     */
+    public static function transicionesFormulario(): array
+    {
+        return [
+            'pendiente'    => ['link_enviado', 'en_progreso'],
+            'link_enviado' => ['en_progreso', 'expirado'],
+            'en_progreso'  => ['completado', 'expirado'],
+            'completado'   => ['pendiente'], // rehabilitar cuestionario
+            'expirado'     => ['pendiente', 'link_enviado'], // reactivar
+        ];
+    }
+
+    /**
+     * Verificar si puede transicionar a un nuevo estado de formulario.
+     */
+    public function puedeTransicionarEstadoFormulario(string $nuevoEstado): bool
+    {
+        if ($this->estado_formulario === $nuevoEstado) {
+            return false;
+        }
+
+        $transiciones = self::transicionesFormulario();
+
+        if (!isset($transiciones[$this->estado_formulario])) {
+            return false;
+        }
+
+        return in_array($nuevoEstado, $transiciones[$this->estado_formulario]);
+    }
+
+    /**
+     * Cambiar estado de formulario con validación.
+     */
+    public function cambiarEstadoFormulario(string $nuevoEstado): bool
+    {
+        if (!$this->puedeTransicionarEstadoFormulario($nuevoEstado)) {
+            return false;
+        }
+
+        $this->estado_formulario = $nuevoEstado;
+
+        // Sincronizar cuestionario_completado (backward compatibility)
+        if ($nuevoEstado === 'completado') {
+            $this->cuestionario_completado = true;
+        } elseif (in_array($nuevoEstado, ['pendiente', 'link_enviado', 'en_progreso', 'expirado'])) {
+            $this->cuestionario_completado = false;
+        }
+
+        return $this->save();
+    }
+
+    /**
+     * Obtener estados disponibles para estado_evaluacion.
+     *
+     * @return array<string, string>
+     */
+    public static function estadosEvaluacionDisponibles(): array
+    {
+        return [
+            'pendiente' => 'Pendiente',
+            'contactando' => 'Contactando',
+            'contactado' => 'Contactado',
+            'link_enviado' => 'Link Enviado',
+            'confirmado' => 'Confirmado',
+            'programado' => 'Programado',
+            'en_sede' => 'En Sede',
+            'docs_pendientes' => 'Documentos Pendientes',
+            'en_proceso' => 'En Proceso',
+            'completado' => 'Completado',
+            'inasistencia' => 'Inasistencia',
+            'reprogramado' => 'Reprogramado',
+            'cancelado' => 'Cancelado',
+            'desistio' => 'Desistió',
+        ];
+    }
+
+    /**
+     * Obtener estados disponibles para estado_formulario.
+     *
+     * @return array<string, string>
+     */
+    public static function estadosFormularioDisponibles(): array
+    {
+        return [
+            'pendiente' => 'Pendiente',
+            'link_enviado' => 'Link Enviado',
+            'en_progreso' => 'En Progreso',
+            'completado' => 'Completado',
+            'expirado' => 'Expirado',
+        ];
     }
 
     /**
