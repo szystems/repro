@@ -319,13 +319,13 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 | # | Tarea | Estado | Commit |
 |---|-------|--------|--------|
-| 5.1 | Migración `estado_formulario` en `evaluados_orden` + migrar datos desde `cuestionario_completado` | ⬜ | |
-| 5.2 | Nuevos estados `estado_evaluacion`: `contactando`, `link_enviado`, `confirmado`, `en_sede`, `docs_pendientes`, `inasistencia`, `desistio` | ⬜ | |
-| 5.3 | Nuevos estados ordenes: `validacion`, `registrado`, `operaciones` + transiciones en `puedeTransicionarA()` | ⬜ | |
-| 5.4 | Lógica transiciones flexibles — arrays de transiciones válidas en cada modelo | ⬜ | |
-| 5.5 | Botones de transición en vistas (Marcar en sede, Inasistencia, Desistió, etc.) | ⬜ | |
-| 5.6 | Fix 7 tests pre-existentes (3 FIX_CODE + 4 FIX_TEST) | ⬜ | |
-| 5.7 | Tests integrales Fase 5 (transiciones, estado_formulario, estados nuevos) | ⬜ | |
+| 5.1 | Migración `estado_formulario` en `evaluados_orden` + migrar datos desde `cuestionario_completado` | ✅ | `361f3a7d` |
+| 5.2 | Nuevos estados `estado_evaluacion`: `contactando`, `link_enviado`, `confirmado`, `en_sede`, `docs_pendientes`, `inasistencia`, `desistio` | ✅ | `361f3a7d` |
+| 5.3 | Nuevos estados ordenes: `validacion`, `registrado`, `operaciones` + transiciones en `puedeTransicionarA()` | ✅ | `361f3a7d` |
+| 5.4 | Lógica transiciones flexibles — arrays de transiciones válidas en cada modelo | ✅ | `361f3a7d` |
+| 5.5 | Botones de transición en vistas (dropdowns contextuales evaluación + formulario) | ✅ | `361f3a7d` |
+| 5.6 | Fix 9 tests pre-existentes (3 FIX_CODE + 6 FIX_TEST) + fix `getEstadoTexto()` | ✅ | `361f3a7d` |
+| 5.7 | Tests integrales Fase 5 (55 tests, 181 assertions) | ✅ | `361f3a7d` |
 
 #### Detalle 5.1 — estado_formulario (nueva columna)
 - Valores: `pendiente`, `link_enviado`, `en_progreso`, `completado`, `expirado`
@@ -351,7 +351,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | Fase 2: Documentación | Semana 2 | **✅ Completada** | **12/12** |
 | **Fase 3: Sedes** | **Semana 3** | **✅ Completada** | **7/7** |
 | Fase 4: Calendario (E2) | Semana 4 | **✅ Completada** | **10/10** |
-| Fase 5: Flujos y Cierre | Semana 5 | 🔄 En progreso | 0/7 |
+| Fase 5: Flujos y Cierre | Semana 5 | **✅ Completada** | **7/7** |
 
 ---
 
@@ -368,6 +368,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
+| 2026-03-03 | Fase 5 completada | Flujos y Cierre — 55 tests, 181 assertions — 3 migraciones (estado_formulario, ENUM→VARCHAR×2), transiciones, dropdowns contextuales, commit `361f3a7d` |
 | 2026-03-03 | Fase 4 completada | Calendario y Agenda — 31 tests, 74 assertions — hora inicio/fin, anti-traslape rangos, dual entry |
 | 2026-03-03 | Inicio Fase 4 | Calendario y Agenda — decisión: usar evaluados_orden directo, slots 30 min, dual entry |
 | 2026-03-02 | Ajustes UI/UX Fase 2 | Firma solo al final, acordeón evaluados, docs en cuestionario admin, botón deshabilitar |
