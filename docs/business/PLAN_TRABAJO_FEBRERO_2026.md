@@ -404,6 +404,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
+| 2026-03-05 | Despliegue a producción | App desplegada en iPage (Network Solutions) vía FTP — `reproappv2.szystems.com` — PHP 8.4.7 LiteSpeed — BD MySQL `dbreprov2` — 18 tablas migradas — HTTP 200 ✅ |
 | 2026-03-03 | Fase 7 completada | Optimización y Limpieza — 13 tests, 34 assertions — named routes, índices BD, imports limpios, checks redundantes, error handling, query builders extraídos, N+1 fix, código muerto eliminado |
 | 2026-03-03 | Fase 6 completada | Seguridad y Calidad — 20 tests, 23 assertions — eliminado test-db.php, ruta debug, rutas GET→PATCH/DELETE, middleware roles, logs sensibles, mailables ShouldQueue, refactor ReportesController |
 | 2026-03-03 | Fase 5 completada | Flujos y Cierre — 55 tests, 181 assertions — 3 migraciones (estado_formulario, ENUM→VARCHAR×2), transiciones, dropdowns contextuales, commit `361f3a7d` |
@@ -445,7 +446,7 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | Pre-existentes | 104 | 253 |
 | **Total** | **285** | **730** |
 
-### Infraestructura
+### Infraestructura — Desarrollo (Docker local)
 
 | Servicio | Contenedor | Puerto |
 |----------|------------|--------|
@@ -453,6 +454,20 @@ El cliente consultó sobre integrar con JotForm (www.jotform.com).
 | PHP-FPM | repro-app | :9000 |
 | MySQL 5.7 | repro-db | :3306 |
 | phpMyAdmin | repro-phpmyadmin | :8080 |
+
+### Infraestructura — Producción (iPage / Network Solutions)
+
+| Aspecto | Valor |
+|---------|-------|
+| URL | https://reproappv2.szystems.com |
+| Servidor FTP | 66.96.147.159 (puerto 21) |
+| Usuario FTP | szclinicascom |
+| PHP | 8.4.7 (LiteSpeed) |
+| Ruta servidor | `/hermes/bosnacweb08/bosnacweb08ai/b2263/ipg.szclinicascom/reproappv2/` |
+| BD Host | szclinicascom.ipagemysql.com |
+| BD Nombre | dbreprov2 |
+| BD Usuario | szreprov2 |
+| `.htaccess` | `public/.htaccess` estándar Laravel (doc root ya es `public/`) |
 
 ### Items Excluidos (Potencial Fase 8)
 
@@ -467,4 +482,4 @@ Los siguientes items se excluyeron deliberadamente de Fase 7 por riesgo alto o b
 ---
 
 *Documento creado: 4 de febrero de 2026*
-*Última actualización: 3 de marzo de 2026 — Verificación post Fase 7*
+*Última actualización: 5 de marzo de 2026 — Despliegue a producción en iPage completado*
