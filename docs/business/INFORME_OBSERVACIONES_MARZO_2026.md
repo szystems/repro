@@ -14,9 +14,6 @@ Recibimos y analizamos todas las observaciones. A continuación respondemos punt
 
 ## ✅ Cosas que ya funcionan (explicación)
 
-### Sede al crear una orden
-La sede **no aparece al crear la orden** porque se asigna **por cada evaluado individualmente** al momento de programar su cita. Esto es así porque una misma orden puede tener evaluados que asistan a sedes diferentes. La sede se selecciona desde la vista de la orden, en la opción de "Programar Cita" de cada evaluado.
-
 ### Resultado preliminar
 La opción de subir un resultado preliminar **ya existe**. Se encuentra dentro de la vista de cada evaluado en la orden. Al abrir el detalle de un evaluado, hay campos para subir el archivo de resultado preliminar y resultado final.
 
@@ -67,6 +64,9 @@ El correo actual (@szystems) es temporal para las pruebas. Cuando el equipo REPR
 - La **firma del candidato** se moverá para que aparezca junto con la autorización
 
 ### Mejoras en sedes
+- Se agregará un campo de **sede responsable** al crear la orden, para indicar qué sede está a cargo de esa orden
+- Al programar la cita de cada evaluado, la sede de la orden vendrá **pre-seleccionada** para agilizar el proceso (pero se podrá cambiar si un evaluado asiste a otra sede)
+- Se agregarán **filtros por sede** en los listados y reportes de órdenes para ver solo las órdenes de una sede en específico
 - Se agregará campo de **WhatsApp** y **enlace de ubicación** (Google Maps) al crear sedes
 
 ### Mejoras en los informes PDF
@@ -107,11 +107,11 @@ Se activará un sistema de permisos que permite:
 |------|-------------|-------------------|
 | **8A** | Corrección de errores | 6 |
 | **8B** | Ajustes de texto, campos y accesibilidad | 7 |
-| **8C** | Estados, colores y mejoras de experiencia | 7 |
+| **8C** | Estados, colores, sedes y mejoras de experiencia | 10 |
 | **8D** | Mejoras en informes PDF | 5 |
 | **8E** | Servicios múltiples, documentos y reportes | 5 |
 | **8F** | Notificaciones y permisos | 4 |
-| **Total** | | **34 tareas** |
+| **Total** | | **37 tareas** |
 
 Las fases se ejecutarán en ese orden, priorizando la corrección de errores y las mejoras que más impactan la experiencia diaria de uso.
 

@@ -87,7 +87,10 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 | 8C.4 | Mover firma a la página de autorización | Mover canvas de firma de `finalizar.blade.php` a `terminos.blade.php`. Guardar firma al aceptar términos | ☐ |
 | 8C.5 | Botón reenviar enlace desde empresa | Agregar botón en vista empresa + ruta autorizada. Reutilizar lógica existente de reenvío (OrdenesController L692) | ☐ |
 | 8C.6 | WhatsApp y enlace Maps en Sedes | Migración: agregar campos `whatsapp` y `enlace_maps` a tabla `sedes`. Actualizar CRUD y vistas | ☐ |
-| 8C.7 | Tests para UX | Validar colores, estados, firma, reenvío, sedes | ☐ |
+| 8C.7 | Sede responsable en cabecera de orden | Migración: agregar `sede_id` (FK nullable) a tabla `ordenes`. Select de sede en create/edit de orden. Mostrar sede en index de órdenes como badge/columna | ☐ |
+| 8C.8 | Auto-sugerir sede al programar cita | Pre-seleccionar la sede de la orden al programar cita de evaluado (editable si el evaluado va a otra sede) | ☐ |
+| 8C.9 | Filtro por sede en listado y reportes de órdenes | Agregar filtro de sede en: index de órdenes (admin), reportes de evaluaciones, reportes de empresas | ☐ |
+| 8C.10 | Tests para UX | Validar colores, estados, firma, reenvío, sedes en orden, filtros | ☐ |
 
 ### Fase 8D — PDF y Documentos
 **Prioridad: MEDIA — Mejoras al informe generado**
@@ -129,11 +132,11 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 |------|-----------|--------|--------|
 | 8A: Bugs y Correcciones | INMEDIATA | 6 | ☐ Pendiente |
 | 8B: Ajustes Rápidos | ALTA | 7 | ☐ Pendiente |
-| 8C: Estados y UX | ALTA | 7 | ☐ Pendiente |
+| 8C: Estados y UX | ALTA | 10 | ☐ Pendiente |
 | 8D: PDF y Documentos | MEDIA | 5 | ☐ Pendiente |
 | 8E: Funcionalidades Medianas | MEDIA | 5 | ☐ Pendiente |
 | 8F: Funcionalidades Complejas | BAJA | 4 | ☐ Pendiente |
-| **Total** | | **34** | |
+| **Total** | | **37** | |
 
 ---
 
@@ -149,7 +152,8 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
-| 2026-03-09 | Documento creado | Análisis de 27 observaciones del cliente, plan de 34 tareas en 6 subfases |
+| 2026-03-09 | Sede responsable en orden | Agregadas tareas 8C.7-8C.9: sede_id en ordenes, auto-sugerir en programación, filtros por sede |
+| 2026-03-09 | Documento creado | Análisis de 27 observaciones del cliente, plan de 37 tareas en 6 subfases |
 
 ---
 
