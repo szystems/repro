@@ -1,0 +1,47 @@
+Solicitudes:
+•	Que no se borren los datos que se ingresan al crear una orden cuando algún campo no se ha llenó, me pasó que un dato no coloqué y cuando quise regresar se borró todo. 
+•	Quitar la fecha limite y en su lugar indicar fecha de creación y que la limitante sea únicamente para una fecha anterior a la que se está creando no para futuras. 
+•	Al crear una orden no aparece la sede o proceso virtual. 
+•	Al generar una orden que puedan seleccionar dos servicios, porque hay personas que solicitan Poligrafo y Socioeconomico o VSA y Socioeconomicos. 
+•	No se puede visualizar en ningún lugar las observaciones que se ingresan al crear una orden o al crear una empresa. (¿donde podemos visualizar lo que el cliente solicita en ese espacio?)
+•	Al crear una orden, también que tenga la opción de subir la papeleria (a veces los reclutadores ya tienen toda la papelería del candidato y que se lleve una secuencia para que el candidato no la suba si ya se ha subido,  tal vez que si la pueda actualizar y que también en repro sepamos que papeleria ya contamos)
+•	La opción de subir archivo que también de la opción de tomar fotografía legible. 
+•	En vez de que las notificaciones a las empresas lleguen por correo que lleguen únicamente como una notificación en el mismo sistema, para no saturarlos con correos. También las notificaciones internas para que no nos saturemos de correos. 
+•	Las papelerías deben tener vista cuando se está editando el informe y también tenemos que tener la opción interna de subir la validación de las mismas, y deben ir plasmadas en el pdf que se va a generar. (internamente validamos la papeleria que suben y se adjunto en los informes)
+•	Copiar enlace del candidato no funciona, lo probé en un usuario de empresa. 
+•	Se repiten algunos datos en la creación de usuario. 
+•	En el usuario del cliente, al finalizar crear una orden tira error, si genera la orden, pero al reclutador le aparece error. 
+•	Que el cliente pueda tener acceso para reenviar la notificación o correo al candidato cuando no han llenado formulario. (a veces ellos también ayudan para el candidato llene su formulario rápido)
+•	La firma del candidato que quede junto con la autorización, no al final. 
+•	No tenemos visualización de la autorización, esa debe de estar también cuando se genere el pdf porque actualmente se adjunta en anexos al final del informe. 
+•	Al momento de que el candidato termina de llenar su formulario, tarda mucho en generar el reporte de enviado. 
+•	En el usuario de cliente hay una opción que dice estado de cuestionario, favor cambiarlo por estado de procesos. 
+•	Lo reportes o informes que se puedan dividir por mes, tanto para el cliente como interno. 
+•	Algunas opciones dan error. 
+•	La opción de configuración tiene error. 
+•	Al crear la opción de sede, que también tengan para whatsap y que tengan enlace directo como los usuarios. 
+•	El archivo que se genere que tenga el nombre del evaluado y numero de orden. 
+•	En usuario de repro en la opción reporte de empresas que también podamos filtrar por empresa no solo por estado, fecha como se encuentra actualmente. 
+•	Actualmente en los reportes que enviamos lleva la firma de quien fue el responsable del proceso, talvez si lo podemos contemplar cuando veamos esa parte. No precisamente que tengamos que firmar pero ver de que forma se puede incluir ya automatizada como opción de selección. 
+•	Que aparezcan todas las opciones de estado del cliente, para que sepa en qué estado va su proceso.  (no solo una opción)
+Los estados de las ordenes que sean: 
+Formulario enviado. color:ffff00
+Formulario lleno. color:ffc000
+Programación pendiente. color:d9e2f3
+Programado. color:8eaadb
+En proceso. color:a8d08d
+En análisis. color:a8d08d
+Resultado. color:538135 
+Informe generado. color:00b050
+Orden finalizada. color:blanco
+Y que le aparezcan todos los estados el cliente para que sepa en que etapa va su orden. 
+
+
+
+Preguntas:
+•	Veo que los correos llegan de @zsistems, cuando se finalice todo va seguir asi o va tener @repro
+•	Donde va estar la opción de buscar a un candidato para saber si ya vino anteriormente. 
+•	Donde está la opción para subir un resultado preliminar 
+•	¿Como editar los permisos para el personal de Repro? Actualmente tienen acceso a todo incluso a crear usuarios. 
+•	¿Como el administrador de empresas vas a controlar los permisos de su personal? 
+•	Cree un usuario para empleado de Repro y en información me tira que es de Grupo Arium, y al crear le di empleado de REPRO, como si revuelve la información de cliente con empresa. 
