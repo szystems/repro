@@ -56,12 +56,12 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | # | Tarea | Detalle Técnico | Estado |
 |---|-------|-----------------|--------|
-| 8A.1 | Fix: datos se borran al crear orden | Pasar `old('evaluados')` como JSON a JS, repoblar campos dinámicos al fallar validación | ☐ |
-| 8A.2 | Fix: error al crear orden desde empresa | Validar `empresa_id` no null, corregir redirección post-store para role empresa | ☐ |
-| 8A.3 | Fix: error en Configuración | Validar campo `currency` en ConfigFormRequest, manejar explode seguro | ☐ |
-| 8A.4 | Fix: checkbox `principal` duplicado | Eliminar duplicado en `add.blade.php`, dejar solo uno dentro de `.empresa-fields` | ☐ |
-| 8A.5 | Verificar copiar enlace en producción | Confirmar que funciona con HTTPS. Si no, agregar fallback con `document.execCommand` | ☐ |
-| 8A.6 | Tests para todos los fixes | Tests de regresión para cada bug corregido | ☐ |
+| 8A.1 | Fix: datos se borran al crear orden | Pasar `old('evaluados')` como JSON a JS, repoblar campos dinámicos al fallar validación | ✅ |
+| 8A.2 | Fix: error al crear orden desde empresa | Validar `empresa_id` no null, corregir protección en EmpresaController | ✅ |
+| 8A.3 | Fix: error en Configuración | Validar campo `currency` en ConfigFormRequest, manejar explode seguro | ✅ |
+| 8A.4 | Fix: checkbox `principal` duplicado | Eliminar duplicado en `add.blade.php`, dejar solo uno dentro de `.principal-check-container` | ✅ |
+| 8A.5 | Verificar copiar enlace en producción | Agregar fallback con textarea + `execCommand('copy')` + prompt manual | ✅ |
+| 8A.6 | Tests para todos los fixes | 8 tests, 22 assertions — todos pasan | ✅ |
 
 ### Fase 8B — Ajustes Rápidos
 **Prioridad: ALTA — Mejoras de texto, campos y accesibilidad**
@@ -137,7 +137,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | Fase | Prioridad | Tareas | Estado |
 |------|-----------|--------|--------|
-| 8A: Bugs y Correcciones | INMEDIATA | 6 | ☐ Pendiente |
+| 8A: Bugs y Correcciones | INMEDIATA | 6 | ✅ Completada |
 | 8B: Ajustes Rápidos | ALTA | 9 | ☐ Pendiente |
 | 8C: Estados y UX | ALTA | 13 | ☐ Pendiente |
 | 8D: PDF y Documentos | MEDIA | 5 | ☐ Pendiente |
@@ -159,6 +159,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
+| 2026-03-09 | Fase 8A completada | 5 bugs corregidos, 8 tests, 22 assertions. Commit: d5f347a4 |
 | 2026-03-09 | 6 nuevas observaciones del cliente | Obs. 1: sede en users REPRO + notificación → 8C.11, 8C.12. Obs. 2: adjuntos seguimiento REPRO → 8E.4. Obs. 3: papelería anticipada empresa → 8E.2 actualizada, 8E.3. Obs. 4: dirección evaluado → 8B.7. Obs. 5: modalidad cita → 8C.10. Obs. 6: observaciones por evaluado → 8B.8. Total 37→44 tareas |
 | 2026-03-09 | Sede responsable en orden | Agregadas tareas 8C.7-8C.9: sede_id en ordenes, auto-sugerir en programación, filtros por sede |
 | 2026-03-09 | Documento creado | Análisis de 27 observaciones del cliente, plan de 37 tareas en 6 subfases |
