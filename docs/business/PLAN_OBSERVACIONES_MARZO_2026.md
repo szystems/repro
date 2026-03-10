@@ -31,7 +31,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | # | Observación | Estado Real |
 |---|------------|-------------|
-| Sede al crear orden | La sede se asigna **por evaluado** al programar cita, no por orden. Un evaluado puede ir a sede diferente que otro de la misma orden. Es correcto así. |
+| Sede al crear orden | La sede se asigna **por evaluado** al programar cita, no por orden. Un evaluado puede ir a sede diferente que otro de la misma orden. Adicionalmente, se agregará sede responsable a nivel de orden (8C.7) y campo `sede_id` en usuarios REPRO para saber qué personal pertenece a cada sede (8C.11). |
 | Resultado preliminar | Ya existe dentro de cada evaluado en la vista de la orden. Se puede subir archivo preliminar y final. |
 | Observaciones internas | Están correctamente ocultas para empresas (solo visibles para REPRO/admin). Son observaciones internas. |
 | Búsqueda de candidato | Ya existe `historialPorDpi()` — solo falta hacerlo más visible/accesible en el menú. |
@@ -74,7 +74,9 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 | 8B.4 | Quitar `fecha_limite`, mostrar fecha de creación | Ocultar campo `fecha_limite` de vistas, mostrar `created_at` formateado como "Fecha de creación" | ☐ |
 | 8B.5 | Captura de foto en inputs de documentos | Agregar `capture="environment"` a inputs file en vistas de documentos y cuestionario | ☐ |
 | 8B.6 | Hacer visible búsqueda historial por DPI | Agregar enlace en menú admin/repro a la vista `historial-dpi` existente | ☐ |
-| 8B.7 | Tests para ajustes | Validar cambios de texto, filtros, nombres de PDF | ☐ |
+| 8B.7 | Dirección del evaluado | Migración: agregar `direccion` (string 300 nullable) a `evaluados_orden`. Agregar a `$fillable`, a JS `agregarEvaluado()` en create, a edit y show. Incluir en `procesarEvaluados()` | ☐ |
+| 8B.8 | Observaciones por evaluado en formulario | El campo `observaciones` ya existe en BD y `$fillable` de `EvaluadoOrden` pero no tiene textarea en create/edit. Agregar textarea en `agregarEvaluado()` JS y en edit. Mostrar en show (admin + empresa). Obs. del cliente visibles para REPRO | ☐ |
+| 8B.9 | Tests para ajustes | Validar cambios de texto, filtros, nombres de PDF, dirección, observaciones | ☐ |
 
 ### Fase 8C — Estados y UX del Cliente
 **Prioridad: ALTA — La empresa ve información limitada y sin colores**
@@ -90,7 +92,10 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 | 8C.7 | Sede responsable en cabecera de orden | Migración: agregar `sede_id` (FK nullable) a tabla `ordenes`. Select de sede en create/edit de orden. Mostrar sede en index de órdenes como badge/columna | ☐ |
 | 8C.8 | Auto-sugerir sede al programar cita | Pre-seleccionar la sede de la orden al programar cita de evaluado (editable si el evaluado va a otra sede) | ☐ |
 | 8C.9 | Filtro por sede en listado y reportes de órdenes | Agregar filtro de sede en: index de órdenes (admin), reportes de evaluaciones, reportes de empresas | ☐ |
-| 8C.10 | Tests para UX | Validar colores, estados, firma, reenvío, sedes en orden, filtros | ☐ |
+| 8C.10 | Modalidad de cita (presencial/virtual) | Migración: agregar `modalidad` enum('presencial','virtual') nullable a `evaluados_orden`. Auto-asignar: polígrafo→presencial, vsa→virtual, socioeconómico→selector. Mostrar en show y calendario | ☐ |
+| 8C.11 | Sede en usuario REPRO | Migración: agregar `sede_id` FK nullable a `users`. Relación `sede()` en User, `usuarios()` en Sede. Selector de sede en add/edit de usuario (solo role_as >= 2) | ☐ |
+| 8C.12 | Notificación nueva orden a usuarios de sede | Crear `NuevaOrdenSedeMail`. En `OrdenesController@store()`: tras crear orden, enviar mail a `User::where('sede_id', $sedeId)->where('estado', 1)`. Usar cola para envío | ☐ |
+| 8C.13 | Tests para UX | Validar colores, estados, firma, reenvío, sedes, modalidad, notificación sede | ☐ |
 
 ### Fase 8D — PDF y Documentos
 **Prioridad: MEDIA — Mejoras al informe generado**
@@ -109,10 +114,12 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 | # | Tarea | Detalle Técnico | Estado |
 |---|-------|-----------------|--------|
 | 8E.1 | Múltiples servicios por evaluado | Relajar restricción unique de DPI: permitir misma persona en misma orden si es diferente servicio. Indicador visual "tiene otro servicio en esta orden" | ☐ |
-| 8E.2 | Subir papelería desde vista de orden | Tras crear orden, redirigir a vista show donde ya se pueden subir documentos. Agregar lógica de secuencia (si doc ya existe → mostrar el existente, permitir actualizar) | ☐ |
-| 8E.3 | Reportes por mes | Agregar filtro rápido de mes/año en reportes. Dropdown de meses + año. Aplicar tanto en admin como empresa | ☐ |
-| 8E.4 | Optimizar rendimiento cuestionario | Revisar `notificarCuestionarioCompletado()` — queries sin índice. Verificar que cola funcione para emails | ☐ |
-| 8E.5 | Tests para funcionalidades | Tests integrales de multi-servicio, documentos, reportes, rendimiento | ☐ |
+| 8E.2 | Subir papelería desde vista empresa | Agregar sección de documentos en `empresa/ordenes/show.blade.php` por cada evaluado. Reutilizar modelo `DocumentoEvaluado` con `subido_por_tipo='empresa'`. Mostrar estado de verificación. Permitir descarga de docs subidos por REPRO | ☐ |
+| 8E.3 | Papelería anticipada desde empresa | Permitir que la empresa suba papelería del evaluado desde su portal **antes** de que el evaluado complete el cuestionario. Endpoint nuevo en controller empresa. El evaluado verá docs ya subidos al llegar a la pantalla de documentos del cuestionario | ☐ |
+| 8E.4 | Archivos adjuntos de seguimiento REPRO | En la sección de documentos del admin (ya existe `_documentos_evaluado.blade.php`), agregar tipo 'seguimiento' para archivos de seguimiento interno de REPRO. Estos son visibles para empresa pero no editables por ella | ☐ |
+| 8E.5 | Reportes por mes | Agregar filtro rápido de mes/año en reportes. Dropdown de meses + año. Aplicar tanto en admin como empresa | ☐ |
+| 8E.6 | Optimizar rendimiento cuestionario | Revisar `notificarCuestionarioCompletado()` — queries sin índice. Verificar que cola funcione para emails | ☐ |
+| 8E.7 | Tests para funcionalidades | Tests integrales de multi-servicio, documentos, papelería anticipada, seguimiento, reportes | ☐ |
 
 ### Fase 8F — Funcionalidades Complejas
 **Prioridad: BAJA — Módulos nuevos que requieren diseño**
@@ -131,12 +138,12 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 | Fase | Prioridad | Tareas | Estado |
 |------|-----------|--------|--------|
 | 8A: Bugs y Correcciones | INMEDIATA | 6 | ☐ Pendiente |
-| 8B: Ajustes Rápidos | ALTA | 7 | ☐ Pendiente |
-| 8C: Estados y UX | ALTA | 10 | ☐ Pendiente |
+| 8B: Ajustes Rápidos | ALTA | 9 | ☐ Pendiente |
+| 8C: Estados y UX | ALTA | 13 | ☐ Pendiente |
 | 8D: PDF y Documentos | MEDIA | 5 | ☐ Pendiente |
-| 8E: Funcionalidades Medianas | MEDIA | 5 | ☐ Pendiente |
+| 8E: Funcionalidades Medianas | MEDIA | 7 | ☐ Pendiente |
 | 8F: Funcionalidades Complejas | BAJA | 4 | ☐ Pendiente |
-| **Total** | | **37** | |
+| **Total** | | **44** | |
 
 ---
 
@@ -152,6 +159,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
+| 2026-03-09 | 6 nuevas observaciones del cliente | Obs. 1: sede en users REPRO + notificación → 8C.11, 8C.12. Obs. 2: adjuntos seguimiento REPRO → 8E.4. Obs. 3: papelería anticipada empresa → 8E.2 actualizada, 8E.3. Obs. 4: dirección evaluado → 8B.7. Obs. 5: modalidad cita → 8C.10. Obs. 6: observaciones por evaluado → 8B.8. Total 37→44 tareas |
 | 2026-03-09 | Sede responsable en orden | Agregadas tareas 8C.7-8C.9: sede_id en ordenes, auto-sugerir en programación, filtros por sede |
 | 2026-03-09 | Documento creado | Análisis de 27 observaciones del cliente, plan de 37 tareas en 6 subfases |
 

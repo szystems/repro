@@ -46,8 +46,8 @@ El correo actual (@szystems) es temporal para las pruebas. Cuando el equipo REPR
 - **"Estado de Cuestionarios"** se cambiará a **"Estado de Procesos"** en el menú del cliente
 - **Fecha Límite** se quitará y se reemplazará por **Fecha de Creación** de la orden
 - Los **nombres de los archivos PDF** generados incluirán el nombre del evaluado y el número de orden
-- Se agregará **filtro por empresa** en el reporte de empresas (actualmente solo filtra por estado y fecha)
-
+- Se agregará **filtro por empresa** en el reporte de empresas (actualmente solo filtra por estado y fecha)- Se agregará el campo de **dirección** del evaluado al agregar o editar evaluados en una orden
+- Se agregará un campo de **observaciones por evaluado** al crear o editar una orden, para que la empresa pueda incluir notas específicas sobre cada candidato (por ejemplo: “verificar si tiene tatuajes”). Estas observaciones serán visibles para el personal de REPRO responsable de la orden
 ### Mejoras de experiencia para el cliente (empresa)
 - Se agregarán los **colores de estado** solicitados para que el cliente vea claramente en qué etapa va cada proceso:
   - 🟡 Formulario enviado
@@ -63,11 +63,20 @@ El correo actual (@szystems) es temporal para las pruebas. Cuando el equipo REPR
 - El cliente podrá **reenviar el enlace del formulario** al candidato directamente desde su vista
 - La **firma del candidato** se moverá para que aparezca junto con la autorización
 
+### Modalidad de cita
+- Al programar una cita se podrá seleccionar si es **presencial** o **virtual**
+- Para **polígrafo** la cita será siempre presencial (se asigna automáticamente)
+- Para **VSA** la cita será siempre virtual (se asigna automáticamente)
+- Para **socioeconómico** se podrá escoger entre presencial o virtual
+- La modalidad será visible en el detalle del evaluado y en el calendario
+
 ### Mejoras en sedes
 - Se agregará un campo de **sede responsable** al crear la orden, para indicar qué sede está a cargo de esa orden
 - Al programar la cita de cada evaluado, la sede de la orden vendrá **pre-seleccionada** para agilizar el proceso (pero se podrá cambiar si un evaluado asiste a otra sede)
 - Se agregarán **filtros por sede** en los listados y reportes de órdenes para ver solo las órdenes de una sede en específico
 - Se agregará campo de **WhatsApp** y **enlace de ubicación** (Google Maps) al crear sedes
+- Cada usuario de REPRO tendrá asignada la **sede en la que trabaja**, para saber quién es responsable de qué
+- Cuando una empresa cree una nueva orden, los **empleados de REPRO de la sede responsable recibirán un aviso** para que sepan que tienen una nueva orden que trabajar
 
 ### Mejoras en los informes PDF
 - El PDF incluirá el **texto de autorización** firmado por el candidato
@@ -84,6 +93,8 @@ El correo actual (@szystems) es temporal para las pruebas. Cuando el equipo REPR
 - Se mejorará la gestión de documentos para que si la papelería **ya fue subida**, el candidato lo vea y pueda actualizarla en caso necesario
 - Los inputs de documentos permitirán **tomar fotografía** directamente desde el celular
 - La papelería será visible al editar el informe y se podrá **validar internamente**
+- La **empresa podrá subir documentos** de sus evaluados directamente desde su portal, para adelantar el proceso cuando ya cuente con la papelería antes de que el candidato llene el cuestionario
+- El personal de REPRO podrá adjuntar **archivos de seguimiento** en cada evaluado (reportes, notas, evidencias). Estos documentos serán visibles para la empresa como parte del expediente del evaluado
 
 ---
 
@@ -106,12 +117,12 @@ Se activará un sistema de permisos que permite:
 | Fase | Descripción | Cantidad de tareas |
 |------|-------------|-------------------|
 | **8A** | Corrección de errores | 6 |
-| **8B** | Ajustes de texto, campos y accesibilidad | 7 |
-| **8C** | Estados, colores, sedes y mejoras de experiencia | 10 |
+| **8B** | Ajustes de texto, campos y accesibilidad | 9 |
+| **8C** | Estados, colores, sedes, modalidad y mejoras de experiencia | 13 |
 | **8D** | Mejoras en informes PDF | 5 |
-| **8E** | Servicios múltiples, documentos y reportes | 5 |
+| **8E** | Servicios múltiples, documentos y reportes | 7 |
 | **8F** | Notificaciones y permisos | 4 |
-| **Total** | | **37 tareas** |
+| **Total** | | **44 tareas** |
 
 Las fases se ejecutarán en ese orden, priorizando la corrección de errores y las mejoras que más impactan la experiencia diaria de uso.
 
