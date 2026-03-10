@@ -123,6 +123,9 @@ class ReportesController extends Controller
         if ($request->filled('estado')) {
             $query->where('estado', $request->estado);
         }
+        if ($request->filled('empresa_id')) {
+            $query->where('id', $request->empresa_id);
+        }
 
         // Clonar para estadísticas
         $statsQuery = Empresa::query();
@@ -135,7 +138,9 @@ class ReportesController extends Controller
 
         $empresas = $query->orderBy('nombre')->paginate(15)->withQueryString();
 
-        return view('admin.reportes.empresas', compact('empresas', 'stats'));
+        $todasEmpresas = Empresa::orderBy('nombre')->pluck('nombre', 'id');
+
+        return view('admin.reportes.empresas', compact('empresas', 'stats', 'todasEmpresas'));
     }
 
     /**

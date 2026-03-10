@@ -424,7 +424,9 @@ class EmpresaController extends Controller
             // Ejemplo básico usando dompdf:
             $pdf = app('dompdf.wrapper');
             $pdf->loadView('pdf.cuestionario_empresa', ['evaluado' => $evaluado]);
-            $nombreArchivo = 'Cuestionario_'.$evaluado->id.'.pdf';
+            $nombreArchivo = $evaluado->nombre . '_' .
+                ($evaluado->apellidos ?? '') . '_Orden' .
+                $evaluado->orden->codigo_orden . '.pdf';
             return $pdf->download($nombreArchivo);
         }
 }

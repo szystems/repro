@@ -272,17 +272,16 @@ class CuestionariosController extends Controller
      */
     public function historialDpi(Request $request)
     {
-        $this->middleware('permission:cuestionarios.historial');
+        $dpi = null;
+        $historial = collect();
 
-        $request->validate([
-            'dpi' => 'required|string|size:13|regex:/^[0-9]{13}$/'
-        ]);
+        if ($request->filled('dpi')) {
+            $request->validate([
+                'dpi' => 'required|string|size:13|regex:/^[0-9]{13}$/'
+            ]);
 
-        $dpi = $request->dpi;
-        $historial = EvaluadoOrden::historialPorDpi($dpi);
-
-        if ($historial->isEmpty()) {
-            return back()->with('warning', 'No se encontraron registros para el DPI proporcionado.');
+            $dpi = $request->dpi;
+            $historial = EvaluadoOrden::historialPorDpi($dpi);
         }
 
         return view('admin.cuestionarios.historial-dpi', compact('historial', 'dpi'));
@@ -318,9 +317,9 @@ class CuestionariosController extends Controller
             'imagen'
         ));
 
-        $nombreArchivo = 'cuestionario_' . 
-            $cuestionario->evaluadoOrden->dpi . '_' . 
-            $cuestionario->created_at->format('Y-m-d') . '.pdf';
+        $nombreArchivo = $cuestionario->evaluadoOrden->nombre . '_' .
+            ($cuestionario->evaluadoOrden->apellidos ?? '') . '_Orden' .
+            $cuestionario->evaluadoOrden->orden->codigo_orden . '.pdf';
 
         return $pdf->download($nombreArchivo);
     }
@@ -372,9 +371,9 @@ class CuestionariosController extends Controller
             'respuestasPorSeccion'
         ));
 
-        $nombreArchivo = 'cuestionario_' . 
-            $cuestionario->evaluadoOrden->dpi . '_' . 
-            $cuestionario->created_at->format('Y-m-d') . '.pdf';
+        $nombreArchivo = $cuestionario->evaluadoOrden->nombre . '_' .
+            ($cuestionario->evaluadoOrden->apellidos ?? '') . '_Orden' .
+            $cuestionario->evaluadoOrden->orden->codigo_orden . '.pdf';
 
         return $pdf->download($nombreArchivo);
     }

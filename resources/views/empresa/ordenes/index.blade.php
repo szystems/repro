@@ -27,7 +27,7 @@
                                 <th>Código</th>
                                 <th>Estado</th>
                                 <th>Fecha Solicitud</th>
-                                <th>Fecha Límite</th>
+                                <th>Fecha Creación</th>
                                 <th>Evaluados</th>
                                 <th>Acciones</th>
                             </tr>
@@ -38,7 +38,7 @@
                                 <td><strong>{{ $orden->codigo_orden }}</strong></td>
                                 <td><span class="badge bg-success">{{ ucfirst($orden->estado) }}</span></td>
                                 <td>{{ $orden->fecha_solicitud ? \Carbon\Carbon::parse($orden->fecha_solicitud)->format('d/m/Y') : '-' }}</td>
-                                <td>{{ $orden->fecha_limite ? \Carbon\Carbon::parse($orden->fecha_limite)->format('d/m/Y') : '-' }}</td>
+                                <td>{{ $orden->created_at ? $orden->created_at->format('d/m/Y') : '-' }}</td>
                                 <td>{{ $orden->evaluados_count }}</td>
                                 <td>
                                     <a href="{{ route('empresa.ordenes.show', $orden) }}" class="btn btn-outline-primary btn-sm" title="Ver Detalle">

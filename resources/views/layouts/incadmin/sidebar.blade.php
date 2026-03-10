@@ -59,6 +59,15 @@
                     </a>
                 </li>
 
+                @if(Auth::user()->role_as >= 2)
+                <li class="{{ Request::is('cuestionarios/historial-dpi') ? 'active-page-link':''  }}">
+                    <a href="{{ route('admin.cuestionarios.historial-dpi') }}">
+                        <i class="bi bi-search"></i>
+                        <span class="menu-text">Historial por DPI</span>
+                    </a>
+                </li>
+                @endif
+
                 <!-- Órdenes de evaluación - Solo para usuarios empresa y superiores -->
                 <li class="{{ Request::is('ordenes','show-orden/*','add-orden','edit-orden/*') ? 'active-page-link':''  }}">
                     <a href="{{ url('ordenes') }}">

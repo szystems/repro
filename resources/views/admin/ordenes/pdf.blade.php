@@ -267,8 +267,8 @@
             <tr>
                 <td class="info-label">Fecha Solicitud:</td>
                 <td class="info-value">{{ $orden->fecha_solicitud ? \Carbon\Carbon::parse($orden->fecha_solicitud)->format('d/m/Y') : 'N/A' }}</td>
-                <td class="info-label">Fecha Límite:</td>
-                <td class="info-value">{{ $orden->fecha_limite ? \Carbon\Carbon::parse($orden->fecha_limite)->format('d/m/Y') : 'Sin definir' }}</td>
+                <td class="info-label">Fecha Creación:</td>
+                <td class="info-value">{{ $orden->created_at ? $orden->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
             </tr>
             <tr>
                 <td class="info-label">Prioridad:</td>

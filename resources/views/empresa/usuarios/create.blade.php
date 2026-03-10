@@ -131,7 +131,7 @@
                         <ul class="small mb-0">
                             <li>Acceder al panel de empresa</li>
                             <li>Ver y crear órdenes de evaluación</li>
-                            <li>Ver el estado de cuestionarios</li>
+                            <li>Ver el estado de procesos</li>
                             <li>Acceder a reportes</li>
                         </ul>
                         <hr>

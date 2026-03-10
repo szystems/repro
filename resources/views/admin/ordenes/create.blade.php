@@ -89,16 +89,6 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-
-                                <!-- Fecha Límite (Solo REPRO) -->
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Fecha Límite</label>
-                                    <input type="date" class="form-control @error('fecha_limite') is-invalid @enderror"
-                                           name="fecha_limite" value="{{ old('fecha_limite') }}" min="{{ date('Y-m-d') }}">
-                                    @error('fecha_limite')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
                                 @endif
 
                                 <!-- Observaciones Internas (Solo REPRO) -->
@@ -203,6 +193,8 @@ function agregarEvaluado(datos = {}) {
     const dpi = datos.dpi || '';
     const email = datos.email || '';
     const telefono = datos.telefono || '';
+    const direccion = datos.direccion || '';
+    const observaciones = datos.observaciones || '';
     const tipoServicio = datos.tipo_servicio || 'poligrafo';
     const tipoFormulario = datos.tipo_formulario || 'preempleo';
     const fechaProgramada = datos.fecha_programada || '';
@@ -263,6 +255,14 @@ function agregarEvaluado(datos = {}) {
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Teléfono</label>
                     <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono]" placeholder="23451234" value="${telefono}">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][direccion]" placeholder="Dirección del evaluado" value="${direccion}" maxlength="300">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Observaciones</label>
+                    <textarea class="form-control" name="evaluados[${contadorEvaluados}][observaciones]" rows="1" placeholder="Observaciones sobre este evaluado..." maxlength="1000">${observaciones}</textarea>
                 </div>
             </div>
         </div>

@@ -66,7 +66,7 @@
                 <li class="{{ Request::is('empresa/cuestionarios*') ? 'active-page-link':''  }}">
                     <a href="{{ url('empresa/cuestionarios') }}">
                         <i class="bi bi-clipboard-check"></i>
-                        <span class="menu-text">Estado de Cuestionarios</span>
+                        <span class="menu-text">Estado de Procesos</span>
                     </a>
                 </li>
 

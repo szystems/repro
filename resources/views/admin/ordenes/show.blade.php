@@ -193,49 +193,8 @@
                                 <div>{{ $orden->fecha_solicitud ? \Carbon\Carbon::parse($orden->fecha_solicitud)->format('d/m/Y') : 'N/A' }}</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Fecha Límite</label>
-                                <div>
-                                    @if($orden->fecha_limite)
-                                        @php
-                                            $fechaLimite = \Carbon\Carbon::parse($orden->fecha_limite);
-                                            $diasRestantes = (int) now()->diffInDays($fechaLimite, false);
-                                            $diasRestantesTexto = abs($diasRestantes);
-                                        @endphp
-                                        <span class="
-                                            @if($diasRestantes < 0) text-danger fw-bold
-                                            @elseif($diasRestantes <= 3 && !in_array($orden->estado, ['entregado', 'cancelado'])) text-warning fw-bold
-                                            @endif">
-                                            {{ $fechaLimite->format('d/m/Y') }}
-                                        </span>
-                                        @if($diasRestantes < 0)
-                                            <span class="badge bg-danger ms-2 fs-6">
-                                                <i class="bi bi-exclamation-triangle-fill"></i>
-                                                Vencida hace {{ $diasRestantesTexto }} {{ $diasRestantesTexto == 1 ? 'día' : 'días' }}
-                                            </span>
-                                        @elseif($diasRestantes == 0 && !in_array($orden->estado, ['entregado', 'cancelado']))
-                                            <span class="badge bg-danger ms-2 fs-6 pulse">
-                                                <i class="bi bi-alarm-fill"></i> ¡VENCE HOY!
-                                            </span>
-                                        @elseif($diasRestantes <= 3 && !in_array($orden->estado, ['entregado', 'cancelado']))
-                                            <span class="badge bg-warning text-dark ms-2 fs-6">
-                                                <i class="bi bi-hourglass-split"></i>
-                                                {{ $diasRestantes }} {{ $diasRestantes == 1 ? 'día restante' : 'días restantes' }}
-                                            </span>
-                                        @elseif($diasRestantes <= 7 && !in_array($orden->estado, ['entregado', 'cancelado']))
-                                            <span class="badge bg-info ms-2 fs-6">
-                                                <i class="bi bi-calendar-check"></i>
-                                                {{ $diasRestantes }} {{ $diasRestantes == 1 ? 'día restante' : 'días restantes' }}
-                                            </span>
-                                        @elseif($diasRestantes > 7)
-                                            <span class="badge bg-success ms-2">
-                                                <i class="bi bi-check-circle"></i>
-                                                {{ $diasRestantes }} {{ $diasRestantes == 1 ? 'día restante' : 'días restantes' }}
-                                            </span>
-                                        @endif
-                                    @else
-                                        <span class="text-muted">Sin definir</span>
-                                    @endif
-                                </div>
+                                <label class="form-label fw-bold">Fecha de Creación</label>
+                                <div>{{ $orden->created_at ? $orden->created_at->format('d/m/Y H:i') : 'N/A' }}</div>
                             </div>
                         </div>
 
@@ -488,13 +447,25 @@
                                                     <i class="bi bi-envelope"></i> {{ $evaluado->email }}<br>
                                                 @endif
                                                 @if($evaluado->telefono)
-                                                    <i class="bi bi-telephone"></i> {{ $evaluado->telefono }}
+                                                    <i class="bi bi-telephone"></i> {{ $evaluado->telefono }}<br>
                                                 @endif
-                                                @if(!$evaluado->email && !$evaluado->telefono)
+                                                @if($evaluado->direccion)
+                                                    <i class="bi bi-geo-alt"></i> {{ $evaluado->direccion }}<br>
+                                                @endif
+                                                @if(!$evaluado->email && !$evaluado->telefono && !$evaluado->direccion)
                                                     <span class="text-muted">Sin contacto</span>
                                                 @endif
                                             </div>
                                         </div>
+
+                                        @if($evaluado->observaciones)
+                                        <div class="row mb-3">
+                                            <div class="col-12">
+                                                <small class="text-muted d-block">Observaciones del Evaluado</small>
+                                                <div class="bg-light p-2 rounded border-start border-3 border-info small">{{ $evaluado->observaciones }}</div>
+                                            </div>
+                                        </div>
+                                        @endif
 
                                         {{-- Estados del evaluado --}}
                                         <div class="row mb-3">
@@ -682,7 +653,7 @@
                                                                       method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
                                                                     @csrf
                                                                     <input type="hidden" name="tipo_resultado" value="preliminar">
-                                                                    <input type="file" name="archivo" class="form-control form-control-sm" accept=".pdf,.doc,.docx" required>
+                                                                    <input type="file" name="archivo" class="form-control form-control-sm" accept=".pdf,.doc,.docx" capture="environment" required>
                                                                     <button type="submit" class="btn btn-sm btn-info text-white">
                                                                         <i class="bi bi-upload"></i>
                                                                     </button>
@@ -732,7 +703,7 @@
                                                                       method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
                                                                     @csrf
                                                                     <input type="hidden" name="tipo_resultado" value="final">
-                                                                    <input type="file" name="archivo" class="form-control form-control-sm" accept=".pdf,.doc,.docx" required>
+                                                                    <input type="file" name="archivo" class="form-control form-control-sm" accept=".pdf,.doc,.docx" capture="environment" required>
                                                                     <button type="submit" class="btn btn-sm btn-success">
                                                                         <i class="bi bi-upload"></i>
                                                                     </button>

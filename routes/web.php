@@ -173,6 +173,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // ========================================
     Route::middleware(['role:admin,repro'])->prefix('cuestionarios')->name('admin.cuestionarios.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\CuestionariosController::class, 'index'])->name('index');
+        Route::get('/historial-dpi', [App\Http\Controllers\Admin\CuestionariosController::class, 'historialDpi'])->name('historial-dpi');
         Route::get('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'show'])->name('show');
         Route::get('/{cuestionario}/editar', [App\Http\Controllers\Admin\CuestionariosController::class, 'edit'])->name('edit');
         Route::put('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'update'])->name('update');

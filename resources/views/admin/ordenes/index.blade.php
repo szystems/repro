@@ -175,26 +175,7 @@
                                         <td>
                                             <div class="small">
                                                 <strong>Solicitud:</strong> {{ $orden->fecha_solicitud ? \Carbon\Carbon::parse($orden->fecha_solicitud)->format('d/m/Y') : 'N/A' }}<br>
-                                                @if($orden->fecha_limite && Auth::user()->role_as >= 2)
-                                                    @php
-                                                        $fechaLimite = \Carbon\Carbon::parse($orden->fecha_limite);
-                                                        $diasRestantes = now()->diffInDays($fechaLimite, false);
-                                                        $alertClass = '';
-                                                        if ($diasRestantes < 0) {
-                                                            $alertClass = 'text-danger fw-bold';
-                                                        } elseif ($diasRestantes <= 3 && !in_array($orden->estado, ['entregado', 'cancelado'])) {
-                                                            $alertClass = 'text-warning fw-bold';
-                                                        }
-                                                    @endphp
-                                                    <strong>Límite:</strong> <span class="{{ $alertClass }}">{{ $fechaLimite->format('d/m/Y') }}</span>
-                                                    @if($diasRestantes < 0)
-                                                        <i class="bi bi-exclamation-triangle text-danger" title="Vencida"></i>
-                                                    @elseif($diasRestantes <= 3 && !in_array($orden->estado, ['entregado', 'cancelado']))
-                                                        <i class="bi bi-clock text-warning" title="Por vencer"></i>
-                                                    @endif
-                                                @else
-                                                    <strong>Límite:</strong> <span class="text-muted">Sin definir</span>
-                                                @endif
+                                                <strong>Creación:</strong> {{ $orden->created_at ? $orden->created_at->format('d/m/Y') : 'N/A' }}
                                             </div>
                                         </td>
                                         @if(Auth::user()->role_as >= 2)

@@ -124,13 +124,8 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="fecha_limite" class="form-label">Fecha Límite</label>
-                                    <input type="date" class="form-control @error('fecha_limite') is-invalid @enderror" 
-                                           name="fecha_limite" id="fecha_limite" 
-                                           value="{{ old('fecha_limite', $orden->fecha_limite ? \Carbon\Carbon::parse($orden->fecha_limite)->format('Y-m-d') : '') }}">
-                                    @error('fecha_limite')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    <label class="form-label">Fecha de Creación</label>
+                                    <input type="text" class="form-control" value="{{ $orden->created_at ? $orden->created_at->format('d/m/Y H:i') : 'N/A' }}" readonly>
                                 </div>
                             </div>
                             @endif
@@ -263,6 +258,20 @@
                                         </div>
                                     </div>
                                     
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label">Dirección</label>
+                                            <input type="text" class="form-control" name="evaluados[{{ $index }}][direccion]" 
+                                                   value="{{ old('evaluados.'.$index.'.direccion', $evaluado->direccion) }}" maxlength="300"
+                                                   placeholder="Dirección del evaluado">
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label">Observaciones</label>
+                                            <textarea class="form-control" name="evaluados[{{ $index }}][observaciones]" rows="1" 
+                                                      maxlength="1000" placeholder="Observaciones sobre este evaluado...">{{ old('evaluados.'.$index.'.observaciones', $evaluado->observaciones) }}</textarea>
+                                        </div>
+                                    </div>
+
                                     @if(Auth::user()->hasAnyRole(['admin', 'repro']))
                                     <div class="row">
                                         <div class="col-md-6 mb-2">

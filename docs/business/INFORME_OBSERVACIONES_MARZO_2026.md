@@ -116,13 +116,13 @@ Se activará un sistema de permisos que permite:
 
 | Fase | Descripción | Cantidad de tareas |
 |------|-------------|-------------------|
-| **8A** | Corrección de errores | 6 |
-| **8B** | Ajustes de texto, campos y accesibilidad | 9 |
-| **8C** | Estados, colores, sedes, modalidad y mejoras de experiencia | 13 |
-| **8D** | Mejoras en informes PDF | 5 |
-| **8E** | Servicios múltiples, documentos y reportes | 7 |
-| **8F** | Notificaciones y permisos | 4 |
-| **Total** | | **44 tareas** |
+| **8A** | Corrección de errores | 6 | ✅ Completada |
+| **8B** | Ajustes de texto, campos y accesibilidad | 9 | ✅ Completada |
+| **8C** | Estados, colores, sedes, modalidad y mejoras de experiencia | 13 | ☐ Pendiente |
+| **8D** | Mejoras en informes PDF | 5 | ☐ Pendiente |
+| **8E** | Servicios múltiples, documentos y reportes | 7 | ☐ Pendiente |
+| **8F** | Notificaciones y permisos | 4 | ☐ Pendiente |
+| **Total** | | **44 tareas** | |
 
 Las fases se ejecutarán en ese orden, priorizando la corrección de errores y las mejoras que más impactan la experiencia diaria de uso.
 

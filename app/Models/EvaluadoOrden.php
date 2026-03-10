@@ -35,6 +35,7 @@ class EvaluadoOrden extends Model
         'email',
         'telefono',
         'celular',
+        'direccion',
         'dpi',
         'tipo_documento',
         'tipo_servicio',

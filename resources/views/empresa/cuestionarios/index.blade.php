@@ -11,7 +11,7 @@
                 <i class="bi bi-clipboard-check"></i>
             </div>
             <div class="page-title">
-                <h5>Estado de Cuestionarios</h5>
+                <h5>Estado de Procesos</h5>
             </div>
         </div>
         <div class="d-flex align-items-end d-none d-sm-block">

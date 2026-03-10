@@ -49,6 +49,15 @@
                                     <option value="0" {{ request('estado') === '0' ? 'selected' : '' }}>Inactivas</option>
                                 </select>
                             </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Empresa</label>
+                                <select name="empresa_id" class="form-select">
+                                    <option value="">Todas</option>
+                                    @foreach($todasEmpresas as $id => $nombre)
+                                        <option value="{{ $id }}" {{ request('empresa_id') == $id ? 'selected' : '' }}>{{ $nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div class="col-md-3 d-flex align-items-end">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-search me-1"></i>Filtrar

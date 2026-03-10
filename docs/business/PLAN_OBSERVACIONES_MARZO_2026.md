@@ -68,15 +68,15 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | # | Tarea | Detalle Técnico | Estado |
 |---|-------|-----------------|--------|
-| 8B.1 | "Estado de Cuestionarios" → "Estado de Procesos" | Cambiar texto en sidebar empresa, vista cuestionarios, vista usuarios (3 archivos) | ☐ |
-| 8B.2 | Nombre del PDF: `{nombre}_{apellido}_Orden{codigo}.pdf` | Cambiar en 4 métodos: `exportarPdf()`, `generarPDF()`, `generarPDFCuestionarioEmpresa()`, y descarga de resultado | ☐ |
-| 8B.3 | Filtro por empresa en reporte de empresas | Agregar select de empresa en `ReportesController::empresas()` y vista | ☐ |
-| 8B.4 | Quitar `fecha_limite`, mostrar fecha de creación | Ocultar campo `fecha_limite` de vistas, mostrar `created_at` formateado como "Fecha de creación" | ☐ |
-| 8B.5 | Captura de foto en inputs de documentos | Agregar `capture="environment"` a inputs file en vistas de documentos y cuestionario | ☐ |
-| 8B.6 | Hacer visible búsqueda historial por DPI | Agregar enlace en menú admin/repro a la vista `historial-dpi` existente | ☐ |
-| 8B.7 | Dirección del evaluado | Migración: agregar `direccion` (string 300 nullable) a `evaluados_orden`. Agregar a `$fillable`, a JS `agregarEvaluado()` en create, a edit y show. Incluir en `procesarEvaluados()` | ☐ |
-| 8B.8 | Observaciones por evaluado en formulario | El campo `observaciones` ya existe en BD y `$fillable` de `EvaluadoOrden` pero no tiene textarea en create/edit. Agregar textarea en `agregarEvaluado()` JS y en edit. Mostrar en show (admin + empresa). Obs. del cliente visibles para REPRO | ☐ |
-| 8B.9 | Tests para ajustes | Validar cambios de texto, filtros, nombres de PDF, dirección, observaciones | ☐ |
+| 8B.1 | "Estado de Cuestionarios" → "Estado de Procesos" | Cambiar texto en sidebar empresa, vista cuestionarios, vista usuarios (3 archivos) | ✅ |
+| 8B.2 | Nombre del PDF: `{nombre}_{apellido}_Orden{codigo}.pdf` | Cambiar en 4 métodos: `exportarPdf()`, `generarPDF()`, `generarPDFCuestionarioEmpresa()`, y descarga de resultado | ✅ |
+| 8B.3 | Filtro por empresa en reporte de empresas | Agregar select de empresa en `ReportesController::empresas()` y vista | ✅ |
+| 8B.4 | Quitar `fecha_limite`, mostrar fecha de creación | Ocultar campo `fecha_limite` de vistas, mostrar `created_at` formateado como "Fecha de creación" | ✅ |
+| 8B.5 | Captura de foto en inputs de documentos | Agregar `capture="environment"` a inputs file en vistas de documentos y cuestionario | ✅ |
+| 8B.6 | Hacer visible búsqueda historial por DPI | Agregar enlace en menú admin/repro a la vista `historial-dpi` existente | ✅ |
+| 8B.7 | Dirección del evaluado | Migración: agregar `direccion` (string 300 nullable) a `evaluados_orden`. Agregar a `$fillable`, a JS `agregarEvaluado()` en create, a edit y show. Incluir en `procesarEvaluados()` | ✅ |
+| 8B.8 | Observaciones por evaluado en formulario | El campo `observaciones` ya existe en BD y `$fillable` de `EvaluadoOrden` pero no tiene textarea en create/edit. Agregar textarea en `agregarEvaluado()` JS y en edit. Mostrar en show (admin + empresa). Obs. del cliente visibles para REPRO | ✅ |
+| 8B.9 | Tests para ajustes | Validar cambios de texto, filtros, nombres de PDF, dirección, observaciones | ✅ |
 
 ### Fase 8C — Estados y UX del Cliente
 **Prioridad: ALTA — La empresa ve información limitada y sin colores**
@@ -138,7 +138,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 | Fase | Prioridad | Tareas | Estado |
 |------|-----------|--------|--------|
 | 8A: Bugs y Correcciones | INMEDIATA | 6 | ✅ Completada |
-| 8B: Ajustes Rápidos | ALTA | 9 | ☐ Pendiente |
+| 8B: Ajustes Rápidos | ALTA | 9 | ✅ Completada |
 | 8C: Estados y UX | ALTA | 13 | ☐ Pendiente |
 | 8D: PDF y Documentos | MEDIA | 5 | ☐ Pendiente |
 | 8E: Funcionalidades Medianas | MEDIA | 7 | ☐ Pendiente |
@@ -159,6 +159,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
+| 2026-03-09 | Fase 8B completada | 9 ajustes rápidos: texto, PDFs, filtros, fecha_limite, captura, historial DPI, dirección, observaciones. 16 tests, 43 assertions |
 | 2026-03-09 | Fase 8A completada | 5 bugs corregidos, 8 tests, 22 assertions. Commit: d5f347a4 |
 | 2026-03-09 | 6 nuevas observaciones del cliente | Obs. 1: sede en users REPRO + notificación → 8C.11, 8C.12. Obs. 2: adjuntos seguimiento REPRO → 8E.4. Obs. 3: papelería anticipada empresa → 8E.2 actualizada, 8E.3. Obs. 4: dirección evaluado → 8B.7. Obs. 5: modalidad cita → 8C.10. Obs. 6: observaciones por evaluado → 8B.8. Total 37→44 tareas |
 | 2026-03-09 | Sede responsable en orden | Agregadas tareas 8C.7-8C.9: sede_id en ordenes, auto-sugerir en programación, filtros por sede |

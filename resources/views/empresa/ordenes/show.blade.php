@@ -97,7 +97,10 @@
                                         <i class="bi bi-envelope"></i> {{ $evaluado->email }}<br>
                                     @endif
                                     @if($evaluado->telefono)
-                                        <i class="bi bi-telephone"></i> {{ $evaluado->telefono }}
+                                        <i class="bi bi-telephone"></i> {{ $evaluado->telefono }}<br>
+                                    @endif
+                                    @if($evaluado->direccion)
+                                        <i class="bi bi-geo-alt"></i> {{ $evaluado->direccion }}
                                     @endif
                                 </td>
                                 <td>

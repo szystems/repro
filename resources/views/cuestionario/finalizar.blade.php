@@ -169,7 +169,7 @@
                             <div class="col-md-5">
                                 <label class="form-label">Archivo <small class="text-muted">(máx. 10 MB)</small></label>
                                 <input type="file" name="archivo" class="form-control form-control-sm"
-                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" capture="environment" required>
                             </div>
                             <div class="col-md-3">
                                 <button type="submit" class="btn btn-outline-primary btn-sm w-100">

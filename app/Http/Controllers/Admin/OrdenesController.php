@@ -524,6 +524,7 @@ class OrdenesController extends Controller
                 'dpi' => $evaluadoData['dpi'],
                 'telefono' => $evaluadoData['telefono'] ?? null,
                 'email' => $evaluadoData['email'] ?? null,
+                'direccion' => $evaluadoData['direccion'] ?? null,
                 'orden_id' => $orden->id,
                 'token_unico' => Str::random(32),
                 'token_expira_at' => now()->addDays(30),
@@ -655,7 +656,7 @@ class OrdenesController extends Controller
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf', compact('orden', 'estados'));
 
-        return $pdf->stream('orden-' . $orden->codigo_orden . '.pdf');
+        return $pdf->stream('Orden_' . $orden->codigo_orden . '_' . ($orden->empresa->nombre ?? 'SinEmpresa') . '.pdf');
     }
 
     /**
