@@ -193,15 +193,25 @@
 <script>
 let contadorEvaluados = 0;
 const esUsuarioEmpresa = {{ Auth::user()->role_as == 1 ? 'true' : 'false' }};
+const evaluadosOld = @json(old('evaluados', []));
 
-function agregarEvaluado() {
+function agregarEvaluado(datos = {}) {
     contadorEvaluados++;
+
+    const nombre = datos.nombre || '';
+    const apellidos = datos.apellidos || '';
+    const dpi = datos.dpi || '';
+    const email = datos.email || '';
+    const telefono = datos.telefono || '';
+    const tipoServicio = datos.tipo_servicio || 'poligrafo';
+    const tipoFormulario = datos.tipo_formulario || 'preempleo';
+    const fechaProgramada = datos.fecha_programada || '';
 
     // Solo mostrar fecha programada si NO es usuario empresa
     const fechaProgramadaHtml = esUsuarioEmpresa ? '' : `
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Fecha Programada</label>
-                    <input type="date" class="form-control" name="evaluados[${contadorEvaluados}][fecha_programada]" min="{{ date('Y-m-d') }}">
+                    <input type="date" class="form-control" name="evaluados[${contadorEvaluados}][fecha_programada]" min="{{ date('Y-m-d') }}" value="${fechaProgramada}">
                 </div>`;
 
     const html = `
@@ -216,43 +226,43 @@ function agregarEvaluado() {
             <div class="row">
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Nombres</label>
-                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][nombre]" placeholder="Nombres" required>
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][nombre]" placeholder="Nombres" value="${nombre}" required>
                 </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Apellidos</label>
-                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][apellidos]" placeholder="Apellidos" required>
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][apellidos]" placeholder="Apellidos" value="${apellidos}" required>
                 </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">DPI</label>
                     <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][dpi]"
-                           placeholder="1234567890123" maxlength="13" pattern="[0-9]{13}" required>
+                           placeholder="1234567890123" maxlength="13" pattern="[0-9]{13}" value="${dpi}" required>
                 </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Email</label>
-                    <input type="email" class="form-control" name="evaluados[${contadorEvaluados}][email]" placeholder="evaluado@empresa.com" required>
+                    <input type="email" class="form-control" name="evaluados[${contadorEvaluados}][email]" placeholder="evaluado@empresa.com" value="${email}" required>
                 </div>
 
                 <!-- Campos específicos por evaluado -->
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Tipo Servicio</label>
                     <select class="form-select" name="evaluados[${contadorEvaluados}][tipo_servicio]" required>
-                        <option value="poligrafo">Polígrafo</option>
-                        <option value="vsa">VSA</option>
-                        <option value="socioeconomico">Socioeconómico</option>
+                        <option value="poligrafo" ${tipoServicio === 'poligrafo' ? 'selected' : ''}>Polígrafo</option>
+                        <option value="vsa" ${tipoServicio === 'vsa' ? 'selected' : ''}>VSA</option>
+                        <option value="socioeconomico" ${tipoServicio === 'socioeconomico' ? 'selected' : ''}>Socioeconómico</option>
                     </select>
                 </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Tipo Formulario</label>
                     <select class="form-select" name="evaluados[${contadorEvaluados}][tipo_formulario]" required>
-                        <option value="preempleo">Pre-empleo</option>
-                        <option value="periodica">Periódica</option>
-                        <option value="especifica">Específica</option>
+                        <option value="preempleo" ${tipoFormulario === 'preempleo' ? 'selected' : ''}>Pre-empleo</option>
+                        <option value="periodica" ${tipoFormulario === 'periodica' ? 'selected' : ''}>Periódica</option>
+                        <option value="especifica" ${tipoFormulario === 'especifica' ? 'selected' : ''}>Específica</option>
                     </select>
                 </div>
                 ${fechaProgramadaHtml}
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Teléfono</label>
-                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono]" placeholder="23451234">
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono]" placeholder="23451234" value="${telefono}">
                 </div>
             </div>
         </div>
@@ -266,9 +276,13 @@ function removerEvaluado(id) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Agregar un evaluado por defecto si no hay ninguno
-    const container = document.getElementById('evaluados-container');
-    if (container && container.children.length === 0) {
+    // Repoblar evaluados desde old() si hubo error de validación
+    const oldKeys = Object.keys(evaluadosOld);
+    if (oldKeys.length > 0) {
+        oldKeys.forEach(function(key) {
+            agregarEvaluado(evaluadosOld[key]);
+        });
+    } else {
         agregarEvaluado();
     }
 

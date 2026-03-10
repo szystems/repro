@@ -19,8 +19,9 @@ class ConfigController extends Controller
 
     public function update(ConfigFormRequest $request)
     {
-        $currency = explode(' ',trim($request->input('currency')));
-        $currency_simbol = ucwords($currency[1]);
+        $currencyInput = trim($request->input('currency'));
+        $currencyParts = explode(' ', $currencyInput);
+        $currency_simbol = isset($currencyParts[1]) ? ucwords($currencyParts[1]) : ucwords($currencyParts[0]);
 
         $config = Config::first();
         if($request->hasFile('logo'))

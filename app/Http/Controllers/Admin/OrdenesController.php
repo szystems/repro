@@ -162,6 +162,9 @@ class OrdenesController extends Controller
 
             if (Auth::user()->role_as == 1) {
                 // Usuario empresa: usar su empresa_id
+                if (!Auth::user()->empresa_id) {
+                    throw new \RuntimeException('Su usuario no tiene una empresa asociada. Contacte al administrador.');
+                }
                 $datosOrden['empresa_id'] = Auth::user()->empresa_id;
             } else {
                 $datosOrden['empresa_id'] = $validated['empresa_id'];

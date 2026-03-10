@@ -248,18 +248,6 @@
                                                                     </div>
                                                                 </div>
 
-                                                                <div class="col-md-12 mb-3">
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="checkbox" value="1" name="principal" id="principal" {{ old('principal') ? 'checked' : '' }}>
-                                                                        <label class="form-check-label" for="principal">
-                                                                            Usuario principal de la empresa
-                                                                        </label>
-                                                                        <div class="form-text">
-                                                                            El usuario principal tiene permisos para administrar otros usuarios de su empresa.
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
                                                                 <div class="col-md-12">
                                                                     <div class="alert alert-success">
                                                                         <h6><i class="bi bi-building-check"></i> Permisos de Usuario Empresa</h6>

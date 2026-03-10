@@ -20,6 +20,9 @@ class EmpresaController extends Controller
     public function verOrden(\App\Models\Orden $orden): \Illuminate\View\View
     {
         $empresa = Auth::user()->empresa;
+        if (!$empresa) {
+            abort(403, 'Su usuario no tiene una empresa asociada');
+        }
         // Verificar que la orden pertenece a la empresa del usuario
         if ($orden->empresa_id !== $empresa->id) {
             abort(403, 'Acceso no autorizado');

@@ -222,10 +222,8 @@
 
 @push('scripts')
 <script>
-// Función para copiar enlace del evaluado al portapapeles
 function copiarEnlaceEvaluado(url) {
-    navigator.clipboard.writeText(url).then(function() {
-        // Mostrar notificación temporal
+    function mostrarExito() {
         const toast = document.createElement('div');
         toast.className = 'position-fixed bottom-0 end-0 p-3';
         toast.style.zIndex = '9999';
@@ -243,9 +241,44 @@ function copiarEnlaceEvaluado(url) {
         `;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
-    }).catch(function(err) {
-        alert('Error al copiar: ' + err);
-    });
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(mostrarExito).catch(function() {
+            copiarFallback(url);
+        });
+    } else {
+        copiarFallback(url);
+    }
+}
+
+function copiarFallback(url) {
+    const textarea = document.createElement('textarea');
+    textarea.value = url;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed bottom-0 end-0 p-3';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <div class="toast show" role="alert">
+                <div class="toast-header bg-success text-white">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong class="me-auto">Enlace copiado</strong>
+                </div>
+                <div class="toast-body">El enlace ha sido copiado al portapapeles.</div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    } catch (err) {
+        prompt('Copie este enlace manualmente:', url);
+    }
+    document.body.removeChild(textarea);
 }
 </script>
 @endpush

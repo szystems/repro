@@ -24,6 +24,7 @@ class ConfigFormRequest extends FormRequest
     public function rules()
     {
         return [
+            'currency'=>'required|string|max:50',
             'fb_link'=>'nullable|url',
             'inst_link'=>'nullable|url',
             'yt_link'=>'nullable|url',
