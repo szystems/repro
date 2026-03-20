@@ -102,11 +102,11 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | # | Tarea | Detalle Técnico | Estado |
 |---|-------|-----------------|--------|
-| 8D.1 | Autorización/términos en el PDF | Agregar sección con texto de autorización + firma del evaluado en el PDF del cuestionario | ☐ |
-| 8D.2 | Documentos verificados en el PDF | Agregar sección listando documentos subidos con estado de verificación (aprobado/rechazado) | ☐ |
-| 8D.3 | Campo responsable del proceso | Nuevo campo `responsable_id` (FK users) en `evaluados_orden`. Select de poligrafista/responsable en vista admin | ☐ |
-| 8D.4 | Firma/nombre del responsable en el PDF | Mostrar nombre y cargo del responsable en pie de firma del PDF generado | ☐ |
-| 8D.5 | Tests para PDFs | Validar contenido de PDFs generados, responsable, documentos | ☐ |
+| 8D.1 | Autorización/términos en el PDF | Sección completa con texto autorización, tipo evaluación, declaraciones, consentimiento polígrafo/VSA, firma digital evaluado | ✅ |
+| 8D.2 | Documentos verificados en el PDF | Tabla con #, Tipo, Archivo, Estado (badge color), Subido por. Condicional si hay documentos | ✅ |
+| 8D.3 | Campo responsable del proceso | Migración `responsable_id` FK users nullable. Select en modal programar/reprogramar. Display en show | ✅ |
+| 8D.4 | Firma/nombre del responsable en el PDF | Bloque firma con nombre, cargo, "Responsable del Proceso — REPRO Guatemala". Condicional si hay responsable | ✅ |
+| 8D.5 | Tests para PDFs | 15 tests, 36 assertions — responsable CRUD, PDF autorización, documentos, firma, validación | ✅ |
 
 ### Fase 8E — Funcionalidades Medianas
 **Prioridad: MEDIA — Nuevas capacidades del sistema**
@@ -140,7 +140,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 | 8A: Bugs y Correcciones | INMEDIATA | 6 | ✅ Completada |
 | 8B: Ajustes Rápidos | ALTA | 9 | ✅ Completada |
 | 8C: Estados y UX | ALTA | 13 | ✅ Completada |
-| 8D: PDF y Documentos | MEDIA | 5 | ☐ Pendiente |
+| 8D: PDF y Documentos | MEDIA | 5 | ✅ Completada |
 | 8E: Funcionalidades Medianas | MEDIA | 7 | ☐ Pendiente |
 | 8F: Funcionalidades Complejas | BAJA | 4 | ☐ Pendiente |
 | **Total** | | **44** | |
@@ -158,7 +158,8 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 ## ✅ Historial de Cambios
 
 | Fecha | Acción | Detalle |
-|-------|--------|---------|
+|-------|--------|---------||
+| 2026-03-20 | Fase 8D completada | 5 tareas de PDF y Documentos: autorización/términos en PDF, documentos verificados en PDF, campo responsable_id, firma responsable en PDF. 1 migración, 13 archivos modificados. 15 tests, 36 assertions. Commit: 81b4a67e |
 | 2026-03-09 | Fase 8C completada | 13 tareas de Estados y UX: colores dinámicos, firma en autorización, reenviar enlace, WhatsApp/Maps en sedes, sede en orden/usuarios, modalidad cita, filtro sede, notificación sede. 4 migraciones, 1 Mailable. 16 tests, 32 assertions |
 | 2026-03-09 | Fase 8B completada | 9 ajustes rápidos: texto, PDFs, filtros, fecha_limite, captura, historial DPI, dirección, observaciones. 16 tests, 43 assertions |
 | 2026-03-09 | Fase 8A completada | 5 bugs corregidos, 8 tests, 22 assertions. Commit: d5f347a4 |
@@ -169,4 +170,4 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 ---
 
 *Documento creado: 9 de marzo de 2026*
-*Última actualización: 9 de marzo de 2026*
+*Última actualización: 20 de marzo de 2026*
