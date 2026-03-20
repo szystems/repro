@@ -41,6 +41,7 @@ class EvaluadoOrden extends Model
         'tipo_servicio',
         'tipo_formulario',
         'poligrafista_id',
+        'responsable_id',
         'sede_id',
         'modalidad',
         'fecha_programada',
@@ -143,6 +144,16 @@ class EvaluadoOrden extends Model
     public function poligrafista()
     {
         return $this->poligrafo();
+    }
+
+    /**
+     * Responsable del proceso de evaluación.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function responsable()
+    {
+        return $this->belongsTo(User::class, 'responsable_id');
     }
 
     /**
@@ -611,7 +622,7 @@ class EvaluadoOrden extends Model
      * @param int    $poligrafistaId
      * @param int|null $sedeId
      */
-    public function programarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null): bool
+    public function programarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null, ?int $responsableId = null): bool
     {
         $this->fecha_programada = $inicio;
         $this->fecha_hora_fin = $fin;
@@ -620,6 +631,7 @@ class EvaluadoOrden extends Model
             $this->sede_id = $sedeId;
         }
         $this->modalidad = $modalidad;
+        $this->responsable_id = $responsableId;
         $this->estado_evaluacion = 'programado';
         return $this->save();
     }
@@ -627,7 +639,7 @@ class EvaluadoOrden extends Model
     /**
      * Reprogramar evaluación (actualizar fecha/hora).
      */
-    public function reprogramarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null): bool
+    public function reprogramarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null, ?int $responsableId = null): bool
     {
         $this->fecha_programada = $inicio;
         $this->fecha_hora_fin = $fin;
@@ -636,6 +648,7 @@ class EvaluadoOrden extends Model
             $this->sede_id = $sedeId;
         }
         $this->modalidad = $modalidad;
+        $this->responsable_id = $responsableId;
         $this->estado_evaluacion = 'programado';
         return $this->save();
     }

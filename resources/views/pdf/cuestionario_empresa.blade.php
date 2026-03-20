@@ -32,6 +32,7 @@
         .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 8px; font-weight: bold; text-transform: uppercase; }
         .badge-success { background-color: #28a745; color: white; }
         .badge-warning { background-color: #000555; color: #ffb000; }
+        .badge-danger { background-color: #dc3545; color: white; }
         .badge-secondary { background-color: #6c757d; color: white; }
         .seccion { margin-bottom: 15px; page-break-inside: avoid; }
         .seccion-titulo { background: linear-gradient(135deg, #000555 0%, #1a1a6b 100%); color: #ffb000; padding: 8px 12px; font-weight: bold; font-size: 11px; margin-bottom: 8px; border-radius: 4px 4px 0 0; letter-spacing: 0.5px; }
@@ -163,6 +164,69 @@
                 @endif
             </div>
         @endforeach
+    @endif
+
+    {{-- Documentos Verificados --}}
+    @if($evaluado->documentos->count() > 0)
+        <div class="seccion">
+            <div class="seccion-titulo">Documentos del Evaluado</div>
+            <table class="datos-table">
+                <thead>
+                    <tr>
+                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 5%;">#</th>
+                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 40%;">Tipo de Documento</th>
+                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 35%;">Archivo</th>
+                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 20%;">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($evaluado->documentos as $index => $doc)
+                        <tr>
+                            <td style="text-align: center;">{{ $index + 1 }}</td>
+                            <td>{{ ucfirst(str_replace('_', ' ', $doc->tipo_documento)) }}</td>
+                            <td>{{ $doc->nombre_original }}</td>
+                            <td style="text-align: center;">
+                                <span class="badge {{ $doc->estado_verificacion == 'aprobado' ? 'badge-success' : ($doc->estado_verificacion == 'rechazado' ? 'badge-danger' : 'badge-warning') }}">
+                                    {{ ucfirst($doc->estado_verificacion ?? 'Pendiente') }}
+                                </span>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
+    {{-- Autorización y Términos --}}
+    @if($cuestionario && $cuestionario->acepta_terminos)
+        <div class="seccion" style="page-break-before: always;">
+            <div class="seccion-titulo">Autorización y Términos</div>
+            <div style="padding: 10px; font-size: 9px; line-height: 1.6;">
+                <h3 style="text-align: center; font-size: 11px; color: #000555; margin-bottom: 10px;">AUTORIZACIÓN PARA EVALUACIÓN</h3>
+                <p>Yo, <strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong>, identificado(a) con DPI número <strong>{{ $evaluado->dpi }}</strong>, por medio de la presente autorizo libre y voluntariamente a <strong>REPRO Guatemala</strong> para que realice la siguiente evaluación.</p>
+                <p>Declaro que participo de manera voluntaria, he sido informado(a) sobre el procedimiento, y autorizo la recopilación y procesamiento de mis datos personales exclusivamente para los fines de esta evaluación.</p>
+            </div>
+            @if($cuestionario->firma_digital)
+                <div class="firma-container">
+                    <img src="{{ $cuestionario->firma_digital }}" alt="Firma Digital" class="firma-imagen">
+                    <div class="firma-texto">
+                        <strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong><br>
+                        Firmado digitalmente el {{ $cuestionario->completado_at ? $cuestionario->completado_at->format('d/m/Y \a \l\a\s H:i:s') : 'N/A' }}
+                    </div>
+                </div>
+            @endif
+            @if($evaluado->responsable)
+                <div style="margin-top: 30px; text-align: center;">
+                    <div style="display: inline-block; width: 250px; border-top: 2px solid #000555; padding-top: 8px;">
+                        <div style="font-size: 10px; font-weight: bold; color: #000555;">{{ $evaluado->responsable->name }}</div>
+                        @if($evaluado->responsable->cargo)
+                            <div style="font-size: 9px; color: #666;">{{ $evaluado->responsable->cargo }}</div>
+                        @endif
+                        <div style="font-size: 8px; color: #999; margin-top: 2px;">Responsable del Proceso — REPRO Guatemala</div>
+                    </div>
+                </div>
+            @endif
+        </div>
     @endif
 
     <div class="footer">

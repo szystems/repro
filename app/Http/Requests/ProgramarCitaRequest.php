@@ -23,6 +23,7 @@ class ProgramarCitaRequest extends FormRequest
             'poligrafista_id'   => ['required', 'integer', 'exists:users,id'],
             'sede_id'           => ['required', 'integer', 'exists:sedes,id'],
             'modalidad'         => ['nullable', 'in:presencial,virtual'],
+            'responsable_id'    => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 

@@ -383,11 +383,12 @@
             <thead>
                 <tr>
                     <th style="width: 5%;">#</th>
-                    <th style="width: 25%;">Nombre</th>
-                    <th style="width: 15%;">DPI</th>
-                    <th style="width: 15%;">Servicio</th>
-                    <th style="width: 15%;">Programación</th>
-                    <th style="width: 15%;">Contacto</th>
+                    <th style="width: 22%;">Nombre</th>
+                    <th style="width: 13%;">DPI</th>
+                    <th style="width: 13%;">Servicio</th>
+                    <th style="width: 13%;">Programación</th>
+                    <th style="width: 12%;">Responsable</th>
+                    <th style="width: 12%;">Contacto</th>
                     <th style="width: 10%;">Estado</th>
                 </tr>
             </thead>
@@ -429,6 +430,16 @@
                         @endif
                         @if($evaluado->poligrafista)
                             <br><small>{{ $evaluado->poligrafista->name }}</small>
+                        @endif
+                    </td>
+                    <td>
+                        @if($evaluado->responsable)
+                            {{ $evaluado->responsable->name }}
+                            @if($evaluado->responsable->cargo)
+                                <br><small>{{ $evaluado->responsable->cargo }}</small>
+                            @endif
+                        @else
+                            <span class="text-muted">—</span>
                         @endif
                     </td>
                     <td>

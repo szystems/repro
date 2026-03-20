@@ -211,7 +211,7 @@
                                                     <div class="btn-group btn-group-sm">
                                                         <button class="btn btn-outline-primary btn-sm" title="Reprogramar"
                                                                 data-bs-toggle="modal" data-bs-target="#modalProgramar"
-                                                                onclick="prepararModalReprogramar({{ $cita->id }}, '{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->format('Y-m-d') : '' }}', '{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->format('H:i') : '' }}', '{{ $cita->fecha_hora_fin ? \Carbon\Carbon::parse($cita->fecha_hora_fin)->format('H:i') : '' }}', {{ $cita->poligrafista_id ?? 'null' }}, {{ $cita->sede_id ?? 'null' }}, '{{ $cita->modalidad ?? '' }}')">
+                                                                onclick="prepararModalReprogramar({{ $cita->id }}, '{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->format('Y-m-d') : '' }}', '{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->format('H:i') : '' }}', '{{ $cita->fecha_hora_fin ? \Carbon\Carbon::parse($cita->fecha_hora_fin)->format('H:i') : '' }}', {{ $cita->poligrafista_id ?? 'null' }}, {{ $cita->sede_id ?? 'null' }}, '{{ $cita->modalidad ?? '' }}', {{ $cita->responsable_id ?? 'null' }})">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
                                                         <form action="{{ route('calendario.cancelar', $cita->id) }}" method="POST"
@@ -353,6 +353,17 @@
                             @endforeach
                         </select>
                     </div>
+
+                    {{-- Responsable --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Responsable del Proceso</label>
+                        <select name="responsable_id" id="modalResponsableId" class="form-select">
+                            <option value="">Sin asignar</option>
+                            @foreach($poligrafistas as $pol)
+                                <option value="{{ $pol->id }}">{{ $pol->name }} {{ $pol->cargo ? '('.$pol->cargo.')' : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -400,7 +411,7 @@
     /**
      * Preparar modal para reprogramar una cita existente
      */
-    function prepararModalReprogramar(evaluadoId, fecha, horaInicio, horaFin, poligrafistaId, sedeId, modalidad) {
+    function prepararModalReprogramar(evaluadoId, fecha, horaInicio, horaFin, poligrafistaId, sedeId, modalidad, responsableId) {
         document.getElementById('formProgramar').action = '/calendario/evaluados/' + evaluadoId + '/reprogramar';
         document.getElementById('formMethod').value = 'PATCH';
         document.getElementById('modalProgramarLabel').innerHTML = '<i class="bi bi-pencil"></i> Reprogramar Cita';
@@ -415,6 +426,7 @@
         if (poligrafistaId) document.getElementById('modalPoligrafistaId').value = poligrafistaId;
         if (sedeId) document.getElementById('modalSedeId').value = sedeId;
         document.getElementById('modalModalidad').value = modalidad || '';
+        document.getElementById('modalResponsableId').value = responsableId || '';
     }
 </script>
 

@@ -133,6 +133,10 @@
             background-color: #000555; 
             color: #ffb000;
         }
+        .badge-danger { 
+            background-color: #dc3545; 
+            color: white;
+        }
         .badge-secondary { 
             background-color: #6c757d; 
             color: white;
@@ -461,19 +465,127 @@
         </div>
     @endforeach
 
-    {{-- Firma Digital --}}
-    @if($cuestionario->firma_digital)
+    {{-- Documentos Verificados (8D.2) --}}
+    @if($cuestionario->evaluadoOrden->documentos->count() > 0)
         <div class="seccion">
             <div class="seccion-titulo">
-                Firma Digital
+                Documentos del Evaluado
             </div>
-            <div class="firma-container">
-                <img src="{{ $cuestionario->firma_digital }}" alt="Firma Digital" class="firma-imagen">
-                <div class="firma-texto">
-                    Firmado digitalmente el {{ $cuestionario->completado_at ? $cuestionario->completado_at->format('d/m/Y \a \l\a\s H:i:s') : 'N/A' }}
+            <table class="datos-table">
+                <thead>
+                    <tr>
+                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 5%;">#</th>
+                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 35%;">Tipo de Documento</th>
+                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 30%;">Archivo</th>
+                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 15%;">Estado</th>
+                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 15%;">Subido por</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($cuestionario->evaluadoOrden->documentos as $index => $doc)
+                        <tr>
+                            <td style="text-align: center;">{{ $index + 1 }}</td>
+                            <td>{{ ucfirst(str_replace('_', ' ', $doc->tipo_documento)) }}</td>
+                            <td>{{ $doc->nombre_original }}</td>
+                            <td style="text-align: center;">
+                                <span class="badge {{ $doc->estado_verificacion == 'aprobado' ? 'badge-success' : ($doc->estado_verificacion == 'rechazado' ? 'badge-danger' : 'badge-warning') }}">
+                                    {{ ucfirst($doc->estado_verificacion ?? 'Pendiente') }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">{{ ucfirst($doc->subido_por_tipo ?? 'N/A') }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
+    {{-- Autorización y Términos (8D.1) --}}
+    @if($cuestionario->acepta_terminos)
+        <div class="seccion" style="page-break-before: always;">
+            <div class="seccion-titulo">
+                Autorización y Términos
+            </div>
+            <div style="padding: 10px; font-size: 9px; line-height: 1.6;">
+                <h3 style="text-align: center; font-size: 11px; color: #000555; margin-bottom: 10px;">AUTORIZACIÓN PARA EVALUACIÓN</h3>
+
+                <p>Yo, <strong>{{ $cuestionario->evaluadoOrden->nombre }} {{ $cuestionario->evaluadoOrden->apellidos }}</strong>, identificado(a) con DPI número <strong>{{ $cuestionario->evaluadoOrden->dpi }}</strong>, por medio de la presente autorizo libre y voluntariamente a <strong>REPRO Guatemala</strong> para que realice la siguiente evaluación:</p>
+
+                <p><strong>Tipo de evaluación:</strong>
+                    @if($cuestionario->evaluadoOrden->tipo_servicio === 'poligrafo')
+                        Evaluación Poligráfica
+                    @elseif($cuestionario->evaluadoOrden->tipo_servicio === 'vsa')
+                        Evaluación VSA (Voice Stress Analysis)
+                    @else
+                        Estudio Socioeconómico
+                    @endif
+                </p>
+
+                <p>Declaro que:</p>
+                <ol style="margin-left: 15px;">
+                    <li>Participo de manera <strong>voluntaria</strong> en este proceso de evaluación.</li>
+                    <li>He sido informado(a) sobre el procedimiento que se llevará a cabo.</li>
+                    <li>Autorizo la recopilación, almacenamiento y procesamiento de mis datos personales exclusivamente para los fines de esta evaluación.</li>
+                    <li>Entiendo que los resultados de esta evaluación serán compartidos con la empresa solicitante <strong>{{ $cuestionario->evaluadoOrden->orden->empresa->nombre ?? '' }}</strong>.</li>
+                    <li>Comprendo que puedo retirarme del proceso en cualquier momento antes de la finalización de la evaluación.</li>
+                    <li>La información que proporcionaré es verídica y correcta según mi mejor conocimiento.</li>
+                    <li>Autorizo el uso de medios digitales (firma electrónica) como constancia de mi aceptación.</li>
+                </ol>
+
+                @if(in_array($cuestionario->evaluadoOrden->tipo_servicio, ['poligrafo', 'vsa']))
+                    <div style="background: #fff3cd; border: 1px solid #ffb000; border-radius: 4px; padding: 8px; margin-top: 8px;">
+                        <strong>Consentimiento adicional para evaluación {{ $cuestionario->evaluadoOrden->tipo_servicio === 'poligrafo' ? 'poligráfica' : 'VSA' }}:</strong>
+                        <p style="margin: 4px 0 0 0;">Autorizo que se me realice una evaluación mediante {{ $cuestionario->evaluadoOrden->tipo_servicio === 'poligrafo' ? 'polígrafo (detector de verdad)' : 'análisis de estrés de voz (VSA)' }}. Declaro que me encuentro en pleno uso de mis facultades mentales y no me encuentro bajo efectos de sustancias que alteren mi estado de conciencia. Confirmo que no tengo impedimento médico alguno para realizar este examen.</p>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Firma Digital del Evaluado --}}
+            @if($cuestionario->firma_digital)
+                <div class="firma-container" style="margin-top: 15px;">
+                    <img src="{{ $cuestionario->firma_digital }}" alt="Firma Digital" class="firma-imagen">
+                    <div class="firma-texto">
+                        <strong>{{ $cuestionario->evaluadoOrden->nombre }} {{ $cuestionario->evaluadoOrden->apellidos }}</strong><br>
+                        DPI: {{ $cuestionario->evaluadoOrden->dpi }}<br>
+                        Firmado digitalmente el {{ $cuestionario->completado_at ? $cuestionario->completado_at->format('d/m/Y \a \l\a\s H:i:s') : 'N/A' }}
+                    </div>
+                </div>
+            @endif
+
+            {{-- Firma del Responsable (8D.4) --}}
+            @if($cuestionario->evaluadoOrden->responsable)
+                <div style="margin-top: 30px; text-align: center;">
+                    <div style="display: inline-block; width: 250px; border-top: 2px solid #000555; padding-top: 8px;">
+                        <div style="font-size: 10px; font-weight: bold; color: #000555;">
+                            {{ $cuestionario->evaluadoOrden->responsable->name }}
+                        </div>
+                        @if($cuestionario->evaluadoOrden->responsable->cargo)
+                            <div style="font-size: 9px; color: #666;">
+                                {{ $cuestionario->evaluadoOrden->responsable->cargo }}
+                            </div>
+                        @endif
+                        <div style="font-size: 8px; color: #999; margin-top: 2px;">
+                            Responsable del Proceso — REPRO Guatemala
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+    @else
+        {{-- Si no aceptó términos, al menos mostrar la firma si existe --}}
+        @if($cuestionario->firma_digital)
+            <div class="seccion">
+                <div class="seccion-titulo">
+                    Firma Digital
+                </div>
+                <div class="firma-container">
+                    <img src="{{ $cuestionario->firma_digital }}" alt="Firma Digital" class="firma-imagen">
+                    <div class="firma-texto">
+                        Firmado digitalmente el {{ $cuestionario->completado_at ? $cuestionario->completado_at->format('d/m/Y \a \l\a\s H:i:s') : 'N/A' }}
+                    </div>
                 </div>
             </div>
-        </div>
+        @endif
     @endif
 
     {{-- Observaciones de REPRO --}}

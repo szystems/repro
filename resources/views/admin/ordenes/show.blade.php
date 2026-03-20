@@ -438,6 +438,9 @@
                                                 @if($evaluado->poligrafista)
                                                     <br><small class="text-muted"><i class="bi bi-person"></i> {{ $evaluado->poligrafista->name }}</small>
                                                 @endif
+                                                @if($evaluado->responsable)
+                                                    <br><small class="text-muted"><i class="bi bi-person-check"></i> Resp: {{ $evaluado->responsable->name }}</small>
+                                                @endif
                                                 @if(Auth::user()->role_as >= 2)
                                                     <br>
                                                     @if($evaluado->fecha_programada)
@@ -823,6 +826,18 @@
                                                                 @foreach($poligrafistas as $pol)
                                                                     <option value="{{ $pol->id }}" {{ $evaluado->poligrafista_id == $pol->id ? 'selected' : '' }}>
                                                                         {{ $pol->name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold">Responsable del Proceso</label>
+                                                            <select name="responsable_id" class="form-select">
+                                                                <option value="">Sin asignar</option>
+                                                                @foreach($poligrafistas as $pol)
+                                                                    <option value="{{ $pol->id }}" {{ $evaluado->responsable_id == $pol->id ? 'selected' : '' }}>
+                                                                        {{ $pol->name }} {{ $pol->cargo ? '('.$pol->cargo.')' : '' }}
                                                                     </option>
                                                                 @endforeach
                                                             </select>

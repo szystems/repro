@@ -146,7 +146,8 @@ class CalendarioController extends Controller
             $fin,
             $request->poligrafista_id,
             $request->sede_id,
-            $request->modalidad
+            $request->modalidad,
+            $request->responsable_id
         );
 
         return redirect()->route('calendario.dia', ['fecha' => $request->fecha])
@@ -174,7 +175,8 @@ class CalendarioController extends Controller
             $fin,
             $request->poligrafista_id,
             $request->sede_id,
-            $request->modalidad
+            $request->modalidad,
+            $request->responsable_id
         );
 
         return redirect()->route('calendario.dia', ['fecha' => $request->fecha])

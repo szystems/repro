@@ -420,8 +420,9 @@ class EmpresaController extends Controller
             if (!$evaluado->orden->resultadosDisponiblesParaEmpresa()) {
                 abort(403, 'Resultados no autorizados para descarga');
             }
-            // Aquí puedes usar la lógica de generación de PDF que se usa en Admin\CuestionariosController@generarPDF
-            // Ejemplo básico usando dompdf:
+
+            $evaluado->load(['cuestionario', 'documentos', 'responsable', 'orden.empresa']);
+
             $pdf = app('dompdf.wrapper');
             $pdf->loadView('pdf.cuestionario_empresa', ['evaluado' => $evaluado]);
             $nombreArchivo = $evaluado->nombre . '_' .

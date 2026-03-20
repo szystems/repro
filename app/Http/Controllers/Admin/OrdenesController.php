@@ -232,7 +232,7 @@ class OrdenesController extends Controller
             'creador',
             'sede',
             'evaluados' => function($query) {
-                $query->with(['poligrafista', 'sede', 'cuestionario', 'documentos'])->orderBy('nombre');
+                $query->with(['poligrafista', 'responsable', 'sede', 'cuestionario', 'documentos'])->orderBy('nombre');
             }
         ]);
 
@@ -697,7 +697,7 @@ class OrdenesController extends Controller
         }
 
         // Cargar relaciones necesarias
-        $orden->load(['empresa', 'creador', 'evaluados.poligrafista']);
+        $orden->load(['empresa', 'creador', 'evaluados.poligrafista', 'evaluados.responsable']);
 
         $estados = Orden::estadosDisponibles();
 

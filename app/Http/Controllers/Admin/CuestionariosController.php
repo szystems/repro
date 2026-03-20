@@ -296,6 +296,8 @@ class CuestionariosController extends Controller
 
         $cuestionario = Cuestionario::with([
             'evaluadoOrden.orden.empresa',
+            'evaluadoOrden.documentos',
+            'evaluadoOrden.responsable',
             'respuestas' => function($query) {
                 $query->orderBy('seccion')->orderBy('campo');
             }
@@ -358,6 +360,8 @@ class CuestionariosController extends Controller
     {
         $cuestionario = Cuestionario::with([
             'evaluadoOrden.orden.empresa',
+            'evaluadoOrden.documentos',
+            'evaluadoOrden.responsable',
             'respuestas' => function($query) {
                 $query->orderBy('seccion')->orderBy('campo');
             }
