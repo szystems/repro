@@ -57,6 +57,11 @@ class UserFormRequest extends FormRequest
             $rules['empresa_id'] = 'nullable|integer';
         }
 
+        // Validar sede_id para usuarios REPRO
+        if ($this->input('role_as') == 2) {
+            $rules['sede_id'] = 'nullable|integer|exists:sedes,id';
+        }
+
         // NOTA: Validación de documento para evaluados eliminada
         // Los evaluados ya NO son usuarios del sistema (no tienen role_as = 0)
         // Se crean en tabla evaluados_orden al generar órdenes

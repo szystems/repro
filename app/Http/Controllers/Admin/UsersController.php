@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Empresa;
 use App\Models\Role;
 use App\Models\Permission;
+use App\Models\Sede;
 use App\Http\Requests\UserFormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -114,6 +115,8 @@ class UsersController extends Controller
         // Obtener la empresa_id del parámetro de consulta si existe (para preseleccionar)
         $empresa_id = request('empresa_id');
 
+        $sedes = Sede::where('estado', 1)->orderBy('nombre')->get();
+
         return view('admin.user.add', compact(
             'canCreateAdmin',
             'canCreateRepro',
@@ -121,7 +124,8 @@ class UsersController extends Controller
             'empresas',
             'empresa_id',
             'roles',
-            'permissions'
+            'permissions',
+            'sedes'
         ));
     }
 
@@ -187,6 +191,7 @@ class UsersController extends Controller
 
         if ($user->role_as == 2) { // Usuario de Repro
             $user->cargo = $request->input('cargo');
+            $user->sede_id = $request->input('sede_id');
         }
 
         // Campos de identificación
@@ -254,6 +259,8 @@ class UsersController extends Controller
         // Obtener los roles actuales del usuario
         $userRoles = $user->roles->pluck('name')->toArray();
 
+        $sedes = Sede::where('estado', 1)->orderBy('nombre')->get();
+
         return view('admin.user.edit', compact(
             'user',
             'canEditRole',
@@ -261,7 +268,8 @@ class UsersController extends Controller
             'empresas',
             'roles',
             'permissions',
-            'userRoles'
+            'userRoles',
+            'sedes'
         ));
     }
 
@@ -332,6 +340,7 @@ class UsersController extends Controller
 
         if ($user->role_as == 2 && $currentUser->role_as == 3) {
             $user->cargo = $request->input('cargo');
+            $user->sede_id = $request->input('sede_id');
             // Actualizar permisos
             if ($request->has('permisos')) {
                 $user->permisos = json_encode($request->input('permisos'));

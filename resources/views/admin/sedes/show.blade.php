@@ -49,6 +49,18 @@
                                 <div>{{ $sede->telefono ?? '—' }}</div>
                             </div>
                             <div class="col-md-3 mb-3">
+                                <label class="form-label text-muted small">WhatsApp</label>
+                                <div>
+                                    @if($sede->whatsapp)
+                                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $sede->whatsapp) }}" target="_blank" class="text-success">
+                                            <i class="bi bi-whatsapp"></i> {{ $sede->whatsapp }}
+                                        </a>
+                                    @else
+                                        —
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
                                 <label class="form-label text-muted small">Estado</label>
                                 <div>
                                     @if($sede->estado)
@@ -60,7 +72,14 @@
                             </div>
                             <div class="col-md-9 mb-3">
                                 <label class="form-label text-muted small">Dirección</label>
-                                <div>{{ $sede->direccion ?? '—' }}</div>
+                                <div>
+                                    {{ $sede->direccion ?? '—' }}
+                                    @if($sede->enlace_maps)
+                                        <a href="{{ $sede->enlace_maps }}" target="_blank" class="ms-2 text-primary">
+                                            <i class="bi bi-geo-alt-fill"></i> Ver en Maps
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label text-muted small">Capacidad máxima</label>

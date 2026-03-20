@@ -79,6 +79,20 @@
                                     </select>
                                 </div>
 
+                                @if(Auth::user()->role_as >= 2 && $sedes->count())
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label">Sede</label>
+                                    <select class="form-select" name="sede_id">
+                                        <option value="">Todas las sedes</option>
+                                        @foreach($sedes as $sede)
+                                        <option value="{{ $sede->id }}" {{ request('sede_id') == $sede->id ? 'selected' : '' }}>
+                                            {{ $sede->nombre }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
+
                                 <div class="col-md-2 mb-2">
                                     <label class="form-label">&nbsp;</label>
                                     <div class="d-grid">
@@ -143,7 +157,12 @@
                                         <td>
                                             <strong>{{ $orden->codigo_orden }}</strong>
                                         </td>
-                                        <td>{{ $orden->empresa->nombre ?? 'N/A' }}</td>
+                                        <td>
+                                            {{ $orden->empresa->nombre ?? 'N/A' }}
+                                            @if($orden->sede)
+                                                <br><small class="text-muted"><i class="bi bi-geo-alt"></i> {{ $orden->sede->nombre }}</small>
+                                            @endif
+                                        </td>
                                         <td>
                                             @php
                                                 $tiposUnicos = $orden->evaluados->pluck('tipo_servicio')->unique();

@@ -47,6 +47,10 @@ class OrdenesController extends Controller
             });
         }
 
+        if ($request->filled('sede_id')) {
+            $query->where('sede_id', $request->sede_id);
+        }
+
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha_solicitud', '>=', $request->fecha_desde);
         }
@@ -66,7 +70,7 @@ class OrdenesController extends Controller
             });
         }
 
-        $ordenes = $query->with(['empresa', 'creador', 'evaluados'])
+        $ordenes = $query->with(['empresa', 'creador', 'sede', 'evaluados'])
                         ->withCount('evaluados')
                         ->orderBy('fecha_solicitud', 'desc')
                         ->paginate(15);
@@ -84,7 +88,11 @@ class OrdenesController extends Controller
             'socioeconomico' => 'Estudio Socioeconómico'
         ];
 
-        return view('admin.ordenes.index', compact('ordenes', 'empresas', 'estados', 'tiposServicio'));
+        $sedes = Auth::user()->role_as >= 2
+            ? Sede::where('estado', 1)->orderBy('nombre')->get()
+            : collect();
+
+        return view('admin.ordenes.index', compact('ordenes', 'empresas', 'estados', 'tiposServicio', 'sedes'));
     }
 
     /**
@@ -111,7 +119,9 @@ class OrdenesController extends Controller
             })->where('estado', 1)->orderBy('name')->get();
         }
 
-        return view('admin.ordenes.create', compact('empresas', 'poligrafistas'));
+        $sedes = Sede::where('estado', 1)->orderBy('nombre')->get();
+
+        return view('admin.ordenes.create', compact('empresas', 'poligrafistas', 'sedes'));
     }
 
     /**
@@ -123,6 +133,7 @@ class OrdenesController extends Controller
         // Validación manual temporal
         $validated = $request->validate([
             'empresa_id' => 'required|exists:empresas,id',
+            'sede_id' => 'nullable|exists:sedes,id',
             'observaciones_internas' => 'nullable|string|max:500',
             'prioridad' => 'nullable|in:baja,normal,alta,urgente',
             'fecha_limite' => 'nullable|date|after:today',
@@ -158,6 +169,7 @@ class OrdenesController extends Controller
                 $datosOrden['prioridad'] = $validated['prioridad'] ?? 'normal';
                 $datosOrden['fecha_limite'] = $validated['fecha_limite'] ?? null;
                 $datosOrden['requerimientos_generales'] = $validated['requerimientos_generales'] ?? null;
+                $datosOrden['sede_id'] = $validated['sede_id'] ?? null;
             }
 
             if (Auth::user()->role_as == 1) {
@@ -177,6 +189,11 @@ class OrdenesController extends Controller
             }
 
             DB::commit();
+
+            // Notificar a usuarios de la sede asignada
+            if ($orden->sede_id) {
+                $this->notificarUsuariosSede($orden);
+            }
 
             // Redirigir según el rol del usuario
             if (Auth::user()->role_as == 1) {
@@ -213,6 +230,7 @@ class OrdenesController extends Controller
         $orden->load([
             'empresa',
             'creador',
+            'sede',
             'evaluados' => function($query) {
                 $query->with(['poligrafista', 'sede', 'cuestionario', 'documentos'])->orderBy('nombre');
             }
@@ -250,7 +268,9 @@ class OrdenesController extends Controller
 
         $estados = Orden::estadosDisponibles();
 
-        return view('admin.ordenes.edit', compact('orden', 'empresas', 'poligrafistas', 'estados'));
+        $sedes = Sede::where('estado', 1)->orderBy('nombre')->get();
+
+        return view('admin.ordenes.edit', compact('orden', 'empresas', 'poligrafistas', 'estados', 'sedes'));
     }
 
     /**
@@ -265,6 +285,7 @@ class OrdenesController extends Controller
         // Validación
         $validated = $request->validate([
             'empresa_id' => 'required|exists:empresas,id',
+            'sede_id' => 'nullable|exists:sedes,id',
             'observaciones_internas' => 'nullable|string|max:500',
             'prioridad' => 'nullable|in:baja,normal,alta,urgente',
             'fecha_limite' => 'nullable|date|after:today',
@@ -309,6 +330,9 @@ class OrdenesController extends Controller
             }
             if (isset($validated['poligrafista_id'])) {
                 $datosOrden['poligrafista_id'] = $validated['poligrafista_id'];
+            }
+            if (Auth::user()->role_as >= 2 && array_key_exists('sede_id', $validated)) {
+                $datosOrden['sede_id'] = $validated['sede_id'];
             }
 
             if (Auth::user()->hasAnyRole(['admin', 'repro'])) {
@@ -587,6 +611,29 @@ class OrdenesController extends Controller
             // No fallar el flujo principal si la notificación falla
             Log::error('Error enviando notificación de asignación', [
                 'evaluado_id' => $evaluado->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Notificar a usuarios REPRO asignados a la sede de la orden.
+     */
+    private function notificarUsuariosSede(Orden $orden): void
+    {
+        try {
+            $usuarios = User::where('sede_id', $orden->sede_id)
+                ->where('estado', 1)
+                ->where('role_as', '>=', 2)
+                ->get();
+
+            foreach ($usuarios as $usuario) {
+                Mail::to($usuario->email)->queue(new \App\Mail\NuevaOrdenSedeMail($orden));
+            }
+        } catch (\Exception $e) {
+            Log::error('Error notificando usuarios de sede', [
+                'orden_id' => $orden->id,
+                'sede_id' => $orden->sede_id,
                 'error' => $e->getMessage(),
             ]);
         }

@@ -107,6 +107,15 @@
                             </div>
                         </div>
 
+                        @if($orden->sede)
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Sede Responsable</label>
+                                <div><i class="bi bi-geo-alt"></i> {{ $orden->sede->nombre }}</div>
+                            </div>
+                        </div>
+                        @endif
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Tipos de Servicio</label>
@@ -419,6 +428,9 @@
                                                     </small>
                                                     @if($evaluado->sede)
                                                         <br><small class="text-muted"><i class="bi bi-geo-alt"></i> {{ $evaluado->sede->nombre }}</small>
+                                                    @endif
+                                                    @if($evaluado->modalidad)
+                                                        <br><small><span class="badge bg-{{ $evaluado->modalidad == 'presencial' ? 'info' : 'purple' }}">{{ ucfirst($evaluado->modalidad) }}</span></small>
                                                     @endif
                                                 @else
                                                     <span class="text-muted">Sin programar</span>
@@ -780,10 +792,28 @@
                                                             <select name="sede_id" class="form-select" required>
                                                                 <option value="">Seleccionar sede...</option>
                                                                 @foreach($sedes as $sede)
-                                                                    <option value="{{ $sede->id }}" {{ $evaluado->sede_id == $sede->id ? 'selected' : '' }}>
+                                                                    <option value="{{ $sede->id }}" {{ ($evaluado->sede_id ?? $orden->sede_id) == $sede->id ? 'selected' : '' }}>
                                                                         {{ $sede->nombre }}
                                                                     </option>
                                                                 @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold">Modalidad</label>
+                                                            @php
+                                                                $modalidadDefault = $evaluado->modalidad;
+                                                                if (!$modalidadDefault) {
+                                                                    $modalidadDefault = match($evaluado->tipo_servicio) {
+                                                                        'poligrafo' => 'presencial',
+                                                                        'vsa' => 'virtual',
+                                                                        default => null,
+                                                                    };
+                                                                }
+                                                            @endphp
+                                                            <select name="modalidad" class="form-select">
+                                                                <option value="">Sin definir</option>
+                                                                <option value="presencial" {{ $modalidadDefault == 'presencial' ? 'selected' : '' }}>Presencial</option>
+                                                                <option value="virtual" {{ $modalidadDefault == 'virtual' ? 'selected' : '' }}>Virtual</option>
                                                             </select>
                                                         </div>
                                                         <div class="mb-3">

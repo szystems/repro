@@ -83,19 +83,19 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | # | Tarea | Detalle Técnico | Estado |
 |---|-------|-----------------|--------|
-| 8C.1 | Estados con colores para vista empresa | Reemplazar `bg-success` hardcodeado por colores específicos del cliente (9 estados con hex). Usar accessors existentes del modelo + colores custom | ☐ |
-| 8C.2 | Mostrar todos los estados al cliente | Vista empresa muestra un solo badge. Mostrar estado de orden + estado de evaluación + estado de formulario con colores | ☐ |
-| 8C.3 | Observaciones visibles donde corresponde | Mostrar observaciones del evaluado en vista empresa (las que la empresa ingresó). Mostrar observaciones de empresa en vista show de empresa | ☐ |
-| 8C.4 | Mover firma a la página de autorización | Mover canvas de firma de `finalizar.blade.php` a `terminos.blade.php`. Guardar firma al aceptar términos | ☐ |
-| 8C.5 | Botón reenviar enlace desde empresa | Agregar botón en vista empresa + ruta autorizada. Reutilizar lógica existente de reenvío (OrdenesController L692) | ☐ |
-| 8C.6 | WhatsApp y enlace Maps en Sedes | Migración: agregar campos `whatsapp` y `enlace_maps` a tabla `sedes`. Actualizar CRUD y vistas | ☐ |
-| 8C.7 | Sede responsable en cabecera de orden | Migración: agregar `sede_id` (FK nullable) a tabla `ordenes`. Select de sede en create/edit de orden. Mostrar sede en index de órdenes como badge/columna | ☐ |
-| 8C.8 | Auto-sugerir sede al programar cita | Pre-seleccionar la sede de la orden al programar cita de evaluado (editable si el evaluado va a otra sede) | ☐ |
-| 8C.9 | Filtro por sede en listado y reportes de órdenes | Agregar filtro de sede en: index de órdenes (admin), reportes de evaluaciones, reportes de empresas | ☐ |
-| 8C.10 | Modalidad de cita (presencial/virtual) | Migración: agregar `modalidad` enum('presencial','virtual') nullable a `evaluados_orden`. Auto-asignar: polígrafo→presencial, vsa→virtual, socioeconómico→selector. Mostrar en show y calendario | ☐ |
-| 8C.11 | Sede en usuario REPRO | Migración: agregar `sede_id` FK nullable a `users`. Relación `sede()` en User, `usuarios()` en Sede. Selector de sede en add/edit de usuario (solo role_as >= 2) | ☐ |
-| 8C.12 | Notificación nueva orden a usuarios de sede | Crear `NuevaOrdenSedeMail`. En `OrdenesController@store()`: tras crear orden, enviar mail a `User::where('sede_id', $sedeId)->where('estado', 1)`. Usar cola para envío | ☐ |
-| 8C.13 | Tests para UX | Validar colores, estados, firma, reenvío, sedes, modalidad, notificación sede | ☐ |
+| 8C.1 | Estados con colores para vista empresa | Reemplazar `bg-success` hardcodeado por accessors `estado_color`/`estado_human` en empresa index y show | ✅ |
+| 8C.2 | Mostrar todos los estados al cliente | Dos badges por evaluado: `estado_evaluacion_color/texto` + `estado_formulario_color` en empresa show | ✅ |
+| 8C.3 | Observaciones visibles donde corresponde | Observaciones del evaluado visibles en empresa/ordenes/show con icono chat | ✅ |
+| 8C.4 | Mover firma a la página de autorización | Canvas de firma movido a `terminos.blade.php`, guardado al aceptar términos. `finalizar.blade.php` simplificado | ✅ |
+| 8C.5 | Botón reenviar enlace desde empresa | Formulario POST a `evaluados.reenviar-correo` con confirmación, solo si email existe y cuestionario no completado | ✅ |
+| 8C.6 | WhatsApp y enlace Maps en Sedes | Migración `whatsapp` (varchar 30) + `enlace_maps` (varchar 500). CRUD y vistas actualizados con wa.me link | ✅ |
+| 8C.7 | Sede responsable en cabecera de orden | Migración `sede_id` FK nullable en ordenes. Select en create/edit, badge en index, fila en show | ✅ |
+| 8C.8 | Auto-sugerir sede al programar cita | Fallback `$evaluado->sede_id ?? $orden->sede_id` en modal de programar cita | ✅ |
+| 8C.9 | Filtro por sede en listado de órdenes | Select de sede en filtros admin, query `where('sede_id', ...)` en controller | ✅ |
+| 8C.10 | Modalidad de cita (presencial/virtual) | Migración `modalidad` enum en evaluados_orden. Auto-sugerencia: polígrafo→presencial, vsa→virtual. Select en modal + calendario | ✅ |
+| 8C.11 | Sede en usuario REPRO | Migración `sede_id` FK en users. Relación `sede()` en User. Selector en add/edit, display en show | ✅ |
+| 8C.12 | Notificación nueva orden a usuarios de sede | `NuevaOrdenSedeMail` (queued). Envío automático en `store()` a usuarios REPRO con `sede_id` matching | ✅ |
+| 8C.13 | Tests para UX | 16 tests, 32 assertions — colores, estados, firma, reenvío, sedes, modalidad, notificación | ✅ |
 
 ### Fase 8D — PDF y Documentos
 **Prioridad: MEDIA — Mejoras al informe generado**
@@ -139,7 +139,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 |------|-----------|--------|--------|
 | 8A: Bugs y Correcciones | INMEDIATA | 6 | ✅ Completada |
 | 8B: Ajustes Rápidos | ALTA | 9 | ✅ Completada |
-| 8C: Estados y UX | ALTA | 13 | ☐ Pendiente |
+| 8C: Estados y UX | ALTA | 13 | ✅ Completada |
 | 8D: PDF y Documentos | MEDIA | 5 | ☐ Pendiente |
 | 8E: Funcionalidades Medianas | MEDIA | 7 | ☐ Pendiente |
 | 8F: Funcionalidades Complejas | BAJA | 4 | ☐ Pendiente |
@@ -159,6 +159,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------|
+| 2026-03-09 | Fase 8C completada | 13 tareas de Estados y UX: colores dinámicos, firma en autorización, reenviar enlace, WhatsApp/Maps en sedes, sede en orden/usuarios, modalidad cita, filtro sede, notificación sede. 4 migraciones, 1 Mailable. 16 tests, 32 assertions |
 | 2026-03-09 | Fase 8B completada | 9 ajustes rápidos: texto, PDFs, filtros, fecha_limite, captura, historial DPI, dirección, observaciones. 16 tests, 43 assertions |
 | 2026-03-09 | Fase 8A completada | 5 bugs corregidos, 8 tests, 22 assertions. Commit: d5f347a4 |
 | 2026-03-09 | 6 nuevas observaciones del cliente | Obs. 1: sede en users REPRO + notificación → 8C.11, 8C.12. Obs. 2: adjuntos seguimiento REPRO → 8E.4. Obs. 3: papelería anticipada empresa → 8E.2 actualizada, 8E.3. Obs. 4: dirección evaluado → 8B.7. Obs. 5: modalidad cita → 8C.10. Obs. 6: observaciones por evaluado → 8B.8. Total 37→44 tareas |

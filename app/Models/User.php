@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'role_as',
         'empresa_id',
+        'sede_id',
         'fotografia',
         'estado',
         'principal',
@@ -61,6 +62,11 @@ class User extends Authenticatable
     public function empresa()
     {
         return $this->belongsTo(Empresa::class, 'empresa_id');
+    }
+
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class, 'sede_id');
     }
 
     /**

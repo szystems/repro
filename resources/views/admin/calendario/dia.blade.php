@@ -177,6 +177,9 @@
                                                             @if($cita->sede)
                                                                 <i class="bi bi-geo-alt"></i> {{ $cita->sede->nombre }}
                                                             @endif
+                                                            @if($cita->modalidad)
+                                                                <span class="badge bg-{{ $cita->modalidad == 'presencial' ? 'info' : 'purple' }} badge-sm">{{ ucfirst($cita->modalidad) }}</span>
+                                                            @endif
                                                             @if($cita->poligrafo)
                                                                 <i class="bi bi-person ms-1"></i> {{ $cita->poligrafo->name }}
                                                             @endif
@@ -208,7 +211,7 @@
                                                     <div class="btn-group btn-group-sm">
                                                         <button class="btn btn-outline-primary btn-sm" title="Reprogramar"
                                                                 data-bs-toggle="modal" data-bs-target="#modalProgramar"
-                                                                onclick="prepararModalReprogramar({{ $cita->id }}, '{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->format('Y-m-d') : '' }}', '{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->format('H:i') : '' }}', '{{ $cita->fecha_hora_fin ? \Carbon\Carbon::parse($cita->fecha_hora_fin)->format('H:i') : '' }}', {{ $cita->poligrafista_id ?? 'null' }}, {{ $cita->sede_id ?? 'null' }})">
+                                                                onclick="prepararModalReprogramar({{ $cita->id }}, '{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->format('Y-m-d') : '' }}', '{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->format('H:i') : '' }}', '{{ $cita->fecha_hora_fin ? \Carbon\Carbon::parse($cita->fecha_hora_fin)->format('H:i') : '' }}', {{ $cita->poligrafista_id ?? 'null' }}, {{ $cita->sede_id ?? 'null' }}, '{{ $cita->modalidad ?? '' }}')">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
                                                         <form action="{{ route('calendario.cancelar', $cita->id) }}" method="POST"
@@ -330,6 +333,16 @@
                         </select>
                     </div>
 
+                    {{-- Modalidad --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Modalidad</label>
+                        <select name="modalidad" id="modalModalidad" class="form-select">
+                            <option value="">Sin definir</option>
+                            <option value="presencial">Presencial</option>
+                            <option value="virtual">Virtual</option>
+                        </select>
+                    </div>
+
                     {{-- Poligrafista --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Poligrafista / Evaluador</label>
@@ -387,7 +400,7 @@
     /**
      * Preparar modal para reprogramar una cita existente
      */
-    function prepararModalReprogramar(evaluadoId, fecha, horaInicio, horaFin, poligrafistaId, sedeId) {
+    function prepararModalReprogramar(evaluadoId, fecha, horaInicio, horaFin, poligrafistaId, sedeId, modalidad) {
         document.getElementById('formProgramar').action = '/calendario/evaluados/' + evaluadoId + '/reprogramar';
         document.getElementById('formMethod').value = 'PATCH';
         document.getElementById('modalProgramarLabel').innerHTML = '<i class="bi bi-pencil"></i> Reprogramar Cita';
@@ -401,6 +414,7 @@
         document.getElementById('modalHoraFin').value = horaFin;
         if (poligrafistaId) document.getElementById('modalPoligrafistaId').value = poligrafistaId;
         if (sedeId) document.getElementById('modalSedeId').value = sedeId;
+        document.getElementById('modalModalidad').value = modalidad || '';
     }
 </script>
 

@@ -21,6 +21,7 @@ class Orden extends Model
      */
     protected $fillable = [
         'empresa_id',
+        'sede_id',
         'codigo_orden',
         'cantidad_evals',
         'estado',
@@ -79,6 +80,14 @@ class Orden extends Model
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class);
+    }
+
+    /**
+     * Relación con sede responsable
+     */
+    public function sede(): BelongsTo
+    {
+        return $this->belongsTo(Sede::class);
     }
 
     /**

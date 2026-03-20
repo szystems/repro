@@ -91,6 +91,24 @@
                                 </div>
                                 @endif
 
+                                <!-- Sede Responsable (Solo REPRO) -->
+                                @if(Auth::user()->role_as >= 2 && isset($sedes) && $sedes->count())
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Sede Responsable</label>
+                                    <select class="form-select @error('sede_id') is-invalid @enderror" name="sede_id">
+                                        <option value="">Sin sede asignada</option>
+                                        @foreach($sedes as $sede)
+                                        <option value="{{ $sede->id }}" {{ old('sede_id') == $sede->id ? 'selected' : '' }}>
+                                            {{ $sede->nombre }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    @error('sede_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                @endif
+
                                 <!-- Observaciones Internas (Solo REPRO) -->
                                 @if(Auth::user()->role_as >= 2)
                                 <div class="col-12 mb-3">

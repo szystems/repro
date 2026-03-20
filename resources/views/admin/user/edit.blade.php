@@ -227,6 +227,19 @@
                                                                 </div>
                                                             </div>
 
+                                                            <div class="mb-3">
+                                                                <label for="sede_id" class="form-label">Sede Asignada</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                                                    <select name="sede_id" id="sede_id" class="form-select">
+                                                                        <option value="">Sin sede asignada</option>
+                                                                        @foreach($sedes as $sede)
+                                                                            <option value="{{ $sede->id }}" {{ old('sede_id', $user->sede_id) == $sede->id ? 'selected' : '' }}>{{ $sede->nombre }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+
                                                             @if(Auth::user()->role_as == 3) {{-- Solo administradores pueden editar permisos --}}
                                                             <div class="mb-0">
                                                                 <label class="form-label">Permisos especiales</label>

@@ -163,10 +163,12 @@ class CuestionarioController extends Controller
     {
         $request->validate([
             'acepta_terminos'    => 'required|accepted',
+            'firma_digital'      => 'required|string',
             'tipo_proceso'       => 'nullable|string',
         ], [
             'acepta_terminos.required' => 'Debe aceptar los términos y condiciones.',
             'acepta_terminos.accepted' => 'Debe aceptar los términos y condiciones.',
+            'firma_digital.required'   => 'Debe proporcionar su firma digital.',
         ]);
 
         $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
@@ -180,6 +182,7 @@ class CuestionarioController extends Controller
             'acepta_terminos'    => true,
             'acepta_terminos_at' => now(),
             'ip_terminos'        => $request->ip(),
+            'firma_digital'      => $request->input('firma_digital'),
         ]);
 
         return redirect()->route('cuestionario.seccion', [
@@ -396,10 +399,8 @@ class CuestionarioController extends Controller
     public function completar(Request $request, string $token)
     {
         $request->validate([
-            'firma_digital' => 'required|string',
             'confirmacion_final' => 'required|accepted',
         ], [
-            'firma_digital.required' => 'Debe proporcionar su firma digital.',
             'confirmacion_final.required' => 'Debe confirmar que ha revisado la información.',
             'confirmacion_final.accepted' => 'Debe confirmar que ha revisado la información.',
         ]);
@@ -407,18 +408,9 @@ class CuestionarioController extends Controller
         $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
         $cuestionario = $evaluado->cuestionario;
 
-        // Debug: verificar que la firma llega
-        $firmaRecibida = $request->input('firma_digital');
-        \Log::info('Firma recibida', [
-            'token' => $token,
-            'firma_length' => strlen($firmaRecibida ?? ''),
-            'firma_preview' => substr($firmaRecibida ?? '', 0, 50)
-        ]);
-
         DB::beginTransaction();
         try {
-            // Guardar firma digital y marcar como completado
-            $cuestionario->firma_digital = $firmaRecibida;
+            // Marcar como completado (firma ya guardada al aceptar términos)
             $cuestionario->completado = true;
             $cuestionario->bloqueado = true;
             $cuestionario->progreso_porcentaje = 100;

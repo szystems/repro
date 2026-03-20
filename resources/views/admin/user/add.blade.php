@@ -280,6 +280,19 @@
                                                                 </div>
 
                                                                 <div class="col-md-12 mb-3">
+                                                                    <label for="sede_id" class="form-label">Sede Asignada</label>
+                                                                    <div class="input-group">
+                                                                        <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                                                        <select name="sede_id" id="sede_id" class="form-select">
+                                                                            <option value="">Sin sede asignada</option>
+                                                                            @foreach($sedes as $sede)
+                                                                                <option value="{{ $sede->id }}" {{ old('sede_id') == $sede->id ? 'selected' : '' }}>{{ $sede->nombre }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="col-md-12 mb-3">
                                                                     <div class="alert alert-info">
                                                                         <h6><i class="bi bi-shield-check"></i> Permisos Automáticos</h6>
                                                                         <p class="mb-0">Este usuario tendrá automáticamente todos los permisos de <strong>Personal Repro</strong>, que incluyen:</p>

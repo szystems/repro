@@ -17,6 +17,8 @@ class Sede extends Model
         'nombre',
         'direccion',
         'telefono',
+        'whatsapp',
+        'enlace_maps',
         'capacidad',
         'estado',
         'notas',

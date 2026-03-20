@@ -31,7 +31,7 @@
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Estado Actual</label>
                         <div>
-                            <span class="badge fs-6 bg-success">{{ $orden->estado }}</span>
+                            <span class="badge fs-6 bg-{{ $orden->estado_color }}">{{ $orden->estado_human }}</span>
                         </div>
                     </div>
                 </div>
@@ -100,11 +100,15 @@
                                         <i class="bi bi-telephone"></i> {{ $evaluado->telefono }}<br>
                                     @endif
                                     @if($evaluado->direccion)
-                                        <i class="bi bi-geo-alt"></i> {{ $evaluado->direccion }}
+                                        <i class="bi bi-geo-alt"></i> {{ $evaluado->direccion }}<br>
+                                    @endif
+                                    @if($evaluado->observaciones)
+                                        <small class="text-info"><i class="bi bi-chat-left-text"></i> {{ $evaluado->observaciones }}</small>
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="badge bg-success">{{ ucfirst($evaluado->estado_evaluacion ?? 'pendiente') }}</span>
+                                    <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">{{ $evaluado->estado_evaluacion_texto }}</span>
+                                    <br><span class="badge bg-{{ $evaluado->estado_formulario_color }}">Form: {{ ucfirst($evaluado->estado_formulario ?? 'pendiente') }}</span>
                                     @if($evaluado->cuestionario_completado)
                                         <br><small class="text-muted">{{ $evaluado->completado_at ? \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') : '' }}</small>
                                     @endif
@@ -132,6 +136,15 @@
                                                     title="Copiar enlace al portapapeles">
                                                 <i class="bi bi-clipboard"></i>
                                             </button>
+                                            @if($evaluado->email)
+                                                <form action="{{ route('evaluados.reenviar-correo', $evaluado) }}" method="POST" class="d-inline"
+                                                      onsubmit="return confirm('¿Reenviar enlace a {{ $evaluado->email }}?')">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-outline-warning btn-sm" title="Reenviar enlace por correo">
+                                                        <i class="bi bi-envelope-arrow-up"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>

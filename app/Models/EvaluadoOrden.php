@@ -42,6 +42,7 @@ class EvaluadoOrden extends Model
         'tipo_formulario',
         'poligrafista_id',
         'sede_id',
+        'modalidad',
         'fecha_programada',
         'fecha_hora_fin',
         'fecha_realizada',
@@ -610,7 +611,7 @@ class EvaluadoOrden extends Model
      * @param int    $poligrafistaId
      * @param int|null $sedeId
      */
-    public function programarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null): bool
+    public function programarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null): bool
     {
         $this->fecha_programada = $inicio;
         $this->fecha_hora_fin = $fin;
@@ -618,6 +619,7 @@ class EvaluadoOrden extends Model
         if ($sedeId) {
             $this->sede_id = $sedeId;
         }
+        $this->modalidad = $modalidad;
         $this->estado_evaluacion = 'programado';
         return $this->save();
     }
@@ -625,7 +627,7 @@ class EvaluadoOrden extends Model
     /**
      * Reprogramar evaluación (actualizar fecha/hora).
      */
-    public function reprogramarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null): bool
+    public function reprogramarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null): bool
     {
         $this->fecha_programada = $inicio;
         $this->fecha_hora_fin = $fin;
@@ -633,6 +635,7 @@ class EvaluadoOrden extends Model
         if ($sedeId) {
             $this->sede_id = $sedeId;
         }
+        $this->modalidad = $modalidad;
         $this->estado_evaluacion = 'programado';
         return $this->save();
     }

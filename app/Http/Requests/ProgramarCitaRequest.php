@@ -22,6 +22,7 @@ class ProgramarCitaRequest extends FormRequest
             'hora_fin'          => ['required', 'date_format:H:i', 'after:hora_inicio'],
             'poligrafista_id'   => ['required', 'integer', 'exists:users,id'],
             'sede_id'           => ['required', 'integer', 'exists:sedes,id'],
+            'modalidad'         => ['nullable', 'in:presencial,virtual'],
         ];
     }
 

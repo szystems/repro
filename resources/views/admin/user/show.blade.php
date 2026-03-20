@@ -116,13 +116,18 @@
                                 </div>
                                 @endif
 
-                                @if($user->role_as == 2 && $user->cargo)
+                                @if($user->role_as == 2)
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0"><i class="bi bi-briefcase-fill"></i> Información Profesional</h6>
                                     </div>
                                     <div class="card-body">
-                                        <h5>{{ $user->cargo }}</h5>
+                                        @if($user->cargo)
+                                            <h5>{{ $user->cargo }}</h5>
+                                        @endif
+                                        @if($user->sede)
+                                            <p class="mb-1"><i class="bi bi-geo-alt"></i> Sede: <strong>{{ $user->sede->nombre }}</strong></p>
+                                        @endif
                                         @if(!empty($user->permisos))
                                             <p class="mb-0 mt-2">
                                                 <strong>Permisos especiales:</strong><br>

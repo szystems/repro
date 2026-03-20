@@ -180,50 +180,14 @@
                     </form>
                 </div>
 
-                {{-- Firma digital --}}
+                {{-- Enviar Cuestionario --}}
                 <div class="mt-4">
                     <div class="section-title">
-                        <i class="fas fa-signature"></i> Firma Digital
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        <strong>Instrucciones para la firma:</strong>
-                        <ul class="mb-0 mt-2">
-                            <li>Dibuje su firma en el recuadro a continuación</li>
-                            <li>Use el mouse o su dedo si está en dispositivo táctil</li>
-                            <li>Puede borrar y volver a firmar si es necesario</li>
-                            <li>La firma es requerida para completar el cuestionario</li>
-                        </ul>
+                        <i class="fas fa-paper-plane"></i> Enviar Cuestionario
                     </div>
                     
                     <form action="{{ route('cuestionario.completar', $token) }}" method="POST" id="finalizarForm">
                         @csrf
-                        
-                        <div class="form-group">
-                            <label for="firma_canvas" class="form-label">
-                                Firma Digital <span class="required">*</span>
-                            </label>
-                            
-                            <div class="signature-pad-container" style="border: 2px solid #ddd; border-radius: 8px; background: white;">
-                                <canvas id="firma_canvas" width="600" height="200" style="border-radius: 6px; cursor: crosshair;"></canvas>
-                            </div>
-                            
-                            <input type="hidden" id="firma_data" name="firma_digital" required>
-                            
-                            <div class="d-flex gap-2 mt-2">
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="limpiarFirma">
-                                    <i class="fas fa-eraser"></i> Limpiar Firma
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-info" id="verificarFirma">
-                                    <i class="fas fa-check"></i> Verificar Firma
-                                </button>
-                            </div>
-                            
-                            @error('firma_digital')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
                         
                         <div class="form-group">
                             <div class="form-check">
@@ -268,192 +232,27 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Configuración del canvas para firma
-    const canvas = document.getElementById('firma_canvas');
-    const ctx = canvas.getContext('2d');
-    const firmaInput = document.getElementById('firma_data');
-    const limpiarBtn = document.getElementById('limpiarFirma');
-    const verificarBtn = document.getElementById('verificarFirma');
     const form = document.getElementById('finalizarForm');
     
-    let isDrawing = false;
-    let hasSignature = false;
-    
-    // Configurar canvas
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    
-    // Función para obtener coordenadas correctas
-    function getCoordinates(e) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
-        if (e.touches) {
-            return {
-                x: (e.touches[0].clientX - rect.left) * scaleX,
-                y: (e.touches[0].clientY - rect.top) * scaleY
-            };
-        } else {
-            return {
-                x: (e.clientX - rect.left) * scaleX,
-                y: (e.clientY - rect.top) * scaleY
-            };
-        }
-    }
-    
-    // Eventos de mouse
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
-    
-    // Eventos táctiles
-    canvas.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        startDrawing(e);
-    });
-    
-    canvas.addEventListener('touchmove', function(e) {
-        e.preventDefault();
-        draw(e);
-    });
-    
-    canvas.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        stopDrawing(e);
-    });
-    
-    function startDrawing(e) {
-        isDrawing = true;
-        const coords = getCoordinates(e);
-        ctx.beginPath();
-        ctx.moveTo(coords.x, coords.y);
-    }
-    
-    function draw(e) {
-        if (!isDrawing) return;
-        
-        const coords = getCoordinates(e);
-        ctx.lineTo(coords.x, coords.y);
-        ctx.stroke();
-        hasSignature = true;
-    }
-    
-    function stopDrawing() {
-        if (isDrawing) {
-            isDrawing = false;
-            updateSignatureData();
-        }
-    }
-    
-    function updateSignatureData() {
-        if (hasSignature) {
-            firmaInput.value = canvas.toDataURL();
-        }
-    }
-    
-    function clearSignature() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        hasSignature = false;
-        firmaInput.value = '';
-        
-        // Agregar línea de guía
-        ctx.strokeStyle = '#ddd';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(50, canvas.height - 50);
-        ctx.lineTo(canvas.width - 50, canvas.height - 50);
-        ctx.stroke();
-        
-        // Restaurar estilo de firma
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        
-        cuestionarioHelpers.showAlert('Firma limpiada. Puede firmar nuevamente.', 'info');
-    }
-    
-    function verifySignature() {
-        const container = canvas.parentElement;
-        if (hasSignature) {
-            container.style.borderColor = '#28a745';
-            container.style.boxShadow = '0 0 10px rgba(40, 167, 69, 0.5)';
-            alert('✅ Firma válida detectada. Puede continuar.');
-        } else {
-            container.style.borderColor = '#dc3545';
-            container.style.boxShadow = '0 0 10px rgba(220, 53, 69, 0.5)';
-            alert('⚠️ No se ha detectado una firma. Por favor, firme en el recuadro.');
-        }
-        // Restaurar estilo después de 3 segundos
-        setTimeout(() => {
-            container.style.borderColor = '#ddd';
-            container.style.boxShadow = 'none';
-        }, 3000);
-    }
-    
-    // Event listeners para botones
-    limpiarBtn.addEventListener('click', clearSignature);
-    verificarBtn.addEventListener('click', verifySignature);
-    
-    // Validación del formulario
     form.addEventListener('submit', function(e) {
-        cuestionarioHelpers.showLoading();
-        
-        if (!hasSignature) {
-            e.preventDefault();
-            cuestionarioHelpers.hideLoading();
-            cuestionarioHelpers.showAlert('Por favor, proporcione su firma digital antes de enviar el cuestionario.', 'error');
-            canvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return false;
-        }
-        
         const confirmacion = document.getElementById('confirmacion_final');
         if (!confirmacion.checked) {
             e.preventDefault();
-            cuestionarioHelpers.hideLoading();
-            cuestionarioHelpers.showAlert('Debe confirmar que ha revisado la información antes de enviar.', 'error');
+            if (typeof cuestionarioHelpers !== 'undefined') {
+                cuestionarioHelpers.showAlert('Debe confirmar que ha revisado la información antes de enviar.', 'error');
+            }
             confirmacion.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return false;
         }
         
-        // Confirmación final
         if (!confirm('¿Está seguro de que desea enviar el cuestionario? No podrá realizar cambios después de enviarlo.')) {
             e.preventDefault();
-            cuestionarioHelpers.hideLoading();
             return false;
         }
         
-        // Deshabilitar botón para evitar doble envío
         document.getElementById('btnFinalizar').disabled = true;
         document.getElementById('btnFinalizar').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
     });
-    
-    // Inicializar con línea de guía
-    clearSignature();
-    
-    // Variable para controlar si el formulario se está enviando
-    let isSubmitting = false;
-    
-    // Prevenir salida accidental (solo si hay firma y no se está enviando)
-    function beforeUnloadHandler(e) {
-        if (hasSignature && !isSubmitting) {
-            e.preventDefault();
-            e.returnValue = '¿Está seguro de salir? Perderá la firma que ha creado.';
-            return e.returnValue;
-        }
-    }
-    
-    window.addEventListener('beforeunload', beforeUnloadHandler);
-    
-    // Modificar el submit para marcar que se está enviando
-    const originalSubmitHandler = form.onsubmit;
-    form.addEventListener('submit', function(e) {
-        // Marcar que se está enviando para evitar el mensaje de beforeunload
-        isSubmitting = true;
-        window.removeEventListener('beforeunload', beforeUnloadHandler);
-    }, true); // usar capture para que se ejecute primero
 });
 </script>
 @endpush
