@@ -242,39 +242,39 @@
 
                                                             @if(Auth::user()->role_as == 3) {{-- Solo administradores pueden editar permisos --}}
                                                             <div class="mb-0">
-                                                                <label class="form-label">Permisos especiales</label>
+                                                                <label class="form-label">Permisos del usuario</label>
                                                                 <div class="form-text mb-2">
-                                                                    Seleccione los permisos adicionales que tendrá este usuario:
+                                                                    Seleccione los permisos que tendrá este usuario REPRO:
                                                                 </div>
-                                                                <div class="row">
-                                                                    @php
-                                                                        $permisos = $user->permisos ? (is_array($user->permisos) ? $user->permisos : json_decode($user->permisos)) : [];
-                                                                    @endphp
-                                                                    <div class="col-md-4">
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="checkbox" value="evaluaciones" name="permisos[]" id="permiso_evaluaciones" {{ in_array('evaluaciones', $permisos) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label" for="permiso_evaluaciones">
-                                                                                Gestionar evaluaciones
-                                                                            </label>
+                                                                @php
+                                                                    $todosPermisos = \App\Models\Permission::orderBy('module')->get()->groupBy('module');
+                                                                    $permisosUsuario = $user->getAllPermissions()->pluck('name')->toArray();
+                                                                    $moduloIconos = [
+                                                                        'ordenes' => 'bi-folder',
+                                                                        'evaluaciones' => 'bi-clipboard-check',
+                                                                        'resultados' => 'bi-file-earmark-check',
+                                                                        'cuestionarios' => 'bi-journal-text',
+                                                                        'empresas' => 'bi-building',
+                                                                        'usuarios' => 'bi-people',
+                                                                        'reportes' => 'bi-bar-chart',
+                                                                        'config' => 'bi-gear',
+                                                                    ];
+                                                                @endphp
+                                                                @foreach($todosPermisos as $modulo => $permsModulo)
+                                                                <div class="mb-2">
+                                                                    <strong><i class="bi {{ $moduloIconos[$modulo] ?? 'bi-key' }}"></i> {{ ucfirst($modulo) }}</strong>
+                                                                    <div class="row ms-2 mt-1">
+                                                                        @foreach($permsModulo as $perm)
+                                                                        <div class="col-md-6 col-lg-4">
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="checkbox" value="{{ $perm->name }}" name="permisos_sistema[]" id="perm_{{ $perm->id }}" {{ in_array($perm->name, $permisosUsuario) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label small" for="perm_{{ $perm->id }}">{{ $perm->display_name }}</label>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="col-md-4">
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="checkbox" value="empresas" name="permisos[]" id="permiso_empresas" {{ in_array('empresas', $permisos) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label" for="permiso_empresas">
-                                                                                Gestionar empresas
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-4">
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="checkbox" value="reportes" name="permisos[]" id="permiso_reportes" {{ in_array('reportes', $permisos) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label" for="permiso_reportes">
-                                                                                Generar reportes
-                                                                            </label>
-                                                                        </div>
+                                                                        @endforeach
                                                                     </div>
                                                                 </div>
+                                                                @endforeach
                                                             </div>
                                                             @endif
                                                         </div>

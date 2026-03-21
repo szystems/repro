@@ -113,13 +113,13 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | # | Tarea | Detalle Técnico | Estado |
 |---|-------|-----------------|--------|
-| 8E.1 | Múltiples servicios por evaluado | Relajar restricción unique de DPI: permitir misma persona en misma orden si es diferente servicio. Indicador visual "tiene otro servicio en esta orden" | ☐ |
-| 8E.2 | Subir papelería desde vista empresa | Agregar sección de documentos en `empresa/ordenes/show.blade.php` por cada evaluado. Reutilizar modelo `DocumentoEvaluado` con `subido_por_tipo='empresa'`. Mostrar estado de verificación. Permitir descarga de docs subidos por REPRO | ☐ |
-| 8E.3 | Papelería anticipada desde empresa | Permitir que la empresa suba papelería del evaluado desde su portal **antes** de que el evaluado complete el cuestionario. Endpoint nuevo en controller empresa. El evaluado verá docs ya subidos al llegar a la pantalla de documentos del cuestionario | ☐ |
-| 8E.4 | Archivos adjuntos de seguimiento REPRO | En la sección de documentos del admin (ya existe `_documentos_evaluado.blade.php`), agregar tipo 'seguimiento' para archivos de seguimiento interno de REPRO. Estos son visibles para empresa pero no editables por ella | ☐ |
-| 8E.5 | Reportes por mes | Agregar filtro rápido de mes/año en reportes. Dropdown de meses + año. Aplicar tanto en admin como empresa | ☐ |
-| 8E.6 | Optimizar rendimiento cuestionario | Revisar `notificarCuestionarioCompletado()` — queries sin índice. Verificar que cola funcione para emails | ☐ |
-| 8E.7 | Tests para funcionalidades | Tests integrales de multi-servicio, documentos, papelería anticipada, seguimiento, reportes | ☐ |
+| 8E.1 | Múltiples servicios por evaluado | Validación DPI+tipo_servicio en OrdenesController. Indicador DPI duplicado en create. Badge 'Multi-servicio' en show | ✅ |
+| 8E.2 | Subir papelería desde vista empresa | Partial `_documentos_evaluado.blade.php` con upload/download/delete. Rediseño show empresa con cards por evaluado. Eager loading en EmpresaController | ✅ |
+| 8E.3 | Papelería anticipada desde empresa | Usa mismo endpoint de 8E.2 — empresa puede subir docs en cualquier momento antes/después del cuestionario | ✅ |
+| 8E.4 | Archivos adjuntos de seguimiento REPRO | Migración enum 'seguimiento' en tipo_documento. Actualización modelo DocumentoEvaluado. Visible para empresa, solo subible por REPRO | ✅ |
+| 8E.5 | Reportes por mes | Dropdown 'Mes Rápido' (últimos 12 meses) en evaluaciones y empresas. JS auto-fill de fechas | ✅ |
+| 8E.6 | Optimizar rendimiento cuestionario | `where('role_as', '>=', 2)` reemplaza `whereHas('roles')`. `loadMissing()` en lugar de `load()` | ✅ |
+| 8E.7 | Tests para funcionalidades | 17 tests, 33 assertions — multi-servicio, documentos empresa, seguimiento, reportes, optimización | ✅ |
 
 ### Fase 8F — Funcionalidades Complejas
 **Prioridad: BAJA — Módulos nuevos que requieren diseño**
@@ -141,7 +141,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 | 8B: Ajustes Rápidos | ALTA | 9 | ✅ Completada |
 | 8C: Estados y UX | ALTA | 13 | ✅ Completada |
 | 8D: PDF y Documentos | MEDIA | 5 | ✅ Completada |
-| 8E: Funcionalidades Medianas | MEDIA | 7 | ☐ Pendiente |
+| 8E: Funcionalidades Medianas | MEDIA | 7 | ✅ Completada |
 | 8F: Funcionalidades Complejas | BAJA | 4 | ☐ Pendiente |
 | **Total** | | **44** | |
 
@@ -159,6 +159,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------||
+| 2026-03-20 | Fase 8E completada | 7 tareas de Funcionalidades Medianas: multi-servicio DPI, papelería empresa con anticipada, adjuntos seguimiento REPRO, filtro mes en reportes, optimización cuestionario. 1 migración, 14 archivos. 17 tests, 33 assertions. Commit: 99b05c30 |
 | 2026-03-20 | Fase 8D completada | 5 tareas de PDF y Documentos: autorización/términos en PDF, documentos verificados en PDF, campo responsable_id, firma responsable en PDF. 1 migración, 13 archivos modificados. 15 tests, 36 assertions. Commit: 81b4a67e |
 | 2026-03-09 | Fase 8C completada | 13 tareas de Estados y UX: colores dinámicos, firma en autorización, reenviar enlace, WhatsApp/Maps en sedes, sede en orden/usuarios, modalidad cita, filtro sede, notificación sede. 4 migraciones, 1 Mailable. 16 tests, 32 assertions |
 | 2026-03-09 | Fase 8B completada | 9 ajustes rápidos: texto, PDFs, filtros, fecha_limite, captura, historial DPI, dirección, observaciones. 16 tests, 43 assertions |

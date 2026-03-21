@@ -13,6 +13,7 @@ use App\Models\Cuestionario;
 use App\Models\CuestionarioRespuesta;
 use App\Models\FormularioCampo;
 use App\Models\User;
+use App\Notifications\CuestionarioCompletadoNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -646,6 +647,14 @@ class CuestionarioController extends Controller
             foreach ($destinatarios as $email) {
                 Mail::to($email)
                     ->queue(new CuestionarioCompletadoMail($evaluado));
+            }
+
+            // Notificación in-app a usuarios REPRO/admin
+            $usuariosNotificar = User::where('role_as', '>=', 2)
+                ->where('estado', 1)
+                ->get();
+            foreach ($usuariosNotificar as $usuario) {
+                $usuario->notify(new CuestionarioCompletadoNotification($evaluado));
             }
 
             Log::info('Notificaciones de cuestionario completado enviadas', [

@@ -418,6 +418,14 @@ class EvaluadoOrden extends Model
     }
 
     /**
+     * Accessor: Nombre completo
+     */
+    public function getNombreCompletoAttribute(): string
+    {
+        return trim($this->nombre . ' ' . $this->apellidos);
+    }
+
+    /**
      * Accessor: Nombre corto (primeros 2 nombres)
      */
     public function getNombreCortoAttribute(): string

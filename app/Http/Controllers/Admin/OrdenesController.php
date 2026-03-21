@@ -10,6 +10,8 @@ use App\Models\EvaluadoOrden;
 use App\Models\Empresa;
 use App\Models\Sede;
 use App\Models\User;
+use App\Notifications\OrdenCreadaNotification;
+use App\Notifications\ResultadosDisponiblesNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -203,6 +205,15 @@ class OrdenesController extends Controller
             // Notificar a usuarios de la sede asignada
             if ($orden->sede_id) {
                 $this->notificarUsuariosSede($orden);
+            }
+
+            // Notificación in-app a usuarios REPRO/admin (excepto al creador)
+            $usuariosNotificar = User::where('role_as', '>=', 2)
+                ->where('estado', 1)
+                ->where('id', '!=', Auth::id())
+                ->get();
+            foreach ($usuariosNotificar as $usuario) {
+                $usuario->notify(new OrdenCreadaNotification($orden));
             }
 
             // Redirigir según el rol del usuario
@@ -527,6 +538,17 @@ class OrdenesController extends Controller
 
             foreach ($emailsEmpresa as $email) {
                 Mail::to($email)->send(new \App\Mail\ResultadosDisponiblesMail($orden));
+            }
+
+            // Notificación in-app a usuarios de la empresa
+            $usuariosEmpresa = \App\Models\User::where('empresa_id', $empresa->id)
+                ->where('role_as', 1)
+                ->where('estado', 1)
+                ->get();
+            foreach ($orden->evaluados as $evaluado) {
+                foreach ($usuariosEmpresa as $usuario) {
+                    $usuario->notify(new ResultadosDisponiblesNotification($evaluado));
+                }
             }
 
             Log::info('Notificación de resultados enviada', [

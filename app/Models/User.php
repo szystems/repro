@@ -174,6 +174,23 @@ class User extends Authenticatable
         })->get();
     }
 
+    /**
+     * Verificar si el usuario empresa tiene un permiso específico.
+     * Usuarios principales siempre tienen todos los permisos.
+     */
+    public function tienePermisoEmpresa(string $permiso): bool
+    {
+        if ($this->principal == 1) {
+            return true;
+        }
+
+        $permisos = $this->permisos
+            ? (is_array($this->permisos) ? $this->permisos : json_decode($this->permisos, true))
+            : [];
+
+        return is_array($permisos) && in_array($permiso, $permisos);
+    }
+
     // ==================== Scopes ====================
 
     /**

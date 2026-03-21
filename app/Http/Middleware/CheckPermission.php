@@ -22,6 +22,11 @@ class CheckPermission
 
         $user = auth()->user();
 
+        // Admin siempre tiene todos los permisos
+        if ($user->role_as >= 3) {
+            return $next($request);
+        }
+
         // Si no se especifican permisos, solo verificar autenticación
         if (empty($permissions)) {
             return $next($request);

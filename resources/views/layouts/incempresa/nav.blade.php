@@ -21,6 +21,8 @@
 
         <!-- Header actions start -->
         <div class="header-actions d-flex gap-3">
+            @include('partials._notificaciones_bell')
+
             @if(Auth::user()->role_as != 1)
             <a href="{{ url('configs') }}" class="header-action-link" data-bs-toggle="tooltip" data-bs-placement="bottom"
                 data-bs-title="Configuración">

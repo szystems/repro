@@ -145,6 +145,11 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');
     Route::post('evaluados/{evaluado}/deshabilitar-cuestionario', [OrdenesController::class, 'deshabilitarCuestionario'])->name('evaluados.deshabilitar-cuestionario');
 
+    // Notificaciones
+    Route::get('notificaciones', [\App\Http\Controllers\NotificacionesController::class, 'index'])->name('notificaciones.index');
+    Route::patch('notificaciones/{id}/leer', [\App\Http\Controllers\NotificacionesController::class, 'marcarLeida'])->name('notificaciones.leer');
+    Route::post('notificaciones/leer-todas', [\App\Http\Controllers\NotificacionesController::class, 'marcarTodasLeidas'])->name('notificaciones.leer-todas');
+
     // Rutas para diferentes tipos de usuario con middleware específico
     Route::middleware(['role:admin,repro'])->group(function () {
         // Solo admin y repro pueden acceder a todas las órdenes y estadísticas
@@ -154,7 +159,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // ========================================
     // MÓDULO DE REPORTES
     // ========================================
-    Route::prefix('reportes')->name('reportes.')->group(function () {
+    Route::prefix('reportes')->name('reportes.')->middleware(['permission:reportes.ver'])->group(function () {
         // Reporte de Evaluaciones - Disponible para todos los usuarios autenticados
         Route::get('evaluaciones', [App\Http\Controllers\Admin\ReportesController::class, 'evaluaciones'])->name('evaluaciones');
         Route::get('evaluaciones/pdf', [App\Http\Controllers\Admin\ReportesController::class, 'evaluacionesPdf'])->name('evaluaciones.pdf');

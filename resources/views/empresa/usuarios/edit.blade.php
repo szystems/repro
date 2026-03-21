@@ -96,6 +96,48 @@
                                 </div>
                             </div>
 
+                            {{-- Permisos del sub-usuario --}}
+                            @php
+                                $permisosUsuario = $usuario->permisos ? (is_array($usuario->permisos) ? $usuario->permisos : json_decode($usuario->permisos, true)) : [];
+                                if (!is_array($permisosUsuario)) $permisosUsuario = [];
+                            @endphp
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-2"><i class="bi bi-shield-check text-success"></i> Permisos del usuario</h6>
+                                    <p class="form-text mb-2">Seleccione qué puede hacer este usuario:</p>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" value="ver_ordenes" name="permisos_empresa[]" id="perm_ver_ordenes" {{ in_array('ver_ordenes', $permisosUsuario) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_ver_ordenes">Ver órdenes</label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" value="crear_ordenes" name="permisos_empresa[]" id="perm_crear_ordenes" {{ in_array('crear_ordenes', $permisosUsuario) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_crear_ordenes">Crear órdenes</label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" value="ver_resultados" name="permisos_empresa[]" id="perm_ver_resultados" {{ in_array('ver_resultados', $permisosUsuario) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_ver_resultados">Ver resultados</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" value="descargar_pdf" name="permisos_empresa[]" id="perm_descargar_pdf" {{ in_array('descargar_pdf', $permisosUsuario) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_descargar_pdf">Descargar PDFs</label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" value="subir_documentos" name="permisos_empresa[]" id="perm_subir_documentos" {{ in_array('subir_documentos', $permisosUsuario) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_subir_documentos">Subir documentos</label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" value="ver_reportes" name="permisos_empresa[]" id="perm_ver_reportes" {{ in_array('ver_reportes', $permisosUsuario) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_ver_reportes">Ver reportes</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <hr>
 
                             <h6 class="mb-3"><i class="bi bi-key text-warning"></i> Cambiar Contraseña (opcional)</h6>

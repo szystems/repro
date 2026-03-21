@@ -345,6 +345,27 @@ class UsersController extends Controller
             if ($request->has('permisos')) {
                 $user->permisos = json_encode($request->input('permisos'));
             }
+
+            // Sincronizar permisos del nuevo sistema roles/permissions
+            if ($currentUser->role_as == 3 && $request->has('permisos_sistema')) {
+                $permisosSeleccionados = $request->input('permisos_sistema', []);
+                // Crear un rol personal para permisos individuales o sincronizar via role
+                $roleName = $user->role_as == 2 ? 'repro' : ($user->role_as == 1 ? 'empresa' : 'admin');
+                $role = \App\Models\Role::where('name', $roleName)->first();
+                if ($role) {
+                    // Asegurar que el usuario tiene asignado su rol base
+                    $user->roles()->syncWithoutDetaching([$role->id]);
+                }
+
+                // Crear/actualizar rol personal del usuario para permisos granulares
+                $personalRole = \App\Models\Role::firstOrCreate(
+                    ['name' => 'user_' . $user->id],
+                    ['display_name' => 'Permisos de ' . $user->name, 'description' => 'Rol personal']
+                );
+                $permissionIds = \App\Models\Permission::whereIn('name', $permisosSeleccionados)->pluck('id')->toArray();
+                $personalRole->permissions()->sync($permissionIds);
+                $user->roles()->syncWithoutDetaching([$personalRole->id]);
+            }
         }
 
         // Resetear contraseña si se solicita

@@ -230,6 +230,7 @@ class EmpresaController extends Controller
             'role_as' => 1, // Usuario tipo empresa
             'principal' => 0, // No es principal
             'estado' => 1, // Activo
+            'permisos' => json_encode($request->input('permisos_empresa', [])),
         ]);
 
         return redirect()->route('empresa.usuarios')->with('success', 'Usuario creado correctamente');
@@ -294,6 +295,8 @@ class EmpresaController extends Controller
         if (!empty($validated['password'])) {
             $usuario->password = Hash::make($validated['password']);
         }
+
+        $usuario->permisos = json_encode($request->input('permisos_empresa', []));
 
         $usuario->save();
 
