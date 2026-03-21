@@ -126,10 +126,10 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | # | Tarea | Detalle Técnico | Estado |
 |---|-------|-----------------|--------|
-| 8F.1 | Sistema de notificaciones en sistema | Crear migración `notifications`, UI de campana en navbar, marcar como leído, reemplazar/complementar emails por notificaciones internas | ☐ |
-| 8F.2 | Permisos granulares para personal REPRO | Activar tablas roles/permissions existentes (24 permisos). UI de gestión de permisos por usuario. Reemplazar `role_as >= 2` por `hasPermission()` en controllers | ☐ |
-| 8F.3 | Control de permisos para admin empresa | Permitir que empresa principal configure qué puede hacer cada sub-usuario. UI de permisos para empresa | ☐ |
-| 8F.4 | Tests para módulos complejos | Tests completos de notificaciones y permisos | ☐ |
+| 8F.1 | Sistema de notificaciones en sistema | Migración `notifications` (UUID). 4 notificaciones: OrdenCreada, CuestionarioCompletado, ResultadosDisponibles, EvaluadoAsignado. Controller API JSON. Bell dropdown en nav con polling 30s | ✅ |
+| 8F.2 | Permisos granulares para personal REPRO | Migración asigna roles existentes. CheckPermission admin bypass. UI permisos por módulo con íconos. Rol personal `user_{id}` con permisos sincronizados | ✅ |
+| 8F.3 | Control de permisos para admin empresa | 6 permisos empresa en create/edit sub-usuarios. JSON en campo `permisos`. `tienePermisoEmpresa()` en User model | ✅ |
+| 8F.4 | Tests para módulos complejos | 19 tests, 52 assertions — notificaciones, permisos REPRO, permisos empresa | ✅ |
 
 ---
 
@@ -142,7 +142,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 | 8C: Estados y UX | ALTA | 13 | ✅ Completada |
 | 8D: PDF y Documentos | MEDIA | 5 | ✅ Completada |
 | 8E: Funcionalidades Medianas | MEDIA | 7 | ✅ Completada |
-| 8F: Funcionalidades Complejas | BAJA | 4 | ☐ Pendiente |
+| 8F: Funcionalidades Complejas | BAJA | 4 | ✅ Completada |
 | **Total** | | **44** | |
 
 ---
@@ -159,6 +159,7 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 
 | Fecha | Acción | Detalle |
 |-------|--------|---------||
+| 2026-03-20 | Fase 8F completada | 4 tareas de Funcionalidades Complejas: notificaciones in-app (4 tipos, bell dropdown, polling 30s), permisos granulares REPRO (rol personal, UI por módulo), permisos admin empresa (6 permisos JSON). 2 migraciones, 23 archivos. 19 tests, 52 assertions. Commit: b00dcce3 |
 | 2026-03-20 | Fase 8E completada | 7 tareas de Funcionalidades Medianas: multi-servicio DPI, papelería empresa con anticipada, adjuntos seguimiento REPRO, filtro mes en reportes, optimización cuestionario. 1 migración, 14 archivos. 17 tests, 33 assertions. Commit: 99b05c30 |
 | 2026-03-20 | Fase 8D completada | 5 tareas de PDF y Documentos: autorización/términos en PDF, documentos verificados en PDF, campo responsable_id, firma responsable en PDF. 1 migración, 13 archivos modificados. 15 tests, 36 assertions. Commit: 81b4a67e |
 | 2026-03-09 | Fase 8C completada | 13 tareas de Estados y UX: colores dinámicos, firma en autorización, reenviar enlace, WhatsApp/Maps en sedes, sede en orden/usuarios, modalidad cita, filtro sede, notificación sede. 4 migraciones, 1 Mailable. 16 tests, 32 assertions |
@@ -171,4 +172,4 @@ El cliente realizó pruebas del sistema en producción e identificó 27 observac
 ---
 
 *Documento creado: 9 de marzo de 2026*
-*Última actualización: 20 de marzo de 2026*
+*Última actualización: 20 de marzo de 2026 — TODAS LAS FASES COMPLETADAS (44/44 tareas)*
