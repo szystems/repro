@@ -159,14 +159,14 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // ========================================
     // MÓDULO DE REPORTES
     // ========================================
-    Route::prefix('reportes')->name('reportes.')->middleware(['permission:reportes.ver'])->group(function () {
+    Route::prefix('reportes')->name('reportes.')->group(function () {
         // Reporte de Evaluaciones - Disponible para todos los usuarios autenticados
         Route::get('evaluaciones', [App\Http\Controllers\Admin\ReportesController::class, 'evaluaciones'])->name('evaluaciones');
         Route::get('evaluaciones/pdf', [App\Http\Controllers\Admin\ReportesController::class, 'evaluacionesPdf'])->name('evaluaciones.pdf');
         Route::get('evaluaciones/excel', [App\Http\Controllers\Admin\ReportesController::class, 'evaluacionesExcel'])->name('evaluaciones.excel');
 
-        // Reporte de Empresas - Solo para admin y repro
-        Route::middleware(['role:admin,repro'])->group(function () {
+        // Reporte de Empresas - Solo para admin y repro con permiso
+        Route::middleware(['permission:reportes.ver', 'role:admin,repro'])->group(function () {
             Route::get('empresas', [App\Http\Controllers\Admin\ReportesController::class, 'empresas'])->name('empresas');
             Route::get('empresas/pdf', [App\Http\Controllers\Admin\ReportesController::class, 'empresasPdf'])->name('empresas.pdf');
             Route::get('empresas/excel', [App\Http\Controllers\Admin\ReportesController::class, 'empresasExcel'])->name('empresas.excel');

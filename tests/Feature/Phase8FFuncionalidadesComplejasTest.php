@@ -198,7 +198,7 @@ class Phase8FFuncionalidadesComplejasTest extends TestCase
         $role = Role::where('name', 'repro')->first();
         $repro->roles()->syncWithoutDetaching([$role->id]);
 
-        $response = $this->actingAs($repro)->get(route('reportes.evaluaciones'));
+        $response = $this->actingAs($repro)->get(route('reportes.empresas'));
         $response->assertOk();
     }
 

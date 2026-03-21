@@ -7,11 +7,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Primero ejecutar el seeder de roles y permisos
-        $seeder = new \Database\Seeders\RolesAndPermissionsSeeder();
-        $seeder->run();
-
         // Asignar roles a usuarios existentes según su role_as
+        // Los roles deben existir previamente (creados por RolesAndPermissionsSeeder)
         $roleMapping = [
             1 => 'empresa',
             2 => 'repro',
