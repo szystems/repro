@@ -98,6 +98,39 @@ class OrdenesController extends Controller
     }
 
     /**
+     * Resumen estadístico de órdenes para admin/repro
+     */
+    public function resumen(): \Illuminate\View\View
+    {
+        $totalOrdenes = Orden::count();
+        $ordenesActivas = Orden::where('estado', 'en_proceso')->count();
+        $ordenesCompletadas = Orden::where('estado', 'completada')->count();
+        $ordenesPendientes = Orden::where('estado', 'pendiente')->count();
+
+        $totalEvaluados = EvaluadoOrden::count();
+        $evaluadosCompletados = EvaluadoOrden::where('estado_evaluacion', 'completado')->count();
+
+        $porEmpresa = Orden::select('empresa_id', DB::raw('COUNT(*) as total'))
+            ->with('empresa:id,nombre')
+            ->groupBy('empresa_id')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
+
+        $porSede = Orden::select('sede_id', DB::raw('COUNT(*) as total'))
+            ->with('sede:id,nombre')
+            ->whereNotNull('sede_id')
+            ->groupBy('sede_id')
+            ->orderByDesc('total')
+            ->get();
+
+        return view('admin.ordenes.resumen', compact(
+            'totalOrdenes', 'ordenesActivas', 'ordenesCompletadas', 'ordenesPendientes',
+            'totalEvaluados', 'evaluadosCompletados', 'porEmpresa', 'porSede'
+        ));
+    }
+
+    /**
      * Mostrar formulario de creación
      */
     public function create()
