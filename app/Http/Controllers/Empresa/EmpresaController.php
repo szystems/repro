@@ -27,7 +27,9 @@ class EmpresaController extends Controller
         if ($orden->empresa_id !== $empresa->id) {
             abort(403, 'Acceso no autorizado');
         }
-        // Puedes agregar eager loading si necesitas más datos
+
+        $orden->load(['evaluados.documentos.subidoPor', 'evaluados.cuestionario']);
+
         return view('empresa.ordenes.show', compact('orden'));
     }
     /**

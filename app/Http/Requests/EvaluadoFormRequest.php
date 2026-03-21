@@ -25,7 +25,7 @@ class EvaluadoFormRequest extends FormRequest
             // Datos personales obligatorios
             'nombre' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
             'apellidos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
-            'dpi' => 'required|string|size:13|regex:/^[0-9]{13}$/|unique:evaluados_orden,dpi',
+            'dpi' => 'required|string|size:13|regex:/^[0-9]{13}$/',
             
             // Datos de contacto
             'telefono' => 'nullable|string|max:20|regex:/^[0-9\-\+\s\(\)]+$/',

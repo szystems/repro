@@ -151,6 +151,16 @@ class OrdenesController extends Controller
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
         ]);
 
+        // Validar que no haya DPI+servicio duplicados en la misma orden
+        if (is_array($validated['evaluados'])) {
+            $combinaciones = collect($validated['evaluados'])
+                ->map(fn($e) => ($e['dpi'] ?? '') . '|' . ($e['tipo_servicio'] ?? ''))
+                ->filter();
+            if ($combinaciones->count() !== $combinaciones->unique()->count()) {
+                return back()->withErrors(['evaluados' => 'No se puede repetir el mismo DPI con el mismo tipo de servicio en la misma orden.'])->withInput();
+            }
+        }
+
         DB::beginTransaction();
 
         try {

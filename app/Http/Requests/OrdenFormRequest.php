@@ -97,12 +97,12 @@ class OrdenFormRequest extends FormRequest
         $validator->after(function ($validator) {
             Log::info('=== VALIDADOR CUSTOM ===');
             
-            // Validar DPIs únicos entre evaluados
+            // Validar DPIs: permitir mismo DPI solo si diferente tipo_servicio
             if ($this->has('evaluados') && is_array($this->evaluados)) {
-                $dpis = collect($this->evaluados)->pluck('dpi')->filter();
-                if ($dpis->count() !== $dpis->unique()->count()) {
-                    Log::info('Error: DPIs duplicados');
-                    $validator->errors()->add('evaluados', 'No se pueden repetir DPIs en la misma orden.');
+                $combinaciones = collect($this->evaluados)->map(fn($e) => ($e['dpi'] ?? '') . '|' . ($e['tipo_servicio'] ?? ''))->filter();
+                if ($combinaciones->count() !== $combinaciones->unique()->count()) {
+                    Log::info('Error: DPI+servicio duplicados');
+                    $validator->errors()->add('evaluados', 'No se puede repetir el mismo DPI con el mismo tipo de servicio en la misma orden.');
                 }
 
                 // Validar combinación servicio-formulario para cada evaluado

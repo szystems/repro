@@ -71,88 +71,75 @@
         <div class="card">
             <div class="card-title p-3">Evaluados Asignados ({{ $orden->evaluados->count() }})</div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>DPI</th>
-                                <th>Servicio/Formulario</th>
-                                <th>Contacto</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($orden->evaluados as $evaluado)
-                            <tr>
-                                <td><strong>{{ $evaluado->nombre }}</strong></td>
-                                <td><code>{{ $evaluado->dpi }}</code></td>
-                                <td>
-                                    <span class="badge bg-primary">{{ $evaluado->tipo_servicio }}</span><br>
-                                    <small class="text-muted">{{ $evaluado->tipo_formulario }}</small>
-                                </td>
-                                <td>
+                @foreach($orden->evaluados as $evaluado)
+                <div class="border rounded p-3 mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong>
+                            <br><code>{{ $evaluado->dpi }}</code>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="badge bg-primary">{{ $evaluado->tipo_servicio }}</span>
+                            <br><small class="text-muted">{{ $evaluado->tipo_formulario }}</small>
+                        </div>
+                        <div class="col-md-2">
+                            @if($evaluado->email)
+                                <small><i class="bi bi-envelope"></i> {{ $evaluado->email }}</small><br>
+                            @endif
+                            @if($evaluado->telefono)
+                                <small><i class="bi bi-telephone"></i> {{ $evaluado->telefono }}</small><br>
+                            @endif
+                            @if($evaluado->direccion)
+                                <small><i class="bi bi-geo-alt"></i> {{ $evaluado->direccion }}</small>
+                            @endif
+                        </div>
+                        <div class="col-md-2">
+                            <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">{{ $evaluado->estado_evaluacion_texto }}</span>
+                            <br><span class="badge bg-{{ $evaluado->estado_formulario_color }}">Form: {{ ucfirst($evaluado->estado_formulario ?? 'pendiente') }}</span>
+                            @if($evaluado->cuestionario_completado)
+                                <br><small class="text-muted">{{ $evaluado->completado_at ? \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') : '' }}</small>
+                            @endif
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group" role="group">
+                                @if($orden->estado === 'entregado' && $orden->resultados_visibles_empresa)
+                                    <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}" class="btn btn-outline-success btn-sm" title="Ver Cuestionario">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('empresa.cuestionarios.pdf', $evaluado) }}" class="btn btn-outline-primary btn-sm" title="Descargar PDF" target="_blank">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                @endif
+                                @if(!$evaluado->cuestionario_completado)
+                                    <a href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}"
+                                       class="btn btn-outline-primary btn-sm" title="Enlace del Evaluado" target="_blank">
+                                        <i class="bi bi-link-45deg"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            onclick="copiarEnlaceEvaluado('{{ route('cuestionario.mostrar', $evaluado->token_unico) }}')"
+                                            title="Copiar enlace">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
                                     @if($evaluado->email)
-                                        <i class="bi bi-envelope"></i> {{ $evaluado->email }}<br>
-                                    @endif
-                                    @if($evaluado->telefono)
-                                        <i class="bi bi-telephone"></i> {{ $evaluado->telefono }}<br>
-                                    @endif
-                                    @if($evaluado->direccion)
-                                        <i class="bi bi-geo-alt"></i> {{ $evaluado->direccion }}<br>
-                                    @endif
-                                    @if($evaluado->observaciones)
-                                        <small class="text-info"><i class="bi bi-chat-left-text"></i> {{ $evaluado->observaciones }}</small>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">{{ $evaluado->estado_evaluacion_texto }}</span>
-                                    <br><span class="badge bg-{{ $evaluado->estado_formulario_color }}">Form: {{ ucfirst($evaluado->estado_formulario ?? 'pendiente') }}</span>
-                                    @if($evaluado->cuestionario_completado)
-                                        <br><small class="text-muted">{{ $evaluado->completado_at ? \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') : '' }}</small>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        @if($orden->estado === 'entregado' && $orden->resultados_visibles_empresa)
-                                            <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}" class="btn btn-outline-success btn-sm" title="Ver Cuestionario">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ route('empresa.cuestionarios.pdf', $evaluado) }}" class="btn btn-outline-primary btn-sm" title="Descargar PDF del Cuestionario" target="_blank">
-                                                <i class="bi bi-file-earmark-pdf"></i>
-                                            </a>
-                                        @endif
-                                        @if(!$evaluado->cuestionario_completado)
-                                            <a href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}"
-                                               class="btn btn-outline-primary btn-sm"
-                                               title="Enlace del Evaluado"
-                                               target="_blank">
-                                                <i class="bi bi-link-45deg"></i>
-                                            </a>
-                                            <button type="button"
-                                                    class="btn btn-outline-secondary btn-sm"
-                                                    onclick="copiarEnlaceEvaluado('{{ route('cuestionario.mostrar', $evaluado->token_unico) }}')"
-                                                    title="Copiar enlace al portapapeles">
-                                                <i class="bi bi-clipboard"></i>
+                                        <form action="{{ route('evaluados.reenviar-correo', $evaluado) }}" method="POST" class="d-inline"
+                                              onsubmit="return confirm('¿Reenviar enlace a {{ $evaluado->email }}?')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-warning btn-sm" title="Reenviar enlace">
+                                                <i class="bi bi-envelope-arrow-up"></i>
                                             </button>
-                                            @if($evaluado->email)
-                                                <form action="{{ route('evaluados.reenviar-correo', $evaluado) }}" method="POST" class="d-inline"
-                                                      onsubmit="return confirm('¿Reenviar enlace a {{ $evaluado->email }}?')">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-outline-warning btn-sm" title="Reenviar enlace por correo">
-                                                        <i class="bi bi-envelope-arrow-up"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                                        </form>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @if($evaluado->observaciones)
+                        <div class="mt-1"><small class="text-info"><i class="bi bi-chat-left-text"></i> {{ $evaluado->observaciones }}</small></div>
+                    @endif
+                    {{-- Sección de documentos/papelería --}}
+                    @include('empresa.ordenes._documentos_evaluado', ['evaluado' => $evaluado])
                 </div>
+                @endforeach
             </div>
         </div>
     </div>

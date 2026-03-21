@@ -244,8 +244,10 @@ function agregarEvaluado(datos = {}) {
                 </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">DPI</label>
-                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][dpi]"
-                           placeholder="1234567890123" maxlength="13" pattern="[0-9]{13}" value="${dpi}" required>
+                    <input type="text" class="form-control dpi-input" name="evaluados[${contadorEvaluados}][dpi]"
+                           placeholder="1234567890123" maxlength="13" pattern="[0-9]{13}" value="${dpi}" required
+                           onchange="verificarDpiDuplicado(this)">
+                    <small class="text-info dpi-duplicado-aviso d-none"><i class="bi bi-info-circle"></i> Este DPI tiene otro servicio en esta orden</small>
                 </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Email</label>
@@ -291,6 +293,25 @@ function agregarEvaluado(datos = {}) {
 
 function removerEvaluado(id) {
     document.getElementById(`evaluado-${id}`).remove();
+    // Re-verificar todos los DPIs después de remover
+    document.querySelectorAll('.dpi-input').forEach(input => verificarDpiDuplicado(input));
+}
+
+function verificarDpiDuplicado(input) {
+    const dpi = input.value.trim();
+    const aviso = input.closest('.col-md-3').querySelector('.dpi-duplicado-aviso');
+    if (!dpi || dpi.length !== 13) {
+        aviso?.classList.add('d-none');
+        return;
+    }
+    const todosInputs = document.querySelectorAll('.dpi-input');
+    let count = 0;
+    todosInputs.forEach(el => { if (el.value.trim() === dpi) count++; });
+    if (count > 1) {
+        aviso?.classList.remove('d-none');
+    } else {
+        aviso?.classList.add('d-none');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

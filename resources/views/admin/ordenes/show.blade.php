@@ -355,6 +355,7 @@
                     </div>
                     <div class="card-body">
                         <div class="accordion" id="accordionEvaluados">
+                            @php $dpisMultiServicio = $orden->evaluados->groupBy('dpi')->filter(fn($g) => $g->count() > 1)->keys(); @endphp
                             @foreach($orden->evaluados as $index => $evaluado)
                             @php $cuestionario = $evaluado->cuestionario; @endphp
                             @php $bgAlt = $index % 2 !== 0 ? 'background-color: #f4f5f7;' : ''; @endphp
@@ -370,6 +371,9 @@
                                             <div>
                                                 <strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong>
                                                 <span class="text-muted ms-2">DPI: <code>{{ $evaluado->dpi }}</code></span>
+                                                @if($dpisMultiServicio->contains($evaluado->dpi))
+                                                    <span class="badge bg-info ms-1" title="Este evaluado tiene múltiples servicios en esta orden"><i class="bi bi-layers"></i> Multi-servicio</span>
+                                                @endif
                                             </div>
                                             <div class="d-flex gap-2 align-items-center">
                                                 <span class="badge

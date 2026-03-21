@@ -29,15 +29,27 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="{{ route('reportes.empresas') }}">
+                    <form method="GET" action="{{ route('reportes.empresas') }}" id="filtroEmpresasForm">
                         <div class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label">Fecha Inicio (Órdenes)</label>
+                            <div class="col-md-2">
+                                <label class="form-label">Mes Rápido</label>
+                                <select name="mes" class="form-select" onchange="aplicarFiltroMesEmpresas(this)">
+                                    <option value="">Seleccionar...</option>
+                                    @for($i = 0; $i < 12; $i++)
+                                        @php $mesDate = now()->subMonths($i); @endphp
+                                        <option value="{{ $mesDate->format('Y-m') }}" {{ request('mes') == $mesDate->format('Y-m') ? 'selected' : '' }}>
+                                            {{ ucfirst($mesDate->translatedFormat('F Y')) }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Fecha Inicio</label>
                                 <input type="date" name="fecha_inicio" class="form-control" 
                                        value="{{ request('fecha_inicio') }}">
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Fecha Fin (Órdenes)</label>
+                            <div class="col-md-2">
+                                <label class="form-label">Fecha Fin</label>
                                 <input type="date" name="fecha_fin" class="form-control" 
                                        value="{{ request('fecha_fin') }}">
                             </div>
@@ -234,3 +246,18 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function aplicarFiltroMesEmpresas(select) {
+    if (!select.value) return;
+    const [year, month] = select.value.split('-');
+    const inicio = `${year}-${month}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const fin = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+    const form = document.getElementById('filtroEmpresasForm');
+    form.querySelector('[name="fecha_inicio"]').value = inicio;
+    form.querySelector('[name="fecha_fin"]').value = fin;
+}
+</script>
+@endpush

@@ -61,6 +61,7 @@ class DocumentoEvaluado extends Model
             'carta_laboral'          => 'Carta Laboral',
             'foto_tatuaje'           => 'Fotografía de Tatuaje',
             'autorizacion_firmada'   => 'Autorización Firmada',
+            'seguimiento'            => 'Seguimiento REPRO',
             'otro'                   => 'Otro',
         ];
     }

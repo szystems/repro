@@ -635,19 +635,16 @@ class CuestionarioController extends Controller
     private function notificarCuestionarioCompletado(EvaluadoOrden $evaluado): void
     {
         try {
-            // Recargar relaciones necesarias
-            $evaluado->load('orden.empresa');
+            $evaluado->loadMissing('orden.empresa');
 
-            // Obtener destinatarios: usuarios admin y repro
-            $destinatarios = User::whereHas('roles', function ($query) {
-                $query->whereIn('name', ['admin', 'repro']);
-            })
-            ->where('estado', 1)
-            ->whereNotNull('email')
-            ->get();
+            // Usar role_as directamente en vez de whereHas subquery
+            $destinatarios = User::where('role_as', '>=', 2)
+                ->where('estado', 1)
+                ->whereNotNull('email')
+                ->pluck('email');
 
-            foreach ($destinatarios as $usuario) {
-                Mail::to($usuario->email)
+            foreach ($destinatarios as $email) {
+                Mail::to($email)
                     ->queue(new CuestionarioCompletadoMail($evaluado));
             }
 
@@ -657,7 +654,6 @@ class CuestionarioController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // No fallar el flujo principal si la notificación falla
             Log::error('Error enviando notificación de cuestionario completado', [
                 'evaluado_id' => $evaluado->id,
                 'error' => $e->getMessage(),
