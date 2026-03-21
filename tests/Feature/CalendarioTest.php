@@ -218,11 +218,12 @@ class CalendarioTest extends TestCase
     {
         $sede = Sede::factory()->create(['estado' => 1]);
         $polA = $this->usuarioRepro();
+        $fechaFutura = Carbon::now()->addDays(7)->format('Y-m-d');
 
         // Cita existente de polA a las 09:00
         $this->crearEvaluado([
-            'fecha_programada' => '2026-03-15 09:00:00',
-            'fecha_hora_fin' => '2026-03-15 11:00:00',
+            'fecha_programada' => $fechaFutura . ' 09:00:00',
+            'fecha_hora_fin' => $fechaFutura . ' 11:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $polA->id,
             'estado_evaluacion' => 'programado',
@@ -230,7 +231,7 @@ class CalendarioTest extends TestCase
 
         // Sin filtro de evaluador, el botón Agendar debe seguir visible en ese slot
         $this->actingAs($polA)
-            ->get('/calendario/dia/2026-03-15')
+            ->get('/calendario/dia/' . $fechaFutura)
             ->assertOk()
             ->assertSee('Agendar');
     }

@@ -253,6 +253,7 @@ class Fase2DocumentacionTest extends TestCase
         $response = $this->post(route('cuestionario.aceptar-terminos', $this->evaluado->token_unico), [
             'acepta_terminos' => '1',
             'tipo_proceso' => 'socioeconomico',
+            'firma_digital' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
         ]);
 
         $response->assertRedirect();
