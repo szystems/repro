@@ -102,7 +102,7 @@ class AdminController extends Controller
         }
 
         // Últimas órdenes
-        $ultimasOrdenes = Orden::with(['empresa', 'evaluados'])
+        $ultimasOrdenes = Orden::with(['empresa', 'creador', 'sede', 'evaluados'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();

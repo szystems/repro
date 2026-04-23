@@ -338,8 +338,10 @@ class Phase8BAjustesTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('evaluados_orden', [
             'nombre' => 'Pedro',
-            'observaciones' => 'Evaluado requiere atención especial',
         ]);
+        // H-09: observaciones está cifrado en BD, verificar via modelo
+        $evaluado = \App\Models\EvaluadoOrden::where('nombre', 'Pedro')->first();
+        $this->assertSame('Evaluado requiere atención especial', $evaluado->observaciones);
     }
 
     public function test_show_orden_muestra_observaciones_evaluado(): void

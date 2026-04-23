@@ -105,6 +105,15 @@ class OrdenFormRequest extends FormRequest
                     $validator->errors()->add('evaluados', 'No se puede repetir el mismo DPI con el mismo tipo de servicio en la misma orden.');
                 }
 
+                // H-08: Validar emails duplicados dentro de la misma orden
+                $emails = collect($this->evaluados)
+                    ->pluck('email')
+                    ->filter()
+                    ->map(fn($e) => strtolower(trim($e)));
+                if ($emails->count() !== $emails->unique()->count()) {
+                    $validator->errors()->add('evaluados', 'No se puede repetir el mismo email en la misma orden (cada evaluado recibe un token único).');
+                }
+
                 // Validar combinación servicio-formulario para cada evaluado
                 foreach ($this->evaluados as $index => $evaluado) {
                     if (isset($evaluado['tipo_servicio']) && isset($evaluado['tipo_formulario'])) {

@@ -7,7 +7,6 @@ use App\Http\Requests\Cuestionario\InformacionFamiliarRequest;
 use App\Http\Requests\Cuestionario\HistorialLaboralRequest;
 use App\Http\Requests\Cuestionario\SituacionEconomicaRequest;
 use App\Http\Requests\Cuestionario\AntecedentesRequest;
-use App\Mail\CuestionarioCompletadoMail;
 use App\Models\EvaluadoOrden;
 use App\Models\Cuestionario;
 use App\Models\CuestionarioRespuesta;
@@ -17,7 +16,6 @@ use App\Notifications\CuestionarioCompletadoNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 /**
@@ -87,7 +85,9 @@ class CuestionarioController extends Controller
             'dpi_ingresado.regex' => 'El DPI solo puede contener números.',
         ]);
 
-        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->where('token_expira_at', '>', now())
+            ->firstOrFail();
         $dpiIngresado = preg_replace('/[^0-9]/', '', $request->dpi_ingresado);
 
         if ($dpiIngresado !== $evaluado->dpi) {
@@ -172,7 +172,9 @@ class CuestionarioController extends Controller
             'firma_digital.required'   => 'Debe proporcionar su firma digital.',
         ]);
 
-        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->where('token_expira_at', '>', now())
+            ->firstOrFail();
         $cuestionario = $evaluado->cuestionario;
 
         if (!$cuestionario) {
@@ -282,7 +284,9 @@ class CuestionarioController extends Controller
      */
     public function guardarSeccion(Request $request, string $token, int $numero)
     {
-        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->where('token_expira_at', '>', now())
+            ->firstOrFail();
         $cuestionario = $evaluado->cuestionario;
 
         // Validar según la sección
@@ -334,7 +338,9 @@ class CuestionarioController extends Controller
      */
     public function finalizar(string $token)
     {
-        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->where('token_expira_at', '>', now())
+            ->firstOrFail();
         $cuestionario = $evaluado->cuestionario;
 
         // Verificar que completó todas las secciones
@@ -406,7 +412,9 @@ class CuestionarioController extends Controller
             'confirmacion_final.accepted' => 'Debe confirmar que ha revisado la información.',
         ]);
 
-        $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->where('token_expira_at', '>', now())
+            ->firstOrFail();
         $cuestionario = $evaluado->cuestionario;
 
         DB::beginTransaction();
@@ -631,23 +639,16 @@ class CuestionarioController extends Controller
 
     /**
      * Enviar notificación cuando un cuestionario se completa.
-     * Notifica a los usuarios REPRO/Admin asociados.
+     *
+     * Solo crea notificación in-app para usuarios REPRO/Admin. El envío de correo
+     * se removió a petición del cliente (2026-04-22) para reducir spam de emails;
+     * los correos a la empresa se conservan únicamente cuando los resultados están
+     * disponibles (ver `OrdenesController::toggleResultadosVisibles`).
      */
     private function notificarCuestionarioCompletado(EvaluadoOrden $evaluado): void
     {
         try {
             $evaluado->loadMissing('orden.empresa');
-
-            // Usar role_as directamente en vez de whereHas subquery
-            $destinatarios = User::where('role_as', '>=', 2)
-                ->where('estado', 1)
-                ->whereNotNull('email')
-                ->pluck('email');
-
-            foreach ($destinatarios as $email) {
-                Mail::to($email)
-                    ->queue(new CuestionarioCompletadoMail($evaluado));
-            }
 
             // Notificación in-app a usuarios REPRO/admin
             $usuariosNotificar = User::where('role_as', '>=', 2)
@@ -657,9 +658,9 @@ class CuestionarioController extends Controller
                 $usuario->notify(new CuestionarioCompletadoNotification($evaluado));
             }
 
-            Log::info('Notificaciones de cuestionario completado enviadas', [
+            Log::info('Notificaciones in-app de cuestionario completado enviadas', [
                 'evaluado_id' => $evaluado->id,
-                'destinatarios' => $destinatarios->count(),
+                'destinatarios' => $usuariosNotificar->count(),
             ]);
 
         } catch (\Exception $e) {
@@ -685,7 +686,13 @@ class CuestionarioController extends Controller
 
         $request->validate([
             'tipo_documento' => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Models\DocumentoEvaluado::tiposDocumento()))],
-            'archivo'        => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,doc,docx'],
+            'archivo'        => [
+                'required',
+                'file',
+                'max:10240',
+                'mimes:pdf,jpg,jpeg,png,doc,docx',
+                'mimetypes:application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ],
         ]);
 
         $archivo = $request->file('archivo');

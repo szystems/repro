@@ -9,6 +9,7 @@ use App\Models\EvaluadoOrden;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -17,15 +18,29 @@ class EmpresaController extends Controller
     /**
      * Mostrar detalle de una orden para empresa
      */
-    public function verOrden(\App\Models\Orden $orden): \Illuminate\View\View
+    public function verOrden(\App\Models\Orden $orden)
     {
-        $empresa = Auth::user()->empresa;
-        if (!$empresa) {
-            abort(403, 'Su usuario no tiene una empresa asociada');
+        $user = Auth::user();
+        $userEmpresaId = $user->empresa_id;
+
+        if (!$userEmpresaId) {
+            Log::warning('Usuario empresa sin empresa_id intentó ver orden', [
+                'user_id' => $user->id,
+                'orden_id' => $orden->id,
+            ]);
+            return redirect()->route('dashboard')
+                ->with('error', 'Su usuario no tiene una empresa asociada. Contacte al administrador.');
         }
-        // Verificar que la orden pertenece a la empresa del usuario
-        if ($orden->empresa_id !== $empresa->id) {
-            abort(403, 'Acceso no autorizado');
+
+        // Comparación tolerante a tipos (int vs string)
+        if ((int) $orden->empresa_id !== (int) $userEmpresaId) {
+            Log::warning('Usuario empresa intentó ver orden de otra empresa', [
+                'user_id' => $user->id,
+                'user_empresa_id' => $userEmpresaId,
+                'orden_id' => $orden->id,
+                'orden_empresa_id' => $orden->empresa_id,
+            ]);
+            abort(403, 'Acceso no autorizado. Esta orden no pertenece a su empresa.');
         }
 
         $orden->load(['evaluados.documentos.subidoPor', 'evaluados.cuestionario']);
@@ -45,6 +60,9 @@ class EmpresaController extends Controller
         // Eager loading y conteo de evaluados
         $ordenes = $empresa->ordenes()
             ->withCount('evaluados')
+            ->with(['evaluados' => function ($q) {
+                $q->orderBy('id')->limit(1);
+            }])
             ->orderByDesc('created_at')
             ->paginate(15);
 

@@ -156,6 +156,10 @@
                                     <tr>
                                         <td>
                                             <strong>{{ $orden->codigo_orden }}</strong>
+                                            @if($orden->evaluados->count() > 0)
+                                                @php $primero = $orden->evaluados->first(); @endphp
+                                                <br><small class="text-muted">{{ trim($primero->nombre . ' ' . $primero->apellidos) }}@if($orden->evaluados->count() > 1) <span class="badge bg-secondary">+{{ $orden->evaluados->count() - 1 }}</span>@endif</small>
+                                            @endif
                                         </td>
                                         <td>
                                             {{ $orden->empresa->nombre ?? 'N/A' }}

@@ -230,7 +230,7 @@ Route::post('/logout', function () {
 // RUTAS PÚBLICAS DE CUESTIONARIOS (SIN AUTENTICACIÓN)
 // ========================================
 
-Route::prefix('cuestionario')->name('cuestionario.')->group(function () {
+Route::prefix('cuestionario')->name('cuestionario.')->middleware('throttle:60,1')->group(function () {
     // Acceso inicial con token
     Route::get('/{token}', [CuestionarioController::class, 'mostrar'])->name('mostrar');
 

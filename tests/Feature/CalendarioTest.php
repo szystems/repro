@@ -14,6 +14,20 @@ class CalendarioTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Las fechas de los tests están hardcodeadas en marzo-2026.
+        // Congelamos el reloj para que la validación "fecha no anterior a hoy" pase.
+        Carbon::setTestNow(Carbon::parse('2026-03-01 08:00:00'));
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
     /** Usuario REPRO (role_as = 2). */
     private function usuarioRepro(): User
     {

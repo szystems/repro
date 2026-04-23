@@ -333,7 +333,23 @@ class UsersController extends Controller
                 if (!$request->input('empresa_id')) {
                     return redirect()->back()->with('error', 'Debe seleccionar una empresa para usuarios de tipo empresa')->withInput();
                 }
-                $user->empresa_id = $request->input('empresa_id');
+
+                // H-15: si se cambia la empresa, registrar evento y advertir al admin
+                $nuevaEmpresaId = (int) $request->input('empresa_id');
+                if ((int) $user->empresa_id !== $nuevaEmpresaId) {
+                    $empresaAnteriorId = $user->empresa_id;
+                    \Illuminate\Support\Facades\Log::warning('Cambio de empresa_id en usuario', [
+                        'usuario_id'         => $user->id,
+                        'usuario_email'      => $user->email,
+                        'empresa_anterior'   => $empresaAnteriorId,
+                        'empresa_nueva'      => $nuevaEmpresaId,
+                        'modificado_por_id'  => $currentUser->id,
+                        'modificado_por'     => $currentUser->email,
+                    ]);
+                    session()->flash('warning', "Atención: el usuario {$user->name} ha sido reasignado a otra empresa y dejará de ver las órdenes de la empresa anterior.");
+                }
+
+                $user->empresa_id = $nuevaEmpresaId;
             }
             $user->cargo = $request->input('cargo');
         }

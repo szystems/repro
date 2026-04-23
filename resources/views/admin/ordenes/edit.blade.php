@@ -195,11 +195,6 @@
                     <div class="card mt-3">
                         <div class="card-header">
                             <div class="card-title">Evaluados</div>
-                            <div class="card-options">
-                                <button type="button" class="btn btn-primary btn-sm" id="agregarEvaluado">
-                                    <i class="bi bi-plus"></i> Agregar Evaluado
-                                </button>
-                            </div>
                         </div>
                         <div class="card-body">
                             <div id="evaluados-container">
@@ -321,6 +316,12 @@
                                 <small>Haga clic en "Agregar Evaluado" para comenzar.</small>
                             </div>
                             @endif
+
+                            <div class="d-flex justify-content-center mt-3">
+                                <button type="button" class="btn btn-primary" id="agregarEvaluado">
+                                    <i class="bi bi-plus"></i> Agregar Evaluado
+                                </button>
+                            </div>
                         </div>
                     </div>
 

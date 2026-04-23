@@ -25,12 +25,12 @@ class ReportesController extends Controller
     {
         $query = EvaluadoOrden::with(['orden.empresa']);
 
-        // Filtrar por empresa si el usuario es de empresa
+        // Cliente (empresa): ver todos los evaluados de sus órdenes, independiente del estado.
+        // La vista/columnas de resultados se condicionan por separado usando
+        // `$orden->resultadosDisponiblesParaEmpresa()`.
         if (Auth::user()->role_as == 1) {
             $query->whereHas('orden', function ($q) {
-                $q->where('empresa_id', Auth::user()->empresa_id)
-                  ->where('resultados_visibles_empresa', true)
-                  ->where('estado', 'entregado');
+                $q->where('empresa_id', Auth::user()->empresa_id);
             });
         }
 

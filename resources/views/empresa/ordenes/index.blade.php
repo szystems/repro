@@ -35,7 +35,13 @@
                         <tbody>
                             @forelse($ordenes as $orden)
                             <tr>
-                                <td><strong>{{ $orden->codigo_orden }}</strong></td>
+                                <td>
+                                    <strong>{{ $orden->codigo_orden }}</strong>
+                                    @if($orden->evaluados->count() > 0)
+                                        @php $primero = $orden->evaluados->first(); @endphp
+                                        <br><small class="text-muted">{{ trim($primero->nombre . ' ' . $primero->apellidos) }}@if($orden->evaluados_count > 1) <span class="badge bg-secondary">+{{ $orden->evaluados_count - 1 }}</span>@endif</small>
+                                    @endif
+                                </td>
                                 <td><span class="badge bg-{{ $orden->estado_color }}">{{ $orden->estado_human }}</span></td>
                                 <td>{{ $orden->fecha_solicitud ? \Carbon\Carbon::parse($orden->fecha_solicitud)->format('d/m/Y') : '-' }}</td>
                                 <td>{{ $orden->created_at ? $orden->created_at->format('d/m/Y') : '-' }}</td>

@@ -168,7 +168,7 @@ class OrdenesController extends Controller
         // Validación manual temporal
         $validated = $request->validate([
             'empresa_id' => 'required|exists:empresas,id',
-            'sede_id' => 'nullable|exists:sedes,id',
+            'sede_id' => 'nullable|exists:sedes,id,estado,1',
             'observaciones_internas' => 'nullable|string|max:500',
             'prioridad' => 'nullable|in:baja,normal,alta,urgente',
             'fecha_limite' => 'nullable|date|after:today',
@@ -194,6 +194,15 @@ class OrdenesController extends Controller
             if ($combinaciones->count() !== $combinaciones->unique()->count()) {
                 return back()->withErrors(['evaluados' => 'No se puede repetir el mismo DPI con el mismo tipo de servicio en la misma orden.'])->withInput();
             }
+
+            // H-08: validar emails duplicados entre personas distintas (DPIs distintos) en la misma orden
+            $emailToDpis = collect($validated['evaluados'])
+                ->filter(fn($e) => !empty($e['email']) && !empty($e['dpi']))
+                ->groupBy(fn($e) => strtolower(trim($e['email'])))
+                ->map(fn($grupo) => collect($grupo)->pluck('dpi')->unique()->count());
+            if ($emailToDpis->filter(fn($n) => $n > 1)->isNotEmpty()) {
+                return back()->withErrors(['evaluados' => 'No se puede usar el mismo email para evaluados diferentes (DPIs distintos) en la misma orden.'])->withInput();
+            }
         }
 
         DB::beginTransaction();
@@ -206,6 +215,8 @@ class OrdenesController extends Controller
                 'creado_por' => Auth::id(),
                 'fecha_solicitud' => now()->toDateString(),
                 'estado' => 'solicitud',
+                // Sede de REPRO que trabajará la orden — disponible para REPRO y cliente.
+                'sede_id' => $validated['sede_id'] ?? null,
             ];
 
             // Campos exclusivos REPRO (role_as >= 2)
@@ -214,7 +225,6 @@ class OrdenesController extends Controller
                 $datosOrden['prioridad'] = $validated['prioridad'] ?? 'normal';
                 $datosOrden['fecha_limite'] = $validated['fecha_limite'] ?? null;
                 $datosOrden['requerimientos_generales'] = $validated['requerimientos_generales'] ?? null;
-                $datosOrden['sede_id'] = $validated['sede_id'] ?? null;
             }
 
             if (Auth::user()->role_as == 1) {
@@ -253,7 +263,8 @@ class OrdenesController extends Controller
             if (Auth::user()->role_as == 1) {
                 // Usuario empresa: redirigir a módulo empresa
                 return redirect()->route('empresa.ordenes.show', $orden)
-                    ->with('success', 'Orden creada exitosamente.');
+                    ->with('success', 'Orden creada exitosamente.')
+                    ->with('mostrar_papeleria', true);
             }
 
             return redirect()->route('ordenes.show', $orden)
@@ -429,8 +440,8 @@ class OrdenesController extends Controller
      */
     public function destroy(Orden $orden)
     {
-        if (!Auth::user()->hasRole('admin')) {
-            abort(403, 'Solo los administradores pueden eliminar órdenes.');
+        if (!Auth::user()->hasAnyRole(['admin', 'repro'])) {
+            abort(403, 'No tiene permisos para eliminar órdenes.');
         }
 
         if (in_array($orden->estado, ['en_proceso', 'analisis', 'entregado'])) {
@@ -748,17 +759,16 @@ class OrdenesController extends Controller
 
     /**
      * Generar PDF de la orden
+     *
+     * El PDF contiene solo datos administrativos de la orden (código, estado, evaluados,
+     * fechas). NO incluye resultados de cuestionarios. Por eso está disponible
+     * para cliente desde que se crea la orden, sin esperar a que sea entregada.
      */
     public function pdf(Orden $orden)
     {
         // Verificar permisos
         if (!$this->usuarioPuedeVerOrden($orden)) {
             abort(403, 'No tienes permisos para ver esta orden.');
-        }
-
-        // Verificar si es usuario empresa y los resultados no están disponibles
-        if (Auth::user()->role_as == 1 && !$orden->resultadosDisponiblesParaEmpresa()) {
-            return back()->with('error', 'Los resultados de esta orden aún no están disponibles. Estarán visibles cuando la orden sea entregada.');
         }
 
         // Cargar relaciones necesarias

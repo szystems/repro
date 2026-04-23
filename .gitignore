@@ -28,6 +28,13 @@ composer.json.backup
 # Ignorar archivos de pruebas y deployment
 scripts/
 
+# Scripts de deploy temporales con credenciales / claves
+/deploy_*.php
+/public/deploy_*.php
+
+# Documentación con credenciales FTP
+/docs/ftp/
+
 # Permitir carpetas necesarias
 !storage/framework/.gitignore
 !database/.gitignore

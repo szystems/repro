@@ -91,10 +91,15 @@
                                 </div>
                                 @endif
 
-                                <!-- Sede Responsable (Solo REPRO) -->
-                                @if(Auth::user()->role_as >= 2 && isset($sedes) && $sedes->count())
+                                <!-- Sede Responsable (REPRO + Cliente) -->
+                                @if(isset($sedes) && $sedes->count())
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Sede Responsable</label>
+                                    <label class="form-label">
+                                        Sede Responsable
+                                        @if(Auth::user()->role_as == 1)
+                                            <small class="text-muted">(sede de REPRO que trabajará la orden)</small>
+                                        @endif
+                                    </label>
                                     <select class="form-select @error('sede_id') is-invalid @enderror" name="sede_id">
                                         <option value="">Sin sede asignada</option>
                                         @foreach($sedes as $sede)
@@ -148,11 +153,6 @@
                             <div class="card mt-4">
                                 <div class="card-header">
                                     <div class="card-title">Evaluados (Opcional)</div>
-                                    <div class="card-options">
-                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="agregarEvaluado()">
-                                            <i class="bi bi-person-plus"></i> Agregar Evaluado
-                                        </button>
-                                    </div>
                                 </div>
                                 <div class="card-body">
                                     <p class="text-muted mb-3">
@@ -162,6 +162,12 @@
 
                                     <div id="evaluados-container">
                                         <!-- Los evaluados se agregan dinámicamente aquí -->
+                                    </div>
+
+                                    <div class="d-flex justify-content-center mt-3">
+                                        <button type="button" class="btn btn-primary" onclick="agregarEvaluado()">
+                                            <i class="bi bi-person-plus"></i> Agregar Evaluado
+                                        </button>
                                     </div>
                                 </div>
                             </div>

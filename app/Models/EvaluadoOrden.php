@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Models\Sede;
+use App\Traits\RegistraCambiosEstado;
+use App\Traits\ValidaEstadosPermitidos;
 
 /**
  * Modelo para evaluados vinculados a órdenes.
@@ -19,6 +21,8 @@ use App\Models\Sede;
 class EvaluadoOrden extends Model
 {
     use HasFactory;
+    use RegistraCambiosEstado;
+    use ValidaEstadosPermitidos;
 
     /**
      * Nombre de la tabla
@@ -100,6 +104,9 @@ class EvaluadoOrden extends Model
             'notificado_at' => 'datetime',
             'resultado_preliminar_at' => 'datetime',
             'resultado_final_at' => 'datetime',
+            // H-09: PII cifrado en base de datos
+            'observaciones' => 'encrypted',
+            'notas_poligrafo' => 'encrypted',
         ];
     }
 
@@ -729,8 +736,15 @@ class EvaluadoOrden extends Model
             return false;
         }
 
+        $estadoAnterior = $this->estado_evaluacion;
         $this->estado_evaluacion = $nuevoEstado;
-        return $this->save();
+        $resultado = $this->save();
+
+        if ($resultado) {
+            $this->registrarCambioEstado('estado_evaluacion', $estadoAnterior, $nuevoEstado);
+        }
+
+        return $resultado;
     }
 
     /**
@@ -776,6 +790,7 @@ class EvaluadoOrden extends Model
             return false;
         }
 
+        $estadoAnterior = $this->estado_formulario;
         $this->estado_formulario = $nuevoEstado;
 
         // Sincronizar cuestionario_completado (backward compatibility)
@@ -785,7 +800,13 @@ class EvaluadoOrden extends Model
             $this->cuestionario_completado = false;
         }
 
-        return $this->save();
+        $resultado = $this->save();
+
+        if ($resultado) {
+            $this->registrarCambioEstado('estado_formulario', $estadoAnterior, $nuevoEstado);
+        }
+
+        return $resultado;
     }
 
     /**
@@ -826,6 +847,20 @@ class EvaluadoOrden extends Model
             'en_progreso' => 'En Progreso',
             'completado' => 'Completado',
             'expirado' => 'Expirado',
+        ];
+    }
+
+    /**
+     * Catálogo de campos de estado protegidos con sus valores permitidos.
+     * Usado por el trait ValidaEstadosPermitidos para prevenir corrupción.
+     *
+     * @return array<string, string[]>
+     */
+    public static function camposEstadoValidos(): array
+    {
+        return [
+            'estado_evaluacion' => array_keys(self::estadosEvaluacionDisponibles()),
+            'estado_formulario' => array_keys(self::estadosFormularioDisponibles()),
         ];
     }
 

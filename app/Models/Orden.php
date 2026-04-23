@@ -7,10 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use App\Traits\RegistraCambiosEstado;
+use App\Traits\ValidaEstadosPermitidos;
 
 class Orden extends Model
 {
     use HasFactory;
+    use RegistraCambiosEstado;
+    use ValidaEstadosPermitidos;
     /**
      * The table associated with the model.
      */
@@ -45,6 +49,8 @@ class Orden extends Model
         'fecha_limite' => 'date',
         'documentos_adjuntos' => 'array',
         'resultados_visibles_empresa' => 'boolean',
+        // H-09: PII cifrado en base de datos
+        'observaciones_internas' => 'encrypted',
     ];
 
     /**
@@ -268,8 +274,15 @@ class Orden extends Model
             return false;
         }
 
+        $estadoAnterior = $this->estado;
         $this->estado = $nuevoEstado;
-        return $this->save();
+        $resultado = $this->save();
+
+        if ($resultado) {
+            $this->registrarCambioEstado('estado', $estadoAnterior, $nuevoEstado);
+        }
+
+        return $resultado;
     }
 
     /**
@@ -291,6 +304,19 @@ class Orden extends Model
             'final' => 'Resultado Final',
             'entregado' => 'Entregado',
             'cancelado' => 'Cancelado',
+        ];
+    }
+
+    /**
+     * Catálogo de campos de estado protegidos con sus valores permitidos.
+     * Usado por el trait ValidaEstadosPermitidos para prevenir corrupción.
+     *
+     * @return array<string, string[]>
+     */
+    public static function camposEstadoValidos(): array
+    {
+        return [
+            'estado' => array_keys(self::estadosDisponibles()),
         ];
     }
 }

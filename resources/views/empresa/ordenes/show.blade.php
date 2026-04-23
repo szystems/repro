@@ -15,6 +15,19 @@
         </div>
     </div>
     <div class="content-wrapper">
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i> {{ session('success') }}
+                @if(session('mostrar_papeleria'))
+                    <hr>
+                    <strong>Próximo paso:</strong>
+                    Suba ahora la papelería de cada evaluado en la sección
+                    <a href="#seccion-evaluados" class="alert-link">Evaluados Asignados</a>.
+                @endif
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="card-title">Detalles de la Orden</span>
@@ -69,7 +82,7 @@
             </div>
         </div>
         <div class="card">
-            <div class="card-title p-3">Evaluados Asignados ({{ $orden->evaluados->count() }})</div>
+            <div class="card-title p-3" id="seccion-evaluados">Evaluados Asignados ({{ $orden->evaluados->count() }})</div>
             <div class="card-body">
                 @foreach($orden->evaluados as $evaluado)
                 <div class="border rounded p-3 mb-3">
@@ -148,6 +161,16 @@
 
 @push('scripts')
 <script>
+@if(session('mostrar_papeleria'))
+    // Scroll automático a la sección de evaluados tras crear la orden
+    document.addEventListener('DOMContentLoaded', function () {
+        const seccion = document.getElementById('seccion-evaluados');
+        if (seccion) {
+            setTimeout(() => seccion.scrollIntoView({ behavior: 'smooth', block: 'start' }), 600);
+        }
+    });
+@endif
+
 function copiarEnlaceEvaluado(url) {
     function mostrarExito() {
         const toast = document.createElement('div');

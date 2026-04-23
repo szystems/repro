@@ -164,9 +164,11 @@ class ResultadosVisibilidadTest extends TestCase
     }
 
     /**
-     * Test que empresa NO puede generar PDF si resultados no visibles
+     * BUG-02 (2026-04-22): el PDF de la orden contiene SOLO metadatos administrativos
+     * (datos de la empresa, evaluados solicitados, fechas), no resultados sensibles.
+     * Por lo tanto la empresa siempre puede descargarlo, aun sin resultados visibles.
      */
-    public function test_empresa_cannot_generate_pdf_when_results_not_visible(): void
+    public function test_empresa_can_generate_pdf_when_results_not_visible(): void
     {
         $empresa = Empresa::factory()->create();
         $usuarioEmpresa = User::factory()->create([
@@ -181,8 +183,8 @@ class ResultadosVisibilidadTest extends TestCase
         $response = $this->actingAs($usuarioEmpresa)
             ->get(route('ordenes.pdf', $orden));
 
-        $response->assertRedirect();
-        $response->assertSessionHas('error');
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
     }
 
     /**
@@ -228,35 +230,35 @@ class ResultadosVisibilidadTest extends TestCase
     }
 
     /**
-     * Test que reporte evaluaciones filtra por visibilidad para empresa
+     * BUG-03 (2026-04-22): el listado de evaluaciones del cliente debe mostrar
+     * TODOS los evaluados de sus órdenes (en cualquier estado), no solo los entregados
+     * con visibilidad activa. La visibilidad solo restringe ver los resultados detallados.
      */
-    public function test_evaluaciones_report_filters_by_visibility_for_empresa(): void
+    public function test_evaluaciones_report_shows_all_empresa_evaluados(): void
     {
         $empresa = Empresa::factory()->create();
         $usuarioEmpresa = User::factory()->create([
             'role_as' => 1,
             'empresa_id' => $empresa->id,
         ]);
-        
-        // Orden con resultados visibles Y estado entregado
+
         $ordenVisible = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'resultados_visibles_empresa' => true,
             'estado' => 'entregado',
         ]);
-        $evaluadoVisible = EvaluadoOrden::factory()->create([
+        EvaluadoOrden::factory()->create([
             'orden_id' => $ordenVisible->id,
             'nombre' => 'Juan Visible',
         ]);
-        
-        // Orden con resultados NO visibles
-        $ordenOculta = Orden::factory()->create([
+
+        $ordenEnProceso = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'resultados_visibles_empresa' => false,
         ]);
-        $evaluadoOculto = EvaluadoOrden::factory()->create([
-            'orden_id' => $ordenOculta->id,
-            'nombre' => 'Pedro Oculto',
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $ordenEnProceso->id,
+            'nombre' => 'Pedro EnProceso',
         ]);
 
         $response = $this->actingAs($usuarioEmpresa)
@@ -264,6 +266,6 @@ class ResultadosVisibilidadTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Juan Visible');
-        $response->assertDontSee('Pedro Oculto');
+        $response->assertSee('Pedro EnProceso');
     }
 }
