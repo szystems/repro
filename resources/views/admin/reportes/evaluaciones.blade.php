@@ -199,6 +199,7 @@
                                     <th>Formulario</th>
                                     <th>Estado</th>
                                     <th>Fecha</th>
+                                    <th class="text-center">Informe</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -237,10 +238,32 @@
                                             @endif
                                         </td>
                                         <td>{{ $evaluado->created_at->format('d/m/Y') }}</td>
+                                        <td class="text-center">
+                                            @php $disponible = $evaluado->orden && $evaluado->orden->resultadosDisponiblesParaEmpresa(); @endphp
+                                            @if($disponible && Auth::user()->role_as == 1)
+                                                <a href="{{ route('empresa.cuestionarios.pdf', $evaluado) }}"
+                                                   class="btn btn-sm btn-danger"
+                                                   title="Descargar informe PDF del evaluado"
+                                                   target="_blank">
+                                                    <i class="bi bi-file-earmark-pdf"></i>
+                                                </a>
+                                            @elseif($disponible && Auth::user()->role_as >= 2 && $evaluado->cuestionario)
+                                                <a href="{{ route('admin.cuestionarios.pdf', $evaluado->cuestionario) }}"
+                                                   class="btn btn-sm btn-danger"
+                                                   title="Descargar informe PDF del evaluado"
+                                                   target="_blank">
+                                                    <i class="bi bi-file-earmark-pdf"></i>
+                                                </a>
+                                            @else
+                                                <span class="badge bg-light text-muted border" title="El informe se habilitará cuando REPRO marque los resultados como disponibles">
+                                                    <i class="bi bi-clock-history"></i> En proceso
+                                                </span>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4 text-muted">
+                                        <td colspan="9" class="text-center py-4 text-muted">
                                             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                             No se encontraron evaluados con los filtros seleccionados
                                         </td>

@@ -275,8 +275,28 @@ Mover el botón del `card-header` al `card-body`, ubicándolo **después** del t
 - [x] MEJ-04: Mensaje éxito + upload papelería
 - [x] MEJ-07: Nombre del candidato en listados
 - [x] MEJ-05: Reposicionar botón "Agregar Evaluado"
+- [x] MEJ-09 (2026-04-27): Botón descarga PDF informe en "Mis Reportes" + columna "En proceso"
 - [ ] Ejecutar suite completa: `php artisan test` (pendiente — entorno sin PHP local)
 - [ ] Actualizar CHANGELOG / versión
+
+---
+
+## Seguimiento post-entrega (2026-04-27)
+
+Cliente reportó dos inquietudes tras revisar el portal:
+
+1. **"En 'Mis Reportes' no encuentro cómo descargar el informe del evaluado."**
+   - **Causa:** El listado de evaluaciones no incluía botón de descarga del PDF individual; el cliente no sabía que el informe se habilita solo cuando REPRO marca `resultados_visibles_empresa = true` en una orden con `estado = entregado`.
+   - **Solución implementada:**
+     - Nueva columna **"Informe"** en [resources/views/admin/reportes/evaluaciones.blade.php](resources/views/admin/reportes/evaluaciones.blade.php).
+     - Si `Orden::resultadosDisponiblesParaEmpresa() === true` → botón rojo PDF apuntando a `route('empresa.cuestionarios.pdf', $evaluado)` para clientes (rol 1) o `route('admin.cuestionarios.pdf', $cuestionario)` para REPRO/admin.
+     - Si no → badge `"En proceso"` con tooltip explicativo.
+     - Eager-load adicional de `cuestionario` en [`ReportesController::buildEvaluacionesQuery`](app/Http/Controllers/Admin/ReportesController.php#L27) para evitar N+1.
+   - **Test:** `tests/Feature/ResultadosVisibilidadTest.php::test_evaluaciones_report_shows_pdf_button_when_results_available`.
+   - **Despliegue FTP:** 2026-04-27 — los 2 archivos producción (`ReportesController.php` + `evaluaciones.blade.php`) subidos OK (HTTP 226).
+
+2. **"¿Se pueden intercambiar los botones 'Agregar Evaluado' y 'Crear Orden'?"**
+   - **Decisión:** No intercambiar. El flujo es: Agregar Evaluado (acción repetible, centro de la card) → Crear Orden (submit final, esquina inferior derecha). Invertir posiciones rompería la convención de formularios secuenciales (carrito → confirmar). Se le explicó al cliente.
 
 ---
 

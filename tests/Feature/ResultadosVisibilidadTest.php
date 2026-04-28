@@ -268,4 +268,46 @@ class ResultadosVisibilidadTest extends TestCase
         $response->assertSee('Juan Visible');
         $response->assertSee('Pedro EnProceso');
     }
+
+    /**
+     * (2026-04-27): el listado "Mis Reportes" debe mostrar el botón de descarga
+     * de PDF del informe del evaluado cuando la orden tenga resultados visibles
+     * para la empresa, y un indicador "En proceso" cuando aún no.
+     */
+    public function test_evaluaciones_report_shows_pdf_button_when_results_available(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $usuarioEmpresa = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+        ]);
+
+        $ordenDisponible = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'resultados_visibles_empresa' => true,
+            'estado' => 'entregado',
+        ]);
+        $evaluadoDisponible = EvaluadoOrden::factory()->create([
+            'orden_id' => $ordenDisponible->id,
+            'nombre' => 'EvaluadoConInforme',
+        ]);
+
+        $ordenEnProceso = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'resultados_visibles_empresa' => false,
+        ]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $ordenEnProceso->id,
+            'nombre' => 'EvaluadoSinInforme',
+        ]);
+
+        $response = $this->actingAs($usuarioEmpresa)
+            ->get(route('reportes.evaluaciones'));
+
+        $response->assertStatus(200);
+        // Botón PDF debe estar presente para el evaluado con resultados disponibles
+        $response->assertSee(route('empresa.cuestionarios.pdf', $evaluadoDisponible), false);
+        // Indicador "En proceso" para el otro evaluado
+        $response->assertSee('En proceso');
+    }
 }
