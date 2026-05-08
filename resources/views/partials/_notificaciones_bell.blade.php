@@ -70,7 +70,7 @@ function cargarNotificaciones() {
                 fetch('{{ url("notificaciones") }}/' + id + '/leer', {
                     method: 'PATCH',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json'
                     }
                 }).then(() => { window.location.href = url; });
@@ -86,7 +86,7 @@ document.getElementById('marcarTodasLeidas')?.addEventListener('click', function
     fetch('{{ route("notificaciones.leer-todas") }}', {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Accept': 'application/json'
         }
     }).then(() => cargarNotificaciones());

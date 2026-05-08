@@ -877,6 +877,26 @@ class OrdenesController extends Controller
             'resultado_subido_por' => Auth::id(),
         ]);
 
+        // Auto-liberar resultados al cliente según tipo de archivo subido
+        $orden = $evaluado->orden;
+        if ($tipo === 'final') {
+            // Subir informe final → estado entregado + visibilidad automática
+            $orden->forzarEstado('entregado', 'Informe final subido automáticamente');
+            $orden->update(['resultados_visibles_empresa' => true]);
+            $orden->refresh();
+            $this->notificarResultadosDisponibles($orden);
+
+            return back()->with('success', 'Archivo de resultado final subido. Los resultados han sido liberados automáticamente al cliente.');
+        }
+
+        // Subir preliminar → avanzar estado si aún está en etapas tempranas
+        if ($tipo === 'preliminar') {
+            $estadosTempranos = ['solicitud', 'validacion', 'registrado', 'programacion', 'en_proceso'];
+            if (in_array($orden->estado, $estadosTempranos)) {
+                $orden->forzarEstado('analisis', 'Resultado preliminar subido automáticamente');
+            }
+        }
+
         return back()->with('success', "Archivo de resultado {$tipo} subido correctamente.");
     }
 

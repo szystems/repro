@@ -67,6 +67,22 @@
             padding-bottom: 10px;
         }
 
+        /* Evitar scrollbars duplicados cuando una vista anida otro .content-wrapper-scroll */
+        .content-wrapper-scroll .content-wrapper-scroll {
+            flex: unset;
+            overflow: visible;
+            padding-bottom: 0;
+            height: auto;
+        }
+
+        /* Garantizar espacio al chevron del acordeón cuando el contenido interno usa w-100 */
+        .accordion-button > .d-flex.w-100 {
+            min-width: 0;
+        }
+        .accordion-button::after {
+            flex-shrink: 0;
+        }
+
         /* Customization for empresa theme */
         .navbar {
             background-color: var(--primary-color) !important;
@@ -156,7 +172,7 @@
 
     <!-- Overlay Scroll JS -->
     <script src="{{ asset('dashboardtemplate/design/assets/vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('dashboardtemplate/design/assets/vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
+    <script src="{{ asset('dashboardtemplate/design/assets/vendor/overlay-scroll/custom-scrollbar.js') }}?v=20260507"></script>
 
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>

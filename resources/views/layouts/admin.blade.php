@@ -76,6 +76,24 @@
             .content-wrapper {
                 padding-bottom: 50px;
             }
+
+            /* Evitar scrollbars duplicados cuando una vista anida otro .content-wrapper-scroll
+               dentro del que ya pone el layout. El externo conserva su scroll; el interno
+               se vuelve transparente. */
+            .content-wrapper-scroll .content-wrapper-scroll {
+                flex: unset;
+                overflow: visible;
+                padding-bottom: 0;
+                height: auto;
+            }
+
+            /* Garantizar espacio al chevron del acordeón cuando el contenido interno usa w-100 */
+            .accordion-button > .d-flex.w-100 {
+                min-width: 0;
+            }
+            .accordion-button::after {
+                flex-shrink: 0;
+            }
         </style>
 
 
@@ -128,7 +146,7 @@
         <!-- Vendor Js Files -->
         <!-- Overlay Scroll JS -->
         <script src="{{ asset('dashboardtemplate/design/assets/vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-        <script src="{{ asset('dashboardtemplate/design/assets/vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
+        <script src="{{ asset('dashboardtemplate/design/assets/vendor/overlay-scroll/custom-scrollbar.js') }}?v=20260507"></script>
 
         <!-- News ticker -->
         <script src="{{ asset('dashboardtemplate/design/assets/vendor/newsticker/newsTicker.min.js') }}"></script>

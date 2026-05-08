@@ -27,12 +27,16 @@ class EvaluadoAsignadoNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        $url = $notifiable->role_as === 1
+            ? route('empresa.ordenes.show', $this->evaluado->orden_id)
+            : route('ordenes.show', $this->evaluado->orden_id);
+
         return [
             'tipo' => 'evaluado_asignado',
             'icono' => 'bi-person-check',
             'color' => 'warning',
             'mensaje' => $this->evaluado->nombre_completo . ' ha sido asignado para evaluación',
-            'url' => route('ordenes.show', $this->evaluado->orden_id),
+            'url' => $url,
             'evaluado_id' => $this->evaluado->id,
         ];
     }

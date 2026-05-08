@@ -367,7 +367,7 @@
                                             aria-expanded="false"
                                             aria-controls="collapse-evaluado-{{ $evaluado->id }}"
                                             style="{{ $bgAlt }}">
-                                        <div class="d-flex align-items-center justify-content-between w-100 me-3">
+                                        <div class="d-flex align-items-center justify-content-between flex-grow-1 me-3 flex-wrap gap-2">
                                             <div>
                                                 <strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong>
                                                 <span class="text-muted ms-2">DPI: <code>{{ $evaluado->dpi }}</code></span>
@@ -833,7 +833,6 @@
                                                                     </option>
                                                                 @endforeach
                                                             </select>
-                                                        </div>
                                                         </div>
                                                         <div class="mb-3">
                                                             <label class="form-label fw-bold">Responsable del Proceso</label>

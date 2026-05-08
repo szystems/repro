@@ -413,4 +413,52 @@ class AuditoriaSeguridadTest extends TestCase
         $this->assertNotSame($plaintext, $raw);
         $this->assertStringStartsWith('eyJ', $raw);
     }
+
+    // ──────────────────────────────────────────────────────────
+    // CO10: Colaboradores (repro role_as=2) no pueden crear usuarios
+    // ──────────────────────────────────────────────────────────
+
+    public function test_co10_colaborador_no_puede_acceder_a_crear_usuario(): void
+    {
+        $repro = $this->crearRepro();
+
+        $response = $this->actingAs($repro)->get(route('users.create'));
+
+        $response->assertForbidden();
+    }
+
+    public function test_co10_colaborador_no_puede_enviar_form_crear_usuario(): void
+    {
+        $repro = $this->crearRepro();
+
+        $response = $this->actingAs($repro)->post(route('users.store'), [
+            'name' => 'Test',
+            'email' => 'test@test.com',
+            'role_as' => 1,
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
+        ]);
+
+        $response->assertForbidden();
+    }
+
+    public function test_co10_admin_puede_acceder_a_crear_usuario(): void
+    {
+        $admin = $this->crearAdmin();
+
+        $response = $this->actingAs($admin)->get(route('users.create'));
+
+        $response->assertOk();
+    }
+
+    public function test_co10_colaborador_no_puede_eliminar_usuario(): void
+    {
+        $repro = $this->crearRepro();
+        $otroUsuario = User::factory()->create(['role_as' => 1]);
+
+        $response = $this->actingAs($repro)->delete(route('users.destroy', $otroUsuario->id));
+
+        $response->assertForbidden();
+    }
 }
+

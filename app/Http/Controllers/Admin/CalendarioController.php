@@ -110,11 +110,13 @@ class CalendarioController extends Controller
         $sedes         = Sede::activas()->orderBy('nombre')->get();
         $poligrafistas = User::poligrafistas()->get();
 
-        // Evaluados pendientes de programar (para el modal desde calendario)
-        $evaluadosPendientes = EvaluadoOrden::pendientesProgramar()
+        // Evaluados disponibles para programar: excluye solo estados terminales (no filtra por fecha_programada,
+        // ya que un evaluado puede reprogramarse o aún no tener fecha asignada)
+        $evaluadosPendientes = EvaluadoOrden::query()
+            ->whereNotIn('estado_evaluacion', ['cancelado', 'completado', 'desistio', 'inasistencia'])
             ->with('orden.empresa')
             ->orderBy('created_at', 'desc')
-            ->limit(100)
+            ->limit(200)
             ->get();
 
         return view('admin.calendario.dia', compact(

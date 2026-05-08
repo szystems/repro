@@ -263,7 +263,7 @@
                                             </select>
                                         </div>
                                         <div class="col-md-6 mb-2">
-                                            <label class="form-label">Fecha Programada</label>
+                                            <label class="form-label">Fecha Tentativa <small class="text-muted">(sujeta a agenda REPRO)</small></label>
                                             <input type="date" class="form-control" name="evaluados[{{ $index }}][fecha_programada]" 
                                                    value="{{ old('evaluados.'.$index.'.fecha_programada', $evaluado->fecha_programada ? \Carbon\Carbon::parse($evaluado->fecha_programada)->format('Y-m-d') : '') }}">
                                         </div>
@@ -467,7 +467,7 @@
                 </select>
             </div>
             <div class="col-md-6 mb-2">
-                <label class="form-label">Fecha Programada</label>
+                <label class="form-label">Fecha Tentativa <small class="text-muted">(sujeta a agenda REPRO)</small></label>
                 <input type="date" class="form-control evaluado-fecha-programada" name="">
             </div>
         </div>

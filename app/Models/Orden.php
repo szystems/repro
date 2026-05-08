@@ -286,6 +286,23 @@ class Orden extends Model
     }
 
     /**
+     * Forzar cambio de estado saltando validación de transiciones.
+     * Usar solo para transiciones automáticas del sistema (ej: subir informe final).
+     */
+    public function forzarEstado(string $nuevoEstado, ?string $observaciones = null): bool
+    {
+        $estadoAnterior = $this->estado;
+        $this->estado = $nuevoEstado;
+        $resultado = $this->save();
+
+        if ($resultado && $estadoAnterior !== $nuevoEstado) {
+            $this->registrarCambioEstado('estado', $estadoAnterior, $nuevoEstado, $observaciones ?? 'Cambio automático del sistema');
+        }
+
+        return $resultado;
+    }
+
+    /**
      * Obtener todos los estados válidos con sus etiquetas humanas.
      *
      * @return array<string, string>

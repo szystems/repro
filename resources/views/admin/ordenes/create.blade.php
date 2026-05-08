@@ -174,7 +174,8 @@
 
                             <!-- Botones -->
                             <div class="d-flex justify-content-end mt-4">
-                                <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary me-2" id="btn-cancelar">
+                                <a href="{{ Auth::user()->role_as == 1 ? route('empresa.ordenes.index') : route('ordenes.index') }}"
+                                   class="btn btn-outline-secondary me-2" id="btn-cancelar">
                                     <i class="bi bi-x-circle"></i> Cancelar
                                 </a>
                                 <button type="submit" class="btn btn-primary" id="btn-crear-orden">
@@ -226,7 +227,7 @@ function agregarEvaluado(datos = {}) {
     // Solo mostrar fecha programada si NO es usuario empresa
     const fechaProgramadaHtml = esUsuarioEmpresa ? '' : `
                 <div class="col-md-3 mb-2">
-                    <label class="form-label">Fecha Programada</label>
+                    <label class="form-label">Fecha Tentativa <small class="text-muted">(sujeta a agenda REPRO)</small></label>
                     <input type="date" class="form-control" name="evaluados[${contadorEvaluados}][fecha_programada]" min="{{ date('Y-m-d') }}" value="${fechaProgramada}">
                 </div>`;
 

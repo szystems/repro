@@ -141,10 +141,13 @@
                             <h6>Documentos cargados:</h6>
                             <ul class="list-group list-group-flush">
                                 @foreach($evaluadoOrden->documentos as $doc)
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                    <li class="list-group-item d-flex justify-content-between align-items-start py-2">
                                         <span>
                                             <i class="fas fa-file"></i>
                                             {{ $doc->tipo_documento_texto }} — <small class="text-muted">{{ $doc->nombre_original }}</small>
+                                            @if($doc->notas_verificacion && $doc->estado_verificacion === 'rechazado')
+                                                <br><small class="text-danger"><i class="fas fa-exclamation-circle"></i> {{ $doc->notas_verificacion }}</small>
+                                            @endif
                                         </span>
                                         <span class="badge bg-{{ $doc->estado_verificacion_color }}">{{ $doc->estado_verificacion_texto }}</span>
                                     </li>

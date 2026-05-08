@@ -27,12 +27,16 @@ class OrdenCreadaNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        $url = $notifiable->role_as === 1
+            ? route('empresa.ordenes.show', $this->orden)
+            : route('ordenes.show', $this->orden);
+
         return [
             'tipo' => 'orden_creada',
             'icono' => 'bi-folder-plus',
             'color' => 'primary',
             'mensaje' => 'Nueva orden #' . $this->orden->codigo . ' creada',
-            'url' => route('ordenes.show', $this->orden),
+            'url' => $url,
             'orden_id' => $this->orden->id,
         ];
     }

@@ -618,4 +618,77 @@ class Fase2DocumentacionTest extends TestCase
             \Illuminate\Support\Facades\Schema::hasColumn('evaluados_orden', 'resultado_final_at')
         );
     }
+
+    // ══════════════════════════════════════════
+    // C5 — AUTO-LIBERAR RESULTADOS AL SUBIR
+    // ══════════════════════════════════════════
+
+    public function test_subir_resultado_final_auto_libera_para_cliente(): void
+    {
+        Mail::fake();
+        $this->orden->update(['estado' => 'en_proceso', 'resultados_visibles_empresa' => false]);
+        $archivo = UploadedFile::fake()->create('informe_final.pdf', 1000, 'application/pdf');
+
+        $this->actingAs($this->adminUser)->post(
+            route('evaluados.subir-resultado-archivo', $this->evaluado->id),
+            ['tipo_resultado' => 'final', 'archivo' => $archivo]
+        );
+
+        $this->orden->refresh();
+        $this->assertEquals('entregado', $this->orden->estado);
+        $this->assertTrue((bool) $this->orden->resultados_visibles_empresa);
+    }
+
+    public function test_subir_resultado_final_envia_notificacion_empresa(): void
+    {
+        Mail::fake();
+        $this->orden->update(['estado' => 'en_proceso', 'resultados_visibles_empresa' => false]);
+        // Crear usuario empresa para que reciba el mail
+        User::factory()->create([
+            'role_as' => 1,
+            'estado' => 1,
+            'empresa_id' => $this->empresa->id,
+            'email' => 'notif@empresa.com',
+        ]);
+        $archivo = UploadedFile::fake()->create('informe_final.pdf', 1000, 'application/pdf');
+
+        $this->actingAs($this->adminUser)->post(
+            route('evaluados.subir-resultado-archivo', $this->evaluado->id),
+            ['tipo_resultado' => 'final', 'archivo' => $archivo]
+        );
+
+        Mail::assertQueued(ResultadosDisponiblesMail::class);
+    }
+
+    public function test_subir_resultado_preliminar_avanza_estado_a_analisis(): void
+    {
+        $this->orden->update(['estado' => 'en_proceso', 'resultados_visibles_empresa' => false]);
+        $archivo = UploadedFile::fake()->create('informe_prelim.pdf', 1000, 'application/pdf');
+
+        $this->actingAs($this->adminUser)->post(
+            route('evaluados.subir-resultado-archivo', $this->evaluado->id),
+            ['tipo_resultado' => 'preliminar', 'archivo' => $archivo]
+        );
+
+        $this->orden->refresh();
+        $this->assertEquals('analisis', $this->orden->estado);
+        // No libera visibilidad automáticamente con preliminar
+        $this->assertFalse((bool) $this->orden->resultados_visibles_empresa);
+    }
+
+    public function test_subir_resultado_preliminar_no_modifica_estado_avanzado(): void
+    {
+        $this->orden->update(['estado' => 'entregado', 'resultados_visibles_empresa' => true]);
+        $archivo = UploadedFile::fake()->create('informe_prelim.pdf', 1000, 'application/pdf');
+
+        $this->actingAs($this->adminUser)->post(
+            route('evaluados.subir-resultado-archivo', $this->evaluado->id),
+            ['tipo_resultado' => 'preliminar', 'archivo' => $archivo]
+        );
+
+        $this->orden->refresh();
+        $this->assertEquals('entregado', $this->orden->estado);
+        $this->assertTrue((bool) $this->orden->resultados_visibles_empresa);
+    }
 }
+

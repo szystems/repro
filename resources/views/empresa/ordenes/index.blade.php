@@ -16,8 +16,11 @@
     </div>
     <div class="content-wrapper">
         <div class="card">
-            <div class="card-header">
-                <span class="card-title">Listado de Órdenes</span>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="card-title mb-0">Listado de Órdenes</span>
+                <a href="{{ route('ordenes.create') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Nueva Solicitud
+                </a>
             </div>
             <div class="card-body">
                 <div class="table-responsive">

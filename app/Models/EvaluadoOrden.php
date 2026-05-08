@@ -274,7 +274,7 @@ class EvaluadoOrden extends Model
     {
         return $query->programados()
             ->where('fecha_programada', '>=', $desde)
-            ->where('fecha_programada', '<', $hasta);
+            ->where('fecha_programada', '<=', $hasta);
     }
 
     /**

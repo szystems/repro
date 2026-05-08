@@ -116,12 +116,24 @@
                         <div class="col-md-4 text-end">
                             <div class="btn-group" role="group">
                                 @if($orden->estado === 'entregado' && $orden->resultados_visibles_empresa)
-                                    <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}" class="btn btn-outline-success btn-sm" title="Ver Cuestionario">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('empresa.cuestionarios.pdf', $evaluado) }}" class="btn btn-outline-primary btn-sm" title="Descargar PDF" target="_blank">
-                                        <i class="bi bi-file-earmark-pdf"></i>
-                                    </a>
+                                    @if($evaluado->archivo_resultado_final)
+                                        <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'final']) }}" class="btn btn-success btn-sm" title="Descargar Informe Final" target="_blank">
+                                            <i class="bi bi-file-earmark-arrow-down"></i> Informe Final
+                                        </a>
+                                    @endif
+                                    @if($evaluado->archivo_resultado_preliminar)
+                                        <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'preliminar']) }}" class="btn btn-outline-info btn-sm" title="Descargar Informe Preliminar" target="_blank">
+                                            <i class="bi bi-file-earmark-arrow-down"></i> Preliminar
+                                        </a>
+                                    @endif
+                                    @if($evaluado->cuestionario_completado)
+                                        <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}" class="btn btn-outline-success btn-sm" title="Ver Cuestionario">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ route('empresa.cuestionarios.pdf', $evaluado) }}" class="btn btn-outline-primary btn-sm" title="Descargar PDF Cuestionario" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
+                                    @endif
                                 @endif
                                 @if(!$evaluado->cuestionario_completado)
                                     <a href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}"

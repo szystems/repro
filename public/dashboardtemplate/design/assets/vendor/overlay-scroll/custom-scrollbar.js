@@ -13,7 +13,9 @@ $(function () {
 });
 
 $(function () {
-	$(".content-wrapper-scroll").overlayScrollbars({
+	// Solo inicializar en el contenedor más externo para evitar scrollbars duplicados
+	// cuando una vista anida otro <div class="content-wrapper-scroll"> dentro del que ya pone el layout.
+	$(".content-wrapper-scroll").not($(".content-wrapper-scroll .content-wrapper-scroll")).overlayScrollbars({
 		scrollbars: {
 			visibility: "auto",
 			autoHide: "scroll",

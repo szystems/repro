@@ -46,7 +46,15 @@ class CuestionariosController extends Controller
             $query->where('tipo_formulario', $request->tipo_formulario);
         }
 
-        if ($request->filled('completado')) {
+        // Filtro por estado (usa campo 'estado' del request mapeado a lógica de completado/progreso)
+        if ($request->filled('estado')) {
+            match ($request->estado) {
+                'completado'  => $query->where('completado', true),
+                'en_progreso' => $query->where('completado', false)->where('seccion_actual', '>', 1),
+                'pendiente'   => $query->where('completado', false)->where('seccion_actual', '<=', 1),
+                default       => null,
+            };
+        } elseif ($request->filled('completado')) {
             $query->where('completado', $request->boolean('completado'));
         }
 
