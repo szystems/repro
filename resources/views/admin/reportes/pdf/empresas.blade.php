@@ -134,13 +134,36 @@
             display: table-cell;
             text-align: right;
         }
+        .repro-header { background-color: #000555; color: white; padding: 15px 20px; margin-bottom: 20px; }
+        .repro-header-content { display: table; width: 100%; }
+        .repro-logo-cell { display: table-cell; width: 160px; vertical-align: middle; }
+        .repro-logo-container { background-color: white; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+        .repro-logo { max-height: 40px; max-width: 150px; display: block; }
+        .repro-title-cell { display: table-cell; vertical-align: middle; padding-left: 15px; }
+        .repro-title-cell h1 { font-size: 16px; margin-bottom: 4px; }
+        .repro-title-cell h2 { font-size: 10px; font-weight: normal; opacity: 0.85; }
+        .repro-info-cell { display: table-cell; vertical-align: middle; text-align: right; font-size: 9px; opacity: 0.9; width: 100px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>REPORTE DE EMPRESAS</h1>
-        <p>REPRO Guatemala - Sistema de Evaluaciones</p>
-        <p>Generado: {{ now()->format('d/m/Y H:i') }}</p>
+    {{-- Cabecera estilo REPRO --}}
+    <div class="repro-header">
+        <div class="repro-header-content">
+            <div class="repro-logo-cell">
+                <div class="repro-logo-container">
+                    <img src="{{ public_path('img/logos/logoreproxelahorizontal.png') }}" alt="REPRO" class="repro-logo">
+                </div>
+            </div>
+            <div class="repro-title-cell">
+                <h1>Reporte de Empresas</h1>
+                <h2>Sistema de Evaluaciones REPRO Guatemala</h2>
+            </div>
+            <div class="repro-info-cell">
+                <strong>Generado:</strong><br>
+                {{ now()->format('d/m/Y') }}<br>
+                {{ now()->format('H:i') }}
+            </div>
+        </div>
     </div>
 
     <div class="filters">
