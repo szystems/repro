@@ -48,8 +48,8 @@
 
 | Estado | Ref | Descripción |
 |--------|-----|-------------|
-| ✗ | A6 | Ampliar el flujo de estados del proceso a 8 etapas con colores y transiciones automáticas |
-| ✗ | CO3 | Bloquear el informe final una vez entregado; requiere justificación para modificar |
+| ✓ | A6 | Ampliar el flujo de estados del proceso a 8 etapas con colores y transiciones automáticas |
+| ✓ | CO3 | Bloquear el informe final una vez entregado; requiere justificación para modificar |
 
 ---
 
@@ -57,10 +57,10 @@
 
 | Estado | Ref | Descripción |
 |--------|-----|-------------|
-| ✗ | A5 | Panel por sede: procesos actuales, realizados, pendientes, búsqueda por nombre/DPI |
-| ✗ | A7 | Reporte administrativo filtrable por sede con ranking de empresas |
-| ✗ | C4 | Botón de WhatsApp con lista de sedes activas para contacto del cliente |
-| ✗ | CO9-hist | Historial de candidatos en el calendario |
+| ✓ | A5 | Panel por sede: procesos actuales, realizados, pendientes, búsqueda por nombre/DPI |
+| ✓ | A7 | Reporte administrativo filtrable por sede con ranking de empresas |
+| ✓ | C4 | Botón de WhatsApp con lista de sedes activas para contacto del cliente |
+| ✓ | CO9-hist | Historial de candidatos en el calendario |
 
 ---
 
@@ -133,8 +133,8 @@ Ajustes de presentación que afectan a todas las pantallas. No cambian funcional
 
 | Estado | Ref | Descripción |
 |--------|-----|-------------|
-| ✗ | A6 | Ampliar el flujo de estados del proceso a 8 etapas con colores y transiciones automáticas |
-| ✗ | CO3 | Bloquear el informe final una vez entregado; requiere justificación para modificar |
+| ✓ | A6 | Ampliar el flujo de estados del proceso a 8 etapas con colores y transiciones automáticas |
+| ✓ | CO3 | Bloquear el informe final una vez entregado; requiere justificación para modificar |
 
 ---
 
@@ -142,10 +142,10 @@ Ajustes de presentación que afectan a todas las pantallas. No cambian funcional
 
 | Estado | Ref | Descripción |
 |--------|-----|-------------|
-| ✗ | A5 | Panel por sede: procesos actuales, realizados, pendientes, búsqueda por nombre/DPI |
-| ✗ | A7 | Reporte administrativo filtrable por sede con ranking de empresas |
-| ✗ | C4 | Botón de WhatsApp con lista de sedes activas para contacto del cliente |
-| ✗ | CO9-hist | Historial de candidatos en el calendario |
+| ✓ | A5 | Panel por sede: procesos actuales, realizados, pendientes, búsqueda por nombre/DPI |
+| ✓ | A7 | Reporte administrativo filtrable por sede con ranking de empresas |
+| ✓ | C4 | Botón de WhatsApp con lista de sedes activas para contacto del cliente |
+| ✓ | CO9-hist | Historial de candidatos en el calendario |
 
 ---
 
@@ -180,5 +180,5 @@ Ajustes de presentación que afectan a todas las pantallas. No cambian funcional
 
 ---
 
-*7 de mayo de 2026 — Fase 1 completada (8/8) · Fase 2 iniciada (1/10) · 24 pendientes*
+*7 de mayo de 2026 — Fase 1 completada (8/8) · Fase 2 completada (10/10) · Fase 3 completada (5/5) · Fase 4 completada (2/2) · Fase 5 completada (4/4) · 463 tests · 9 pendientes (Fases 6-8)*
 

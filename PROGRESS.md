@@ -3,7 +3,7 @@
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
 **Ultima actualizacion:** 2026-05-07
-**Suite de tests:** 449/449
+**Suite de tests:** 463/463
 
 ---
 
@@ -108,23 +108,52 @@ UI Layout (mitigacion temporal, solucion completa en Fase 8):
 
 ---
 
-## Fase 4 - Estados y bloqueos - PENDIENTE
+## Fase 4 - Estados y bloqueos - COMPLETADA 2026-05-07
 
-| Ref | Descripcion |
-|-----|-------------|
-| A6 | Ampliar flujo de estados del proceso a 8 etapas con colores y transiciones automaticas |
-| CO3 | Bloquear informe final una vez entregado; requiere justificacion para modificar |
+457 tests al cierre.
+
+| Ref | Descripcion | Tests |
+|-----|-------------|-------|
+| A6 | Ampliar flujo de estados a 8 etapas con colores y transiciones automaticas | Fase4EstadosOrdenTest (6) |
+| CO3 | Bloquear informe final entregado; justificacion para modificar | Fase4BloqueoInformeTest (2) |
+
+### Archivos clave Fase 4
+
+- app/Http/Controllers/Admin/OrdenesController.php: usuarioPuedeEditarOrden(), transiciones de estado
+- resources/views/admin/ordenes/show.blade.php: botones de avance de estado con colores, bloqueo editar
+- resources/views/admin/ordenes/index.blade.php: badges de color por estado
+- Estados: solicitud, autorizacion, requisito, programacion, en_proceso, preliminar, final, entregado, cancelado
+
+### Bugs corregidos post-verificacion Fase 4
+
+- 403 en edicion de orden para empresa: estados viejos `pendiente/programada` cambiados a `solicitud/autorizacion`
+- Boton Editar oculto para admin/repro en estados `entregado` y `cancelado` (show + index)
+- Boton ⚙ Configuracion del nav: `url('configs')` → `url('config')` en incadmin y incempresa
 
 ---
 
-## Fase 5 - Reportes y sedes - PENDIENTE
+## Fase 5 - Reportes y sedes - COMPLETADA 2026-05-07
 
-| Ref | Descripcion |
-|-----|-------------|
-| A5 | Panel por sede: procesos actuales, realizados, pendientes, busqueda por nombre/DPI |
-| A7 | Reporte administrativo filtrable por sede con ranking de empresas |
-| C4 | Boton de WhatsApp con lista de sedes activas para contacto del cliente |
-| CO9-hist | Historial de candidatos en el calendario |
+463 tests al cierre.
+
+| Ref | Descripcion | Tests |
+|-----|-------------|-------|
+| A5 | Panel por sede: stats + busqueda por nombre/DPI + candidatos paginados | Fase5PanelSedeReportesTest (3) |
+| A7 | Reporte empresas filtrable por sede con ranking top 5 | Fase5PanelSedeReportesTest (3) |
+| C4 | Botones WhatsApp por sede activa en dashboard empresa | Fase5PanelSedeReportesTest (3) |
+| CO9-hist | Historial candidatos completados/inasistencia en calendario | Fase5PanelSedeReportesTest (3) |
+
+### Archivos clave Fase 5
+
+- app/Http/Controllers/Admin/SedesController.php: show() con stats y busqueda
+- app/Http/Controllers/Admin/ReportesController.php: empresas() con filtro sede y ranking
+- app/Http/Controllers/Admin/CalendarioController.php: index() con $historial
+- app/Http/Controllers/Admin/AdminController.php: getEmpresaStats() con $sedesContacto
+- resources/views/admin/sedes/show.blade.php: 4 cards + tabla candidatos paginada
+- resources/views/admin/reportes/empresas.blade.php: dropdown sede + tabla ranking
+- resources/views/admin/calendario/index.blade.php: seccion historial
+- resources/views/admin/index.blade.php: botones WhatsApp por sede
+- resources/views/admin/reportes/pdf/empresas.blade.php: header con logo REPRO
 
 ---
 
@@ -171,6 +200,8 @@ Plan L1-L7:
 | 2026-05-07 | 428 | Sprint-1 Fase 1 N1 CO10 A9 C3 CA1 CO9 C5 |
 | 2026-05-07 | 433 | C2 + fixes notificaciones + infra 20M |
 | 2026-05-07 | 449 | Fase 2 completa + Fase 3 completa |
+| 2026-05-07 | 457 | Fase 4 completa (A6 + CO3) |
+| 2026-05-07 | 463 | Fase 5 completa (A5, A7, C4, CO9-hist) + bugs post-verificacion |
 
 
 ---
@@ -180,10 +211,10 @@ Plan L1-L7:
 | Fase | Descripcion | Estado |
 |------|-------------|--------|
 | Fase 1 | Correcciones urgentes (8 items) | COMPLETADA |
-| Fase 2 | Mejoras rapidas (10 items) | PENDIENTE |
-| Fase 3 | Funcionalidades nuevas | PENDIENTE |
-| Fase 4 | Estados y bloqueos | PENDIENTE |
-| Fase 5 | Reportes y sedes | PENDIENTE |
+| Fase 2 | Mejoras rapidas (10 items) | COMPLETADA |
+| Fase 3 | Funcionalidades nuevas | COMPLETADA |
+| Fase 4 | Estados y bloqueos | COMPLETADA |
+| Fase 5 | Reportes y sedes | COMPLETADA |
 | Fase 6 | Configuracion + Finanzas | PENDIENTE |
 | Fase 7 | Editor de informes | PENDIENTE |
 | Fase 8 | Mejoras visuales (layout/scroll) | PENDIENTE |
