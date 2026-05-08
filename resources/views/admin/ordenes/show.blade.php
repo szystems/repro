@@ -253,14 +253,12 @@
                                 <select class="form-select" name="nuevo_estado" required>
                                     <option value="">Seleccionar nuevo estado...</option>
                                     <option value="solicitud" {{ $orden->estado == 'solicitud' ? 'disabled' : '' }}>Solicitud</option>
-                                    <option value="validacion" {{ $orden->estado == 'validacion' ? 'disabled' : '' }}>Validación</option>
-                                    <option value="registrado" {{ $orden->estado == 'registrado' ? 'disabled' : '' }}>Registrado</option>
+                                    <option value="autorizacion" {{ $orden->estado == 'autorizacion' ? 'disabled' : '' }}>Autorización</option>
+                                    <option value="requisito" {{ $orden->estado == 'requisito' ? 'disabled' : '' }}>Requisito</option>
                                     <option value="programacion" {{ $orden->estado == 'programacion' ? 'disabled' : '' }}>Programación</option>
-                                    <option value="en_proceso" {{ $orden->estado == 'en_proceso' ? 'disabled' : '' }}>En Proceso</option>
-                                    <option value="operaciones" {{ $orden->estado == 'operaciones' ? 'disabled' : '' }}>En Operaciones</option>
-                                    <option value="analisis" {{ $orden->estado == 'analisis' ? 'disabled' : '' }}>En Análisis</option>
-                                    <option value="preliminar" {{ $orden->estado == 'preliminar' ? 'disabled' : '' }}>Resultado Preliminar</option>
-                                    <option value="final" {{ $orden->estado == 'final' ? 'disabled' : '' }}>Resultado Final</option>
+                                    <option value="en_proceso" {{ $orden->estado == 'en_proceso' ? 'disabled' : '' }}>Realización de la Prueba</option>
+                                    <option value="preliminar" {{ $orden->estado == 'preliminar' ? 'disabled' : '' }}>Informe Preliminar</option>
+                                    <option value="final" {{ $orden->estado == 'final' ? 'disabled' : '' }}>Informe Final</option>
                                     <option value="entregado" {{ $orden->estado == 'entregado' ? 'disabled' : '' }}>Entregado</option>
                                     <option value="cancelado" {{ $orden->estado == 'cancelado' ? 'disabled' : '' }}>Cancelado</option>
                                 </select>

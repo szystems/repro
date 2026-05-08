@@ -222,12 +222,15 @@
                 <div class="card-body">
                     @php
                         $estadosLabels = [
-                            'solicitud' => ['label' => 'Solicitud', 'color' => 'secondary'],
-                            'programacion' => ['label' => 'Programación', 'color' => 'info'],
-                            'en_proceso' => ['label' => 'En Proceso', 'color' => 'warning'],
-                            'analisis' => ['label' => 'Análisis', 'color' => 'orange'],
-                            'entregado' => ['label' => 'Entregado', 'color' => 'success'],
-                            'cancelado' => ['label' => 'Cancelado', 'color' => 'danger'],
+                            'solicitud'    => ['label' => 'Solicitud',                 'color' => 'secondary'],
+                            'autorizacion' => ['label' => 'Autorización',              'color' => 'info'],
+                            'requisito'    => ['label' => 'Requisito',                 'color' => 'warning'],
+                            'programacion' => ['label' => 'Programación',              'color' => 'primary'],
+                            'en_proceso'   => ['label' => 'Realización de la Prueba', 'color' => 'orange'],
+                            'preliminar'   => ['label' => 'Informe Preliminar',        'color' => 'purple'],
+                            'final'        => ['label' => 'Informe Final',             'color' => 'orange'],
+                            'entregado'    => ['label' => 'Entregado',                 'color' => 'success'],
+                            'cancelado'    => ['label' => 'Cancelado',                 'color' => 'danger'],
                         ];
                     @endphp
 
@@ -615,12 +618,15 @@
                             <tbody>
                                 @php
                                     $estadosLabels = [
-                                        'solicitud' => ['label' => 'Solicitud', 'color' => 'secondary'],
-                                        'programacion' => ['label' => 'Programación', 'color' => 'info'],
-                                        'en_proceso' => ['label' => 'En Proceso', 'color' => 'warning'],
-                                        'analisis' => ['label' => 'Análisis', 'color' => 'orange'],
-                                        'entregado' => ['label' => 'Entregado', 'color' => 'success'],
-                                        'cancelado' => ['label' => 'Cancelado', 'color' => 'danger'],
+                                        'solicitud'    => ['label' => 'Solicitud',                 'color' => 'secondary'],
+                                        'autorizacion' => ['label' => 'Autorización',              'color' => 'info'],
+                                        'requisito'    => ['label' => 'Requisito',                 'color' => 'warning'],
+                                        'programacion' => ['label' => 'Programación',              'color' => 'primary'],
+                                        'en_proceso'   => ['label' => 'Realización de la Prueba', 'color' => 'orange'],
+                                        'preliminar'   => ['label' => 'Informe Preliminar',        'color' => 'purple'],
+                                        'final'        => ['label' => 'Informe Final',             'color' => 'orange'],
+                                        'entregado'    => ['label' => 'Entregado',                 'color' => 'success'],
+                                        'cancelado'    => ['label' => 'Cancelado',                 'color' => 'danger'],
                                     ];
                                 @endphp
                                 @forelse($ultimasOrdenes ?? [] as $orden)

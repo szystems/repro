@@ -92,13 +92,13 @@ class EmpresaController extends Controller
             return back()->with('error', 'No tiene una empresa asociada');
         }
 
-        // Estados agrupados según flujo:
-        // Pendientes: solicitud, validacion, registrado, programacion
-        // En proceso: en_proceso, operaciones, analisis, preliminar, final
+        // Estados agrupados según flujo de 8 etapas:
+        // Pendientes: solicitud, autorizacion, requisito, programacion
+        // En proceso: en_proceso, preliminar, final
         // Completadas: entregado
 
-        $estadosPendientes = ['solicitud', 'validacion', 'registrado', 'programacion'];
-        $estadosProceso = ['en_proceso', 'operaciones', 'analisis', 'preliminar', 'final'];
+        $estadosPendientes = ['solicitud', 'autorizacion', 'requisito', 'programacion'];
+        $estadosProceso = ['en_proceso', 'preliminar', 'final'];
 
 
         // Estadísticas de la empresa

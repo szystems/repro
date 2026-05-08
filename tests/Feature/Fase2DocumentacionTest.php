@@ -660,7 +660,7 @@ class Fase2DocumentacionTest extends TestCase
         Mail::assertQueued(ResultadosDisponiblesMail::class);
     }
 
-    public function test_subir_resultado_preliminar_avanza_estado_a_analisis(): void
+    public function test_subir_resultado_preliminar_avanza_estado_a_preliminar(): void
     {
         $this->orden->update(['estado' => 'en_proceso', 'resultados_visibles_empresa' => false]);
         $archivo = UploadedFile::fake()->create('informe_prelim.pdf', 1000, 'application/pdf');
@@ -671,7 +671,7 @@ class Fase2DocumentacionTest extends TestCase
         );
 
         $this->orden->refresh();
-        $this->assertEquals('analisis', $this->orden->estado);
+        $this->assertEquals('preliminar', $this->orden->estado);
         // No libera visibilidad automáticamente con preliminar
         $this->assertFalse((bool) $this->orden->resultados_visibles_empresa);
     }
@@ -689,6 +689,37 @@ class Fase2DocumentacionTest extends TestCase
         $this->orden->refresh();
         $this->assertEquals('entregado', $this->orden->estado);
         $this->assertTrue((bool) $this->orden->resultados_visibles_empresa);
+    }
+
+    /** @group co3 */
+    public function test_co3_no_se_puede_subir_informe_final_si_orden_entregada(): void
+    {
+        $this->orden->update(['estado' => 'entregado']);
+        $archivo = UploadedFile::fake()->create('informe_final.pdf', 1000, 'application/pdf');
+
+        $response = $this->actingAs($this->adminUser)->post(
+            route('evaluados.subir-resultado-archivo', $this->evaluado->id),
+            ['tipo_resultado' => 'final', 'archivo' => $archivo]
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+    }
+
+    /** @group co3 */
+    public function test_co3_no_se_puede_eliminar_informe_final_si_orden_entregada(): void
+    {
+        $this->orden->update(['estado' => 'entregado']);
+        $this->evaluado->update(['archivo_resultado_final' => 'resultados/1/informe.pdf']);
+
+        $response = $this->actingAs($this->adminUser)->delete(
+            route('evaluados.eliminar-resultado-archivo', [$this->evaluado->id, 'final'])
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+        // El archivo no fue eliminado del registro
+        $this->assertNotNull($this->evaluado->fresh()->archivo_resultado_final);
     }
 }
 

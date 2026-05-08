@@ -451,7 +451,7 @@ class OrdenesController extends Controller
             abort(403, 'No tiene permisos para eliminar órdenes.');
         }
 
-        if (in_array($orden->estado, ['en_proceso', 'analisis', 'entregado'])) {
+        if (in_array($orden->estado, ['en_proceso', 'preliminar', 'final', 'entregado'])) {
             return back()->with('error', 'No se puede eliminar una orden que está en proceso o completada.');
         }
 
@@ -474,7 +474,7 @@ class OrdenesController extends Controller
     public function cambiarEstado(Request $request, Orden $orden)
     {
         $request->validate([
-            'nuevo_estado' => 'required|in:solicitud,validacion,registrado,programacion,en_proceso,operaciones,analisis,preliminar,final,entregado,cancelado',
+            'nuevo_estado' => 'required|in:solicitud,autorizacion,requisito,programacion,en_proceso,preliminar,final,entregado,cancelado',
             'observaciones' => 'nullable|string|max:500'
         ]);
 
@@ -901,6 +901,12 @@ class OrdenesController extends Controller
         ]);
 
         $tipo = $request->tipo_resultado;
+
+        // CO3: bloquear subida de informe final si la orden ya fue entregada
+        if ($tipo === 'final' && $evaluado->orden->estado === 'entregado') {
+            return back()->with('error', 'No se puede reemplazar el informe final de una orden ya entregada.');
+        }
+
         $campo = $tipo === 'preliminar' ? 'archivo_resultado_preliminar' : 'archivo_resultado_final';
         $campoFecha = $tipo === 'preliminar' ? 'resultado_preliminar_at' : 'resultado_final_at';
 
@@ -934,9 +940,9 @@ class OrdenesController extends Controller
 
         // Subir preliminar → avanzar estado si aún está en etapas tempranas
         if ($tipo === 'preliminar') {
-            $estadosTempranos = ['solicitud', 'validacion', 'registrado', 'programacion', 'en_proceso'];
+            $estadosTempranos = ['solicitud', 'autorizacion', 'requisito', 'programacion', 'en_proceso'];
             if (in_array($orden->estado, $estadosTempranos)) {
-                $orden->forzarEstado('analisis', 'Resultado preliminar subido automáticamente');
+                $orden->forzarEstado('preliminar', 'Resultado preliminar subido automáticamente');
             }
         }
 
@@ -985,6 +991,11 @@ class OrdenesController extends Controller
 
         if (!in_array($tipo, ['preliminar', 'final'])) {
             abort(404);
+        }
+
+        // CO3: no se puede eliminar el informe final de una orden ya entregada
+        if ($tipo === 'final' && $evaluado->orden->estado === 'entregado') {
+            return back()->with('error', 'No se puede eliminar el informe final de una orden ya entregada.');
         }
 
         $campo = $tipo === 'preliminar' ? 'archivo_resultado_preliminar' : 'archivo_resultado_final';

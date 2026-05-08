@@ -172,18 +172,16 @@ class Orden extends Model
     public function getEstadoHumanAttribute(): string
     {
         return match ($this->estado) {
-            'solicitud' => 'Solicitud',
-            'validacion' => 'Validación',
-            'registrado' => 'Registrado',
+            'solicitud'   => 'Solicitud',
+            'autorizacion' => 'Autorización',
+            'requisito'   => 'Requisito',
             'programacion' => 'Programación',
-            'en_proceso' => 'En Proceso',
-            'operaciones' => 'En Operaciones',
-            'analisis' => 'En Análisis',
-            'preliminar' => 'Resultado Preliminar',
-            'final' => 'Resultado Final',
-            'entregado' => 'Entregado',
-            'cancelado' => 'Cancelado',
-            default => $this->estado,
+            'en_proceso'  => 'Realización de la Prueba',
+            'preliminar'  => 'Informe Preliminar',
+            'final'       => 'Informe Final',
+            'entregado'   => 'Entregado',
+            'cancelado'   => 'Cancelado',
+            default => ucfirst($this->estado),
         };
     }
 
@@ -193,17 +191,15 @@ class Orden extends Model
     public function getEstadoColorAttribute(): string
     {
         return match ($this->estado) {
-            'solicitud' => 'secondary',
-            'validacion' => 'info',
-            'registrado' => 'info',
+            'solicitud'   => 'secondary',
+            'autorizacion' => 'info',
+            'requisito'   => 'warning',
             'programacion' => 'primary',
-            'en_proceso' => 'warning',
-            'operaciones' => 'warning',
-            'analisis' => 'orange',
-            'preliminar' => 'orange',
-            'final' => 'orange',
-            'entregado' => 'success',
-            'cancelado' => 'danger',
+            'en_proceso'  => 'orange',
+            'preliminar'  => 'purple',
+            'final'       => 'orange',
+            'entregado'   => 'success',
+            'cancelado'   => 'danger',
             default => 'secondary',
         };
     }
@@ -241,20 +237,18 @@ class Orden extends Model
             return false;
         }
 
-        // Transiciones recomendadas (flujo normal)
-        // Admin puede saltar pasos, pero no ir hacia atrás de entregado
-        // y cancelado solo puede ir a solicitud (reactivar)
+        // Transiciones del flujo de 8 etapas.
+        // Admin puede saltar pasos, pero no retroceder desde entregado.
+        // cancelado solo puede reactivarse a solicitud.
         $transicionesLogicas = [
-            'solicitud'    => ['validacion', 'registrado', 'programacion', 'cancelado'],
-            'validacion'   => ['registrado', 'programacion', 'cancelado'],
-            'registrado'   => ['programacion', 'cancelado'],
+            'solicitud'   => ['autorizacion', 'requisito', 'programacion', 'cancelado'],
+            'autorizacion' => ['requisito', 'programacion', 'cancelado'],
+            'requisito'   => ['programacion', 'cancelado'],
             'programacion' => ['en_proceso', 'cancelado'],
-            'en_proceso'   => ['operaciones', 'analisis', 'completado', 'cancelado'],
-            'operaciones'  => ['analisis', 'cancelado'],
-            'analisis'     => ['preliminar', 'final', 'entregado', 'cancelado'],
-            'preliminar'   => ['final', 'entregado', 'cancelado'],
-            'final'        => ['entregado', 'cancelado'],
-            'cancelado'    => ['solicitud'], // reactivar
+            'en_proceso'  => ['preliminar', 'final', 'entregado', 'cancelado'],
+            'preliminar'  => ['final', 'entregado', 'cancelado'],
+            'final'       => ['entregado', 'cancelado'],
+            'cancelado'   => ['solicitud'], // reactivar
         ];
         
         // Flexible: si hay transiciones definidas, verificar; si no, permitir
@@ -310,17 +304,15 @@ class Orden extends Model
     public static function estadosDisponibles(): array
     {
         return [
-            'solicitud' => 'Solicitud',
-            'validacion' => 'Validación',
-            'registrado' => 'Registrado',
+            'solicitud'   => 'Solicitud',
+            'autorizacion' => 'Autorización',
+            'requisito'   => 'Requisito',
             'programacion' => 'Programación',
-            'en_proceso' => 'En Proceso',
-            'operaciones' => 'En Operaciones',
-            'analisis' => 'En Análisis',
-            'preliminar' => 'Resultado Preliminar',
-            'final' => 'Resultado Final',
-            'entregado' => 'Entregado',
-            'cancelado' => 'Cancelado',
+            'en_proceso'  => 'Realización de la Prueba',
+            'preliminar'  => 'Informe Preliminar',
+            'final'       => 'Informe Final',
+            'entregado'   => 'Entregado',
+            'cancelado'   => 'Cancelado',
         ];
     }
 

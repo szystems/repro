@@ -330,16 +330,16 @@ class Fase5FlujosYCierreTest extends TestCase
     // TRANSICIONES DE ESTADO DE ORDEN
     // ======================================================================
 
-    public function test_transicion_orden_solicitud_a_validacion(): void
+    public function test_transicion_orden_solicitud_a_autorizacion(): void
     {
-        $this->assertNotNull($this->orden->puedeTransicionarA('validacion'));
-        $this->assertTrue($this->orden->cambiarEstado('validacion'));
-        $this->assertEquals('validacion', $this->orden->fresh()->estado);
+        $this->assertNotNull($this->orden->puedeTransicionarA('autorizacion'));
+        $this->assertTrue($this->orden->cambiarEstado('autorizacion'));
+        $this->assertEquals('autorizacion', $this->orden->fresh()->estado);
     }
 
     public function test_transicion_orden_flujo_completo(): void
     {
-        $flujo = ['validacion', 'registrado', 'programacion', 'en_proceso', 'operaciones', 'analisis', 'preliminar', 'final', 'entregado'];
+        $flujo = ['autorizacion', 'requisito', 'programacion', 'en_proceso', 'preliminar', 'final', 'entregado'];
 
         foreach ($flujo as $estado) {
             $this->assertTrue($this->orden->puedeTransicionarA($estado), "Orden no puede transicionar a {$estado} desde {$this->orden->estado}");
@@ -351,7 +351,7 @@ class Fase5FlujosYCierreTest extends TestCase
 
     public function test_transicion_orden_cancelar_desde_cualquier_estado(): void
     {
-        $estadosIntermedios = ['solicitud', 'validacion', 'registrado', 'programacion', 'en_proceso'];
+        $estadosIntermedios = ['solicitud', 'autorizacion', 'requisito', 'programacion', 'en_proceso'];
 
         foreach ($estadosIntermedios as $estado) {
             $orden = Orden::factory()->create([
@@ -385,17 +385,15 @@ class Fase5FlujosYCierreTest extends TestCase
         $estados = Orden::estadosDisponibles();
 
         $this->assertArrayHasKey('solicitud', $estados);
-        $this->assertArrayHasKey('validacion', $estados);
-        $this->assertArrayHasKey('registrado', $estados);
+        $this->assertArrayHasKey('autorizacion', $estados);
+        $this->assertArrayHasKey('requisito', $estados);
         $this->assertArrayHasKey('programacion', $estados);
         $this->assertArrayHasKey('en_proceso', $estados);
-        $this->assertArrayHasKey('operaciones', $estados);
-        $this->assertArrayHasKey('analisis', $estados);
         $this->assertArrayHasKey('preliminar', $estados);
         $this->assertArrayHasKey('final', $estados);
         $this->assertArrayHasKey('entregado', $estados);
         $this->assertArrayHasKey('cancelado', $estados);
-        $this->assertCount(11, $estados);
+        $this->assertCount(9, $estados);
     }
 
     // ======================================================================
@@ -468,14 +466,14 @@ class Fase5FlujosYCierreTest extends TestCase
 
     public function test_accessor_orden_estado_human(): void
     {
-        $this->orden->update(['estado' => 'operaciones']);
-        $this->assertEquals('En Operaciones', $this->orden->fresh()->estado_human);
+        $this->orden->update(['estado' => 'en_proceso']);
+        $this->assertEquals('Realización de la Prueba', $this->orden->fresh()->estado_human);
     }
 
     public function test_accessor_orden_estado_color(): void
     {
         $this->orden->update(['estado' => 'preliminar']);
-        $this->assertEquals('orange', $this->orden->fresh()->estado_color);
+        $this->assertEquals('purple', $this->orden->fresh()->estado_color);
     }
 
     // ======================================================================
@@ -609,16 +607,16 @@ class Fase5FlujosYCierreTest extends TestCase
     // ENDPOINT: CAMBIAR ESTADO ORDEN (HTTP)
     // ======================================================================
 
-    public function test_admin_puede_cambiar_estado_orden_a_validacion(): void
+    public function test_admin_puede_cambiar_estado_orden_a_autorizacion(): void
     {
         $response = $this->actingAs($this->admin)
             ->patch(route('ordenes.cambiar-estado', $this->orden->id), [
-                'nuevo_estado' => 'validacion',
+                'nuevo_estado' => 'autorizacion',
             ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-        $this->assertEquals('validacion', $this->orden->fresh()->estado);
+        $this->assertEquals('autorizacion', $this->orden->fresh()->estado);
     }
 
     public function test_cambiar_estado_orden_invalido_retorna_error(): void

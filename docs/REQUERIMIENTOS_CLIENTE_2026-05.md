@@ -98,15 +98,6 @@ Ajustes de presentación que afectan a todas las pantallas. No cambian funcional
 *7 de mayo de 2026 — Fase 1 completada (6/6) · Fase 2 completada (10/10) · Fase 3 completada (5/5) · 449 tests · 13 pendientes*
 
 
-| Estado | Ref | Descripción |
-|--------|-----|-------------|
-| ✓ | C5 | Al subir el informe final, el cliente lo ve de inmediato sin intervención manual |
-| ✓ | CO10 | Solo administradores pueden crear, editar o eliminar usuarios |
-| ✓ | CA1 | El candidato ve el motivo cuando REPRO rechaza uno de sus documentos |
-| ✓ | CO9 | El calendario muestra correctamente los candidatos disponibles para agendar |
-| ✓ | A9 | El filtro de estado en cuestionarios (Pendiente / En Progreso / Completado) aplica correctamente |
-| ✓ | N1 | "Fecha Programada" renombrada a "Fecha Tentativa (sujeta a agenda REPRO)" |
-
 ---
 
 ## Fase 2 — Mejoras rápidas

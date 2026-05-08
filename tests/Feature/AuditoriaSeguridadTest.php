@@ -319,14 +319,14 @@ class AuditoriaSeguridadTest extends TestCase
         $orden = Orden::factory()->create(['estado' => 'solicitud']);
 
         $this->actingAs($admin);
-        $orden->cambiarEstado('validacion');
+        $orden->cambiarEstado('autorizacion');
 
         $this->assertDatabaseHas('auditoria_estados', [
             'entidad_tipo' => Orden::class,
             'entidad_id' => $orden->id,
             'campo' => 'estado',
             'estado_anterior' => 'solicitud',
-            'estado_nuevo' => 'validacion',
+            'estado_nuevo' => 'autorizacion',
             'user_id' => $admin->id,
         ]);
     }
