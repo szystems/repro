@@ -83,6 +83,10 @@
             flex-shrink: 0;
         }
 
+        /* Colores de badge para estados del proceso */
+        .bg-orange  { background-color: #dd5500 !important; color: #fff !important; }
+        .bg-purple  { background-color: #7920d1 !important; color: #fff !important; }
+
         /* Customization for empresa theme */
         .navbar {
             background-color: var(--primary-color) !important;

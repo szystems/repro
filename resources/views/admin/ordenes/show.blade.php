@@ -79,14 +79,8 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Estado Actual</label>
                                 <div>
-                                    <span class="badge fs-6
-                                        @if($orden->estado == 'solicitud') bg-secondary
-                                        @elseif($orden->estado == 'en_proceso') bg-primary
-                                        @elseif($orden->estado == 'entregado') bg-success
-                                        @elseif($orden->estado == 'cancelado') bg-danger
-                                        @else bg-info
-                                        @endif">
-                                        {{ $estados[$orden->estado] ?? $orden->estado }}
+                                    <span class="badge fs-6 bg-{{ $orden->estado_color }}">
+                                        {{ $orden->estado_human }}
                                     </span>
                                 </div>
                                 @if($orden->observaciones)
