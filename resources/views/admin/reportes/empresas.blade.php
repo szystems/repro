@@ -70,6 +70,15 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Sede</label>
+                                <select name="sede_id" class="form-select">
+                                    <option value="">Todas las sedes</option>
+                                    @foreach($todasSedes as $id => $nombre)
+                                        <option value="{{ $id }}" {{ request('sede_id') == $id ? 'selected' : '' }}>{{ $nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div class="col-md-3 d-flex align-items-end">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-search me-1"></i>Filtrar
@@ -158,6 +167,43 @@
     </div>
 
     <!-- Botones de exportación y tabla -->
+    @if($ranking->isNotEmpty())
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-trophy me-2 text-warning"></i>Ranking de empresas (por procesos entregados)
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center" style="width:50px">#</th>
+                                    <th>Empresa</th>
+                                    <th class="text-center">Procesos entregados</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($ranking as $i => $emp)
+                                <tr>
+                                    <td class="text-center fw-bold">{{ $i + 1 }}</td>
+                                    <td><a href="{{ url('show-empresa/' . $emp->id) }}">{{ $emp->nombre }}</a></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success">{{ $emp->ordenes_entregadas }}</span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
     <div class="row">
         <div class="col-12">
             <div class="card">

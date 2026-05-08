@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
+use App\Models\Sede;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -126,21 +127,36 @@ class ReportesController extends Controller
         if ($request->filled('empresa_id')) {
             $query->where('id', $request->empresa_id);
         }
+        // A7: filtro por sede
+        if ($request->filled('sede_id')) {
+            $query->whereHas('ordenes.evaluados', function ($q) use ($request) {
+                $q->where('sede_id', $request->sede_id);
+            });
+        }
 
         // Clonar para estadísticas
         $statsQuery = Empresa::query();
         $stats = [
-            'total_empresas' => $statsQuery->count(),
+            'total_empresas'   => $statsQuery->count(),
             'empresas_activas' => (clone $statsQuery)->where('estado', 1)->count(),
-            'total_ordenes' => Orden::count(),
-            'total_evaluados' => EvaluadoOrden::count(),
+            'total_ordenes'    => Orden::count(),
+            'total_evaluados'  => EvaluadoOrden::count(),
         ];
 
-        $empresas = $query->orderBy('nombre')->paginate(15)->withQueryString();
+        // A7: ranking top 5 empresas por órdenes entregadas
+        $ranking = Empresa::withCount([
+            'ordenes as ordenes_entregadas' => fn ($q) => $q->where('estado', 'entregado'),
+        ])
+        ->having('ordenes_entregadas', '>', 0)
+        ->orderByDesc('ordenes_entregadas')
+        ->limit(5)
+        ->get();
 
+        $empresas      = $query->orderBy('nombre')->paginate(15)->withQueryString();
         $todasEmpresas = Empresa::orderBy('nombre')->pluck('nombre', 'id');
+        $todasSedes    = Sede::activas()->orderBy('nombre')->pluck('nombre', 'id');
 
-        return view('admin.reportes.empresas', compact('empresas', 'stats', 'todasEmpresas'));
+        return view('admin.reportes.empresas', compact('empresas', 'stats', 'todasEmpresas', 'todasSedes', 'ranking'));
     }
 
     /**

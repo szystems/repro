@@ -590,6 +590,20 @@
                             <i class="bi bi-list-ul me-2"></i>Ver Mis Órdenes
                         </a>
                     </div>
+                    {{-- C4: Botones WhatsApp sedes activas --}}
+                    @if(!empty($sedesContacto) && $sedesContacto->isNotEmpty())
+                    <hr class="my-3">
+                    <p class="small text-muted mb-2"><i class="bi bi-headset me-1"></i>Contactar una sede:</p>
+                    <div class="d-grid gap-2">
+                        @foreach($sedesContacto as $sedeContacto)
+                        <a href="https://wa.me/{{ preg_replace('/\D+/', '', $sedeContacto->whatsapp) }}"
+                           target="_blank" rel="noopener noreferrer"
+                           class="btn btn-success btn-sm">
+                            <i class="bi bi-whatsapp me-1"></i>{{ $sedeContacto->nombre }}
+                        </a>
+                        @endforeach
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

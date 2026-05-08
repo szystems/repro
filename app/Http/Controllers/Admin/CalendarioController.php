@@ -66,11 +66,30 @@ class CalendarioController extends Controller
         $sedes         = Sede::activas()->orderBy('nombre')->get();
         $poligrafistas = User::poligrafistas()->get();
 
+        // CO9-hist: historial de candidatos completados/inasistencias en este mes
+        $historialQuery = EvaluadoOrden::query()
+            ->whereIn('estado_evaluacion', ['completado', 'inasistencia', 'desistio', 'cancelado'])
+            ->whereBetween('fecha_programada', [$inicioMes, $finMes->copy()->endOfDay()])
+            ->with(['poligrafo', 'sede', 'orden.empresa']);
+
+        if ($sedeId) {
+            $historialQuery->where('sede_id', $sedeId);
+        }
+        if ($poligrafistaId) {
+            $historialQuery->where('poligrafista_id', $poligrafistaId);
+        }
+        if ($tipoServicio) {
+            $historialQuery->where('tipo_servicio', $tipoServicio);
+        }
+
+        $historial = $historialQuery->orderByDesc('fecha_programada')->get();
+
         return view('admin.calendario.index', compact(
             'fecha', 'inicioMes', 'finMes', 'citasPorDia',
             'sedes', 'poligrafistas',
             'sedeId', 'poligrafistaId', 'tipoServicio',
-            'mes', 'anio'
+            'mes', 'anio',
+            'historial'
         ));
     }
 

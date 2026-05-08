@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Empresa;
 use App\Models\Orden;
 use App\Models\EvaluadoOrden;
+use App\Models\Sede;
 use App\Models\Cuestionario;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -196,6 +197,8 @@ class AdminController extends Controller
             'cuestionariosCompletados' => $cuestionariosCompletados,
             'ultimasOrdenes' => $ultimasOrdenes,
             'ordenesPendientes' => $ordenesPendientes,
+            // C4: sedes activas con WhatsApp para contacto
+            'sedesContacto' => Sede::activas()->whereNotNull('whatsapp')->orderBy('nombre')->get(),
         ];
     }
 }

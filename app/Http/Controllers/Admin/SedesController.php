@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SedeFormRequest;
+use App\Models\EvaluadoOrden;
+use App\Models\Orden;
 use App\Models\Sede;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -54,12 +56,45 @@ class SedesController extends Controller
         return redirect('sedes')->with('success', 'Sede creada correctamente.');
     }
 
-    /** Mostrar detalle de una sede. */
-    public function show(int $id): View
+    /** Mostrar detalle de una sede con panel de procesos. */
+    public function show(int $id, Request $request): View
     {
         $sede = Sede::withCount('evaluados')->findOrFail($id);
 
-        return view('admin.sedes.show', compact('sede'));
+        // Búsqueda por nombre o DPI
+        $search = $request->input('search');
+
+        $estadosActivos  = ['solicitud', 'autorizacion', 'requisito', 'programacion', 'en_proceso', 'preliminar', 'final'];
+        $estadosRealizados = ['entregado'];
+        $estadosPendientes = ['solicitud', 'autorizacion', 'requisito'];
+
+        // Candidatos de esta sede (a través de evaluados_orden.sede_id)
+        $baseQuery = EvaluadoOrden::where('sede_id', $sede->id)
+            ->with(['orden.empresa']);
+
+        if ($search) {
+            $baseQuery->where(function ($q) use ($search) {
+                $q->where('nombre', 'like', "%{$search}%")
+                  ->orWhere('apellidos', 'like', "%{$search}%")
+                  ->orWhere('dpi', 'like', "%{$search}%");
+            });
+        }
+
+        // Estadísticas de procesos en esta sede
+        $stats = [
+            'actuales'   => (clone $baseQuery)->whereHas('orden', fn ($q) => $q->whereIn('estado', $estadosActivos))->count(),
+            'realizados' => (clone $baseQuery)->whereHas('orden', fn ($q) => $q->whereIn('estado', $estadosRealizados))->count(),
+            'pendientes' => (clone $baseQuery)->whereHas('orden', fn ($q) => $q->whereIn('estado', $estadosPendientes))->count(),
+            'total'      => (clone $baseQuery)->count(),
+        ];
+
+        // Tabla paginada de candidatos con su estado
+        $candidatos = (clone $baseQuery)
+            ->orderByDesc('created_at')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.sedes.show', compact('sede', 'stats', 'candidatos', 'search'));
     }
 
     /** Formulario para editar una sede. */

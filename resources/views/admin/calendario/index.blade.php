@@ -193,4 +193,61 @@
     </div>
 </div>
 
+{{-- CO9-hist: Historial de candidatos del mes --}}
+@if($historial->isNotEmpty())
+<div class="content-wrapper pt-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Historial de candidatos — {{ ucfirst($fecha->translatedFormat('F Y')) }}
+                        <span class="badge bg-secondary ms-2">{{ $historial->count() }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Candidato</th>
+                                    <th>Empresa</th>
+                                    <th>Sede</th>
+                                    <th>Poligrafista</th>
+                                    <th>Tipo</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($historial as $h)
+                                @php
+                                    $estadoColores = [
+                                        'completado'  => 'success',
+                                        'inasistencia'=> 'warning',
+                                        'desistio'    => 'secondary',
+                                        'cancelado'   => 'danger',
+                                    ];
+                                    $estadoColor = $estadoColores[$h->estado_evaluacion] ?? 'secondary';
+                                @endphp
+                                <tr>
+                                    <td>{{ $h->nombre }} {{ $h->apellidos }}</td>
+                                    <td class="small">{{ $h->orden->empresa->nombre ?? '—' }}</td>
+                                    <td class="small">{{ $h->sede->nombre ?? '—' }}</td>
+                                    <td class="small">{{ $h->poligrafo ? $h->poligrafo->name : '—' }}</td>
+                                    <td><span class="badge bg-primary">{{ ucfirst($h->tipo_servicio ?? '—') }}</span></td>
+                                    <td class="small text-muted">{{ \Carbon\Carbon::parse($h->fecha_programada)->format('d/m/Y H:i') }}</td>
+                                    <td><span class="badge bg-{{ $estadoColor }}">{{ ucfirst(str_replace('_', ' ', $h->estado_evaluacion)) }}</span></td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 @endsection

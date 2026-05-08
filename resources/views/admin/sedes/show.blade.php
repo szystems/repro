@@ -101,6 +101,106 @@
                         Evaluados asignados: <strong>{{ $sede->evaluados_count }}</strong>
                     </div>
                 </div>
+
+                {{-- Panel de procesos --}}
+                <div class="row gx-3 mt-3">
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center border-primary h-100">
+                            <div class="card-body py-3">
+                                <div class="fs-2 fw-bold text-primary">{{ $stats['actuales'] }}</div>
+                                <div class="small text-muted">Procesos actuales</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center border-success h-100">
+                            <div class="card-body py-3">
+                                <div class="fs-2 fw-bold text-success">{{ $stats['realizados'] }}</div>
+                                <div class="small text-muted">Realizados</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center border-warning h-100">
+                            <div class="card-body py-3">
+                                <div class="fs-2 fw-bold text-warning">{{ $stats['pendientes'] }}</div>
+                                <div class="small text-muted">Pendientes</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="card text-center border-secondary h-100">
+                            <div class="card-body py-3">
+                                <div class="fs-2 fw-bold text-secondary">{{ $stats['total'] }}</div>
+                                <div class="small text-muted">Total candidatos</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Búsqueda y tabla de candidatos --}}
+                <div class="card mt-1">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="card-title mb-0"><i class="bi bi-people"></i> Candidatos en esta sede</span>
+                    </div>
+                    <div class="card-body pb-2">
+                        <form method="GET" action="{{ route('sedes.show', $sede->id) }}" class="d-flex gap-2 mb-3">
+                            <input type="text" name="search" class="form-control form-control-sm"
+                                   placeholder="Buscar por nombre o DPI…"
+                                   value="{{ $search }}">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bi bi-search"></i>
+                            </button>
+                            @if($search)
+                                <a href="{{ route('sedes.show', $sede->id) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-x"></i>
+                                </a>
+                            @endif
+                        </form>
+
+                        @if($candidatos->isEmpty())
+                            <p class="text-muted text-center py-3">No se encontraron candidatos.</p>
+                        @else
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Candidato</th>
+                                            <th>DPI</th>
+                                            <th>Empresa</th>
+                                            <th>Servicio</th>
+                                            <th>Estado proceso</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($candidatos as $candidato)
+                                        <tr>
+                                            <td>{{ $candidato->nombre }} {{ $candidato->apellidos }}</td>
+                                            <td class="text-muted small">{{ $candidato->dpi ?? '—' }}</td>
+                                            <td class="small">{{ $candidato->orden->empresa->nombre ?? '—' }}</td>
+                                            <td class="small">{{ ucfirst($candidato->tipo_servicio ?? '—') }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ $candidato->orden->estado_color }}">
+                                                    {{ $candidato->orden->estado_human }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('ordenes.show', $candidato->orden_id) }}"
+                                                   class="btn btn-xs btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            {{ $candidatos->links() }}
+                        @endif
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
