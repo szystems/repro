@@ -67,6 +67,29 @@ class DocumentosEvaluadoController extends Controller
     }
 
     /**
+     * Servir un documento de forma inline (vista previa en navegador).
+     */
+    public function preview(DocumentoEvaluado $documento)
+    {
+        $evaluado = $documento->evaluadoOrden;
+
+        if (!$this->puedeAcceder($evaluado)) {
+            abort(403);
+        }
+
+        if (!Storage::disk('local')->exists($documento->ruta_archivo)) {
+            abort(404, 'El archivo no existe en el servidor.');
+        }
+
+        $contenido = Storage::disk('local')->get($documento->ruta_archivo);
+        $mimeType  = $documento->mime_type ?: 'application/octet-stream';
+
+        return response($contenido, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'inline; filename="' . $documento->nombre_original . '"');
+    }
+
+    /**
      * Verificar (aprobar/rechazar) un documento — solo REPRO.
      */
     public function verificar(Request $request, DocumentoEvaluado $documento)
@@ -106,6 +129,11 @@ class DocumentosEvaluadoController extends Controller
         $user = Auth::user();
         if ($user->role_as < 2 && $documento->subido_por_user_id !== $user->id) {
             abort(403, 'No tiene permiso para eliminar este documento.');
+        }
+
+        // Empresa solo puede eliminar documentos en estado pendiente
+        if ($user->role_as < 2 && $documento->estado_verificacion !== 'pendiente') {
+            abort(403, 'Solo se pueden eliminar documentos con estado pendiente.');
         }
 
         $nombre = $documento->tipo_documento_texto;

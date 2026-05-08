@@ -56,7 +56,10 @@
                                 <i class="bi bi-arrow-left"></i> Volver
                             </a>
                             <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-danger btn-sm me-1" target="_blank">
-                                <i class="bi bi-file-pdf"></i> PDF
+                                <i class="bi bi-file-pdf"></i> Orden de Servicio
+                            </a>
+                            <a href="{{ route('ordenes.pdf-informe', $orden) }}" class="btn btn-outline-danger btn-sm me-1" target="_blank">
+                                <i class="bi bi-file-person"></i> Informe Candidatos
                             </a>
 
                             @if(Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->hasRole('empresa') && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'programacion'])))
@@ -420,6 +423,14 @@
                                                 </span>
                                             </div>
                                             <div class="col-md-4">
+                                                <small class="text-muted d-block">Puesto a Evaluar</small>
+                                                <span>{{ $evaluado->puesto_evaluar ?: '—' }}</span>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Sede del Candidato</small>
+                                                <span>{{ $evaluado->sede?->nombre ?: '—' }}</span>
+                                            </div>
+                                            <div class="col-md-4">
                                                 <small class="text-muted d-block">Programación</small>
                                                 @if($evaluado->fecha_programada)
                                                     <i class="bi bi-calendar"></i> {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('d/m/Y') }}
@@ -482,6 +493,38 @@
                                             <div class="col-12">
                                                 <small class="text-muted d-block">Observaciones del Evaluado</small>
                                                 <div class="bg-light p-2 rounded border-start border-3 border-info small">{{ $evaluado->observaciones }}</div>
+                                            </div>
+                                        </div>
+                                        @endif
+
+                                        {{-- Form para editar observación (solo colaborador/admin) --}}
+                                        @if(Auth::user()->role_as >= 2)
+                                        <div class="row mb-3">
+                                            <div class="col-12">
+                                                <details class="text-sm">
+                                                    <summary class="text-muted small" style="cursor:pointer;">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                        {{ $evaluado->observaciones ? 'Editar observación' : 'Agregar observación (visible para empresa)' }}
+                                                    </summary>
+                                                    <form action="{{ route('evaluados.actualizar-observacion', $evaluado) }}" method="POST" class="mt-2">
+                                                        @csrf @method('PATCH')
+                                                        <textarea class="form-control form-control-sm" name="observaciones" rows="3"
+                                                                  placeholder="Observación visible para la empresa..."
+                                                                  maxlength="2000">{{ $evaluado->observaciones }}</textarea>
+                                                        <div class="d-flex gap-2 mt-1">
+                                                            <button type="submit" class="btn btn-sm btn-success">
+                                                                <i class="bi bi-check-lg"></i> Guardar
+                                                            </button>
+                                                            @if($evaluado->observaciones)
+                                                            <button type="submit" name="observaciones" value=""
+                                                                    class="btn btn-sm btn-outline-secondary"
+                                                                    onclick="return confirm('¿Eliminar la observación?');">
+                                                                <i class="bi bi-trash"></i> Borrar
+                                                            </button>
+                                                            @endif
+                                                        </div>
+                                                    </form>
+                                                </details>
                                             </div>
                                         </div>
                                         @endif

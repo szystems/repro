@@ -140,4 +140,32 @@ class EmpresaCrearOrdenTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHasErrors();
     }
+
+    // ──────────────────────────────────────────────────────────
+    // C2-sede: empresa puede crear orden con sede por evaluado
+    // ──────────────────────────────────────────────────────────
+
+    public function test_empresa_puede_crear_orden_con_sede_por_evaluado(): void
+    {
+        [$user, $empresa] = $this->crearEmpresaUser();
+        $sede = Sede::factory()->create(['estado' => 1]);
+
+        $payload = $this->payloadEvaluado();
+        $payload['sede_id'] = $sede->id;
+        $payload['puesto_evaluar'] = 'Gerente de Ventas';
+
+        $response = $this->actingAs($user)->post(route('ordenes.store'), [
+            'empresa_id' => $empresa->id,
+            'evaluados'  => [$payload],
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+
+        $orden = Orden::where('empresa_id', $empresa->id)->first();
+        $evaluado = $orden->evaluados->first();
+
+        $this->assertEquals($sede->id, $evaluado->sede_id);
+        $this->assertEquals('Gerente de Ventas', $evaluado->puesto_evaluar);
+    }
 }

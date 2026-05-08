@@ -343,6 +343,12 @@
                                         <td>{{ Str::limit($orden->empresa->nombre ?? 'N/A', 20) }}</td>
                                         <td>
                                             <span class="badge bg-secondary">{{ $orden->evaluados->count() }}</span>
+                                            @if($orden->evaluados->isNotEmpty())
+                                                <div class="small text-muted mt-1">{{ $orden->evaluados->first()->nombre }}</div>
+                                                @if($orden->evaluados->count() > 1)
+                                                    <div class="small text-muted">+{{ $orden->evaluados->count() - 1 }} más</div>
+                                                @endif
+                                            @endif
                                         </td>
                                         <td>
                                             @php
@@ -626,6 +632,12 @@
                                         </td>
                                         <td>
                                             <span class="badge bg-secondary">{{ $orden->evaluados->count() }}</span>
+                                            @if($orden->evaluados->isNotEmpty())
+                                                <div class="small text-muted mt-1">{{ $orden->evaluados->first()->nombre }}</div>
+                                                @if($orden->evaluados->count() > 1)
+                                                    <div class="small text-muted">+{{ $orden->evaluados->count() - 1 }} más</div>
+                                                @endif
+                                            @endif
                                         </td>
                                         <td>
                                             @php

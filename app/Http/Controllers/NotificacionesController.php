@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class NotificacionesController extends Controller
@@ -26,6 +27,43 @@ class NotificacionesController extends Controller
             'count' => Auth::user()->unreadNotifications()->count(),
             'notificaciones' => $notificaciones,
         ]);
+    }
+
+    public function centro(Request $request): \Illuminate\View\View
+    {
+        $query = Auth::user()->notifications()->latest();
+
+        if ($request->filled('estado')) {
+            if ($request->estado === 'leida') {
+                $query->whereNotNull('read_at');
+            } elseif ($request->estado === 'no_leida') {
+                $query->whereNull('read_at');
+            }
+        }
+
+        if ($request->filled('tipo')) {
+            $query->where('type', 'like', '%' . $request->tipo . '%');
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('created_at', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('created_at', '<=', $request->fecha_hasta);
+        }
+
+        if ($request->filled('buscar')) {
+            $buscar = $request->buscar;
+            $query->where(function($q) use ($buscar) {
+                $q->where('data->mensaje', 'like', "%{$buscar}%");
+            });
+        }
+
+        $notificaciones = $query->paginate(20)->appends($request->query());
+        $totalNoLeidas = Auth::user()->unreadNotifications()->count();
+
+        return view('notificaciones.centro', compact('notificaciones', 'totalNoLeidas'));
     }
 
     public function marcarLeida(string $id): JsonResponse

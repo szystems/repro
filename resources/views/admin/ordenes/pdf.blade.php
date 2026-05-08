@@ -401,6 +401,12 @@
                         @if($evaluado->apellidos)
                             <br><small>{{ $evaluado->apellidos }}</small>
                         @endif
+                        @if($evaluado->puesto_evaluar)
+                            <br><small style="color:#666;">{{ $evaluado->puesto_evaluar }}</small>
+                        @endif
+                        @if($evaluado->sede)
+                            <br><small style="color:#888;">Sede: {{ $evaluado->sede->nombre }}</small>
+                        @endif
                     </td>
                     <td>{{ $evaluado->dpi }}</td>
                     <td>

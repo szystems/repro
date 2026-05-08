@@ -182,6 +182,8 @@ class OrdenesController extends Controller
             'evaluados.*.telefono' => 'nullable|string|max:20',
             'evaluados.*.tipo_servicio' => 'required|in:poligrafo,vsa,socioeconomico',
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
+            'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
+            'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
         ]);
@@ -244,6 +246,9 @@ class OrdenesController extends Controller
             }
 
             DB::commit();
+
+            // Recargar relaciones necesarias para notificaciones
+            $orden->load(['empresa', 'evaluados']);
 
             // Notificar a usuarios de la sede asignada
             if ($orden->sede_id) {
@@ -367,6 +372,8 @@ class OrdenesController extends Controller
             'evaluados.*.telefono' => 'nullable|string|max:20',
             'evaluados.*.tipo_servicio' => 'required|in:poligrafo,vsa,socioeconomico',
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
+            'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
+            'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
         ]);
@@ -536,6 +543,24 @@ class OrdenesController extends Controller
     }
 
     /**
+     * Actualizar observación del evaluado (visible para empresa).
+     */
+    public function actualizarObservacion(Request $request, EvaluadoOrden $evaluado): \Illuminate\Http\RedirectResponse
+    {
+        if (Auth::user()->role_as < 2) {
+            return back()->with('error', 'No tiene permisos para realizar esta acción.');
+        }
+
+        $request->validate([
+            'observaciones' => 'nullable|string|max:2000',
+        ]);
+
+        $evaluado->update(['observaciones' => $request->observaciones]);
+
+        return back()->with('success', "Observación de {$evaluado->nombre} {$evaluado->apellidos} actualizada.");
+    }
+
+    /**
      * Toggle visibilidad de resultados para empresa
      */
     public function toggleResultadosVisibles(Orden $orden)
@@ -634,6 +659,8 @@ class OrdenesController extends Controller
                 'tipo_formulario' => $evaluadoData['tipo_servicio'] === 'socioeconomico'
                     ? 'preempleo'
                     : $evaluadoData['tipo_formulario'],
+                'puesto_evaluar' => $evaluadoData['puesto_evaluar'] ?? null,
+                'sede_id' => $evaluadoData['sede_id'] ?? null,
                 'fecha_programada' => $evaluadoData['fecha_programada'] ?? null,
                 'poligrafista_id' => $evaluadoData['poligrafista_id'] ?? null,
                 'observaciones' => $evaluadoData['observaciones'] ?? null,
@@ -772,13 +799,29 @@ class OrdenesController extends Controller
         }
 
         // Cargar relaciones necesarias
-        $orden->load(['empresa', 'creador', 'evaluados.poligrafista', 'evaluados.responsable']);
+        $orden->load(['empresa', 'creador', 'evaluados.poligrafista', 'evaluados.responsable', 'evaluados.sede']);
 
         $estados = Orden::estadosDisponibles();
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf', compact('orden', 'estados'));
 
-        return $pdf->stream('Orden_' . $orden->codigo_orden . '_' . ($orden->empresa->nombre ?? 'SinEmpresa') . '.pdf');
+        return $pdf->stream('OrdenServicio_' . $orden->codigo_orden . '_' . ($orden->empresa->nombre ?? 'SinEmpresa') . '.pdf');
+    }
+
+    /**
+     * PDF Informe del Candidato — muestra los resultados de evaluación por evaluado.
+     */
+    public function pdfInforme(Orden $orden)
+    {
+        if (!$this->usuarioPuedeVerOrden($orden)) {
+            abort(403, 'No tienes permisos para ver esta orden.');
+        }
+
+        $orden->load(['empresa', 'sede', 'evaluados.poligrafista', 'evaluados.responsable', 'evaluados.sede']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf-informe', compact('orden'));
+
+        return $pdf->stream('Informe_' . $orden->codigo_orden . '_' . ($orden->empresa->nombre ?? 'SinEmpresa') . '.pdf');
     }
 
     /**

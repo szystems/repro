@@ -55,7 +55,7 @@
                 <li class="{{ Request::is('cuestionarios','show-cuestionario/*','add-cuestionario','edit-cuestionario/*') ? 'active-page-link':''  }}">
                     <a href="{{ url('cuestionarios') }}">
                         <i class="bi bi-card-checklist"></i>
-                        <span class="menu-text">Cuestionarios</span>
+                        <span class="menu-text">Gestión de Cuestionario – Candidatos</span>
                     </a>
                 </li>
 

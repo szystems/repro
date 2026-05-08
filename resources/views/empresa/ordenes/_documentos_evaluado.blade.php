@@ -77,6 +77,18 @@
                             @endif
                         </td>
                         <td>
+                            @if($documento->es_pdf || $documento->es_imagen)
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm py-0 btn-preview-doc"
+                                        title="Vista previa"
+                                        data-url="{{ route('documentos-evaluado.preview', $documento) }}"
+                                        data-tipo="{{ $documento->es_imagen ? 'imagen' : 'pdf' }}"
+                                        data-nombre="{{ $documento->nombre_original }}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalPreviewDoc">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            @endif
                             <a href="{{ route('documentos-evaluado.download', $documento) }}"
                                class="btn btn-outline-primary btn-sm py-0" title="Descargar">
                                 <i class="bi bi-download"></i>
@@ -103,3 +115,68 @@
         </div>
     @endif
 </div>
+
+@once
+<div class="modal fade" id="modalPreviewDoc" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title" id="modalPreviewDocTitulo">Vista previa</h6>
+                <div class="ms-auto d-flex gap-2 align-items-center">
+                    <a href="#" id="btnDescargarPreview" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <i class="bi bi-download"></i> Descargar
+                    </a>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body p-0" style="min-height: 500px; background: #f0f0f0;">
+                <div id="previewContenedor" class="w-100 h-100 d-flex align-items-center justify-content-center" style="min-height: 500px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-preview-doc');
+    if (!btn) { return; }
+
+    const url    = btn.dataset.url;
+    const tipo   = btn.dataset.tipo;
+    const nombre = btn.dataset.nombre;
+
+    document.getElementById('modalPreviewDocTitulo').textContent = nombre;
+    document.getElementById('btnDescargarPreview').href = url.replace('/preview', '/download');
+
+    const contenedor = document.getElementById('previewContenedor');
+    contenedor.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>';
+
+    if (tipo === 'imagen') {
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '80vh';
+        img.style.objectFit = 'contain';
+        img.style.display = 'block';
+        img.style.margin = 'auto';
+        img.onload = () => { contenedor.innerHTML = ''; contenedor.appendChild(img); };
+        img.onerror = () => { contenedor.innerHTML = '<p class="text-danger p-4">No se pudo cargar la imagen.</p>'; };
+    } else {
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.width = '100%';
+        iframe.style.height = '80vh';
+        iframe.style.border = 'none';
+        iframe.style.display = 'block';
+        contenedor.innerHTML = '';
+        contenedor.appendChild(iframe);
+    }
+});
+</script>
+@endpush
+@endonce

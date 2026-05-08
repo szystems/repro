@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Gestión de Cuestionarios')
+@section('title', 'Gestión de Cuestionario – Candidatos')
 
 @section('content')
 <div class="container-fluid">
@@ -9,7 +9,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">
-                        <i class="bi bi-clipboard-check"></i> Gestión de Cuestionarios Socioeconómicos
+                        <i class="bi bi-clipboard-check"></i> Gestión de Cuestionario – Candidatos
                     </h3>
                     <button type="button" class="btn btn-light btn-lg" id="btnFiltros">
                         <i class="bi bi-funnel-fill"></i> Filtrar Resultados
@@ -17,7 +17,21 @@
                 </div>
 
                 <div class="card-body">
-                    {{-- Panel de filtros (colapsable) --}}
+                    {{-- Accesos rápidos --}}
+                    <div class="mb-3 d-flex gap-2 flex-wrap">
+                        <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-sm {{ !request()->hasAny(['estado','tipo_servicio','sede_id','empresa_id','fecha_desde','fecha_hasta','buscar']) ? 'btn-primary' : 'btn-outline-primary' }}">
+                            <i class="bi bi-list-ul"></i> Todos
+                        </a>
+                        <a href="{{ route('admin.cuestionarios.index', ['estado' => 'pendiente']) }}" class="btn btn-sm {{ request('estado') == 'pendiente' ? 'btn-warning' : 'btn-outline-warning' }}">
+                            <i class="bi bi-hourglass"></i> Pendientes
+                        </a>
+                        <a href="{{ route('admin.cuestionarios.index', ['estado' => 'en_progreso']) }}" class="btn btn-sm {{ request('estado') == 'en_progreso' ? 'btn-info' : 'btn-outline-info' }}">
+                            <i class="bi bi-pencil-square"></i> En Progreso
+                        </a>
+                        <a href="{{ route('admin.cuestionarios.index', ['estado' => 'completado']) }}" class="btn btn-sm {{ request('estado') == 'completado' ? 'btn-success' : 'btn-outline-success' }}">
+                            <i class="bi bi-check-circle"></i> Completados
+                        </a>
+                    </div>
                     <div class="collapse" id="filtrosPanel">
                         <div class="card card-body mb-4 bg-light">
                             <form method="GET" action="{{ route('admin.cuestionarios.index') }}" id="formFiltros">
@@ -63,8 +77,34 @@
                                     </div>
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-md-6">
+                                <div class="row mt-2">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filtro_tipo_servicio" class="form-label">Tipo de Servicio</label>
+                                            <select class="form-control" id="filtro_tipo_servicio" name="tipo_servicio">
+                                                <option value="">Todos los servicios</option>
+                                                <option value="poligrafo" {{ request('tipo_servicio') == 'poligrafo' ? 'selected' : '' }}>Polígrafo</option>
+                                                <option value="vsa" {{ request('tipo_servicio') == 'vsa' ? 'selected' : '' }}>VSA</option>
+                                                <option value="socioeconomico" {{ request('tipo_servicio') == 'socioeconomico' ? 'selected' : '' }}>Socioeconómico</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filtro_sede_id" class="form-label">Sede</label>
+                                            <select class="form-control" id="filtro_sede_id" name="sede_id">
+                                                <option value="">Todas las sedes</option>
+                                                @foreach($sedes as $sede)
+                                                    <option value="{{ $sede->id }}" {{ request('sede_id') == $sede->id ? 'selected' : '' }}>
+                                                        {{ $sede->nombre }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="filtro_buscar" class="form-label">Buscar</label>
                                             <input type="text" class="form-control" id="filtro_buscar" name="buscar"
@@ -72,13 +112,13 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6 d-flex align-items-end">
+                                    <div class="col-md-2 d-flex align-items-end">
                                         <div class="btn-group w-100">
                                             <button type="submit" class="btn btn-primary">
-                                                <i class="bi bi-search"></i> Aplicar Filtros
+                                                <i class="bi bi-search"></i> Filtrar
                                             </button>
                                             <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-outline-secondary">
-                                                <i class="bi bi-x-lg"></i> Limpiar
+                                                <i class="bi bi-x-lg"></i>
                                             </a>
                                         </div>
                                     </div>
@@ -211,6 +251,7 @@
                                     <th>Evaluado</th>
                                     <th>Contacto</th>
                                     <th>Empresa</th>
+                                    <th>Sede</th>
                                     <th>Servicio / Formulario</th>
                                     <th>Estado</th>
                                     <th>Progreso</th>
@@ -271,6 +312,15 @@
                                         </td>
                                         <td>
                                             <span class="badge bg-info">{{ $empresa->nombre }}</span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                @if($orden->sede)
+                                                    <i class="bi bi-geo-alt"></i> {{ $orden->sede->nombre }}
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </small>
                                         </td>
                                         <td>
                                             <div class="d-flex flex-column">

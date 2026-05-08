@@ -31,11 +31,18 @@ class OrdenCreadaNotification extends Notification
             ? route('empresa.ordenes.show', $this->orden)
             : route('ordenes.show', $this->orden);
 
+        $servicios = $this->orden->evaluados->pluck('tipo_servicio')->filter()->unique()->map(fn($s) => ucfirst($s))->join(', ');
+        $empresa = $this->orden->empresa?->nombre ?? 'Sin empresa';
+        $mensaje = "Nueva orden #{$this->orden->codigo_orden} — {$empresa}";
+        if ($servicios) {
+            $mensaje .= " | {$servicios}";
+        }
+
         return [
             'tipo' => 'orden_creada',
             'icono' => 'bi-folder-plus',
             'color' => 'primary',
-            'mensaje' => 'Nueva orden #' . $this->orden->codigo . ' creada',
+            'mensaje' => $mensaje,
             'url' => $url,
             'orden_id' => $this->orden->id,
         ];

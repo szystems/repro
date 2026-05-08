@@ -31,8 +31,11 @@
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="card-title">Detalles de la Orden</span>
-                <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-danger btn-sm" target="_blank">
-                    <i class="bi bi-file-pdf"></i> PDF
+                <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-danger btn-sm me-1" target="_blank">
+                    <i class="bi bi-file-pdf"></i> Orden de Servicio
+                </a>
+                <a href="{{ route('ordenes.pdf-informe', $orden) }}" class="btn btn-outline-danger btn-sm" target="_blank">
+                    <i class="bi bi-file-person"></i> Informe Candidatos
                 </a>
             </div>
             <div class="card-body">
@@ -94,6 +97,17 @@
                         <div class="col-md-2">
                             <span class="badge bg-primary">{{ $evaluado->tipo_servicio }}</span>
                             <br><small class="text-muted">{{ $evaluado->tipo_formulario }}</small>
+                        </div>
+                        <div class="col-md-2">
+                            @if($evaluado->puesto_evaluar)
+                                <small><i class="bi bi-briefcase"></i> {{ $evaluado->puesto_evaluar }}</small><br>
+                            @endif
+                            @if($evaluado->sede)
+                                <small><i class="bi bi-geo-alt"></i> {{ $evaluado->sede->nombre }}</small>
+                            @endif
+                            @if(!$evaluado->puesto_evaluar && !$evaluado->sede)
+                                <small class="text-muted">—</small>
+                            @endif
                         </div>
                         <div class="col-md-2">
                             @if($evaluado->email)

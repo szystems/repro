@@ -63,6 +63,7 @@ class EvaluadoOrden extends Model
         'ip_acceso',
         'observaciones',
         'notas',
+        'puesto_evaluar',
         'archivo_resultado_preliminar',
         'archivo_resultado_final',
         'resultado_preliminar_at',

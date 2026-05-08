@@ -127,6 +127,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::patch('ordenes/{orden}/cambiar-estado', [OrdenesController::class, 'cambiarEstado'])->name('ordenes.cambiar-estado');
     Route::patch('ordenes/{orden}/toggle-resultados-visibles', [OrdenesController::class, 'toggleResultadosVisibles'])->name('ordenes.toggle-resultados-visibles');
     Route::get('ordenes/{orden}/pdf', [OrdenesController::class, 'pdf'])->name('ordenes.pdf');
+    Route::get('ordenes/{orden}/pdf-informe', [OrdenesController::class, 'pdfInforme'])->name('ordenes.pdf-informe');
 
     // Reenviar correo a evaluado
     Route::post('evaluados/{evaluado}/reenviar-correo', [OrdenesController::class, 'reenviarCorreo'])->name('evaluados.reenviar-correo');
@@ -134,6 +135,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // Documentos de evaluados
     Route::post('documentos-evaluado', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'store'])->name('documentos-evaluado.store');
     Route::get('documentos-evaluado/{documento}/download', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'download'])->name('documentos-evaluado.download');
+    Route::get('documentos-evaluado/{documento}/preview', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'preview'])->name('documentos-evaluado.preview');
     Route::patch('documentos-evaluado/{documento}/verificar', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'verificar'])->name('documentos-evaluado.verificar');
     Route::delete('documentos-evaluado/{documento}', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'destroy'])->name('documentos-evaluado.destroy');
 
@@ -144,6 +146,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
 
     // Cambio de estado evaluado — solo REPRO/admin
     Route::patch('evaluados/{evaluado}/cambiar-estado', [OrdenesController::class, 'cambiarEstadoEvaluado'])->name('evaluados.cambiar-estado');
+    Route::patch('evaluados/{evaluado}/observacion', [OrdenesController::class, 'actualizarObservacion'])->name('evaluados.actualizar-observacion');
 
     // Rehabilitación de cuestionario — solo REPRO/admin
     Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');
@@ -151,6 +154,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
 
     // Notificaciones
     Route::get('notificaciones', [\App\Http\Controllers\NotificacionesController::class, 'index'])->name('notificaciones.index');
+    Route::get('notificaciones/centro', [\App\Http\Controllers\NotificacionesController::class, 'centro'])->name('notificaciones.centro');
     Route::patch('notificaciones/{id}/leer', [\App\Http\Controllers\NotificacionesController::class, 'marcarLeida'])->name('notificaciones.leer');
     Route::post('notificaciones/leer-todas', [\App\Http\Controllers\NotificacionesController::class, 'marcarTodasLeidas'])->name('notificaciones.leer-todas');
 

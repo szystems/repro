@@ -32,13 +32,25 @@ class CuestionariosController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Cuestionario::with(['evaluadoOrden.orden.empresa'])
+        $query = Cuestionario::with(['evaluadoOrden.orden.empresa', 'evaluadoOrden.orden.sede'])
             ->orderBy('created_at', 'desc');
 
         // Filtros
         if ($request->filled('empresa_id')) {
             $query->whereHas('evaluadoOrden.orden', function($q) use ($request) {
                 $q->where('empresa_id', $request->empresa_id);
+            });
+        }
+
+        if ($request->filled('tipo_servicio')) {
+            $query->whereHas('evaluadoOrden', function($q) use ($request) {
+                $q->where('tipo_servicio', $request->tipo_servicio);
+            });
+        }
+
+        if ($request->filled('sede_id')) {
+            $query->whereHas('evaluadoOrden.orden', function($q) use ($request) {
+                $q->where('sede_id', $request->sede_id);
             });
         }
 
@@ -112,6 +124,7 @@ class CuestionariosController extends Controller
 
         // Datos para filtros
         $empresas = \App\Models\Empresa::where('estado', 1)->orderBy('nombre')->get();
+        $sedes = \App\Models\Sede::where('estado', 1)->orderBy('nombre')->get();
         $tiposFormulario = [
             'preempleo' => 'Pre-empleo',
             'periodica' => 'Periódica',
@@ -121,7 +134,8 @@ class CuestionariosController extends Controller
 
         return view('admin.cuestionarios.index', compact(
             'cuestionarios', 
-            'empresas', 
+            'empresas',
+            'sedes',
             'tiposFormulario',
             'estadisticas'
         ));

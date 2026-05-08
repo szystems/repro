@@ -238,11 +238,31 @@
                                     </div>
                                     
                                     <div class="row">
-                                        <div class="col-md-6 mb-2">
+                                        <div class="col-md-4 mb-2">
+                                            <label class="form-label">Puesto a Evaluar</label>
+                                            <input type="text" class="form-control" name="evaluados[{{ $index }}][puesto_evaluar]"
+                                                   value="{{ old('evaluados.'.$index.'.puesto_evaluar', $evaluado->puesto_evaluar) }}"
+                                                   placeholder="Ej: Gerente de Ventas" maxlength="100">
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <label class="form-label">Sede del Candidato</label>
+                                            <select class="form-select" name="evaluados[{{ $index }}][sede_id]">
+                                                <option value="">Sin sede</option>
+                                                @foreach($sedes as $sede)
+                                                <option value="{{ $sede->id }}" {{ old('evaluados.'.$index.'.sede_id', $evaluado->sede_id) == $sede->id ? 'selected' : '' }}>
+                                                    {{ $sede->nombre }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
                                             <label class="form-label">Teléfono</label>
                                             <input type="tel" class="form-control" name="evaluados[{{ $index }}][telefono]" 
                                                    value="{{ old('evaluados.'.$index.'.telefono', $evaluado->telefono) }}">
                                         </div>
+                                    </div>
+
+                                    <div class="row">
                                         <div class="col-md-6 mb-2">
                                             <label class="form-label">Tipo de Servicio *</label>
                                             <select class="form-select" name="evaluados[{{ $index }}][tipo_servicio]" required>
@@ -444,9 +464,25 @@
         
         <div class="row">
             <div class="col-md-6 mb-2">
+                <label class="form-label">Puesto a Evaluar</label>
+                <input type="text" class="form-control evaluado-puesto-evaluar" name="" placeholder="Ej: Gerente de Ventas" maxlength="100">
+        </div>
+        <div class="col-md-6 mb-2">
+            <label class="form-label">Sede del Candidato</label>
+            <select class="form-select evaluado-sede-id" name="">
+                <option value="">Sin sede</option>
+                @foreach($sedes as $sede)
+                <option value="{{ $sede->id }}">{{ $sede->nombre }}</option>
+                @endforeach
+            </select>
+            </div>
+            <div class="col-md-6 mb-2">
                 <label class="form-label">Teléfono</label>
                 <input type="tel" class="form-control evaluado-telefono" name="">
             </div>
+        </div>
+
+        <div class="row">
             <div class="col-md-6 mb-2">
                 <label class="form-label">Tipo de Servicio *</label>
                 <select class="form-select evaluado-tipo-servicio" name="" required>
@@ -531,6 +567,8 @@ document.addEventListener('DOMContentLoaded', function() {
         newEvaluado.querySelector('.evaluado-apellidos').name = `evaluados[${evaluadoIndex}][apellidos]`;
         newEvaluado.querySelector('.evaluado-dpi').name = `evaluados[${evaluadoIndex}][dpi]`;
         newEvaluado.querySelector('.evaluado-email').name = `evaluados[${evaluadoIndex}][email]`;
+        newEvaluado.querySelector('.evaluado-puesto-evaluar').name = `evaluados[${evaluadoIndex}][puesto_evaluar]`;
+        newEvaluado.querySelector('.evaluado-sede-id').name = `evaluados[${evaluadoIndex}][sede_id]`;
         newEvaluado.querySelector('.evaluado-telefono').name = `evaluados[${evaluadoIndex}][telefono]`;
         newEvaluado.querySelector('.evaluado-tipo-servicio').name = `evaluados[${evaluadoIndex}][tipo_servicio]`;
         newEvaluado.querySelector('.evaluado-tipo-formulario').name = `evaluados[${evaluadoIndex}][tipo_formulario]`;

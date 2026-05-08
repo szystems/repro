@@ -94,9 +94,20 @@
                                 @endif
 
                                 <div class="col-md-2 mb-2">
+                                    <label class="form-label">Desde</label>
+                                    <input type="date" class="form-control" name="fecha_desde" value="{{ request('fecha_desde') }}">
+                                </div>
+
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label">Hasta</label>
+                                    <input type="date" class="form-control" name="fecha_hasta" value="{{ request('fecha_hasta') }}">
+                                </div>
+
+                                <div class="col-md-2 mb-2">
                                     <label class="form-label">&nbsp;</label>
-                                    <div class="d-grid">
-                                        <button type="submit" class="btn btn-info"><i class="bi bi-search"></i> Buscar</button>
+                                    <div class="d-flex gap-1">
+                                        <button type="submit" class="btn btn-info flex-grow-1"><i class="bi bi-search"></i> Buscar</button>
+                                        <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
                                     </div>
                                 </div>
                             </div>

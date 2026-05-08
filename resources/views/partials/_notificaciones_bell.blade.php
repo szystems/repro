@@ -21,6 +21,12 @@
                 <small>Sin notificaciones</small>
             </div>
         </div>
+        <div class="dropdown-divider"></div>
+        <div class="text-center py-2">
+            <a href="{{ route('notificaciones.centro') }}" class="text-decoration-none small">
+                <i class="bi bi-list-ul"></i> Ver todas las notificaciones
+            </a>
+        </div>
     </div>
 </div>
 

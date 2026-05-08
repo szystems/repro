@@ -209,6 +209,7 @@
 let contadorEvaluados = 0;
 const esUsuarioEmpresa = {{ Auth::user()->role_as == 1 ? 'true' : 'false' }};
 const evaluadosOld = @json(old('evaluados', []));
+const sedesDisponibles = @json($sedes->map(fn($s) => ['id' => $s->id, 'nombre' => $s->nombre]));
 
 function agregarEvaluado(datos = {}) {
     contadorEvaluados++;
@@ -223,6 +224,9 @@ function agregarEvaluado(datos = {}) {
     const tipoServicio = datos.tipo_servicio || 'poligrafo';
     const tipoFormulario = datos.tipo_formulario || 'preempleo';
     const fechaProgramada = datos.fecha_programada || '';
+    const puestoEvaluar = datos.puesto_evaluar || '';
+    const sedeId = datos.sede_id || '';
+    const sedeOptions = sedesDisponibles.map(s => `<option value="${s.id}" ${String(sedeId) === String(s.id) ? 'selected' : ''}>${s.nombre}</option>`).join('');
 
     // Solo mostrar fecha programada si NO es usuario empresa
     const fechaProgramadaHtml = esUsuarioEmpresa ? '' : `
@@ -262,6 +266,17 @@ function agregarEvaluado(datos = {}) {
                 </div>
 
                 <!-- Campos específicos por evaluado -->
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Puesto a Evaluar</label>
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][puesto_evaluar]" placeholder="Ej: Gerente de Ventas" value="${puestoEvaluar}" maxlength="100">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Sede del Candidato</label>
+                    <select class="form-select" name="evaluados[${contadorEvaluados}][sede_id]">
+                        <option value="">Sin sede</option>
+                        ${sedeOptions}
+                    </select>
+                </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Tipo Servicio</label>
                     <select class="form-select" name="evaluados[${contadorEvaluados}][tipo_servicio]" required>
