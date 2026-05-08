@@ -778,7 +778,7 @@ class OrdenesController extends Controller
         // Las empresas pueden editar sus propias órdenes solo si están en estado inicial
         if (Auth::user()->hasRole('empresa')) {
             return $orden->empresa_id === Auth::user()->empresa_id
-                && in_array($orden->estado, ['pendiente', 'programada']);
+                && in_array($orden->estado, ['solicitud', 'autorizacion']);
         }
 
         return false;
