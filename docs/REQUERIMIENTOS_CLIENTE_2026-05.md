@@ -105,13 +105,8 @@ Auditoría ejecutada el 8 de mayo de 2026 antes de subir los cambios al servidor
 |--------|-----|-------------|
 | ✓ | H1 | Saneamiento del HTML del informe preliminar (Quill) para evitar inyección de scripts en sesión de empresa |
 | ✓ | H2 | Ampliación del catálogo de permisos por rol con los 20 permisos correspondientes a las nuevas funcionalidades de Fases 1–8 (sedes, finanzas, calendario, notificaciones, documentos, informe preliminar, observaciones, historial DPI) |
-
-### Pendientes antes del push a producción
-
-| Estado | Ref | Descripción |
-|--------|-----|-------------|
-|   | H3 | Checklist de despliegue actualizado con el seeder de permisos como paso obligatorio post-pull |
-|   | H4 | Verificación manual de `APP_DEBUG=false` en el servidor de producción |
+| ✓ | H3 | Migración idempotente que aplica los 19 permisos nuevos directamente en producción (sin necesidad de acceso shell al servidor) |
+| ✓ | H4 | Verificación de `APP_ENV=production` y `APP_DEBUG=false` en el servidor de producción |
 
 ### Mejoras planificadas para próximo sprint (no bloquean este deploy)
 
@@ -128,5 +123,39 @@ Auditoría ejecutada el 8 de mayo de 2026 antes de subir los cambios al servidor
 
 ---
 
-*8 de mayo de 2026 — Fase 1 completada (8/8) · Fase 2 completada (10/10) · Fase 3 completada (5/5) · Fase 4 completada (2/2) · Fase 5 completada (4/4) · Fase 6 completada (2/2) · Fase 7 completada (1/1) · Fase 8 completada (3/3) · Fase 9 en progreso (2/4 críticos · 8 mejoras planificadas) · 475 tests · 0 pendientes*
+## Despliegue a producción — 8 de mayo de 2026
+
+Los cambios de las Fases 1–9 fueron subidos al servidor de producción (https://reproappv2.szystems.com) el mismo 8 de mayo.
+
+### Resumen del despliegue
+
+| Concepto | Resultado |
+|----------|-----------|
+| Archivos críticos desplegados | 31 (controladores, modelos, vistas, layouts, rutas, migraciones) |
+| Auditoría de integridad | 31/31 archivos coinciden byte-a-byte con el código local |
+| Migraciones aplicadas en BD | 3 (estados a 8 etapas, columna informe preliminar, permisos RBAC) |
+| Permisos en producción | 44 totales (19 nuevos · 88 asignaciones a roles) |
+| Configuración de seguridad | `APP_ENV=production` y `APP_DEBUG=false` verificados |
+| Caché de aplicación | Limpiada tras cada subida (vistas compiladas + OPcache) |
+
+### Cambios visibles para el cliente tras el despliegue
+
+- Vista de Cuestionarios con encabezado consistente con el resto del panel administrativo (mismo patrón visual que Órdenes, Sedes, Empresas).
+- Editor de texto enriquecido para informes preliminares disponible en producción.
+- Filtros de tipo de servicio y sede operativos en Cuestionarios.
+- Flujo de 8 etapas de orden con transiciones automáticas y colores activo.
+- Módulo de Finanzas (pantalla informativa) accesible desde el menú.
+- Configuración dividida en pestañas Identidad / Catálogos / Plantillas.
+- Mejoras visuales (UI1/UI2/UI3): scroll único, pie de página anclado, sin contenedores con scroll anidado.
+- Notificaciones internas en la creación de órdenes con código identificable.
+- Acceso a sedes activas vía botón de WhatsApp.
+- Catálogo de permisos granular (44 permisos en 16 módulos) listo para futuras políticas finas por rol.
+
+### Estado final del proyecto
+
+Todas las fases planificadas para mayo de 2026 están entregadas. Suite de pruebas en 475/475. Sin regresiones detectadas en producción tras el deploy.
+
+---
+
+*8 de mayo de 2026 — Fase 1 completada (8/8) · Fase 2 completada (10/10) · Fase 3 completada (5/5) · Fase 4 completada (2/2) · Fase 5 completada (4/4) · Fase 6 completada (2/2) · Fase 7 completada (1/1) · Fase 8 completada (3/3) · Fase 9 completada (4/4 críticos · 8 mejoras en backlog para próximo sprint) · Deploy a producción ejecutado y verificado · 475 tests · 0 pendientes bloqueantes*
 

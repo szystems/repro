@@ -2,8 +2,9 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-05-08
+**Ultima actualizacion:** 2026-05-08 (post-deploy)
 **Suite de tests:** 475/475
+**Deploy a producción:** EJECUTADO el 2026-05-08 (iPage FTP)
 
 ---
 
@@ -343,19 +344,19 @@ Plan L1-L7:
 
 ---
 
-## Fase 9 - Hardening Pre-Deploy - EN PROGRESO
+## Fase 9 - Hardening Pre-Deploy - COMPLETADA 2026-05-08
 
 Auditoria profesional ejecutada el 2026-05-08 antes de subir Fases 1-8 al servidor (iPage FTP).
-Resultado: 2 hallazgos criticos resueltos en working tree, plan de cierre abajo.
+Los 4 hallazgos críticos del Bloque A fueron resueltos y desplegados en producción.
 
-### Bloque A - CRITICOS (deben ir antes del push/FTP)
+### Bloque A - CRITICOS (resueltos antes del deploy)
 
 | ID | Tarea | Estado | Archivo |
 |----|-------|--------|---------|
-| H1 | Sanitizar HTML de texto_informe_preliminar (XSS almacenado) | LISTO en working tree | app/Http/Controllers/Admin/OrdenesController.php |
-| H2 | Ampliar permissions seeder con 20 permisos de Fases 1-8 | LISTO en working tree + BD local seeded | database/seeders/RolesAndPermissionsSeeder.php |
-| H3 | Estrategia para aplicar el seeder en iPage (sin acceso CLI artisan) | PENDIENTE - decidir entre 3 opciones (ver abajo) | scripts/deploy_sql.sql o nuevo deploy_seed_permissions.php |
-| H4 | Verificar APP_DEBUG=false y APP_ENV=production en .env del servidor | PENDIENTE manual via FTP | .env produccion |
+| H1 | Sanitizar HTML de texto_informe_preliminar (XSS almacenado) | RESUELTO + DESPLEGADO | app/Http/Controllers/Admin/OrdenesController.php |
+| H2 | Ampliar permissions seeder con 20 permisos de Fases 1-8 | RESUELTO + DESPLEGADO | database/seeders/RolesAndPermissionsSeeder.php |
+| H3 | Migración idempotente que aplica los 19 permisos en producción sin acceso CLI | RESUELTO + DESPLEGADO | database/migrations/2026_05_08_201716_seed_permissions_fase9.php |
+| H4 | Verificar APP_DEBUG=false y APP_ENV=production en .env del servidor | VERIFICADO | .env produccion (script auto-eliminado) |
 
 ### Opciones para H3 (iPage no tiene `php artisan` interactivo)
 
@@ -399,3 +400,65 @@ Recomendado: opcion 3 (migracion) para mantener idempotencia y trazabilidad.
 - Permisos en BD local: 44 en 16 modulos (antes 24 en 8)
 - Migraciones pendientes: 0
 - Working tree files modificados: 2 (OrdenesController, RolesAndPermissionsSeeder)
+
+---
+
+## Deploy a producción - EJECUTADO 2026-05-08
+
+Subida completa a iPage (https://reproappv2.szystems.com) tras cierre de Fase 9.
+
+### Migraciones aplicadas en BD producción
+
+| Migración | Resultado |
+|-----------|-----------|
+| 2026_05_07_215048_migrate_estados_a_8_etapas | ✓ aplicada |
+| 2026_05_08_183729_add_texto_informe_preliminar_to_evaluados_orden_table | ✓ columna `texto_informe_preliminar` (LONGTEXT) añadida a `evaluados_orden` |
+| 2026_05_08_201716_seed_permissions_fase9 | ✓ 19 permisos insertados, 88 asignaciones role_permission |
+
+### Verificación H4
+
+- APP_ENV = production ✓
+- APP_DEBUG = false ✓
+
+### Auditoría de archivos desplegados (hash MD5 local vs servidor)
+
+- 31 archivos auditados
+- 31 idénticos
+- 0 diferentes
+- 0 faltantes
+
+Archivos críticos confirmados en servidor:
+
+- 2 controladores (OrdenesController, CuestionariosController, ConfigController)
+- 1 modelo (EvaluadoOrden)
+- 1 form request (ConfigFormRequest)
+- 17 vistas Blade (admin, empresa, layouts/incadmin, layouts/incempresa)
+- 1 archivo de rutas (web.php)
+- 3 migraciones de Fase 9
+- 1 asset JS (custom-scrollbar.js)
+
+### Limpieza de caché ejecutada en producción
+
+- bootstrap/cache: packages.php, services.php, events.php eliminados
+- 134 vistas compiladas eliminadas (en sucesivas pasadas)
+- OPcache reseteado tras cada upload de PHP
+
+### Scripts one-shot utilizados (todos auto-eliminados)
+
+- deploy_verify_h4.php (verificación APP_ENV/APP_DEBUG)
+- deploy_permissions_fase9.php (seed inicial de los 19 permisos vía PDO)
+- deploy_migrate_fase9.php (registro de las 3 migraciones en tabla `migrations` + ALTER TABLE de la columna nueva)
+- audit_hashes.php (verificación MD5 byte-a-byte de archivos desplegados)
+- clear_cache*.php (limpieza de bootstrap/cache + storage/framework/views + opcache_reset)
+- read_log.php (lectura de últimas 100 líneas de storage/logs/laravel.log para diagnóstico)
+
+### Incidentes durante el deploy y su resolución
+
+1. **Error 500 en /cuestionarios** — causa: faltaba subir `CuestionariosController.php` y la vista `index.blade.php` ya tenía la variable `$sedes`. Solución: subir el controlador.
+2. **Error 500 en /ordenes/{id}** — causa: la ruta `ordenes.pdf-informe` no estaba en el `routes/web.php` del servidor. Solución: subir `routes/web.php`.
+3. **HTTP 550 en finanzas/index.blade.php** — causa: el directorio remoto no existía. Solución: usar `--ftp-create-dirs` de curl.
+4. **Vistas compiladas obsoletas** — solución: limpiar `storage/framework/views/*.php` después de cada subida de Blade y resetear OPcache.
+
+### Resultado final
+
+Producción funcionando con todas las funcionalidades de Fases 1-9. Audit de hashes confirma paridad byte-a-byte entre local y servidor para los 31 archivos críticos del deploy.
