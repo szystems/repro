@@ -95,5 +95,38 @@ Ajustes de presentación que afectan a todas las pantallas. No cambian funcional
 
 ---
 
-*8 de mayo de 2026 — Fase 1 completada (8/8) · Fase 2 completada (10/10) · Fase 3 completada (5/5) · Fase 4 completada (2/2) · Fase 5 completada (4/4) · Fase 6 completada (2/2) · Fase 7 completada (1/1) · Fase 8 completada (3/3) · 475 tests · 0 pendientes*
+## Fase 9 — Hardening pre-despliegue (auditoría profesional)
+
+Auditoría ejecutada el 8 de mayo de 2026 antes de subir los cambios al servidor de producción. No corresponde a una solicitud explícita del cliente, pero es indispensable para garantizar la estabilidad y seguridad del despliegue.
+
+### Hallazgos críticos resueltos
+
+| Estado | Ref | Descripción |
+|--------|-----|-------------|
+| ✓ | H1 | Saneamiento del HTML del informe preliminar (Quill) para evitar inyección de scripts en sesión de empresa |
+| ✓ | H2 | Ampliación del catálogo de permisos por rol con los 20 permisos correspondientes a las nuevas funcionalidades de Fases 1–8 (sedes, finanzas, calendario, notificaciones, documentos, informe preliminar, observaciones, historial DPI) |
+
+### Pendientes antes del push a producción
+
+| Estado | Ref | Descripción |
+|--------|-----|-------------|
+|   | H3 | Checklist de despliegue actualizado con el seeder de permisos como paso obligatorio post-pull |
+|   | H4 | Verificación manual de `APP_DEBUG=false` en el servidor de producción |
+
+### Mejoras planificadas para próximo sprint (no bloquean este deploy)
+
+| Estado | Ref | Descripción |
+|--------|-----|-------------|
+|   | H5 | Migrar rutas con `role:admin,repro` hardcoded al middleware `permission:` para aprovechar el catálogo granular |
+|   | H6 | Silenciar el warning de `psysh` que genera 8 entradas diarias de ruido en logs |
+|   | H7 | Revisión final de las 14 ocurrencias restantes de `{!! !!}` (ya verificadas seguras) |
+|   | H8 | Caché de configuración, rutas y vistas como paso fijo del script de despliegue |
+|   | H9 | Crear Policies Eloquent para reemplazar los checks dispersos basados en `role_as` |
+|   | H10 | Cobertura de tests para asignación automática de los nuevos permisos a roles |
+|   | H11 | Tests E2E del flujo evaluado vía token único |
+|   | H12 | Auditoría de las 5 ocurrencias de `DB::raw` para confirmar ausencia de input de usuario |
+
+---
+
+*8 de mayo de 2026 — Fase 1 completada (8/8) · Fase 2 completada (10/10) · Fase 3 completada (5/5) · Fase 4 completada (2/2) · Fase 5 completada (4/4) · Fase 6 completada (2/2) · Fase 7 completada (1/1) · Fase 8 completada (3/3) · Fase 9 en progreso (2/4 críticos · 8 mejoras planificadas) · 475 tests · 0 pendientes*
 

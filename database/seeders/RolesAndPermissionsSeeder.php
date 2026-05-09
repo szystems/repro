@@ -85,6 +85,41 @@ class RolesAndPermissionsSeeder extends Seeder
             // Módulo: Configuración
             ['name' => 'config.ver', 'display_name' => 'Ver Configuración', 'module' => 'config'],
             ['name' => 'config.editar', 'display_name' => 'Editar Configuración', 'module' => 'config'],
+
+            // Módulo: Sedes (Fase 4)
+            ['name' => 'sedes.ver', 'display_name' => 'Ver Sedes', 'module' => 'sedes'],
+            ['name' => 'sedes.crear', 'display_name' => 'Crear Sedes', 'module' => 'sedes'],
+            ['name' => 'sedes.editar', 'display_name' => 'Editar Sedes', 'module' => 'sedes'],
+            ['name' => 'sedes.eliminar', 'display_name' => 'Eliminar Sedes', 'module' => 'sedes'],
+
+            // Módulo: Finanzas (Fase 5)
+            ['name' => 'finanzas.ver', 'display_name' => 'Ver Finanzas', 'module' => 'finanzas'],
+            ['name' => 'finanzas.editar', 'display_name' => 'Editar Finanzas', 'module' => 'finanzas'],
+
+            // Módulo: Calendario (Fase 6)
+            ['name' => 'calendario.ver', 'display_name' => 'Ver Calendario', 'module' => 'calendario'],
+            ['name' => 'calendario.editar', 'display_name' => 'Editar Calendario', 'module' => 'calendario'],
+
+            // Módulo: Notificaciones (Fase 7)
+            ['name' => 'notificaciones.ver', 'display_name' => 'Ver Notificaciones', 'module' => 'notificaciones'],
+            ['name' => 'notificaciones.gestionar', 'display_name' => 'Gestionar Notificaciones', 'module' => 'notificaciones'],
+
+            // Módulo: Documentos (Fase 8)
+            ['name' => 'documentos.ver', 'display_name' => 'Ver Documentos', 'module' => 'documentos'],
+            ['name' => 'documentos.subir', 'display_name' => 'Subir Documentos', 'module' => 'documentos'],
+            ['name' => 'documentos.verificar', 'display_name' => 'Verificar Documentos', 'module' => 'documentos'],
+            ['name' => 'documentos.eliminar', 'display_name' => 'Eliminar Documentos', 'module' => 'documentos'],
+
+            // Módulo: Informe Preliminar (Fase 8)
+            ['name' => 'informe_preliminar.ver', 'display_name' => 'Ver Informe Preliminar', 'module' => 'informe_preliminar'],
+            ['name' => 'informe_preliminar.editar', 'display_name' => 'Editar Informe Preliminar', 'module' => 'informe_preliminar'],
+
+            // Módulo: Observaciones (Fase 8)
+            ['name' => 'observacion.ver', 'display_name' => 'Ver Observaciones', 'module' => 'observacion'],
+            ['name' => 'observacion.editar', 'display_name' => 'Editar Observaciones', 'module' => 'observacion'],
+
+            // Módulo: Historial DPI (Fase 8)
+            ['name' => 'historial_dpi.ver', 'display_name' => 'Ver Historial DPI', 'module' => 'historial_dpi'],
         ];
 
         foreach ($permissions as $permission) {
@@ -135,7 +170,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'cuestionarios.ver',
             'empresas.ver',
             'usuarios.ver',
-            'reportes.ver', 'reportes.generar'
+            'reportes.ver', 'reportes.generar',
+            'sedes.ver',
+            'finanzas.ver',
+            'calendario.ver', 'calendario.editar',
+            'notificaciones.ver',
+            'documentos.ver', 'documentos.subir', 'documentos.verificar',
+            'informe_preliminar.ver', 'informe_preliminar.editar',
+            'observacion.ver', 'observacion.editar',
+            'historial_dpi.ver',
         ];
         
         $this->assignPermissionsByName($reproRole->id, $reproPermissions);
@@ -146,7 +189,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'ordenes.ver', 'ordenes.crear',
             'evaluaciones.ver',
             'resultados.ver', 'resultados.descargar',
-            'usuarios.ver', 'usuarios.crear', 'usuarios.editar' // Sus propios usuarios
+            'usuarios.ver', 'usuarios.crear', 'usuarios.editar', // Sus propios usuarios
+            'sedes.ver', 'sedes.crear', 'sedes.editar',
+            'calendario.ver',
+            'notificaciones.ver',
+            'documentos.ver', 'documentos.subir',
+            'informe_preliminar.ver',
         ];
         
         $this->assignPermissionsByName($empresaRole->id, $empresaPermissions);

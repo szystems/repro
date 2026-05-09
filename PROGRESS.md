@@ -19,6 +19,7 @@
 | Fase 6 | Configuracion + Finanzas | COMPLETADA |
 | Fase 7 | Editor de informes | COMPLETADA |
 | Fase 8 | Mejoras visuales (layout/scroll) | COMPLETADA |
+| Fase 9 | Hardening pre-deploy (auditoria) | EN PROGRESO |
 
 ---
 
@@ -247,6 +248,7 @@ UI Layout (mitigacion temporal, solucion completa en Fase 8):
 | Fase 6 | Configuracion + Finanzas | COMPLETADA |
 | Fase 7 | Editor de informes | COMPLETADA |
 | Fase 8 | Mejoras visuales (layout/scroll) | COMPLETADA |
+| Fase 9 | Hardening pre-deploy (auditoria) | EN PROGRESO |
 
 ---
 
@@ -338,3 +340,62 @@ Plan L1-L7:
 | 2026-04-22 | 409 | Sprint Auditoria-3 |
 | 2026-05-07 | 428 | Sprint-1 Fase 1 N1 CO10 A9 C3 CA1 CO9 C5 |
 | 2026-05-07 | 433 | C2 + fixes notificaciones + infra 20M |
+
+---
+
+## Fase 9 - Hardening Pre-Deploy - EN PROGRESO
+
+Auditoria profesional ejecutada el 2026-05-08 antes de subir Fases 1-8 al servidor (iPage FTP).
+Resultado: 2 hallazgos criticos resueltos en working tree, plan de cierre abajo.
+
+### Bloque A - CRITICOS (deben ir antes del push/FTP)
+
+| ID | Tarea | Estado | Archivo |
+|----|-------|--------|---------|
+| H1 | Sanitizar HTML de texto_informe_preliminar (XSS almacenado) | LISTO en working tree | app/Http/Controllers/Admin/OrdenesController.php |
+| H2 | Ampliar permissions seeder con 20 permisos de Fases 1-8 | LISTO en working tree + BD local seeded | database/seeders/RolesAndPermissionsSeeder.php |
+| H3 | Estrategia para aplicar el seeder en iPage (sin acceso CLI artisan) | PENDIENTE - decidir entre 3 opciones (ver abajo) | scripts/deploy_sql.sql o nuevo deploy_seed_permissions.php |
+| H4 | Verificar APP_DEBUG=false y APP_ENV=production en .env del servidor | PENDIENTE manual via FTP | .env produccion |
+
+### Opciones para H3 (iPage no tiene `php artisan` interactivo)
+
+1. Generar SQL plano con los 20 INSERT INTO permissions + INSERT INTO role_permission y subir como deploy_seed_permissions.sql
+2. Crear script PHP one-shot tipo deploy_*.php que invoque el seeder via Artisan::call() y se borre tras ejecutar (patron usado en deploy_migrate_v2.php existente)
+3. Crear migracion 2026_05_08_xxxxxx_seed_permissions_fases_1_8.php que llame al seeder y se ejecute con el sistema actual de migraciones FTP
+
+Recomendado: opcion 3 (migracion) para mantener idempotencia y trazabilidad.
+
+### Bloque B - ALTOS (proximo sprint, no bloquean deploy)
+
+| ID | Tarea | Justificacion |
+|----|-------|---------------|
+| H5 | Migrar rutas hardcoded role:admin,repro a permission:xxx.ver | Aprovechar los 20 nuevos permisos granulares |
+| H6 | Definir HOME=/tmp en Dockerfile o silenciar warning psysh | Limpiar 8 entradas de ruido en laravel.log local |
+| H7 | Auditar las 14 ocurrencias restantes de {!! !!} | Ya verificadas seguras (nl2br(e()) o json_encode), confirmar tras refactor |
+| H8 | Activar cache de config, route y view en deploy iPage | Via script PHP one-shot tipo deploy_cache.php |
+
+### Bloque C - MEDIOS (backlog)
+
+| ID | Tarea | Justificacion |
+|----|-------|---------------|
+| H9 | Crear policies Eloquent para Orden, Empresa, EvaluadoOrden, Sede | Reemplazar checks role_as<2 dispersos en controllers |
+| H10 | Cobertura de tests para los nuevos permisos (sedes, finanzas, etc) | Asegurar que assignPermissionsToRoles no rompe en futuras migraciones |
+| H11 | Tests E2E con candidate-token para flujo evaluado | Hoy solo cubierto a nivel unit; el token es la unica via de acceso de evaluados |
+| H12 | Revisar las 5 ocurrencias de DB::raw en controllers | Confirmar que ningun input de usuario llega a SQL crudo |
+
+### Plan de ejecucion sugerido
+
+1. Hoy antes del deploy: H1 + H2 (ya listos) + H3 (crear migracion seeder) + H4 (verificar .env via FTP).
+2. Hacer commit con los 3 archivos modificados.
+3. Subir via FTP a iPage segun procedimiento existente en docs/deployment/.
+4. Ejecutar deploy_migrate_v2.php remoto para correr migraciones (incluye el seeder).
+5. Verificar en BD remota que permissions tiene 44 filas y role_permission para repro/empresa esta poblada.
+6. Sprint siguiente: H5, H6, H8.
+7. Backlog: H7, H9, H10, H11, H12.
+
+### Verificacion baseline tras Fase 9 (local)
+
+- Tests: 475/475 (sin regresion tras H1+H2)
+- Permisos en BD local: 44 en 16 modulos (antes 24 en 8)
+- Migraciones pendientes: 0
+- Working tree files modificados: 2 (OrdenesController, RolesAndPermissionsSeeder)

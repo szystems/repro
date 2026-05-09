@@ -573,7 +573,9 @@ class OrdenesController extends Controller
             'texto_informe_preliminar' => 'nullable|string',
         ]);
 
-        $evaluado->update(['texto_informe_preliminar' => $request->texto_informe_preliminar]);
+        $textoLimpio = $this->sanitizarHtmlInforme($request->texto_informe_preliminar);
+
+        $evaluado->update(['texto_informe_preliminar' => $textoLimpio]);
 
         return back()->with('success', "Informe preliminar de {$evaluado->nombre} {$evaluado->apellidos} guardado.");
     }
@@ -1154,5 +1156,27 @@ class OrdenesController extends Controller
 
             return back()->with('error', 'Error al deshabilitar el cuestionario. Intente nuevamente.');
         }
+    }
+
+    /**
+     * Sanitiza HTML proveniente del editor enriquecido (Quill) permitiendo
+     * solo etiquetas y atributos seguros para evitar XSS almacenado.
+     */
+    private function sanitizarHtmlInforme(?string $html): ?string
+    {
+        if ($html === null || trim($html) === '') {
+            return $html;
+        }
+
+        $tagsPermitidos = '<p><br><b><strong><i><em><u><s><strike><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><pre><code><span><div><a>';
+        $limpio = strip_tags($html, $tagsPermitidos);
+
+        // Eliminar atributos peligrosos (on*, javascript:, style con expresiones)
+        $limpio = preg_replace('/\s+on[a-z]+\s*=\s*"[^"]*"/i', '', $limpio) ?? $limpio;
+        $limpio = preg_replace("/\s+on[a-z]+\s*=\s*'[^']*'/i", '', $limpio) ?? $limpio;
+        $limpio = preg_replace('/\s+(href|src)\s*=\s*"\s*javascript:[^"]*"/i', '', $limpio) ?? $limpio;
+        $limpio = preg_replace("/\s+(href|src)\s*=\s*'\s*javascript:[^']*'/i", '', $limpio) ?? $limpio;
+
+        return $limpio;
     }
 }
