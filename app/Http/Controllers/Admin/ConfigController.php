@@ -24,31 +24,16 @@ class ConfigController extends Controller
         $currency_simbol = isset($currencyParts[1]) ? ucwords($currencyParts[1]) : ucwords($currencyParts[0]);
 
         $config = Config::first();
-        if($request->hasFile('logo'))
-        {
+        if ($request->hasFile('logo')) {
             $path = 'assets/imgs/logos/'.$config->logo;
-            if(File::exists($path))
-            {
+            if (File::exists($path)) {
                 File::delete($path);
             }
             $file = $request->file('logo');
             $ext = $file->getClientOriginalExtension();
             $filename = time().'.'.$ext;
-            $file->move('assets/imgs/logos/',$filename);
+            $file->move('assets/imgs/logos/', $filename);
             $config->logo = $filename;
-        }
-        if($request->hasFile('contract'))
-        {
-            $path1 = 'assets/imgs/contract/'.$config->contract;
-            if(File::exists($path1))
-            {
-                File::delete($path1);
-            }
-            $file1 = $request->file('contract');
-            $ext1 = $file1->getClientOriginalExtension();
-            $filename1 = time().'.'.$ext1;
-            $file1->move('assets/imgs/contract/',$filename1);
-            $config->contract = $filename1;
         }
         $config->currency = $request->input('currency');
         $config->currency_simbol = $currency_simbol;
@@ -57,13 +42,16 @@ class ConfigController extends Controller
         $config->inst_link = $request->input('inst_link');
         $config->yt_link = $request->input('yt_link');
         $config->wapp_link = $request->input('wapp_link');
-        // $config->descuento_maximo = $request->input('descuento_maximo');
-        $config->impuesto = $request->input('impuesto');
+        $config->descuento_maximo = $request->input('descuento_maximo', 0);
+        $config->impuesto = $request->input('impuesto', 0);
         $config->update();
 
         // $request->session()->flash('alert-success', 'Configuración actualizado correctamente!');
         return redirect('config')->with('status', __('Configuración actualizada correctamente!'));
+    }
 
-        // return view('admin.config.index', \compact('config'));
+    public function finanzas(): \Illuminate\View\View
+    {
+        return view('admin.finanzas.index');
     }
 }

@@ -161,6 +161,12 @@
                         <span class="menu-text">Configuración</span>
                     </a>
                 </li>
+                <li class="{{ Request::is('finanzas') ? 'active-page-link':''  }}">
+                    <a href="{{ url('finanzas') }}">
+                        <i class="bi bi-cash-stack"></i>
+                        <span class="menu-text">Finanzas</span>
+                    </a>
+                </li>
                 @endif
 
                 <!-- Mis evaluaciones - Para evaluados -->

@@ -91,6 +91,9 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // RUTAS ADMIN + REPRO (role_as >= 2)
     // ========================================
     Route::middleware(['role:admin,repro'])->group(function () {
+        // Finanzas (próximamente)
+        Route::get('finanzas', [ConfigController::class, 'finanzas'])->name('finanzas.index');
+
         // Módulo de Empresas
         Route::get('empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'index'])->name('empresas.index');
         Route::get('add-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'create'])->name('empresas.create');

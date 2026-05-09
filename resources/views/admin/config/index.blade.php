@@ -13,7 +13,6 @@
                     <h5>Configuración del Sistema</h5>
                 </div>
             </div>
-            <!-- Date range start -->
             <div class="d-flex align-items-end d-none d-sm-block">
                 <h6 class="float-end text-light" id="reloj"></h6>
             </div>
@@ -22,7 +21,6 @@
 
         <!-- Content wrapper start -->
         <div class="content-wrapper">
-            <!-- Row start -->
             <div class="row gx-3">
                 <div class="col-sm-12 col-12">
                     <div class="card">
@@ -39,55 +37,153 @@
                             </div>
                         </div>
                         <div class="card-body">
+
+                            @if (count($errors) > 0)
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <ul class="mb-0">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+
                             <div class="custom-tabs-container">
                                 <ul class="nav nav-tabs nav-tabs-v2" id="configTab" role="tablist">
                                     <li class="nav-item" role="presentation">
-                                        <a class="nav-link active" id="tab-general" data-bs-toggle="tab" href="#general" role="tab"
-                                            aria-controls="general" aria-selected="true">
-                                            <i class="bi bi-gear me-1"></i> General
-                                        </a>
-                                    </li>
-                                    <!-- Las pestañas de Apariencia y Negocio están ocultas temporalmente
-                                    <li class="nav-item" role="presentation">
-                                        <a class="nav-link" id="tab-appearance" data-bs-toggle="tab" href="#appearance" role="tab"
-                                            aria-controls="appearance" aria-selected="false">
-                                            <i class="bi bi-palette me-1"></i> Apariencia
+                                        <a class="nav-link active" id="tab-identidad" data-bs-toggle="tab" href="#identidad" role="tab"
+                                            aria-controls="identidad" aria-selected="true">
+                                            <i class="bi bi-building me-1"></i> Identidad
                                         </a>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <a class="nav-link" id="tab-business" data-bs-toggle="tab" href="#business" role="tab"
-                                            aria-controls="business" aria-selected="false">
-                                            <i class="bi bi-building me-1"></i> Negocio
+                                        <a class="nav-link" id="tab-catalogos" data-bs-toggle="tab" href="#catalogos" role="tab"
+                                            aria-controls="catalogos" aria-selected="false">
+                                            <i class="bi bi-list-ul me-1"></i> Catálogos
                                         </a>
                                     </li>
-                                    -->
+                                    <li class="nav-item" role="presentation">
+                                        <a class="nav-link" id="tab-plantillas" data-bs-toggle="tab" href="#plantillas" role="tab"
+                                            aria-controls="plantillas" aria-selected="false">
+                                            <i class="bi bi-file-earmark-text me-1"></i> Plantillas
+                                        </a>
+                                    </li>
                                 </ul>
 
-                                <div class="tab-content" id="configTabContent">
-                                    <!-- Pestaña de Configuración General -->
-                                    <div class="tab-pane fade show active" id="general" role="tabpanel">
-                                        <div class="p-3">
-                                            <p class="text-muted mb-4">Configure los ajustes generales del sistema. Estos parámetros afectan el funcionamiento de todas las áreas de la aplicación.</p>
+                                <form id="configForm" action="{{ url('update-config') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    @method('PUT')
 
-                                            @if (count($errors)>0)
-                                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                                    <ul class="mb-0">
-                                                        @foreach ($errors->all() as $error)
-                                                            <li>{{$error}}</li>
-                                                        @endforeach
-                                                    </ul>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                                </div>
-                                            @endif
+                                    <div class="tab-content" id="configTabContent">
 
-                                            <form id="configForm" action="{{ url('update-config') }}" method="POST" enctype="multipart/form-data">
-                                                @csrf
-                                                @method('PUT')
+                                        <!-- ===== TAB: IDENTIDAD ===== -->
+                                        <div class="tab-pane fade show active" id="identidad" role="tabpanel">
+                                            <div class="p-3">
+                                                <p class="text-muted mb-4">Información visual y datos de contacto del sistema.</p>
 
-                                                <!-- Sección de Moneda y Finanzas -->
+                                                <!-- Logo -->
                                                 <div class="card mb-4 border">
                                                     <div class="card-header bg-light">
-                                                        <h6 class="mb-0"><i class="bi bi-currency-exchange me-1"></i> Moneda y Finanzas</h6>
+                                                        <h6 class="mb-0"><i class="bi bi-image me-1"></i> Logo del Sistema</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="row align-items-center">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label">Logo Actual</label>
+                                                                <div class="text-center p-3 bg-light rounded">
+                                                                    @if ($config->logo)
+                                                                        <img id="logoPreview" src="{{ asset('assets/imgs/logos/'.$config->logo) }}" class="img-fluid" style="max-height: 150px;" alt="Logo" />
+                                                                    @else
+                                                                        <div class="text-muted p-3" id="logoPlaceholder">
+                                                                            <i class="bi bi-image fs-1"></i>
+                                                                            <p>No hay logo configurado</p>
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label">Cambiar Logo</label>
+                                                                <div class="input-group mb-3">
+                                                                    <span class="input-group-text"><i class="bi bi-upload"></i></span>
+                                                                    <input type="file" id="logoFile" name="logo" class="form-control" accept="image/*">
+                                                                </div>
+                                                                <div class="form-text">
+                                                                    <i class="bi bi-info-circle me-1"></i> PNG o JPG con fondo transparente. Máx. 2MB.
+                                                                </div>
+                                                                @if ($errors->has('logo'))
+                                                                    <div class="text-danger mt-2">{{ $errors->first('logo') }}</div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Contacto y Redes -->
+                                                <div class="card mb-4 border">
+                                                    <div class="card-header bg-light">
+                                                        <h6 class="mb-0"><i class="bi bi-envelope me-1"></i> Contacto y Redes Sociales</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="email" class="form-label">Correo Electrónico</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                                                    <input name="email" id="email" type="email" class="form-control" placeholder="correo@empresa.com" value="{{ $config->email }}">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="wapp_link" class="form-label">WhatsApp</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text"><i class="bi bi-whatsapp"></i></span>
+                                                                    <input name="wapp_link" id="wapp_link" type="url" class="form-control" placeholder="https://wa.me/502..." value="{{ $config->wapp_link }}">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="fb_link" class="form-label">Facebook</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text"><i class="bi bi-facebook"></i></span>
+                                                                    <input name="fb_link" id="fb_link" type="url" class="form-control" placeholder="https://facebook.com/..." value="{{ $config->fb_link }}">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="inst_link" class="form-label">Instagram</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text"><i class="bi bi-instagram"></i></span>
+                                                                    <input name="inst_link" id="inst_link" type="url" class="form-control" placeholder="https://instagram.com/..." value="{{ $config->inst_link }}">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="yt_link" class="form-label">YouTube</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text"><i class="bi bi-youtube"></i></span>
+                                                                    <input name="yt_link" id="yt_link" type="url" class="form-control" placeholder="https://youtube.com/..." value="{{ $config->yt_link }}">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="d-flex gap-2 justify-content-end mt-2">
+                                                    <button type="reset" class="btn btn-outline-secondary">
+                                                        <i class="bi bi-arrow-counterclockwise"></i> Restablecer
+                                                    </button>
+                                                    <button type="submit" class="btn btn-success">
+                                                        <i class="bi bi-save"></i> Guardar Cambios
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- ===== TAB: CATÁLOGOS ===== -->
+                                        <div class="tab-pane fade" id="catalogos" role="tabpanel">
+                                            <div class="p-3">
+                                                <p class="text-muted mb-4">Valores de referencia utilizados en el sistema: moneda e impuestos.</p>
+
+                                                <div class="card mb-4 border">
+                                                    <div class="card-header bg-light">
+                                                        <h6 class="mb-0"><i class="bi bi-currency-exchange me-1"></i> Moneda e Impuestos</h6>
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="row">
@@ -102,135 +198,60 @@
                                                                         <option value="EUR €">Euros (EUR €)</option>
                                                                     </select>
                                                                 </div>
-                                                                <div class="form-text">Establece la moneda principal para reportes y transacciones</div>
+                                                                <div class="form-text">Moneda principal para reportes y transacciones.</div>
                                                             </div>
-
                                                             <div class="col-md-6 mb-3">
-                                                                <label for="impuesto" class="form-label">Porcentaje de Impuesto</label>
+                                                                <label for="impuesto" class="form-label">Porcentaje de Impuesto (%)</label>
                                                                 <div class="input-group">
                                                                     <span class="input-group-text"><i class="bi bi-percent"></i></span>
                                                                     <input name="impuesto" id="impuesto" type="number" class="form-control" min="0" max="100" step="0.01" placeholder="Ej: 12.50" value="{{ $config->impuesto }}">
                                                                     <span class="input-group-text bg-light">%</span>
                                                                 </div>
-                                                                <div class="form-text">IVA u otros impuestos aplicados en ventas</div>
+                                                                <div class="form-text">IVA u otros impuestos aplicados en ventas.</div>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="descuento_maximo" class="form-label">Descuento Máximo Permitido (%)</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                                                                    <input name="descuento_maximo" id="descuento_maximo" type="number" class="form-control" min="0" max="100" step="0.01" placeholder="Ej: 20.00" value="{{ $config->descuento_maximo }}">
+                                                                    <span class="input-group-text bg-light">%</span>
+                                                                </div>
+                                                                <div class="form-text">Porcentaje máximo de descuento aplicable.</div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <!-- Sección de Identidad Visual -->
-                                                <div class="card mb-4 border">
-                                                    <div class="card-header bg-light">
-                                                        <h6 class="mb-0"><i class="bi bi-image me-1"></i> Identidad Visual</h6>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <div class="row align-items-center">
-                                                            <div class="col-md-6 mb-3">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label">Logo Actual</label>
-                                                                    <div class="text-center p-3 bg-light rounded">
-                                                                        @if ($config->logo)
-                                                                            <img id="logoPreview" src="{{ asset('assets/imgs/logos/'.$config->logo) }}" class="img-fluid" style="max-height: 150px;" alt="Logo" />
-                                                                        @else
-                                                                            <div class="text-muted p-3">
-                                                                                <i class="bi bi-image fs-1"></i>
-                                                                                <p>No hay logo configurado</p>
-                                                                            </div>
-                                                                        @endif
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="col-md-6 mb-3">
-                                                                <label class="form-label">Cambiar Logo</label>
-                                                                <div class="input-group mb-3">
-                                                                    <span class="input-group-text"><i class="bi bi-upload"></i></span>
-                                                                    <input type="file" id="logoFile" name="logo" class="form-control" accept="image/*">
-                                                                </div>
-                                                                <div class="form-text">
-                                                                    <i class="bi bi-info-circle me-1"></i> Formato recomendado: PNG o JPG con fondo transparente. Tamaño máximo: 2MB.
-                                                                </div>
-                                                                @if ($errors->has('logo'))
-                                                                    <div class="text-danger mt-2">{{ $errors->first('logo') }}</div>
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Sección de Información del Negocio (temporalmente oculta)
-                                                <div class="card mb-4 border">
-                                                    <div class="card-header bg-light">
-                                                        <h6 class="mb-0"><i class="bi bi-building me-1"></i> Información del Negocio</h6>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <div class="row">
-                                                            <div class="col-md-6 mb-3">
-                                                                <label for="nombre_negocio" class="form-label">Nombre del Negocio</label>
-                                                                <div class="input-group">
-                                                                    <span class="input-group-text"><i class="bi bi-shop"></i></span>
-                                                                    <input name="nombre_negocio" type="text" class="form-control" placeholder="Nombre de su empresa" value="{{ $config->nombre_negocio }}">
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="col-md-6 mb-3">
-                                                                <label for="telefono" class="form-label">Teléfono</label>
-                                                                <div class="input-group">
-                                                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                                                    <input name="telefono" type="text" class="form-control" placeholder="Número de contacto" value="{{ $config->telefono }}">
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="col-md-12">
-                                                                <label for="direccion" class="form-label">Dirección</label>
-                                                                <div class="input-group">
-                                                                    <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                                                                    <textarea name="direccion" class="form-control" rows="2" placeholder="Dirección completa del negocio">{{ $config->direccion }}</textarea>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                -->
-
-                                                <div class="d-flex gap-2 justify-content-center mt-4">
+                                                <div class="d-flex gap-2 justify-content-end mt-2">
                                                     <button type="reset" class="btn btn-outline-secondary">
                                                         <i class="bi bi-arrow-counterclockwise"></i> Restablecer
                                                     </button>
                                                     <button type="submit" class="btn btn-success">
-                                                        <i class="bi bi-save"></i> Guardar Configuración
+                                                        <i class="bi bi-save"></i> Guardar Cambios
                                                     </button>
                                                 </div>
-                                            </form>
-                                        </div>
-                                    </div>
-
-                                    <!-- Contenidos de pestañas ocultas (temporalmente comentados)
-                                    <div class="tab-pane fade" id="appearance" role="tabpanel">
-                                        <div class="p-3">
-                                            <div class="alert alert-info">
-                                                <i class="bi bi-info-circle-fill me-2"></i>
-                                                La configuración de apariencia estará disponible en una actualización futura.
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div class="tab-pane fade" id="business" role="tabpanel">
-                                        <div class="p-3">
-                                            <div class="alert alert-info">
-                                                <i class="bi bi-info-circle-fill me-2"></i>
-                                                La configuración extendida de información de negocio estará disponible en una actualización futura.
+                                        <!-- ===== TAB: PLANTILLAS ===== -->
+                                        <div class="tab-pane fade" id="plantillas" role="tabpanel">
+                                            <div class="p-3">
+                                                <div class="text-center py-5">
+                                                    <i class="bi bi-file-earmark-text text-muted" style="font-size: 4rem;"></i>
+                                                    <h5 class="mt-3 text-muted">Plantillas de Documentos y Correos</h5>
+                                                    <p class="text-muted">La configuración de plantillas estará disponible en una próxima actualización.</p>
+                                                    <span class="badge bg-secondary fs-6 px-3 py-2">Próximamente</span>
+                                                </div>
                                             </div>
                                         </div>
+
                                     </div>
-                                    -->
-                                </div>
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- Row end -->
         </div>
         <!-- Content wrapper end -->
     </div>
@@ -239,37 +260,33 @@
     @push('scripts')
     <script>
         $(document).ready(function() {
-            // Previsualización de logo al seleccionarlo
             $("#logoFile").change(function() {
                 if (this.files && this.files[0]) {
                     var reader = new FileReader();
                     reader.onload = function(e) {
-                        $("#logoPreview").attr('src', e.target.result);
-                    }
+                        if ($("#logoPreview").length) {
+                            $("#logoPreview").attr('src', e.target.result);
+                        } else {
+                            $("#logoPlaceholder").html('<img id="logoPreview" src="' + e.target.result + '" class="img-fluid" style="max-height: 150px;" alt="Logo" />');
+                        }
+                    };
                     reader.readAsDataURL(this.files[0]);
                 }
             });
 
-            // Validación del formulario
             $("#configForm").submit(function(e) {
-                // Verificar impuesto
-                var impuesto = $("#impuesto").val();
-                if (impuesto < 0 || impuesto > 100) {
+                var impuesto = parseFloat($("#impuesto").val());
+                if (!isNaN(impuesto) && (impuesto < 0 || impuesto > 100)) {
                     e.preventDefault();
                     alert("El porcentaje de impuesto debe estar entre 0 y 100");
                     return false;
                 }
-
-                // Verificar tamaño de archivo de logo
                 var logoFile = $("#logoFile")[0];
-                if (logoFile.files.length > 0) {
-                    if (logoFile.files[0].size > 2 * 1024 * 1024) { // 2MB
-                        e.preventDefault();
-                        alert("El archivo de logo no debe exceder 2MB");
-                        return false;
-                    }
+                if (logoFile.files.length > 0 && logoFile.files[0].size > 2 * 1024 * 1024) {
+                    e.preventDefault();
+                    alert("El archivo de logo no debe exceder 2MB");
+                    return false;
                 }
-
                 return true;
             });
         });
