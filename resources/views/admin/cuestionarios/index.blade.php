@@ -3,18 +3,34 @@
 @section('title', 'Gestión de Cuestionario – Candidatos')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">
-                        <i class="bi bi-clipboard-check"></i> Gestión de Cuestionario – Candidatos
-                    </h3>
-                    <button type="button" class="btn btn-light btn-lg" id="btnFiltros">
-                        <i class="bi bi-funnel-fill"></i> Filtrar Resultados
-                    </button>
-                </div>
+<div class="content-wrapper-scroll">
+
+    <div class="main-header d-flex align-items-center justify-content-between position-relative">
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="page-icon">
+                <i class="bi bi-clipboard-check"></i>
+            </div>
+            <div class="page-title">
+                <h5>Gestión de Cuestionario – Candidatos</h5>
+            </div>
+        </div>
+        <div class="d-flex align-items-end d-none d-sm-block">
+            <h6 class="float-end text-light" id="reloj"></h6>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        <div class="row gx-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="card-title">
+                            <i class="bi bi-clipboard-check"></i> Cuestionarios
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnFiltros">
+                            <i class="bi bi-funnel-fill"></i> Filtrar
+                        </button>
+                    </div>
 
                 <div class="card-body">
                     {{-- Accesos rápidos --}}
@@ -481,6 +497,7 @@
             </div>
         </div>
     </div>
+    </div>
 </div>
 @endsection
 
@@ -504,15 +521,6 @@
     box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
 }
 
-.card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.card-header h3 {
-    color: white;
-}
-
 .card-header .btn-outline-primary {
     border-color: white;
     color: white;
@@ -521,8 +529,7 @@
 .card-header .btn-outline-primary:hover {
     background-color: white;
     color: #667eea;
-}
-</style>
+}</style>
 @endpush
 
 @push('scripts')
