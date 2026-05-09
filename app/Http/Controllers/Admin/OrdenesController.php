@@ -561,6 +561,24 @@ class OrdenesController extends Controller
     }
 
     /**
+     * Guardar el texto del informe preliminar (editor enriquecido).
+     */
+    public function guardarInformePreliminar(Request $request, EvaluadoOrden $evaluado): \Illuminate\Http\RedirectResponse
+    {
+        if (Auth::user()->role_as < 2) {
+            return back()->with('error', 'No tiene permisos para realizar esta acción.');
+        }
+
+        $request->validate([
+            'texto_informe_preliminar' => 'nullable|string',
+        ]);
+
+        $evaluado->update(['texto_informe_preliminar' => $request->texto_informe_preliminar]);
+
+        return back()->with('success', "Informe preliminar de {$evaluado->nombre} {$evaluado->apellidos} guardado.");
+    }
+
+    /**
      * Toggle visibilidad de resultados para empresa
      */
     public function toggleResultadosVisibles(Orden $orden)

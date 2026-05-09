@@ -65,6 +65,7 @@ class EvaluadoOrden extends Model
         'notas',
         'puesto_evaluar',
         'archivo_resultado_preliminar',
+        'texto_informe_preliminar',
         'archivo_resultado_final',
         'resultado_preliminar_at',
         'resultado_final_at',

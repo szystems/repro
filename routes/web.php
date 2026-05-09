@@ -150,7 +150,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // Cambio de estado evaluado — solo REPRO/admin
     Route::patch('evaluados/{evaluado}/cambiar-estado', [OrdenesController::class, 'cambiarEstadoEvaluado'])->name('evaluados.cambiar-estado');
     Route::patch('evaluados/{evaluado}/observacion', [OrdenesController::class, 'actualizarObservacion'])->name('evaluados.actualizar-observacion');
-
+        Route::patch('evaluados/{evaluado}/informe-preliminar', [OrdenesController::class, 'guardarInformePreliminar'])->name('evaluados.guardar-informe-preliminar');
     // Rehabilitación de cuestionario — solo REPRO/admin
     Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');
     Route::post('evaluados/{evaluado}/deshabilitar-cuestionario', [OrdenesController::class, 'deshabilitarCuestionario'])->name('evaluados.deshabilitar-cuestionario');

@@ -772,6 +772,50 @@
                                             </div>
                                         </div>
 
+                                        {{-- Informe Preliminar (Editor de texto enriquecido) --}}
+                                        @if(Auth::user()->role_as >= 2 || ($orden->resultados_visibles_empresa && $evaluado->texto_informe_preliminar))
+                                        <div class="card border-info mt-3">
+                                            <div class="card-header bg-info bg-opacity-10 py-2">
+                                                <h6 class="mb-0 text-info">
+                                                    <i class="bi bi-file-earmark-text"></i> Informe Preliminar
+                                                    @if($evaluado->texto_informe_preliminar)
+                                                        <span class="badge bg-success ms-2">Redactado</span>
+                                                    @else
+                                                        <span class="badge bg-secondary ms-2">Sin redactar</span>
+                                                    @endif
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                @if(Auth::user()->role_as >= 2)
+                                                    {{-- Editor para admin/repro --}}
+                                                    <form action="{{ route('evaluados.guardar-informe-preliminar', $evaluado->id) }}"
+                                                          method="POST" class="informe-preliminar-form">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <div id="editor-preliminar-{{ $evaluado->id }}" style="min-height: 150px; max-height: 400px; overflow-y: auto;">
+                                                            {!! $evaluado->texto_informe_preliminar !!}
+                                                        </div>
+                                                        <input type="hidden" name="texto_informe_preliminar"
+                                                               id="hidden-preliminar-{{ $evaluado->id }}"
+                                                               value="{{ $evaluado->texto_informe_preliminar }}">
+                                                        <div class="mt-2 d-flex justify-content-end">
+                                                            <button type="submit" class="btn btn-sm btn-info text-white">
+                                                                <i class="bi bi-save"></i> Guardar informe
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                @else
+                                                    {{-- Vista de solo lectura para empresa --}}
+                                                    @if($evaluado->texto_informe_preliminar)
+                                                        <div class="border rounded p-3 bg-light">
+                                                            {!! $evaluado->texto_informe_preliminar !!}
+                                                        </div>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @endif
+
                                     </div>
 
                                     {{-- Modal Programar/Reprogramar cita --}}
@@ -923,6 +967,7 @@
 @endsection
 
 @push('styles')
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 <style>
 /* Estilos para alertas de fechas límite */
 .pulse {
@@ -1017,5 +1062,38 @@ function copiarEnlaceEvaluado(url) {
         alert('Error al copiar: ' + err);
     });
 }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script>
+// Inicializar editores Quill para informe preliminar
+document.querySelectorAll('[id^="editor-preliminar-"]').forEach(function(editorEl) {
+    const evaluadoId = editorEl.id.replace('editor-preliminar-', '');
+    const hiddenInput = document.getElementById('hidden-preliminar-' + evaluadoId);
+
+    const quill = new Quill(editorEl, {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['clean']
+            ]
+        }
+    });
+
+    // Restaurar contenido del campo oculto si viene del servidor
+    if (hiddenInput.value) {
+        quill.clipboard.dangerouslyPasteHTML(hiddenInput.value);
+    }
+
+    // Antes de enviar el form, copiar HTML al input oculto
+    const form = editorEl.closest('form.informe-preliminar-form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            hiddenInput.value = quill.getSemanticHTML();
+        });
+    }
+});
 </script>
 @endpush
