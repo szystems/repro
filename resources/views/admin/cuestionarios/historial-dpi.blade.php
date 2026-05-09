@@ -18,7 +18,7 @@
 
         {{-- Formulario de búsqueda --}}
         <div class="row mb-4">
-            <div class="col-md-8 mx-auto">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-body">
                         <form method="GET" action="{{ route('admin.cuestionarios.historial-dpi') }}" class="row g-3 align-items-end">

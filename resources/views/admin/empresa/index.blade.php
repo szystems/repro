@@ -25,7 +25,7 @@
 
         <!-- Row start -->
         <div class="row gx-3">
-            <div class="col-xl-12">
+            <div class="col-12">
                 <div class="card card-background-mask-info">
                     <div class="card-header">
                         <div class="card-title"><i class="bi bi-search"></i> Buscar Empresa</div>
@@ -82,7 +82,7 @@
 
         <!-- Row start -->
         <div class="row gx-3">
-            <div class="col-xl-12">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header">
                         <div class="row">

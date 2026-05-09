@@ -87,13 +87,13 @@ Ajustes de presentación que afectan a todas las pantallas. No cambian funcional
 
 | Estado | Ref | Descripción |
 |--------|-----|-------------|
-| ✗ | UI1 | Eliminar las barras de desplazamiento duplicadas que aparecen en el lado derecho. Dejar una sola barra, la del navegador. |
-| ✗ | UI2 | Anclar el pie de página al final del contenido. Hoy queda un espacio en blanco grande entre el último elemento y el pie de página cuando la pantalla es corta. |
-| ✗ | UI3 | Revisar todas las vistas para que no se generen contenedores con su propio scroll dentro de otros contenedores que también tienen scroll. |
+| ✓ | UI1 | Eliminar las barras de desplazamiento duplicadas que aparecen en el lado derecho. Dejar una sola barra, la del navegador. |
+| ✓ | UI2 | Anclar el pie de página al final del contenido. Hoy queda un espacio en blanco grande entre el último elemento y el pie de página cuando la pantalla es corta. |
+| ✓ | UI3 | Revisar todas las vistas para que no se generen contenedores con su propio scroll dentro de otros contenedores que también tienen scroll. |
 
 > Nota: aplicada una mitigación temporal el 7 de mayo de 2026 que reduce el problema en la vista de detalle de orden, pero la solución completa requiere un repaso transversal y se aborda en esta fase.
 
 ---
 
-*8 de mayo de 2026 — Fase 1 completada (8/8) · Fase 2 completada (10/10) · Fase 3 completada (5/5) · Fase 4 completada (2/2) · Fase 5 completada (4/4) · Fase 6 completada (2/2) · Fase 7 completada (1/1) · 475 tests · 3 pendientes (Fase 8)*
+*8 de mayo de 2026 — Fase 1 completada (8/8) · Fase 2 completada (10/10) · Fase 3 completada (5/5) · Fase 4 completada (2/2) · Fase 5 completada (4/4) · Fase 6 completada (2/2) · Fase 7 completada (1/1) · Fase 8 completada (3/3) · 475 tests · 0 pendientes*
 

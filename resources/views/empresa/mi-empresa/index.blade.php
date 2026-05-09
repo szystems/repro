@@ -91,7 +91,7 @@
 
         <!-- Información de la empresa -->
         <div class="row gx-3 mb-3">
-            <div class="col-xl-12">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">

@@ -98,6 +98,51 @@
             /* Colores de badge para estados del proceso */
             .bg-orange  { background-color: #dd5500 !important; color: #fff !important; }
             .bg-purple  { background-color: #7920d1 !important; color: #fff !important; }
+
+            /* === Fase 8 (UI1, UI2, UI3): scroll natural del navegador y footer anclado === */
+            html, body {
+                overflow-x: hidden;
+            }
+            /* Eliminar scrollbar interno del content-wrapper para dejar solo la del navegador */
+            .content-wrapper {
+                height: auto !important;
+                overflow: visible !important;
+                flex: 1 0 auto;
+            }
+            /* El wrapper de las vistas tampoco debe scrollear: se delega al documento */
+            .content-wrapper-scroll {
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            /* main-container como flex column para anclar el footer al final */
+            .page-wrapper .main-container {
+                height: auto !important;
+                min-height: calc(100vh - 65px);
+                display: flex;
+                flex-direction: column;
+            }
+            /* Footer: que se empuje al final cuando el contenido es corto */
+            .app-footer {
+                margin-top: auto;
+                flex-shrink: 0;
+            }
+            /* Bajo el breakpoint xl, cualquier col-xl-N debe apilarse al 100% para
+               evitar que el flex item se encoja al ancho del contenido. */
+            @media (max-width: 1199.98px) {
+                [class*="col-xl-"]:not([class*="col-lg-"]):not([class*="col-md-"]):not([class*="col-sm-"]):not([class*="col-12"]) {
+                    flex: 0 0 auto;
+                    width: 100%;
+                }
+            }
+            /* Muchas vistas anidan otro .content-wrapper dentro de .content-wrapper-scroll,
+               lo que duplica el padding 30/30 del template. Como el .content-wrapper externo
+               (del layout) ya aporta el padding, el interno debe quedar sin padding/altura. */
+            .content-wrapper-scroll .content-wrapper {
+                padding: 0 !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
         </style>
 
         @stack('styles')

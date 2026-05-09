@@ -56,18 +56,17 @@
 
         .main-container {
             display: flex;
-            flex: 1;
-            min-height: 0;
+            flex: 1 0 auto;
         }
 
+        /* Fase 8 (UI1/UI3): el scroll lo gestiona el documento, no este wrapper */
         .content-wrapper-scroll {
             flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
+            overflow: visible;
             padding-bottom: 10px;
         }
 
-        /* Evitar scrollbars duplicados cuando una vista anida otro .content-wrapper-scroll */
+        /* Anidamientos legacy: nunca scroll propio */
         .content-wrapper-scroll .content-wrapper-scroll {
             flex: unset;
             overflow: visible;
@@ -108,6 +107,20 @@
         .btn-primary:hover {
             background-color: var(--secondary-color);
             border-color: var(--secondary-color);
+        }
+
+        /* Bajo xl, col-xl-N debe apilarse al 100% para evitar shrink-to-content */
+        @media (max-width: 1199.98px) {
+            [class*="col-xl-"]:not([class*="col-lg-"]):not([class*="col-md-"]):not([class*="col-sm-"]):not([class*="col-12"]) {
+                flex: 0 0 auto;
+                width: 100%;
+            }
+        }
+        /* Evitar padding duplicado cuando una vista anida .content-wrapper dentro de .content-wrapper-scroll */
+        .content-wrapper-scroll .content-wrapper {
+            padding: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
         }
     </style>
 </head>

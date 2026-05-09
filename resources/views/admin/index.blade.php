@@ -337,9 +337,9 @@
                             </thead>
                             <tbody>
                                 @forelse($ultimasOrdenes ?? [] as $orden)
-                                    <tr>
+                                    <tr style="cursor:pointer" onclick="window.location='{{ route('ordenes.show', $orden) }}'">
                                         <td>
-                                            <a href="{{ route('ordenes.show', $orden) }}" class="fw-bold text-primary">
+                                            <a href="{{ route('ordenes.show', $orden) }}" class="fw-bold text-primary text-decoration-none" onclick="event.stopPropagation()">
                                                 {{ $orden->codigo_orden }}
                                             </a>
                                         </td>
@@ -644,9 +644,9 @@
                                     ];
                                 @endphp
                                 @forelse($ultimasOrdenes ?? [] as $orden)
-                                    <tr>
+                                    <tr style="cursor:pointer" onclick="window.location='{{ route('empresa.ordenes.show', $orden) }}'">
                                         <td>
-                                            <a href="{{ route('empresa.ordenes.show', $orden) }}" class="fw-bold text-primary">
+                                            <a href="{{ route('empresa.ordenes.show', $orden) }}" class="fw-bold text-primary text-decoration-none" onclick="event.stopPropagation()">
                                                 {{ $orden->codigo_orden }}
                                             </a>
                                         </td>

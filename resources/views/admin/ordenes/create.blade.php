@@ -24,7 +24,7 @@
     <div class="content-wrapper">
 
         <div class="row gx-3">
-            <div class="col-xl-12">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">Datos de la Orden</div>

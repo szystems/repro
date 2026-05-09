@@ -513,12 +513,12 @@
     color: white;
 }
 
-.btn-outline-primary {
+.card-header .btn-outline-primary {
     border-color: white;
     color: white;
 }
 
-.btn-outline-primary:hover {
+.card-header .btn-outline-primary:hover {
     background-color: white;
     color: #667eea;
 }

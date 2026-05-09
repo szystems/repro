@@ -2,8 +2,8 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-05-07
-**Suite de tests:** 463/463
+**Ultima actualizacion:** 2026-05-08
+**Suite de tests:** 475/475
 
 ---
 
@@ -14,11 +14,11 @@
 | Fase 1 | Correcciones urgentes (8 items) | COMPLETADA |
 | Fase 2 | Mejoras rapidas (10 items) | COMPLETADA |
 | Fase 3 | Funcionalidades nuevas (5 items) | COMPLETADA |
-| Fase 4 | Estados y bloqueos | PENDIENTE |
-| Fase 5 | Reportes y sedes | PENDIENTE |
-| Fase 6 | Configuracion + Finanzas | PENDIENTE |
-| Fase 7 | Editor de informes | PENDIENTE |
-| Fase 8 | Mejoras visuales (layout/scroll) | PENDIENTE |
+| Fase 4 | Estados y bloqueos | COMPLETADA |
+| Fase 5 | Reportes y sedes | COMPLETADA |
+| Fase 6 | Configuracion + Finanzas | COMPLETADA |
+| Fase 7 | Editor de informes | COMPLETADA |
+| Fase 8 | Mejoras visuales (layout/scroll) | COMPLETADA |
 
 ---
 
@@ -157,35 +157,62 @@ UI Layout (mitigacion temporal, solucion completa en Fase 8):
 
 ---
 
-## Fase 6 - Configuracion y Finanzas - PENDIENTE
+## Fase 6 - Configuracion y Finanzas - COMPLETADA 2026-05-08
 
-| Ref | Descripcion |
-|-----|-------------|
-| A8 | Dividir Configuracion en subsecciones: Identidad, Plantillas y Catalogos |
-| A8-fin | Agregar seccion "Finanzas" al menu con pantalla de "Proximamente" |
-
----
-
-## Fase 7 - Editor de informes - PENDIENTE
-
-| Ref | Descripcion |
-|-----|-------------|
-| CO6 | Editor de texto enriquecido para redactar el informe preliminar en el sistema |
+| Ref | Descripcion | Tests |
+|-----|-------------|-------|
+| A8 | Dividir Configuracion en subsecciones: Identidad, Plantillas y Catalogos | OK |
+| A8-fin | Agregar seccion "Finanzas" al menu con pantalla de "Proximamente" | OK |
 
 ---
 
-## Fase 8 - Deuda Layout UI - PENDIENTE
+## Fase 7 - Editor de informes - COMPLETADA 2026-05-08
 
-Problema: multiples barras de scroll apiladas y footer flotante.
+| Ref | Descripcion | Tests |
+|-----|-------------|-------|
+| CO6 | Editor de texto enriquecido (Quill 1.3.7) para informe preliminar | Fase7EditorInformePreliminarTest (6) |
 
-Plan L1-L7:
-- L1: Un unico modelo de scroll (scroll en html, sidebar position fixed)
-- L2: Quitar overflow-y:auto y height:100vh de page-wrapper
-- L3: Eliminar OverlayScrollbars en content-wrapper-scroll
-- L4: Quitar div content-wrapper-scroll anidado en las 36 vistas
-- L5: Mover footer dentro del wrapper de contenido
-- L6: Auditar otros overflow:auto internos
-- L7: Test visual - 1 solo scrollbar en pantallas menores a 1080p
+### Archivos clave Fase 7
+
+- database/migrations/2026_05_08_183729_add_texto_informe_preliminar_to_evaluados_orden_table.php
+- app/Models/EvaluadoOrden.php: texto_informe_preliminar en $fillable
+- app/Http/Controllers/Admin/OrdenesController.php: guardarInformePreliminar(), pdfInforme() con $mostrarInformePreliminar
+- routes/web.php: PATCH evaluados/{evaluado}/informe-preliminar
+- resources/views/admin/ordenes/show.blade.php: card con editor Quill (toolbar h2/h3/bold/italic/listas)
+- resources/views/empresa/ordenes/show.blade.php: card read-only cuando resultados_visibles_empresa
+- resources/views/admin/ordenes/pdf-informe.blade.php: bloque Informe Preliminar en PDF
+- resources/views/layouts/admin.blade.php: @stack('styles') agregado (faltaba)
+- tests/Feature/Fase7EditorInformePreliminarTest.php: 6 tests (admin puede guardar, empresa bloqueada, etc.)
+
+---
+
+## Fase 8 - Mejoras visuales - COMPLETADA 2026-05-08
+
+475 tests al cierre.
+
+| Ref | Descripcion | Solucion |
+|-----|-------------|----------|
+| UI1 | Eliminar scrollbars duplicadas | overlayScrollbars desactivado en content-wrapper-scroll; CSS height:auto/overflow:visible |
+| UI2 | Footer anclado al final del contenido | main-container como flex column, app-footer con margin-top:auto |
+| UI3 | Eliminar scrolls anidados | CSS .content-wrapper-scroll .content-wrapper { padding:0; overflow:visible } |
+
+### Fixes adicionales Fase 8
+
+- Dropdown invisible en cuestionarios: .btn-outline-primary sin scope sobreescribia color; limitado a .card-header .btn-outline-primary
+- Filas "Ultimas Ordenes" no clicables: onclick en <tr> con route en admin y empresa dashboard
+- col-xl-12 -> col-12 en 13 vistas (sedes, empresas, ordenes, config, mi-empresa)
+- CSS defensivo: col-xl-N sin fallback apila al 100% bajo breakpoint xl
+- historial-dpi: form de busqueda expandido a col-12 en lugar de col-md-8 mx-auto
+
+### Archivos clave Fase 8
+
+- resources/views/layouts/admin.blade.php: CSS Fase 8 (overflow, flex, footer, col-xl, nested wrapper)
+- resources/views/layouts/empresa.blade.php: mismos overrides CSS
+- public/dashboardtemplate/design/assets/vendor/overlay-scroll/custom-scrollbar.js: content-wrapper-scroll desactivado
+- resources/views/admin/index.blade.php: filas clicables en Ultimas Ordenes (admin + empresa)
+- resources/views/admin/cuestionarios/index.blade.php: fix scope CSS btn-outline-primary
+- resources/views/admin/cuestionarios/historial-dpi.blade.php: col-12 full width
+- 13 vistas: col-xl-12 -> col-12
 
 ---
 
@@ -202,6 +229,8 @@ Plan L1-L7:
 | 2026-05-07 | 449 | Fase 2 completa + Fase 3 completa |
 | 2026-05-07 | 457 | Fase 4 completa (A6 + CO3) |
 | 2026-05-07 | 463 | Fase 5 completa (A5, A7, C4, CO9-hist) + bugs post-verificacion |
+| 2026-05-08 | 469 | Fase 6 completa (A8, A8-fin) + Fase 7 completa (CO6 Quill editor) |
+| 2026-05-08 | 475 | Fase 8 completa (UI1/UI2/UI3 scroll/footer/ancho) + fixes dropdown + filas clickables |
 
 
 ---
@@ -215,9 +244,9 @@ Plan L1-L7:
 | Fase 3 | Funcionalidades nuevas | COMPLETADA |
 | Fase 4 | Estados y bloqueos | COMPLETADA |
 | Fase 5 | Reportes y sedes | COMPLETADA |
-| Fase 6 | Configuracion + Finanzas | PENDIENTE |
-| Fase 7 | Editor de informes | PENDIENTE |
-| Fase 8 | Mejoras visuales (layout/scroll) | PENDIENTE |
+| Fase 6 | Configuracion + Finanzas | COMPLETADA |
+| Fase 7 | Editor de informes | COMPLETADA |
+| Fase 8 | Mejoras visuales (layout/scroll) | COMPLETADA |
 
 ---
 

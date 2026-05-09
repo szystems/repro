@@ -13,19 +13,10 @@ $(function () {
 });
 
 $(function () {
-	// Solo inicializar en el contenedor más externo para evitar scrollbars duplicados
-	// cuando una vista anida otro <div class="content-wrapper-scroll"> dentro del que ya pone el layout.
-	$(".content-wrapper-scroll").not($(".content-wrapper-scroll .content-wrapper-scroll")).overlayScrollbars({
-		scrollbars: {
-			visibility: "auto",
-			autoHide: "scroll",
-			autoHideDelay: 200,
-			dragScrolling: true,
-			clickScrolling: false,
-			touchSupport: true,
-			snapHandle: false,
-		},
-	});
+	// Fase 8 (UI1/UI3): no aplicar overlayScrollbars a .content-wrapper-scroll
+	// para evitar barras duplicadas con la del navegador y scrolls anidados.
+	// Se delega el scroll al documento (gestionado por CSS en layouts/admin.blade.php).
+	// Mantener desactivado salvo cambio explícito.
 });
 
 // Scroll 330
