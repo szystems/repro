@@ -967,7 +967,76 @@
 @endsection
 
 @push('styles')
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+<style>
+/* Forzar tamaños correctos de los iconos Quill (conflicto con CSS del template) */
+.ql-toolbar.ql-snow {
+    border: 1px solid #ced4da;
+    border-radius: 4px 4px 0 0;
+    padding: 6px 8px;
+}
+.ql-container.ql-snow {
+    border: 1px solid #ced4da;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    font-family: inherit;
+    font-size: 14px;
+}
+.ql-snow .ql-editor {
+    min-height: 150px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.ql-snow .ql-toolbar button,
+.ql-snow.ql-toolbar button {
+    width: 28px !important;
+    height: 24px !important;
+    padding: 3px 5px !important;
+    display: inline-block !important;
+    background: transparent;
+    border: none;
+}
+.ql-snow .ql-toolbar button svg,
+.ql-snow.ql-toolbar button svg {
+    width: 18px !important;
+    height: 18px !important;
+    float: none !important;
+}
+.ql-snow .ql-picker {
+    height: 24px !important;
+    font-size: 14px;
+}
+.ql-snow .ql-picker-label {
+    padding-left: 8px;
+    padding-right: 2px;
+}
+.ql-snow .ql-picker-label svg,
+.ql-snow .ql-picker-options svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+.ql-snow .ql-stroke {
+    stroke: #444;
+    stroke-width: 2;
+    fill: none;
+}
+.ql-snow .ql-fill,
+.ql-snow .ql-stroke.ql-fill {
+    fill: #444;
+}
+.ql-snow.ql-toolbar button:hover .ql-stroke,
+.ql-snow .ql-toolbar button:hover .ql-stroke,
+.ql-snow.ql-toolbar button.ql-active .ql-stroke,
+.ql-snow .ql-toolbar button.ql-active .ql-stroke {
+    stroke: #06c;
+}
+.ql-snow.ql-toolbar button:hover .ql-fill,
+.ql-snow .ql-toolbar button:hover .ql-fill,
+.ql-snow.ql-toolbar button.ql-active .ql-fill,
+.ql-snow .ql-toolbar button.ql-active .ql-fill {
+    fill: #06c;
+}
+</style>
 <style>
 /* Estilos para alertas de fechas límite */
 .pulse {
@@ -1063,7 +1132,7 @@ function copiarEnlaceEvaluado(url) {
     });
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 <script>
 // Inicializar editores Quill para informe preliminar
 document.querySelectorAll('[id^="editor-preliminar-"]').forEach(function(editorEl) {
@@ -1074,7 +1143,7 @@ document.querySelectorAll('[id^="editor-preliminar-"]').forEach(function(editorE
         theme: 'snow',
         modules: {
             toolbar: [
-                [{ 'header': [1, 2, 3, false] }],
+                [{ 'header': [2, 3, false] }],
                 ['bold', 'italic', 'underline'],
                 [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                 ['clean']
@@ -1082,7 +1151,7 @@ document.querySelectorAll('[id^="editor-preliminar-"]').forEach(function(editorE
         }
     });
 
-    // Restaurar contenido del campo oculto si viene del servidor
+    // Restaurar contenido si ya existe
     if (hiddenInput.value) {
         quill.clipboard.dangerouslyPasteHTML(hiddenInput.value);
     }
@@ -1091,7 +1160,7 @@ document.querySelectorAll('[id^="editor-preliminar-"]').forEach(function(editorE
     const form = editorEl.closest('form.informe-preliminar-form');
     if (form) {
         form.addEventListener('submit', function() {
-            hiddenInput.value = quill.getSemanticHTML();
+            hiddenInput.value = quill.root.innerHTML;
         });
     }
 });

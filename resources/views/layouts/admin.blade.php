@@ -100,6 +100,7 @@
             .bg-purple  { background-color: #7920d1 !important; color: #fff !important; }
         </style>
 
+        @stack('styles')
 
 	</head>
 

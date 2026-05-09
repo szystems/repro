@@ -175,6 +175,23 @@
                     @if($evaluado->observaciones)
                         <div class="mt-1"><small class="text-info"><i class="bi bi-chat-left-text"></i> {{ $evaluado->observaciones }}</small></div>
                     @endif
+
+                    {{-- Informe Preliminar (texto enriquecido) --}}
+                    @if($orden->resultados_visibles_empresa && $evaluado->texto_informe_preliminar)
+                        <div class="card border-info mt-2">
+                            <div class="card-header bg-info bg-opacity-10 py-2">
+                                <h6 class="mb-0 text-info">
+                                    <i class="bi bi-file-earmark-text"></i> Informe Preliminar
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="border rounded p-3 bg-light">
+                                    {!! $evaluado->texto_informe_preliminar !!}
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Sección de documentos/papelería --}}
                     @include('empresa.ordenes._documentos_evaluado', ['evaluado' => $evaluado])
                 </div>

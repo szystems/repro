@@ -68,8 +68,8 @@
 
 | Estado | Ref | Descripción |
 |--------|-----|-------------|
-| ✗ | A8 | Dividir Configuración en subsecciones: Identidad, Plantillas y Catálogos |
-| ✗ | A8-fin | Agregar sección "Finanzas" al menú con pantalla de "Próximamente" |
+| ✓ | A8 | Dividir Configuración en subsecciones: Identidad, Plantillas y Catálogos |
+| ✓ | A8-fin | Agregar sección "Finanzas" al menú con pantalla de "Próximamente" |
 
 ---
 
@@ -77,7 +77,7 @@
 
 | Estado | Ref | Descripción |
 |--------|-----|-------------|
-| ✗ | CO6 | Editor de texto enriquecido para redactar el informe preliminar directamente en el sistema |
+| ✓ | CO6 | Editor de texto enriquecido para redactar el informe preliminar directamente en el sistema |
 
 ---
 
@@ -95,5 +95,5 @@ Ajustes de presentación que afectan a todas las pantallas. No cambian funcional
 
 ---
 
-*7 de mayo de 2026 — Fase 1 completada (8/8) · Fase 2 completada (10/10) · Fase 3 completada (5/5) · Fase 4 completada (2/2) · Fase 5 completada (4/4) · 463 tests · 9 pendientes (Fases 6-8)*
+*8 de mayo de 2026 — Fase 1 completada (8/8) · Fase 2 completada (10/10) · Fase 3 completada (5/5) · Fase 4 completada (2/2) · Fase 5 completada (4/4) · Fase 6 completada (2/2) · Fase 7 completada (1/1) · 475 tests · 3 pendientes (Fase 8)*
 

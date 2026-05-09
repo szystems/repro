@@ -837,7 +837,10 @@ class OrdenesController extends Controller
 
         $orden->load(['empresa', 'sede', 'evaluados.poligrafista', 'evaluados.responsable', 'evaluados.sede']);
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf-informe', compact('orden'));
+        $esEmpresa = Auth::user()->role_as < 2;
+        $mostrarInformePreliminar = !$esEmpresa || $orden->resultados_visibles_empresa;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf-informe', compact('orden', 'mostrarInformePreliminar'));
 
         return $pdf->stream('Informe_' . $orden->codigo_orden . '_' . ($orden->empresa->nombre ?? 'SinEmpresa') . '.pdf');
     }
