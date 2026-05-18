@@ -35,7 +35,7 @@ class CuestionarioCompletadoNotification extends Notification
             'tipo' => 'cuestionario_completado',
             'icono' => 'bi-check-circle',
             'color' => 'success',
-            'mensaje' => $this->evaluado->nombre_completo . ' completó su cuestionario',
+            'mensaje' => $this->evaluado->nombre_completo . ' completó su cuestionario — Orden #' . ($this->evaluado->orden->codigo_orden ?? $this->evaluado->orden_id),
             'url' => $url,
             'evaluado_id' => $this->evaluado->id,
         ];

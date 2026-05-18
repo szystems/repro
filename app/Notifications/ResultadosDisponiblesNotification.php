@@ -35,7 +35,7 @@ class ResultadosDisponiblesNotification extends Notification
             'tipo' => 'resultados_disponibles',
             'icono' => 'bi-file-earmark-check',
             'color' => 'info',
-            'mensaje' => 'Resultados disponibles para ' . $this->evaluado->nombre_completo,
+            'mensaje' => 'Resultados disponibles: ' . $this->evaluado->nombre_completo . ' — Orden #' . ($this->evaluado->orden->codigo_orden ?? $this->evaluado->orden_id),
             'url' => $url,
             'evaluado_id' => $this->evaluado->id,
         ];

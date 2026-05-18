@@ -577,7 +577,14 @@ class OrdenesController extends Controller
 
         $evaluado->update(['texto_informe_preliminar' => $textoLimpio]);
 
-        return back()->with('success', "Informe preliminar de {$evaluado->nombre} {$evaluado->apellidos} guardado.");
+        // Auto-liberar resultados para el cliente al guardar el informe preliminar
+        $orden = $evaluado->orden;
+        if (!$orden->resultados_visibles_empresa) {
+            $orden->update(['resultados_visibles_empresa' => true]);
+            $this->notificarResultadosDisponibles($orden);
+        }
+
+        return back()->with('success', "Informe preliminar de {$evaluado->nombre} {$evaluado->apellidos} guardado y liberado al cliente.");
     }
 
     /**
@@ -585,9 +592,9 @@ class OrdenesController extends Controller
      */
     public function toggleResultadosVisibles(Orden $orden)
     {
-        // Solo admin y repro pueden cambiar la visibilidad
-        if (Auth::user()->role_as < 2) {
-            return back()->with('error', 'No tiene permisos para realizar esta acción.');
+        // Solo administradores de REPRO pueden bloquear/desbloquear manualmente la visibilidad
+        if (Auth::user()->role_as < 3) {
+            return back()->with('error', 'Solo los administradores pueden bloquear o desbloquear manualmente la visibilidad de resultados.');
         }
 
         $nuevoEstado = !$orden->resultados_visibles_empresa;
@@ -961,15 +968,19 @@ class OrdenesController extends Controller
             return back()->with('success', 'Archivo de resultado final subido. Los resultados han sido liberados automáticamente al cliente.');
         }
 
-        // Subir preliminar → avanzar estado si aún está en etapas tempranas
+        // Subir preliminar → avanzar estado + auto-liberar al cliente
         if ($tipo === 'preliminar') {
             $estadosTempranos = ['solicitud', 'autorizacion', 'requisito', 'programacion', 'en_proceso'];
             if (in_array($orden->estado, $estadosTempranos)) {
                 $orden->forzarEstado('preliminar', 'Resultado preliminar subido automáticamente');
             }
+            if (!$orden->resultados_visibles_empresa) {
+                $orden->update(['resultados_visibles_empresa' => true]);
+                $this->notificarResultadosDisponibles($orden);
+            }
         }
 
-        return back()->with('success', "Archivo de resultado {$tipo} subido correctamente.");
+        return back()->with('success', "Archivo de resultado {$tipo} subido correctamente. Los resultados han sido liberados al cliente.");
     }
 
     /**

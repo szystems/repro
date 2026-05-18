@@ -57,6 +57,9 @@
         .main-container {
             display: flex;
             flex: 1 0 auto;
+            /* R12: anular height fijo del template para que el body pueda scrollear */
+            height: auto !important;
+            min-height: calc(100vh - 65px);
         }
 
         /* Fase 8 (UI1/UI3): el scroll lo gestiona el documento, no este wrapper */

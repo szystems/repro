@@ -285,12 +285,14 @@
                                         <i class="bi bi-x-circle"></i> Ocultos
                                     @endif
                                 </span>
+                                @if(Auth::user()->role_as >= 3)
                                 <div class="form-check form-switch mb-0">
                                     <input class="form-check-input" type="checkbox" role="switch"
                                            id="toggleResultados"
                                            {{ $orden->resultados_visibles_empresa ? 'checked' : '' }}
                                            onchange="confirmarToggleResultados(this)">
                                 </div>
+                                @endif
                             </div>
                             <small class="text-muted d-block mt-1">
                                 @if($orden->resultadosDisponiblesParaEmpresa())
@@ -303,10 +305,12 @@
                             </small>
                         </div>
 
+                        @if(Auth::user()->role_as >= 3)
                         <form id="form-toggle-resultados" action="{{ route('ordenes.toggle-resultados-visibles', $orden) }}" method="POST" class="d-none">
                             @csrf
                             @method('PATCH')
                         </form>
+                        @endif
                         @else
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i>
@@ -777,7 +781,7 @@
                                         <div class="card border-info mt-3">
                                             <div class="card-header bg-info bg-opacity-10 py-2">
                                                 <h6 class="mb-0 text-info">
-                                                    <i class="bi bi-file-earmark-text"></i> Informe Preliminar
+                                                    <i class="bi bi-file-earmark-text"></i> Informe Preliminar / Observaciones
                                                     @if($evaluado->texto_informe_preliminar)
                                                         <span class="badge bg-success ms-2">Redactado</span>
                                                     @else

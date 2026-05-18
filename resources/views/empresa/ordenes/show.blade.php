@@ -129,7 +129,7 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <div class="btn-group" role="group">
-                                @if($orden->estado === 'entregado' && $orden->resultados_visibles_empresa)
+                                @if($orden->resultados_visibles_empresa)
                                     @if($evaluado->archivo_resultado_final)
                                         <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'final']) }}" class="btn btn-success btn-sm" title="Descargar Informe Final" target="_blank">
                                             <i class="bi bi-file-earmark-arrow-down"></i> Informe Final
@@ -176,12 +176,31 @@
                         <div class="mt-1"><small class="text-info"><i class="bi bi-chat-left-text"></i> {{ $evaluado->observaciones }}</small></div>
                     @endif
 
-                    {{-- Informe Preliminar (texto enriquecido) --}}
-                    @if($orden->resultados_visibles_empresa && $evaluado->texto_informe_preliminar)
+                    {{-- Informes disponibles para empresa --}}
+                    @if($orden->resultados_visibles_empresa)
+                        {{-- Informe Final (texto del resultado definitivo) --}}
+                        @if($evaluado->archivo_resultado_final)
+                        <div class="card border-success mt-2">
+                            <div class="card-header bg-success bg-opacity-10 py-2">
+                                <h6 class="mb-0 text-success">
+                                    <i class="bi bi-file-earmark-check"></i> Informe Final
+                                    <span class="badge bg-success ms-2">Disponible</span>
+                                </h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'final']) }}" class="btn btn-success btn-sm" target="_blank">
+                                    <i class="bi bi-download"></i> Descargar Informe Final
+                                </a>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Informe Preliminar / Observaciones (texto enriquecido) --}}
+                        @if($evaluado->texto_informe_preliminar)
                         <div class="card border-info mt-2">
                             <div class="card-header bg-info bg-opacity-10 py-2">
                                 <h6 class="mb-0 text-info">
-                                    <i class="bi bi-file-earmark-text"></i> Informe Preliminar
+                                    <i class="bi bi-file-earmark-text"></i> Informe Preliminar / Observaciones
                                 </h6>
                             </div>
                             <div class="card-body">
@@ -190,6 +209,23 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
+
+                        {{-- Archivo Preliminar (PDF descargable si existe) --}}
+                        @if(!$evaluado->archivo_resultado_final && $evaluado->archivo_resultado_preliminar)
+                        <div class="card border-info mt-2">
+                            <div class="card-header bg-info bg-opacity-10 py-2">
+                                <h6 class="mb-0 text-info">
+                                    <i class="bi bi-file-earmark-arrow-down"></i> Informe Preliminar
+                                </h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'preliminar']) }}" class="btn btn-outline-info btn-sm" target="_blank">
+                                    <i class="bi bi-download"></i> Descargar Preliminar
+                                </a>
+                            </div>
+                        </div>
+                        @endif
                     @endif
 
                     {{-- Sección de documentos/papelería --}}

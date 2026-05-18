@@ -35,7 +35,7 @@ class EvaluadoAsignadoNotification extends Notification
             'tipo' => 'evaluado_asignado',
             'icono' => 'bi-person-check',
             'color' => 'warning',
-            'mensaje' => $this->evaluado->nombre_completo . ' ha sido asignado para evaluación',
+            'mensaje' => $this->evaluado->nombre_completo . ' asignado para evaluación — Orden #' . ($this->evaluado->orden->codigo_orden ?? $this->evaluado->orden_id),
             'url' => $url,
             'evaluado_id' => $this->evaluado->id,
         ];
