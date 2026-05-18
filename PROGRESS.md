@@ -2,9 +2,10 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-05-08 (post-deploy)
+**Ultima actualizacion:** 2026-05-18 (nueva ronda observaciones cliente)
 **Suite de tests:** 475/475
 **Deploy a producción:** EJECUTADO el 2026-05-08 (iPage FTP)
+**Ultimo archivo subido post-deploy:** resources/views/admin/cuestionarios/index.blade.php (2026-05-13, 36809 bytes verificados)
 
 ---
 
@@ -20,7 +21,302 @@
 | Fase 6 | Configuracion + Finanzas | COMPLETADA |
 | Fase 7 | Editor de informes | COMPLETADA |
 | Fase 8 | Mejoras visuales (layout/scroll) | COMPLETADA |
-| Fase 9 | Hardening pre-deploy (auditoria) | EN PROGRESO |
+| Fase 9 | Hardening pre-deploy (auditoria) | COMPLETADA |
+| Fase 10 | Correcciones rapidas 2a ronda | PENDIENTE |
+| Fase 11 | Auto-estados por acciones | PENDIENTE |
+| Fase 12 | Campo Sede/Region del evaluado | PENDIENTE |
+| Fase 13 | Mejoras dashboard y WhatsApp | PENDIENTE |
+| Fase 14 | Configuracion ampliada | PENDIENTE |
+| Fase 15 | Auditoria de permisos por rol | PENDIENTE |
+
+---
+
+## NUEVA RONDA — Observaciones Cliente 2026-05-18
+
+**12 requerimientos registrados. Analisis quirurgico realizado el 2026-05-18.**
+
+### Mapa de requerimientos → Fases
+
+| Ref | Descripcion resumida | Fase | Prioridad | Complejidad |
+|-----|----------------------|------|-----------|-------------|
+| R1 | Auto-cambio de estados por acciones | Fase 11 | ALTA | ALTA |
+| R2 | Top empresas en dashboard admin | Fase 13 | MEDIA | BAJA |
+| R3 | Configuracion ampliada in-app | Fase 14 | MEDIA | ALTA |
+| R4 | Campo Sede/Region del evaluado | Fase 12 | ALTA | MEDIA |
+| R5 | Auto-liberar informe al subirlo | Fase 10 | ALTA | MEDIA |
+| R6 | WhatsApp dropdown de sedes | Fase 13 | MEDIA | MEDIA |
+| R7 | Diferenciar preliminar vs final en cliente | Fase 10 | MEDIA | BAJA |
+| R8 | Notificaciones con info y redireccion correcta | Fase 10 | ALTA | MEDIA |
+| R9 | Quitar fecha tentativa en cliente | Fase 10 | ALTA | BAJA |
+| R10 | Renombrar editor informe preliminar | Fase 10 | BAJA | MUY BAJA |
+| R11 | Auditoria restricciones por rol | Fase 15 | ALTA | ALTA |
+| R12 | Layout vistas cliente empresa (scroll/footer) | Fase 10 | ALTA | MEDIA |
+
+---
+
+## ANALISIS DETALLADO POR REQUERIMIENTO
+
+### R1 — Auto-cambio de estados por acciones (Fase 11)
+
+**Solicitud del cliente:** Los estados deben cambiar automáticamente al ejecutar ciertas acciones. Flujo deseado:
+`Solicitud → Link Enviado → Llenando Formulario → Formulario Recibido → Programado → En Proceso → Resultado Preliminar (opcional) → Informe Completo Entregado`
+
+**Estado actual del sistema:**
+- Existen 14 estados en `estado_evaluacion`: pendiente, contactando, contactado, link_enviado, confirmado, programado, en_sede, docs_pendientes, en_proceso, completado, inasistencia, reprogramado, cancelado, desistio
+- El estado_formulario tiene su propio ciclo: pendiente → link_enviado → en_progreso → completado
+
+**Desfase identificado entre estados del cliente y del sistema:**
+
+| Estado que describe el cliente | Estado actual del sistema | Accion que debe dispararlo |
+|-------------------------------|--------------------------|---------------------------|
+| Solicitud | pendiente (al crear evaluado) | Creación de la orden/evaluado |
+| Link Enviado | link_enviado | Cuando admin envía el token/link |
+| Llenando Formulario | (no existe → agregar) | Cuando candidato abre el form por primera vez |
+| Formulario Recibido | (mapeado a: cuestionario_completado=true) | Auto: cuando candidato completa cuestionario |
+| Programado | programado | Auto: cuando admin asigna fecha_programada |
+| En Proceso | en_proceso | Manual: admin marca como en proceso |
+| Resultado Preliminar | (no existe como estado separado claramente visible) | Auto: cuando se sube archivo_resultado_preliminar |
+| Informe Completo Entregado | completado | Auto: cuando se sube archivo_resultado_final (ya parcial) |
+
+**Acciones que YA disparan cambio de estado (verificadas en código):**
+- Programar cita → `programado` (en programarEvaluacion())
+- Subir informe final → `completado` + `resultados_visibles_empresa=true` (en OrdenesController ~línea 957)
+- Completar cuestionario → `cuestionario_completado=true` pero NO cambia `estado_evaluacion` automáticamente
+
+**Acciones que NO disparan cambio (gaps a corregir):**
+- Enviar link → no cambia `estado_evaluacion` a `link_enviado`
+- Candidato abre formulario → no hay estado "llenando_formulario"
+- Candidato completa cuestionario → no avanza `estado_evaluacion` a "formulario_recibido"
+- Subir informe preliminar → no cambia estado automáticamente a estado visible
+
+**Plan de implementación Fase 11:**
+1. Renombrar/simplificar estados para que coincidan con lo que ve el cliente (o agregar un accessor de mapeo)
+2. En el controlador de envío de link: auto-set `estado_evaluacion = 'link_enviado'`
+3. En CuestionariosController (cuando candidato accede): auto-set `estado_evaluacion = 'en_progreso'` si era `link_enviado`
+4. En completarCuestionario(): auto-set `estado_evaluacion = 'docs_pendientes'` o similar "formulario_recibido"
+5. Al subir preliminar: auto-set `estado_evaluacion = 'preliminar'` (agregar este estado o reusar uno)
+6. Al subir final: ya funciona → `completado`
+7. Lógica de skip: si se sube final sin preliminar → saltar directo a `completado` (ya existe parcialmente)
+8. Colores por estado: auditar que todos los estados tengan colores apropiados en las vistas
+
+**Archivos a modificar:**
+- app/Models/EvaluadoOrden.php: estados, transiciones, colores
+- app/Http/Controllers/Admin/OrdenesController.php: guardarInformePreliminar(), subirResultado()
+- app/Http/Controllers/CuestionariosController.php: completarCuestionario() o show()
+- Vistas: badges de color en admin y empresa ordenes
+
+---
+
+### R2 — Top empresas en dashboard admin (Fase 13)
+
+**Solicitud:** Estadística "Top empresas" con número de procesos enviados en el dashboard de admin.
+
+**Estado actual:** El dashboard admin (resources/views/admin/index.blade.php, 753 líneas) ya tiene stats generales, WhatsApp por sedes, últimas órdenes. No tiene ranking de empresas.
+
+**Plan:**
+1. En AdminController@index: agregar query `Orden::query()->groupBy('empresa_id')->withCount('evaluados')->orderByDesc('count')->take(5)->with('empresa')`
+2. En admin/index.blade.php: agregar card "Top Empresas" con tabla de ranking
+3. Test: verificar que aparece la empresa con más órdenes primero
+
+**Archivos:** app/Http/Controllers/Admin/AdminController.php, resources/views/admin/index.blade.php
+
+---
+
+### R3 — Configuracion ampliada in-app (Fase 14)
+
+**Solicitud:** Agregar más opciones al módulo de Configuración para que cambios se puedan hacer desde la UI sin tocar código.
+
+**Estado actual del Config model:** logo, email, time_zone, currency, currency_simbol, currency_iso, fb_link, inst_link, yt_link, wapp_link, descuento_maximo, impuesto
+
+**Configuraciones candidatas a agregar (análisis del código):**
+- `dias_vigencia_token` — actualmente hardcoded en 30 días en EvaluadoOrden::generarToken()
+- `max_intentos_acceso` — actualmente sin límite visible
+- `texto_bienvenida_candidato` — texto de bienvenida en el formulario del candidato
+- `mensaje_resultados_bloqueados` — mensaje cuando empresa trata de ver resultados no disponibles
+- `habilitar_informe_preliminar` — toggle para habilitar/deshabilitar el paso de preliminar por defecto
+- `notificaciones_activas` — toggle para habilitar notificaciones internas
+- `nombre_empresa` — nombre comercial de REPRO para mostrar en PDFs y notificaciones
+- `telefono_contacto` — teléfono general REPRO
+- `direccion` — dirección de REPRO
+
+**Plan:**
+1. Migración para agregar columnas al configs
+2. Actualizar Config model (fillable)
+3. Actualizar ConfigFormRequest (reglas de validación)
+4. Actualizar vistas de configuración (pestañas existentes + nuevos campos)
+5. Usar las configs en el código donde están hardcodeadas
+6. Tests de actualización de las nuevas configs
+
+**Archivos:** database/migrations/nueva, app/Models/Config.php, app/Http/Requests/ConfigFormRequest.php, resources/views/admin/config/
+
+---
+
+### R4 — Campo Sede/Region del evaluado (Fase 12)
+
+**Solicitud:** Agregar campo "Sede/Región de la empresa" en la info del evaluado. Diferente a la sede de REPRO donde se realiza la evaluación. Es la sede de la empresa cliente a la que pertenece el candidato (ej: "Regional Norte", "Sucursal Centro").
+
+**Estado actual:** Existe `sede_id` en evaluados_orden → es la sede de REPRO donde se hace la evaluación. El campo que pide el cliente es la sede/región de la empresa del candidato, un campo de texto libre o referencia.
+
+**Decisión de diseño:** Campo de texto libre `sede_region_empresa` (no FK) porque las regiones del cliente empresa son arbitrarias y cambian.
+
+**Plan:**
+1. Migración: `ALTER TABLE evaluados_orden ADD COLUMN sede_region_empresa VARCHAR(100) NULL`
+2. EvaluadoOrden.php: agregar a $fillable
+3. Formularios admin crear/editar orden: agregar campo input text
+4. Formulario empresa crear orden: agregar campo input text
+5. Vista show admin: mostrar en datos del evaluado
+6. Vista show empresa: mostrar en datos del evaluado
+7. PDF Orden de Servicio: incluir campo
+8. PDF Informe Candidatos: incluir campo
+9. Reportes: incluir en columnas donde aparece info del evaluado
+10. Tests
+
+**Archivos:** nueva migración, EvaluadoOrden.php, admin/ordenes/create.blade.php, admin/ordenes/edit.blade.php, admin/ordenes/show.blade.php, empresa/ordenes/show.blade.php, admin/ordenes/pdf.blade.php, admin/ordenes/pdf-informe.blade.php
+
+---
+
+### R5 — Auto-liberar informe al subirlo (Fase 10)
+
+**Solicitud:** Al subir informe preliminar o final → auto liberar para el cliente (resultados_visibles_empresa=true). Solo admins REPRO pueden bloquearlo manualmente.
+
+**Estado actual:**
+- Subir informe FINAL: ya auto-libera (OrdenesController ~línea 957: `$orden->update(['resultados_visibles_empresa' => true])`)
+- Subir informe PRELIMINAR (texto Quill): NO auto-libera. El admin debe hacer click en "Liberar resultados" separado.
+- El botón toggle de resultados_visibles_empresa está disponible para todos los roles con acceso.
+
+**Plan:**
+1. En guardarInformePreliminar(): agregar `$orden->update(['resultados_visibles_empresa' => true])` después de guardar el texto
+2. En subirResultadoPreliminar() (si existe como acción separada para archivo): igual
+3. Asegurarse que el botón toggle de bloquear/liberar SOLO sea visible para admin (role_as === 1), no para repro/colaboradores
+4. Tests: verificar auto-liberación al guardar preliminar
+
+---
+
+### R6 — WhatsApp dropdown de sedes (Fase 13)
+
+**Solicitud:** Botón WhatsApp en barra lateral y panel de control como dropdown que liste todas las sedes activas con sus números. Primera opción: sede asignada a la orden si hay contexto.
+
+**Estado actual:** En admin/index.blade.php ya existen botones WhatsApp por sede. En empresa/ordenes se muestra el WhatsApp de la sede de la orden. Pero NO hay dropdown en barra lateral.
+
+**Plan:**
+1. En layouts/empresa.blade.php (incempresa sidebar): agregar dropdown de sedes activas con WhatsApp
+2. En layouts/admin.blade.php (incadmin sidebar): igual
+3. En empresa/ordenes/show.blade.php: el primer item del dropdown debe ser la sede de la orden
+4. Query de sedes: `Sede::where('activo', true)->whereNotNull('whatsapp')->get()`
+5. Inyectar las sedes en todos los layouts via ViewComposer o AppServiceProvider
+
+---
+
+### R7 — Diferenciar preliminar vs final en vistas cliente (Fase 10)
+
+**Solicitud:** Mostrar de manera diferente el informe preliminar y el final. Siempre mostrar ambos en el portal cliente. En reportes, mostrar todas las opciones no solo el final.
+
+**Estado actual:**
+- empresa/ordenes/show.blade.php: muestra texto_informe_preliminar como read-only cuando resultados_visibles_empresa. Muestra botón de archivo_resultado_final.
+- No está claro si siempre muestra AMBOS (preliminar Y final) o solo uno según condición.
+- Los reportes de empresa probablemente solo filtran el informe final.
+
+**Plan:**
+1. Auditar empresa/ordenes/show.blade.php: verificar que se muestren AMBAS secciones (Informe Preliminar / Observaciones + Informe Final)
+2. Diferenciar visualmente: card de color diferente para cada tipo
+3. Agregar etiquetas claras: "Informe Preliminar / Observaciones" vs "Informe Final"
+4. Reportes empresa: revisar que filtre/muestre ambos tipos si existen
+
+---
+
+### R8 — Notificaciones con info y redireccion correcta (Fase 10)
+
+**Solicitud:** Todas las notificaciones deben llevar info en el nombre (código de orden, nombre de candidato, etc.) y al presionarlas redirigir al lugar correcto.
+
+**Estado actual (4 notificaciones):**
+- OrdenCreadaNotification: mensaje `"Nueva orden #{codigo_orden} — {empresa}"`, URL generada por role_as ✓
+- ResultadosDisponiblesNotification: tiene URL por role_as, falta verificar mensaje
+- CuestionarioCompletadoNotification: verificar si lleva nombre del candidato y URL correcta
+- EvaluadoAsignadoNotification: verificar si lleva datos y URL
+
+**Plan:**
+1. Auditar las 4 notificaciones: revisar toArray() de cada una
+2. Verificar que el title/mensaje incluya: código de orden, nombre del candidato (si aplica)
+3. Verificar URLs: que role_as === 1 → admin URL, role_as === 2 → empresa URL, etc.
+4. En la vista de notificaciones (bell/centro): verificar que el link del item use la URL de la notificación correctamente
+5. Test: notificación al presionar redirige a la orden correcta
+
+**Archivos:** app/Notifications/*.php, resources/views/layouts/incadmin/_notificaciones_bell.blade.php, resources/views/layouts/incempresa/_notificaciones_bell.blade.php
+
+---
+
+### R9 — Quitar fecha tentativa en vistas cliente empresa (Fase 10)
+
+**Solicitud:** Eliminar la fecha tentativa de las evaluaciones del lado del cliente empresa porque confunde (el cliente cree que él escoge la fecha de la cita con REPRO).
+
+**Estado actual:**
+- El campo `fecha_programada` existe en evaluados_orden y se usa internamente en REPRO
+- En admin no se toca (el admin sí puede poner fecha interna)
+- En empresa/ordenes/create.blade.php: NO hay referencias a fecha_programada (confirmado: grep no encontró nada en empresa/)
+- Posibles apariciones en empresa/ordenes/show.blade.php
+
+**Plan:**
+1. Buscar y eliminar cualquier mención de "fecha tentativa" o `fecha_programada` en TODAS las vistas del portal empresa
+2. Verificar que en empresa/ordenes/show.blade.php no se muestre la fecha_programada del evaluado como dato visible al cliente
+3. Verificar empresa/ordenes/index.blade.php
+4. El campo sigue existiendo en BD y admin, solo se oculta al cliente
+
+**Nota:** El campo `fecha_programada` ya fue renombrado en etiquetas a "Fecha Tentativa (sujeta a agenda REPRO)" en Fase 1. Ahora se pide quitarlo completamente de la UI del cliente.
+
+---
+
+### R10 — Renombrar editor informe preliminar (Fase 10)
+
+**Solicitud:** Cambiar el label del editor Quill de "Informe Preliminar" a "Informe Preliminar / Observaciones".
+
+**Estado actual:** En resources/views/admin/ordenes/show.blade.php hay una card con el editor Quill para el informe preliminar. El título dice "Informe Preliminar".
+
+**Plan:** Localizar el texto en admin/ordenes/show.blade.php y cambiarlo.
+
+**Archivos:** resources/views/admin/ordenes/show.blade.php (1 cambio de texto)
+
+---
+
+### R11 — Auditoria restricciones por rol (Fase 15)
+
+**Solicitud:** Revisar que todas las restricciones de permisos se cumplan en todos los módulos. Caso reportado: usuario repro no-admin puede acceder al módulo de usuarios.
+
+**Estado actual:**
+- Existe tabla permissions con 44 permisos en 16 módulos (desde Fase 9)
+- Existe Middleware de roles: verificar app/Http/Middleware/
+- El módulo de usuarios debería estar bloqueado para role_as !== 1
+
+**Plan (análisis completo en Fase 15):**
+1. Listar todos los módulos y sus rutas
+2. Verificar middleware de protección en cada grupo de rutas (routes/web.php)
+3. Para cada módulo: verificar que el middleware/gate/policy sea correcto
+4. Módulo usuarios: agregar/verificar middleware que solo permita admins
+5. Módulos de configuración, finanzas, reportes avanzados: revisar acceso
+6. Test: intentar acceder a rutas protegidas con usuario repro no-admin
+
+---
+
+### R12 — Layout vistas cliente empresa (Fase 10)
+
+**Solicitud:** En el formulario de creación de orden y vistas del portal empresa, el contenido inferior no se puede ver por problema con scroll/footer.
+
+**Estado actual:**
+- layouts/empresa.blade.php tiene CSS de Fase 8: `.content-wrapper-scroll { overflow:visible; height:auto }`
+- El footer está en `app-footer` con `margin-top:auto`
+- El problema puede ser que los formularios largos (create orden) no generan scroll porque el contenedor tiene `overflow:visible`
+
+**Análisis:** El fix de Fase 8 para eliminar scrollbars duplicadas puede causar que en formularios muy largos el scroll natural del body no alcance a mostrar el final si el footer está posicionado de forma que tape el contenido.
+
+**Plan:**
+1. Abrir empresa/ordenes/create.blade.php en browser y reproducir el problema
+2. Revisar el HTML/CSS del layout empresa completo
+3. Verificar que `main-container` tenga la altura correcta para que el scroll del body funcione
+4. Posible fix: asegurar que `.content-wrapper-scroll` tenga `min-height` apropiado y que el footer no sea `position:fixed` sino en flujo normal
+5. Revisar todas las vistas largas de empresa (create, edit, show con muchos evaluados)
+
+**Archivos:** resources/views/layouts/empresa.blade.php, resources/views/empresa/ordenes/create.blade.php
+
+---
 
 ---
 
@@ -234,113 +530,6 @@ UI Layout (mitigacion temporal, solucion completa en Fase 8):
 | 2026-05-08 | 469 | Fase 6 completa (A8, A8-fin) + Fase 7 completa (CO6 Quill editor) |
 | 2026-05-08 | 475 | Fase 8 completa (UI1/UI2/UI3 scroll/footer/ancho) + fixes dropdown + filas clickables |
 
-
----
-
-## Estado por Fase
-
-| Fase | Descripcion | Estado |
-|------|-------------|--------|
-| Fase 1 | Correcciones urgentes (8 items) | COMPLETADA |
-| Fase 2 | Mejoras rapidas (10 items) | COMPLETADA |
-| Fase 3 | Funcionalidades nuevas | COMPLETADA |
-| Fase 4 | Estados y bloqueos | COMPLETADA |
-| Fase 5 | Reportes y sedes | COMPLETADA |
-| Fase 6 | Configuracion + Finanzas | COMPLETADA |
-| Fase 7 | Editor de informes | COMPLETADA |
-| Fase 8 | Mejoras visuales (layout/scroll) | COMPLETADA |
-| Fase 9 | Hardening pre-deploy (auditoria) | EN PROGRESO |
-
----
-
-## Fase 1 - Correcciones urgentes - COMPLETADA 2026-05-07
-
-Verificacion manual completada. 433 tests pasando.
-
-| Ref | Descripcion | Tests | Verificado |
-|-----|-------------|-------|------------|
-| N1 | Fecha Programada renombrada a Fecha Tentativa | Sprint1BugFixesTest (2) | OK |
-| CO10 | Solo admins crean/editan/eliminan usuarios | AuditoriaSeguridadTest (4) | OK |
-| A9 | Filtro estado cuestionarios corregido | Sprint1BugFixesTest (3) | OK |
-| C3 | Upload documentos evaluado, fix 413 nginx 20M + PHP 20M | infra | OK |
-| CA1 | Candidato ve motivo de rechazo de documento | Sprint1BugFixesTest (2) | OK |
-| CO9-1 | Dropdown calendario incluye evaluados con cita | Sprint1BugFixesTest (2) | OK |
-| CO9-2 | Conteo calendario mensual = vista dia | Sprint1BugFixesTest (1) | OK |
-| C5 | Al subir informe final auto-entrega y cliente ve informe | Fase2DocumentacionTest (4) | OK |
-
-### Cambios adicionales durante Fase 1
-
-C2 implementado adelantado:
-- Empresa puede crear ordenes propias desde el portal
-- Boton Nueva Solicitud en empresa/ordenes/index.blade.php
-- 5 tests en EmpresaCrearOrdenTest
-
-Infraestructura:
-- docker/nginx/default.conf: client_max_body_size 20M
-- Dockerfile: upload_max_filesize=20M, post_max_size=20M
-- Contenedores reconstruidos
-
-Notificaciones fix:
-- CSRF: _notificaciones_bell.blade.php usaba meta csrf-token inexistente, cambiado a Blade csrf_token()
-- URLs por rol: 4 notificaciones ahora generan URL segun role_as del destinatario
-- 2 notificaciones existentes en BD corregidas via Tinker
-
-Vista empresa/ordenes/show:
-- Muestra botones Informe Final y Preliminar cuando orden entregada y resultados_visibles_empresa=true
-
-UI Layout (mitigacion temporal, solucion completa en Fase 8):
-- CSS: .content-wrapper-scroll anidado con overflow:visible en ambos layouts
-- JS: OverlayScrollbars no se aplica a wrappers anidados en custom-scrollbar.js
-- Cache-buster v=20260507 en script de custom-scrollbar.js
-- Fix HTML: div extra en modal reprogramacion de admin/ordenes/show.blade.php
-
----
-
-## Fase 2 - Mejoras rapidas - PENDIENTE
-
-| Ref | Descripcion |
-|-----|-------------|
-| A1 | Renombrar seccion cuestionarios a Gestion de Cuestionario - Candidatos |
-| A2 | Filtros tipo de servicio y sede en cuestionarios |
-| A3 | Columna sede en tabla cuestionarios |
-| A10 | Notificacion interna al crear orden |
-| C1 | Nombre candidato en Mis Ultimas Ordenes del dashboard |
-| C2-puesto | Campo puesto y sede del candidato al crear orden |
-| C3 | Cliente elimina documentos pendientes propios |
-| CO4 | Filtro por fecha en listado de ordenes colaborador |
-| CO8 | Filtro cuestionarios incompletos colaborador |
-
----
-
-## Fase 8 - Deuda Layout UI - PENDIENTE
-
-Problema: multiples barras de scroll apiladas y footer flotante.
-
-Causa raiz: page-wrapper con overflow-y:auto y height:100vh del template mas
-content-wrapper-scroll con overflow-y:auto en layouts mas OverlayScrollbars plugin.
-36 vistas anidan un segundo content-wrapper-scroll.
-
-Plan L1-L7:
-- L1: Un unico modelo de scroll (scroll en html, sidebar position fixed)
-- L2: Quitar overflow-y:auto y height:100vh de page-wrapper
-- L3: Eliminar OverlayScrollbars en content-wrapper-scroll
-- L4: Quitar div content-wrapper-scroll anidado en las 36 vistas
-- L5: Mover footer dentro del wrapper de contenido
-- L6: Auditar otros overflow:auto internos
-- L7: Test visual - 1 solo scrollbar en pantallas menores a 1080p
-
----
-
-## Historial baseline tests
-
-| Fecha | Tests | Hito |
-|-------|-------|------|
-| 2026-04-22 | ~391 | Ronda 1 observaciones cliente |
-| 2026-04-22 | 399 | Sprint Auditoria-1 |
-| 2026-04-22 | 403 | Sprint Auditoria-2 |
-| 2026-04-22 | 409 | Sprint Auditoria-3 |
-| 2026-05-07 | 428 | Sprint-1 Fase 1 N1 CO10 A9 C3 CA1 CO9 C5 |
-| 2026-05-07 | 433 | C2 + fixes notificaciones + infra 20M |
 
 ---
 
