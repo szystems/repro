@@ -225,6 +225,7 @@ function agregarEvaluado(datos = {}) {
     const tipoFormulario = datos.tipo_formulario || 'preempleo';
     const puestoEvaluar = datos.puesto_evaluar || '';
     const sedeId = datos.sede_id || '';
+    const sedeRegionEmpresa = datos.sede_region_empresa || '';
     const sedeOptions = sedesDisponibles.map(s => `<option value="${s.id}" ${String(sedeId) === String(s.id) ? 'selected' : ''}>${s.nombre}</option>`).join('');
 
     const html = `
@@ -263,11 +264,15 @@ function agregarEvaluado(datos = {}) {
                     <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][puesto_evaluar]" placeholder="Ej: Gerente de Ventas" value="${puestoEvaluar}" maxlength="100">
                 </div>
                 <div class="col-md-3 mb-2">
-                    <label class="form-label">Sede del Candidato</label>
+                    <label class="form-label">Sede REPRO</label>
                     <select class="form-select" name="evaluados[${contadorEvaluados}][sede_id]">
                         <option value="">Sin sede</option>
                         ${sedeOptions}
                     </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Sede/Región Empresa</label>
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][sede_region_empresa]" placeholder="Ej: Regional Norte" value="${sedeRegionEmpresa}" maxlength="100">
                 </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Tipo Servicio</label>

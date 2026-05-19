@@ -245,7 +245,7 @@
                                                    placeholder="Ej: Gerente de Ventas" maxlength="100">
                                         </div>
                                         <div class="col-md-4 mb-2">
-                                            <label class="form-label">Sede del Candidato</label>
+                                            <label class="form-label">Sede REPRO</label>
                                             <select class="form-select" name="evaluados[{{ $index }}][sede_id]">
                                                 <option value="">Sin sede</option>
                                                 @foreach($sedes as $sede)
@@ -259,6 +259,12 @@
                                             <label class="form-label">Teléfono</label>
                                             <input type="tel" class="form-control" name="evaluados[{{ $index }}][telefono]" 
                                                    value="{{ old('evaluados.'.$index.'.telefono', $evaluado->telefono) }}">
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <label class="form-label">Sede/Región Empresa</label>
+                                            <input type="text" class="form-control" name="evaluados[{{ $index }}][sede_region_empresa]"
+                                                   value="{{ old('evaluados.'.$index.'.sede_region_empresa', $evaluado->sede_region_empresa) }}"
+                                                   placeholder="Ej: Regional Norte" maxlength="100">
                                         </div>
                                     </div>
 
@@ -460,7 +466,7 @@
                 <input type="text" class="form-control evaluado-puesto-evaluar" name="" placeholder="Ej: Gerente de Ventas" maxlength="100">
         </div>
         <div class="col-md-6 mb-2">
-            <label class="form-label">Sede del Candidato</label>
+            <label class="form-label">Sede REPRO</label>
             <select class="form-select evaluado-sede-id" name="">
                 <option value="">Sin sede</option>
                 @foreach($sedes as $sede)
@@ -471,6 +477,10 @@
             <div class="col-md-6 mb-2">
                 <label class="form-label">Teléfono</label>
                 <input type="tel" class="form-control evaluado-telefono" name="">
+            </div>
+            <div class="col-md-6 mb-2">
+                <label class="form-label">Sede/Región Empresa</label>
+                <input type="text" class="form-control evaluado-sede-region-empresa" name="" placeholder="Ej: Regional Norte" maxlength="100">
             </div>
         </div>
 
@@ -557,6 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
         newEvaluado.querySelector('.evaluado-email').name = `evaluados[${evaluadoIndex}][email]`;
         newEvaluado.querySelector('.evaluado-puesto-evaluar').name = `evaluados[${evaluadoIndex}][puesto_evaluar]`;
         newEvaluado.querySelector('.evaluado-sede-id').name = `evaluados[${evaluadoIndex}][sede_id]`;
+        newEvaluado.querySelector('.evaluado-sede-region-empresa').name = `evaluados[${evaluadoIndex}][sede_region_empresa]`;
         newEvaluado.querySelector('.evaluado-telefono').name = `evaluados[${evaluadoIndex}][telefono]`;
         newEvaluado.querySelector('.evaluado-tipo-servicio').name = `evaluados[${evaluadoIndex}][tipo_servicio]`;
         newEvaluado.querySelector('.evaluado-tipo-formulario').name = `evaluados[${evaluadoIndex}][tipo_formulario]`;

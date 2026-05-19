@@ -184,6 +184,7 @@ class OrdenesController extends Controller
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
             'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
             'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
+            'evaluados.*.sede_region_empresa' => 'nullable|string|max:100',
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
         ]);
@@ -374,6 +375,7 @@ class OrdenesController extends Controller
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
             'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
             'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
+            'evaluados.*.sede_region_empresa' => 'nullable|string|max:100',
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
         ]);
@@ -688,6 +690,7 @@ class OrdenesController extends Controller
                     : $evaluadoData['tipo_formulario'],
                 'puesto_evaluar' => $evaluadoData['puesto_evaluar'] ?? null,
                 'sede_id' => $evaluadoData['sede_id'] ?? null,
+                'sede_region_empresa' => $evaluadoData['sede_region_empresa'] ?? null,
                 'fecha_programada' => $evaluadoData['fecha_programada'] ?? null,
                 'poligrafista_id' => $evaluadoData['poligrafista_id'] ?? null,
                 'observaciones' => $evaluadoData['observaciones'] ?? null,

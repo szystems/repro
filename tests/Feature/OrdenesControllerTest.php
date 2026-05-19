@@ -267,4 +267,104 @@ class OrdenesControllerTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('error');
     }
+
+    // === R4: Campo Sede/Región del Evaluado ===
+
+    public function test_r4_sede_region_empresa_se_guarda_al_crear_orden(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $empresa = Empresa::factory()->create();
+
+        $response = $this->actingAs($admin)
+            ->post(route('ordenes.store'), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    [
+                        'nombre' => 'María',
+                        'apellidos' => 'López',
+                        'dpi' => '9876543210123',
+                        'email' => 'maria@test.com',
+                        'tipo_servicio' => 'poligrafo',
+                        'tipo_formulario' => 'preempleo',
+                        'puesto_evaluar' => 'Analista',
+                        'sede_region_empresa' => 'Regional Norte',
+                    ]
+                ]
+            ]);
+
+        $response->assertStatus(302);
+
+        $evaluado = EvaluadoOrden::where('dpi', '9876543210123')->first();
+        $this->assertNotNull($evaluado);
+        $this->assertEquals('Regional Norte', $evaluado->sede_region_empresa);
+    }
+
+    public function test_r4_sede_region_empresa_es_nullable_al_crear(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $empresa = Empresa::factory()->create();
+
+        $response = $this->actingAs($admin)
+            ->post(route('ordenes.store'), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    [
+                        'nombre' => 'Carlos',
+                        'apellidos' => 'Gómez',
+                        'dpi' => '1111111111111',
+                        'email' => 'carlos@test.com',
+                        'tipo_servicio' => 'vsa',
+                        'tipo_formulario' => 'periodica',
+                    ]
+                ]
+            ]);
+
+        $response->assertStatus(302);
+
+        $evaluado = EvaluadoOrden::where('dpi', '1111111111111')->first();
+        $this->assertNotNull($evaluado);
+        $this->assertNull($evaluado->sede_region_empresa);
+    }
+
+    public function test_r4_sede_region_empresa_se_actualiza_al_editar_orden(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id,
+        ]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'sede_region_empresa' => null,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->put(route('ordenes.update', $orden), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    [
+                        'id' => $evaluado->id,
+                        'nombre' => $evaluado->nombre,
+                        'apellidos' => $evaluado->apellidos,
+                        'dpi' => $evaluado->dpi,
+                        'email' => $evaluado->email,
+                        'tipo_servicio' => $evaluado->tipo_servicio,
+                        'tipo_formulario' => $evaluado->tipo_formulario,
+                        'sede_region_empresa' => 'Sucursal Centro',
+                    ]
+                ]
+            ]);
+
+        $response->assertStatus(302);
+
+        $evaluado->refresh();
+        $this->assertEquals('Sucursal Centro', $evaluado->sede_region_empresa);
+    }
 }

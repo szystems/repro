@@ -102,10 +102,13 @@
                             @if($evaluado->puesto_evaluar)
                                 <small><i class="bi bi-briefcase"></i> {{ $evaluado->puesto_evaluar }}</small><br>
                             @endif
+                            @if($evaluado->sede_region_empresa)
+                                <small><i class="bi bi-building"></i> {{ $evaluado->sede_region_empresa }}</small><br>
+                            @endif
                             @if($evaluado->sede)
                                 <small><i class="bi bi-geo-alt"></i> {{ $evaluado->sede->nombre }}</small>
                             @endif
-                            @if(!$evaluado->puesto_evaluar && !$evaluado->sede)
+                            @if(!$evaluado->puesto_evaluar && !$evaluado->sede_region_empresa && !$evaluado->sede)
                                 <small class="text-muted">—</small>
                             @endif
                         </div>

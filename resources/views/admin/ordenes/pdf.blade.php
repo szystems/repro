@@ -404,6 +404,9 @@
                         @if($evaluado->puesto_evaluar)
                             <br><small style="color:#666;">{{ $evaluado->puesto_evaluar }}</small>
                         @endif
+                        @if($evaluado->sede_region_empresa)
+                            <br><small style="color:#888;">Región: {{ $evaluado->sede_region_empresa }}</small>
+                        @endif
                         @if($evaluado->sede)
                             <br><small style="color:#888;">Sede: {{ $evaluado->sede->nombre }}</small>
                         @endif

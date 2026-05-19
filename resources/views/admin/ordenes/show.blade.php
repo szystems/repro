@@ -423,8 +423,12 @@
                                                 <span>{{ $evaluado->puesto_evaluar ?: '—' }}</span>
                                             </div>
                                             <div class="col-md-4">
-                                                <small class="text-muted d-block">Sede del Candidato</small>
+                                                <small class="text-muted d-block">Sede REPRO</small>
                                                 <span>{{ $evaluado->sede?->nombre ?: '—' }}</span>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Sede/Región Empresa</small>
+                                                <span>{{ $evaluado->sede_region_empresa ?: '—' }}</span>
                                             </div>
                                             <div class="col-md-4">
                                                 <small class="text-muted d-block">Programación</small>
