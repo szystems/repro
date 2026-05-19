@@ -125,6 +125,12 @@
             height: auto !important;
             overflow: visible !important;
         }
+        /* Navbar fijo al top: se mantiene visible al hacer scroll */
+        .page-header {
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
     </style>
 </head>
 

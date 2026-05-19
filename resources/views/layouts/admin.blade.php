@@ -127,6 +127,12 @@
                 margin-top: auto;
                 flex-shrink: 0;
             }
+            /* Navbar fijo al top: se mantiene visible al hacer scroll */
+            .page-header {
+                position: sticky;
+                top: 0;
+                z-index: 1030;
+            }
             /* Bajo el breakpoint xl, cualquier col-xl-N debe apilarse al 100% para
                evitar que el flex item se encoja al ancho del contenido. */
             @media (max-width: 1199.98px) {
