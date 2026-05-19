@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-05-18 (nueva ronda observaciones cliente)
+**Ultima actualizacion:** 2026-05-18 (sesion tarde: R11 seguridad, errores, navbar sticky)
 **Suite de tests:** 475/475
 **Deploy a producción:** EJECUTADO el 2026-05-08 (iPage FTP)
 **Ultimo archivo subido post-deploy:** resources/views/admin/cuestionarios/index.blade.php (2026-05-13, 36809 bytes verificados)
@@ -25,9 +25,9 @@
 | Fase 10 | Correcciones rapidas 2a ronda | COMPLETADA |
 | Fase 11 | Auto-estados por acciones | PENDIENTE |
 | Fase 12 | Campo Sede/Region del evaluado | PENDIENTE |
-| Fase 13 | Mejoras dashboard y WhatsApp | PENDIENTE |
+| Fase 13 | Mejoras dashboard y WhatsApp | PARCIAL (R2 ya implementado) |
 | Fase 14 | Configuracion ampliada | PENDIENTE |
-| Fase 15 | Auditoria de permisos por rol | PENDIENTE |
+| Fase 15 | Auditoria de permisos por rol | COMPLETADA |
 
 ---
 
@@ -39,18 +39,18 @@
 
 | Ref | Descripcion resumida | Fase | Prioridad | Complejidad |
 |-----|----------------------|------|-----------|-------------|
-| R1 | Auto-cambio de estados por acciones | Fase 11 | ALTA | ALTA |
-| R2 | Top empresas en dashboard admin | Fase 13 | MEDIA | BAJA |
-| R3 | Configuracion ampliada in-app | Fase 14 | MEDIA | ALTA |
-| R4 | Campo Sede/Region del evaluado | Fase 12 | ALTA | MEDIA |
-| R5 | Auto-liberar informe al subirlo | Fase 10 | ALTA | MEDIA |
-| R6 | WhatsApp dropdown de sedes | Fase 13 | MEDIA | MEDIA |
-| R7 | Diferenciar preliminar vs final en cliente | Fase 10 | MEDIA | BAJA |
-| R8 | Notificaciones con info y redireccion correcta | Fase 10 | ALTA | MEDIA |
-| R9 | Quitar fecha tentativa en cliente | Fase 10 | ALTA | BAJA |
-| R10 | Renombrar editor informe preliminar | Fase 10 | BAJA | MUY BAJA |
-| R11 | Auditoria restricciones por rol | Fase 15 | ALTA | ALTA |
-| R12 | Layout vistas cliente empresa (scroll/footer) | Fase 10 | ALTA | MEDIA |
+| R1 | Auto-cambio de estados por acciones | Fase 11 | ALTA | ALTA | PENDIENTE |
+| R2 | Top empresas en dashboard admin | Fase 13 | MEDIA | BAJA | ✅ YA IMPLEMENTADO |
+| R3 | Configuracion ampliada in-app | Fase 14 | MEDIA | ALTA | PENDIENTE |
+| R4 | Campo Sede/Region del evaluado | Fase 12 | ALTA | MEDIA | PENDIENTE |
+| R5 | Auto-liberar informe al subirlo | Fase 10 | ALTA | MEDIA | ✅ COMPLETADO |
+| R6 | WhatsApp dropdown de sedes | Fase 13 | MEDIA | MEDIA | PENDIENTE |
+| R7 | Diferenciar preliminar vs final en cliente | Fase 10 | MEDIA | BAJA | ✅ COMPLETADO |
+| R8 | Notificaciones con info y redireccion correcta | Fase 10 | ALTA | MEDIA | ✅ COMPLETADO |
+| R9 | Quitar fecha tentativa en cliente y admin | Fase 10 | ALTA | BAJA | ✅ COMPLETADO |
+| R10 | Renombrar editor informe preliminar | Fase 10 | BAJA | MUY BAJA | ✅ COMPLETADO |
+| R11 | Auditoria restricciones por rol | Fase 15 | ALTA | ALTA | ✅ COMPLETADO |
+| R12 | Layout vistas cliente empresa (scroll/footer) | Fase 10 | ALTA | MEDIA | ✅ COMPLETADO |
 
 ---
 
@@ -629,6 +629,40 @@ Recomendado: opcion 3 (migracion) para mantener idempotencia y trazabilidad.
 - Permisos en BD local: 44 en 16 modulos (antes 24 en 8)
 - Migraciones pendientes: 0
 - Working tree files modificados: 2 (OrdenesController, RolesAndPermissionsSeeder)
+
+---
+
+## Fase 15 - Auditoría de permisos por rol - COMPLETADA 2026-05-18
+
+Auditoría de módulos sensibles ejecutada el 2026-05-18.
+
+| ID | Hallazgo | Severidad | Estado |
+|----|----------|-----------|--------|
+| R11-A | `GET /users` y `GET /show-user/{id}` sin middleware `role:admin` → repro y empresa podían acceder | ALTA | ✓ RESUELTO |
+| R11-B | Sidebar mostraba "Usuarios", "Configuración" a repro (`role_as >= 2`) | MEDIA | ✓ RESUELTO |
+| R11-C | Config protegida por ruta pero link visible en nav para repro | BAJA | ✓ RESUELTO |
+
+### Cambios aplicados
+
+- **routes/web.php**: `users.index` y `users.show` movidos dentro del grupo `role:admin`
+- **sidebar.blade.php**: bloque "Administración" separado: admin ve todo; repro ve solo Finanzas
+- **tests**: 5 tests R11 en `AuditoriaSeguridadTest` — repro/empresa bloqueados, admin autorizado
+
+### Otros cambios (sesión 2026-05-18)
+
+| Item | Descripcion | Archivos |
+|------|-------------|----------|
+| Paginas de error | 404/403/500 con logo REPRO, mensaje y botones Ir al inicio / Regresar | resources/views/errors/ |
+| Navbar sticky | .page-header { position: sticky; top: 0; z-index: 1030 } en admin y empresa layouts | admin.blade.php, empresa.blade.php |
+
+### Commits de esta sesión
+
+| Hash | Descripcion |
+|------|-------------|
+| 5a21cba7 | feat: Fase 10 (R5/R7/R8/R9/R10/R12) + admin puede eliminar informe final |
+| 0e6b3b0c | feat: eliminar campo Fecha Tentativa de formularios y PDFs admin |
+| 34352956 | fix: R11 — modulo usuarios restringido exclusivamente a admin |
+| 15cdb291 | feat: paginas de error personalizadas + navbar sticky |
 
 ---
 
