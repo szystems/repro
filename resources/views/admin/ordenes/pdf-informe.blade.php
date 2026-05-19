@@ -226,8 +226,6 @@
                     <span class="dato-valor">
                         @if($evaluado->fecha_realizada)
                             {{ \Carbon\Carbon::parse($evaluado->fecha_realizada)->format('d/m/Y') }}
-                        @elseif($evaluado->fecha_programada)
-                            {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('d/m/Y') }} <small>(tentativa)</small>
                         @else
                             —
                         @endif

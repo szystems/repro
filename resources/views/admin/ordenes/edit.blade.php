@@ -283,14 +283,6 @@
                                             </select>
                                         </div>
                                         <div class="col-md-6 mb-2">
-                                            <label class="form-label">Fecha Tentativa <small class="text-muted">(sujeta a agenda REPRO)</small></label>
-                                            <input type="date" class="form-control" name="evaluados[{{ $index }}][fecha_programada]" 
-                                                   value="{{ old('evaluados.'.$index.'.fecha_programada', $evaluado->fecha_programada ? \Carbon\Carbon::parse($evaluado->fecha_programada)->format('Y-m-d') : '') }}">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6 mb-2">
                                             <label class="form-label">Dirección</label>
                                             <input type="text" class="form-control" name="evaluados[{{ $index }}][direccion]" 
                                                    value="{{ old('evaluados.'.$index.'.direccion', $evaluado->direccion) }}" maxlength="300"
@@ -502,10 +494,6 @@
                     <option value="especifica">Específica</option>
                 </select>
             </div>
-            <div class="col-md-6 mb-2">
-                <label class="form-label">Fecha Tentativa <small class="text-muted">(sujeta a agenda REPRO)</small></label>
-                <input type="date" class="form-control evaluado-fecha-programada" name="">
-            </div>
         </div>
         
         @if(Auth::user()->hasAnyRole(['admin', 'repro']))
@@ -572,7 +560,6 @@ document.addEventListener('DOMContentLoaded', function() {
         newEvaluado.querySelector('.evaluado-telefono').name = `evaluados[${evaluadoIndex}][telefono]`;
         newEvaluado.querySelector('.evaluado-tipo-servicio').name = `evaluados[${evaluadoIndex}][tipo_servicio]`;
         newEvaluado.querySelector('.evaluado-tipo-formulario').name = `evaluados[${evaluadoIndex}][tipo_formulario]`;
-        newEvaluado.querySelector('.evaluado-fecha-programada').name = `evaluados[${evaluadoIndex}][fecha_programada]`;
         @if(Auth::user()->hasAnyRole(['admin', 'repro']))
         const poligrafistaSelect = newEvaluado.querySelector('.evaluado-poligrafista');
         if (poligrafistaSelect) {

@@ -223,17 +223,9 @@ function agregarEvaluado(datos = {}) {
     const observaciones = datos.observaciones || '';
     const tipoServicio = datos.tipo_servicio || 'poligrafo';
     const tipoFormulario = datos.tipo_formulario || 'preempleo';
-    const fechaProgramada = datos.fecha_programada || '';
     const puestoEvaluar = datos.puesto_evaluar || '';
     const sedeId = datos.sede_id || '';
     const sedeOptions = sedesDisponibles.map(s => `<option value="${s.id}" ${String(sedeId) === String(s.id) ? 'selected' : ''}>${s.nombre}</option>`).join('');
-
-    // Solo mostrar fecha programada si NO es usuario empresa
-    const fechaProgramadaHtml = esUsuarioEmpresa ? '' : `
-                <div class="col-md-3 mb-2">
-                    <label class="form-label">Fecha Tentativa <small class="text-muted">(sujeta a agenda REPRO)</small></label>
-                    <input type="date" class="form-control" name="evaluados[${contadorEvaluados}][fecha_programada]" min="{{ date('Y-m-d') }}" value="${fechaProgramada}">
-                </div>`;
 
     const html = `
         <div class="evaluado-item border rounded p-3 mb-3" id="evaluado-${contadorEvaluados}">
@@ -293,7 +285,6 @@ function agregarEvaluado(datos = {}) {
                         <option value="especifica" ${tipoFormulario === 'especifica' ? 'selected' : ''}>Específica</option>
                     </select>
                 </div>
-                ${fechaProgramadaHtml}
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Teléfono</label>
                     <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono]" placeholder="23451234" value="${telefono}">
