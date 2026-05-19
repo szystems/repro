@@ -437,7 +437,7 @@ class CuestionarioController extends Controller
             $evaluado->cuestionario_completado = true;
             $evaluado->cuestionario_completado_at = now();
             $evaluado->completado_at = now();
-            $evaluado->estado_evaluacion = 'completado';
+            $evaluado->estado_evaluacion = 'docs_pendientes'; // Formulario recibido, pendiente de revisar
             $evaluado->ip_acceso = $request->ip();
             $evaluado->save();
 

@@ -92,4 +92,37 @@ class CuestionarioTest extends TestCase
         // Debería mostrar mensaje de completado o redirigir
         $response->assertSee('completado'); // O el mensaje que definas
     }
+
+    // =========================================================
+    // R1 — Auto-estados en flujo del candidato
+    // =========================================================
+
+    public function test_r1_completar_cuestionario_establece_docs_pendientes(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id'          => $orden->id,
+            'token_unico'       => 'token-r1-completar',
+            'token_expira_at'   => now()->addDays(30),
+            'estado_evaluacion' => 'link_enviado',
+            'cuestionario_completado' => false,
+        ]);
+        \App\Models\Cuestionario::create([
+            'evaluado_orden_id'   => $evaluado->id,
+            'tipo_formulario'     => 'preempleo',
+            'acepta_terminos'     => true,
+            'progreso_porcentaje' => 100,
+            'seccion_actual'      => 1,
+            'total_secciones'     => 1,
+        ]);
+
+        $this->post(route('cuestionario.completar', $evaluado->token_unico), [
+            'confirmacion_final' => '1',
+        ]);
+
+        $evaluado->refresh();
+        $this->assertEquals('docs_pendientes', $evaluado->estado_evaluacion);
+        $this->assertTrue($evaluado->cuestionario_completado);
+    }
 }

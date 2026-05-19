@@ -708,6 +708,11 @@ class OrdenesController extends Controller
 
                 // Enviar notificación al evaluado si tiene email
                 $this->notificarEvaluadoAsignado($evaluadoCreado);
+
+                // Auto-estado: si tiene email el link fue enviado
+                if (!empty($evaluadoCreado->email)) {
+                    $evaluadoCreado->update(['estado_evaluacion' => 'link_enviado']);
+                }
             }
         }
 
@@ -900,6 +905,11 @@ class OrdenesController extends Controller
                 'usuario' => Auth::user()->name,
             ]);
 
+            // Auto-estado: link reenviado
+            if (in_array($evaluado->estado_evaluacion, ['pendiente', 'link_enviado'])) {
+                $evaluado->update(['estado_evaluacion' => 'link_enviado']);
+            }
+
             return back()->with('success', "Correo reenviado exitosamente a {$evaluado->email}");
 
         } catch (\Exception $e) {
@@ -968,6 +978,9 @@ class OrdenesController extends Controller
             $orden->update(['resultados_visibles_empresa' => true]);
             $orden->refresh();
             $this->notificarResultadosDisponibles($orden);
+
+            // Auto-estado evaluado: completado
+            $evaluado->update(['estado_evaluacion' => 'completado']);
 
             return back()->with('success', 'Archivo de resultado final subido. Los resultados han sido liberados automáticamente al cliente.');
         }

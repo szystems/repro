@@ -2,8 +2,8 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-05-19 (sesion: R6 WhatsApp dropdown de sedes en sidebars)
-**Suite de tests:** 482/482
+**Ultima actualizacion:** 2026-05-19 (sesion: R1 Auto-estados por acciones)
+**Suite de tests:** 486/486
 **Deploy a producción:** EJECUTADO el 2026-05-08 (iPage FTP)
 **Ultimo archivo subido post-deploy:** resources/views/admin/cuestionarios/index.blade.php (2026-05-13, 36809 bytes verificados)
 
@@ -23,7 +23,7 @@
 | Fase 8 | Mejoras visuales (layout/scroll) | COMPLETADA |
 | Fase 9 | Hardening pre-deploy (auditoria) | COMPLETADA |
 | Fase 10 | Correcciones rapidas 2a ronda | COMPLETADA |
-| Fase 11 | Auto-estados por acciones | PENDIENTE |
+| Fase 11 | Auto-estados por acciones | COMPLETADA |
 | Fase 12 | Campo Sede/Region del evaluado | COMPLETADA |
 | Fase 13 | Mejoras dashboard y WhatsApp | COMPLETADA |
 | Fase 14 | Configuracion ampliada | PENDIENTE |
@@ -39,7 +39,7 @@
 
 | Ref | Descripcion resumida | Fase | Prioridad | Complejidad |
 |-----|----------------------|------|-----------|-------------|
-| R1 | Auto-cambio de estados por acciones | Fase 11 | ALTA | ALTA | PENDIENTE |
+| R1 | Auto-cambio de estados por acciones | Fase 11 | ALTA | ALTA | ✅ COMPLETADO |
 | R2 | Top empresas en dashboard admin | Fase 13 | MEDIA | BAJA | ✅ YA IMPLEMENTADO |
 | R3 | Configuracion ampliada in-app | Fase 14 | MEDIA | ALTA | PENDIENTE |
 | R4 | Campo Sede/Region del evaluado | Fase 12 | ALTA | MEDIA | ✅ COMPLETADO |

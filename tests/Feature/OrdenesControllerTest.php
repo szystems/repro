@@ -367,4 +367,79 @@ class OrdenesControllerTest extends TestCase
         $evaluado->refresh();
         $this->assertEquals('Sucursal Centro', $evaluado->sede_region_empresa);
     }
+
+    // =========================================================
+    // R1 — Auto-cambio de estados por acciones
+    // =========================================================
+
+    public function test_r1_crear_evaluado_con_email_establece_link_enviado(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create(['role_as' => 3]);
+        $empresa = Empresa::factory()->create();
+        $sede = \App\Models\Sede::factory()->create(['estado' => 1]);
+
+        $response = $this->actingAs($admin)->post(route('ordenes.store'), [
+            'empresa_id'   => $empresa->id,
+            'sede_id'      => $sede->id,
+            'tipo_servicio' => ['vsa'],
+            'evaluados' => [[
+                'nombre'         => 'Juan',
+                'apellidos'      => 'Pérez',
+                'dpi'            => '1234567890101',
+                'email'          => 'juan@example.com',
+                'tipo_servicio'  => 'vsa',
+                'tipo_formulario'=> 'preempleo',
+            ]],
+        ]);
+
+        $evaluado = EvaluadoOrden::where('email', 'juan@example.com')->first();
+        $this->assertNotNull($evaluado);
+        $this->assertEquals('link_enviado', $evaluado->estado_evaluacion);
+    }
+
+    public function test_r1_reenviar_correo_establece_link_enviado(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create(['role_as' => 3]);
+        $empresa = Empresa::factory()->create();
+        $sede = \App\Models\Sede::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id, 'sede_id' => $sede->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id'          => $orden->id,
+            'email'             => 'test@example.com',
+            'estado_evaluacion' => 'pendiente',
+            'token_unico'       => 'test-token-abc',
+            'token_expira_at'   => now()->addDays(30),
+        ]);
+
+        $this->actingAs($admin)->post(route('evaluados.reenviar-correo', $evaluado));
+
+        $evaluado->refresh();
+        $this->assertEquals('link_enviado', $evaluado->estado_evaluacion);
+    }
+
+    public function test_r1_subir_resultado_final_marca_evaluado_completado(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $empresa = Empresa::factory()->create();
+        $sede = \App\Models\Sede::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id, 'sede_id' => $sede->id, 'estado' => 'en_proceso']);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id'          => $orden->id,
+            'estado_evaluacion' => 'docs_pendientes',
+        ]);
+
+        $archivo = \Illuminate\Http\UploadedFile::fake()->create('informe.pdf', 100, 'application/pdf');
+
+        $this->actingAs($admin)->post(route('evaluados.subir-resultado-archivo', $evaluado), [
+            'tipo_resultado' => 'final',
+            'archivo'        => $archivo,
+        ]);
+
+        $evaluado->refresh();
+        $this->assertEquals('completado', $evaluado->estado_evaluacion);
+    }
 }
