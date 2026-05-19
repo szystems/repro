@@ -2,10 +2,10 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-05-18 (sesion: R3 Configuracion ampliada)
+**Ultima actualizacion:** 2026-05-18 (sesion: Deploy ronda Mayo 2026)
 **Suite de tests:** 490/490
-**Deploy a producción:** EJECUTADO el 2026-05-08 (iPage FTP)
-**Ultimo archivo subido post-deploy:** resources/views/admin/cuestionarios/index.blade.php (2026-05-13, 36809 bytes verificados)
+**Deploy a producción:** EJECUTADO el 2026-05-18 (iPage FTP) — 31 archivos subidos, 3 migraciones BD aplicadas, caché limpiado
+**Script deploy:** scripts/deploy_sprint_2026-05-18.sh
 
 ---
 
