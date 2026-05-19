@@ -742,13 +742,13 @@
                                                                            class="btn btn-sm btn-outline-success" title="Descargar">
                                                                             <i class="bi bi-download"></i>
                                                                         </a>
-                                                                        @if(Auth::user()->role_as >= 2)
+                                                                        @if(Auth::user()->role_as >= 3)
                                                                         <form action="{{ route('evaluados.eliminar-resultado-archivo', [$evaluado->id, 'final']) }}"
                                                                               method="POST" class="d-inline"
-                                                                              onsubmit="return confirm('¿Eliminar resultado final?')">
+                                                                              onsubmit="return confirm('¿Eliminar informe final? Esto permite reemplazarlo.')">
                                                                             @csrf
                                                                             @method('DELETE')
-                                                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar (solo admin)">
                                                                                 <i class="bi bi-trash"></i>
                                                                             </button>
                                                                         </form>

@@ -933,8 +933,9 @@ class OrdenesController extends Controller
         $tipo = $request->tipo_resultado;
 
         // CO3: bloquear subida de informe final si la orden ya fue entregada
-        if ($tipo === 'final' && $evaluado->orden->estado === 'entregado') {
-            return back()->with('error', 'No se puede reemplazar el informe final de una orden ya entregada.');
+        // Solo admins pueden reemplazarlo
+        if ($tipo === 'final' && $evaluado->orden->estado === 'entregado' && Auth::user()->role_as < 3) {
+            return back()->with('error', 'No se puede reemplazar el informe final de una orden ya entregada. Solo los administradores pueden hacerlo.');
         }
 
         $campo = $tipo === 'preliminar' ? 'archivo_resultado_preliminar' : 'archivo_resultado_final';
@@ -1028,8 +1029,9 @@ class OrdenesController extends Controller
         }
 
         // CO3: no se puede eliminar el informe final de una orden ya entregada
-        if ($tipo === 'final' && $evaluado->orden->estado === 'entregado') {
-            return back()->with('error', 'No se puede eliminar el informe final de una orden ya entregada.');
+        // Solo admins pueden hacerlo
+        if ($tipo === 'final' && $evaluado->orden->estado === 'entregado' && Auth::user()->role_as < 3) {
+            return back()->with('error', 'No se puede eliminar el informe final de una orden ya entregada. Solo los administradores pueden hacerlo.');
         }
 
         $campo = $tipo === 'preliminar' ? 'archivo_resultado_preliminar' : 'archivo_resultado_final';
