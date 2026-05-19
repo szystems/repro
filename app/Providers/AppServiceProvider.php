@@ -57,6 +57,13 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('currentUser', $user);
                 $view->with('userRole', $user->role_as);
                 $view->with('userRoleName', $user->getRoleName());
+
+                // Sedes con WhatsApp para el dropdown de contacto en sidebars
+                try {
+                    $view->with('sedesWhatsApp', \App\Models\Sede::activas()->whereNotNull('whatsapp')->where('whatsapp', '!=', '')->orderBy('nombre')->get());
+                } catch (\Exception $e) {
+                    $view->with('sedesWhatsApp', collect());
+                }
             }
         });
 

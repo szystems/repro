@@ -191,6 +191,29 @@
                     </a>
                 </li>
                 @endif
+
+                <!-- WhatsApp sedes REPRO -->
+                @if(isset($sedesWhatsApp) && $sedesWhatsApp->isNotEmpty())
+                <li class="menu-category">Contacto</li>
+                <li class="sidebar-dropdown">
+                    <a href="#">
+                        <i class="bi bi-whatsapp text-success"></i>
+                        <span class="menu-text">WhatsApp REPRO</span>
+                        <i class="bi bi-chevron-down menu-arrow"></i>
+                    </a>
+                    <div class="sidebar-submenu">
+                        <ul>
+                            @foreach($sedesWhatsApp as $sedeWa)
+                            <li>
+                                <a href="https://wa.me/{{ preg_replace('/\D+/', '', $sedeWa->whatsapp) }}" target="_blank" rel="noopener noreferrer">
+                                    <i class="bi bi-whatsapp text-success"></i> {{ $sedeWa->nombre }}
+                                </a>
+                            </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </li>
+                @endif
             </ul>
         </div>
     </div>

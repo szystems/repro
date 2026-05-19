@@ -299,5 +299,67 @@ class Fase5PanelSedeReportesTest extends TestCase
         $response->assertStatus(200);
         $response->assertDontSee('Historial de candidatos');
     }
+
+    // =========================================================
+    // R6 — WhatsApp dropdown en sidebar
+    // =========================================================
+
+    public function test_r6_sidebar_admin_muestra_whatsapp_dropdown(): void
+    {
+        Sede::factory()->create([
+            'nombre'  => 'Sede Central',
+            'estado'  => 1,
+            'whatsapp' => '50212345678',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('ordenes.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('WhatsApp REPRO');
+        $response->assertSee('wa.me/50212345678');
+        $response->assertSee('Sede Central');
+    }
+
+    public function test_r6_sidebar_empresa_muestra_whatsapp_dropdown(): void
+    {
+        Sede::factory()->create([
+            'nombre'  => 'Sede Norte',
+            'estado'  => 1,
+            'whatsapp' => '50298765432',
+        ]);
+
+        $response = $this->actingAs($this->empresaUser)
+            ->get(route('empresa.ordenes.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('WhatsApp REPRO');
+        $response->assertSee('wa.me/50298765432');
+    }
+
+    public function test_r6_sidebar_no_muestra_dropdown_si_no_hay_sedes_con_whatsapp(): void
+    {
+        // setUp crea una sede sin whatsapp
+        $response = $this->actingAs($this->empresaUser)
+            ->get(route('empresa.ordenes.index'));
+
+        $response->assertStatus(200);
+        $response->assertDontSee('WhatsApp REPRO');
+    }
+
+    public function test_r6_sede_inactiva_no_aparece_en_sidebar(): void
+    {
+        Sede::factory()->create([
+            'nombre'  => 'Sede Inactiva Sur',
+            'estado'  => 0,
+            'whatsapp' => '50200000099',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('ordenes.index'));
+
+        $response->assertStatus(200);
+        $response->assertDontSee('50200000099');
+    }
 }
 

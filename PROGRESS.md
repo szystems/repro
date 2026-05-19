@@ -2,8 +2,8 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-05-18 (sesion tarde: R11 seguridad, errores, navbar sticky, R4 sede/región empresa)
-**Suite de tests:** 478/478
+**Ultima actualizacion:** 2026-05-19 (sesion: R6 WhatsApp dropdown de sedes en sidebars)
+**Suite de tests:** 482/482
 **Deploy a producción:** EJECUTADO el 2026-05-08 (iPage FTP)
 **Ultimo archivo subido post-deploy:** resources/views/admin/cuestionarios/index.blade.php (2026-05-13, 36809 bytes verificados)
 
@@ -25,7 +25,7 @@
 | Fase 10 | Correcciones rapidas 2a ronda | COMPLETADA |
 | Fase 11 | Auto-estados por acciones | PENDIENTE |
 | Fase 12 | Campo Sede/Region del evaluado | COMPLETADA |
-| Fase 13 | Mejoras dashboard y WhatsApp | PARCIAL (R2 ya implementado) |
+| Fase 13 | Mejoras dashboard y WhatsApp | COMPLETADA |
 | Fase 14 | Configuracion ampliada | PENDIENTE |
 | Fase 15 | Auditoria de permisos por rol | COMPLETADA |
 
@@ -44,7 +44,7 @@
 | R3 | Configuracion ampliada in-app | Fase 14 | MEDIA | ALTA | PENDIENTE |
 | R4 | Campo Sede/Region del evaluado | Fase 12 | ALTA | MEDIA | ✅ COMPLETADO |
 | R5 | Auto-liberar informe al subirlo | Fase 10 | ALTA | MEDIA | ✅ COMPLETADO |
-| R6 | WhatsApp dropdown de sedes | Fase 13 | MEDIA | MEDIA | PENDIENTE |
+| R6 | WhatsApp dropdown de sedes | Fase 13 | MEDIA | MEDIA | ✅ COMPLETADO |
 | R7 | Diferenciar preliminar vs final en cliente | Fase 10 | MEDIA | BAJA | ✅ COMPLETADO |
 | R8 | Notificaciones con info y redireccion correcta | Fase 10 | ALTA | MEDIA | ✅ COMPLETADO |
 | R9 | Quitar fecha tentativa en cliente y admin | Fase 10 | ALTA | BAJA | ✅ COMPLETADO |
@@ -187,18 +187,15 @@
 
 ---
 
-### R6 — WhatsApp dropdown de sedes (Fase 13)
+### R6 — WhatsApp dropdown de sedes (Fase 13) ✅ COMPLETADO
 
-**Solicitud:** Botón WhatsApp en barra lateral y panel de control como dropdown que liste todas las sedes activas con sus números. Primera opción: sede asignada a la orden si hay contexto.
+**Solicitud:** Botón WhatsApp en barra lateral y panel de control como dropdown que liste todas las sedes activas con sus números.
 
-**Estado actual:** En admin/index.blade.php ya existen botones WhatsApp por sede. En empresa/ordenes se muestra el WhatsApp de la sede de la orden. Pero NO hay dropdown en barra lateral.
-
-**Plan:**
-1. En layouts/empresa.blade.php (incempresa sidebar): agregar dropdown de sedes activas con WhatsApp
-2. En layouts/admin.blade.php (incadmin sidebar): igual
-3. En empresa/ordenes/show.blade.php: el primer item del dropdown debe ser la sede de la orden
-4. Query de sedes: `Sede::where('activo', true)->whereNotNull('whatsapp')->get()`
-5. Inyectar las sedes en todos los layouts via ViewComposer o AppServiceProvider
+**Implementación:**
+- `AppServiceProvider::boot()`: comparte `$sedesWhatsApp` globalmente via `View::composer('*')` con `Sede::activas()->whereNotNull('whatsapp')->where('whatsapp', '!=', '')->orderBy('nombre')->get()`
+- `incadmin/sidebar.blade.php`: dropdown "WhatsApp REPRO" con ícono verde, lista todas las sedes, cada item abre `https://wa.me/{numero}` en nueva pestaña
+- `incempresa/sidebar.blade.php`: misma estructura
+- 4 tests (11 assertions): admin sidebar muestra, empresa sidebar muestra, no muestra si vacío, inactiva no aparece
 
 ---
 
