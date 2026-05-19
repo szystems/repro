@@ -2,8 +2,8 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-05-18 (sesion tarde: R11 seguridad, errores, navbar sticky)
-**Suite de tests:** 475/475
+**Ultima actualizacion:** 2026-05-18 (sesion tarde: R11 seguridad, errores, navbar sticky, R4 sede/región empresa)
+**Suite de tests:** 478/478
 **Deploy a producción:** EJECUTADO el 2026-05-08 (iPage FTP)
 **Ultimo archivo subido post-deploy:** resources/views/admin/cuestionarios/index.blade.php (2026-05-13, 36809 bytes verificados)
 
@@ -24,7 +24,7 @@
 | Fase 9 | Hardening pre-deploy (auditoria) | COMPLETADA |
 | Fase 10 | Correcciones rapidas 2a ronda | COMPLETADA |
 | Fase 11 | Auto-estados por acciones | PENDIENTE |
-| Fase 12 | Campo Sede/Region del evaluado | PENDIENTE |
+| Fase 12 | Campo Sede/Region del evaluado | COMPLETADA |
 | Fase 13 | Mejoras dashboard y WhatsApp | PARCIAL (R2 ya implementado) |
 | Fase 14 | Configuracion ampliada | PENDIENTE |
 | Fase 15 | Auditoria de permisos por rol | COMPLETADA |
@@ -42,7 +42,7 @@
 | R1 | Auto-cambio de estados por acciones | Fase 11 | ALTA | ALTA | PENDIENTE |
 | R2 | Top empresas en dashboard admin | Fase 13 | MEDIA | BAJA | ✅ YA IMPLEMENTADO |
 | R3 | Configuracion ampliada in-app | Fase 14 | MEDIA | ALTA | PENDIENTE |
-| R4 | Campo Sede/Region del evaluado | Fase 12 | ALTA | MEDIA | PENDIENTE |
+| R4 | Campo Sede/Region del evaluado | Fase 12 | ALTA | MEDIA | ✅ COMPLETADO |
 | R5 | Auto-liberar informe al subirlo | Fase 10 | ALTA | MEDIA | ✅ COMPLETADO |
 | R6 | WhatsApp dropdown de sedes | Fase 13 | MEDIA | MEDIA | PENDIENTE |
 | R7 | Diferenciar preliminar vs final en cliente | Fase 10 | MEDIA | BAJA | ✅ COMPLETADO |
@@ -159,19 +159,14 @@
 
 **Decisión de diseño:** Campo de texto libre `sede_region_empresa` (no FK) porque las regiones del cliente empresa son arbitrarias y cambian.
 
-**Plan:**
-1. Migración: `ALTER TABLE evaluados_orden ADD COLUMN sede_region_empresa VARCHAR(100) NULL`
-2. EvaluadoOrden.php: agregar a $fillable
-3. Formularios admin crear/editar orden: agregar campo input text
-4. Formulario empresa crear orden: agregar campo input text
-5. Vista show admin: mostrar en datos del evaluado
-6. Vista show empresa: mostrar en datos del evaluado
-7. PDF Orden de Servicio: incluir campo
-8. PDF Informe Candidatos: incluir campo
-9. Reportes: incluir en columnas donde aparece info del evaluado
-10. Tests
-
-**Archivos:** nueva migración, EvaluadoOrden.php, admin/ordenes/create.blade.php, admin/ordenes/edit.blade.php, admin/ordenes/show.blade.php, empresa/ordenes/show.blade.php, admin/ordenes/pdf.blade.php, admin/ordenes/pdf-informe.blade.php
+**Estado: ✅ COMPLETADO (2026-05-18)**
+- Migración aplicada: `sede_region_empresa VARCHAR(100) NULL` en `evaluados_orden`
+- Modelo, controller (store/update), validación actualizados
+- Formularios create y edit (admin/empresa): campo después de Dirección
+- Vista show admin (accordion evaluado) y show empresa
+- PDF Orden: etiqueta "Sede/Región Empresa" y "Sede REPRO" claramente diferenciados
+- PDF Informe: filas separadas con etiquetas explícitas
+- 3 tests PHPUnit (8 assertions) — todos pasan
 
 ---
 
