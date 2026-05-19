@@ -57,12 +57,10 @@ Route::post('/password/email', [\App\Http\Controllers\Auth\ForgotPasswordControl
 Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
-    //Admin Users — index/show accesibles para empresa (filtrado por empresa_id en controller)
-    Route::get('users', [UsersController::class, 'users'])->name('users.index');
-    Route::get('show-user/{id}', [UsersController::class, 'showuser'])->name('users.show');
-
     // Gestión de usuarios: solo Admin (role_as=3)
     Route::middleware(['role:admin'])->group(function () {
+        Route::get('users', [UsersController::class, 'users'])->name('users.index');
+        Route::get('show-user/{id}', [UsersController::class, 'showuser'])->name('users.show');
         Route::get('add-user', [UsersController::class, 'adduser'])->name('users.create');
         Route::post('insert-user', [UsersController::class, 'insertuser'])->name('users.store');
         Route::get('edit-user/{id}', [UsersController::class, 'edituser'])->name('users.edit');

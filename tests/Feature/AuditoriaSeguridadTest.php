@@ -460,5 +460,55 @@ class AuditoriaSeguridadTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    // R11: repro no puede acceder al listado ni detalle de usuarios
+    // ──────────────────────────────────────────────────────────
+
+    public function test_r11_repro_no_puede_listar_usuarios(): void
+    {
+        $repro = $this->crearRepro();
+
+        $response = $this->actingAs($repro)->get(route('users.index'));
+
+        $response->assertForbidden();
+    }
+
+    public function test_r11_repro_no_puede_ver_detalle_usuario(): void
+    {
+        $repro = $this->crearRepro();
+        $otroUsuario = User::factory()->create(['role_as' => 1]);
+
+        $response = $this->actingAs($repro)->get(route('users.show', $otroUsuario->id));
+
+        $response->assertForbidden();
+    }
+
+    public function test_r11_empresa_no_puede_listar_usuarios_admin(): void
+    {
+        $empresa = $this->crearEmpresaUser();
+
+        $response = $this->actingAs($empresa)->get(route('users.index'));
+
+        $response->assertForbidden();
+    }
+
+    public function test_r11_admin_puede_listar_usuarios(): void
+    {
+        $admin = $this->crearAdmin();
+
+        $response = $this->actingAs($admin)->get(route('users.index'));
+
+        $response->assertOk();
+    }
+
+    public function test_r11_admin_puede_ver_detalle_usuario(): void
+    {
+        $admin = $this->crearAdmin();
+        $otroUsuario = User::factory()->create(['role_as' => 1, 'estado' => 1]);
+
+        $response = $this->actingAs($admin)->get(route('users.show', $otroUsuario->id));
+
+        $response->assertOk();
+    }
 }
 

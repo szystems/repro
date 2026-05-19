@@ -22,7 +22,7 @@
 | Fase 7 | Editor de informes | COMPLETADA |
 | Fase 8 | Mejoras visuales (layout/scroll) | COMPLETADA |
 | Fase 9 | Hardening pre-deploy (auditoria) | COMPLETADA |
-| Fase 10 | Correcciones rapidas 2a ronda | PENDIENTE |
+| Fase 10 | Correcciones rapidas 2a ronda | COMPLETADA |
 | Fase 11 | Auto-estados por acciones | PENDIENTE |
 | Fase 12 | Campo Sede/Region del evaluado | PENDIENTE |
 | Fase 13 | Mejoras dashboard y WhatsApp | PENDIENTE |
@@ -530,6 +530,46 @@ UI Layout (mitigacion temporal, solucion completa en Fase 8):
 | 2026-05-08 | 469 | Fase 6 completa (A8, A8-fin) + Fase 7 completa (CO6 Quill editor) |
 | 2026-05-08 | 475 | Fase 8 completa (UI1/UI2/UI3 scroll/footer/ancho) + fixes dropdown + filas clickables |
 
+
+---
+
+## Fase 10 - Correcciones rapidas 2a ronda - COMPLETADA 2026-05-18
+
+Implementada el 2026-05-18 como respuesta a la revisión del cliente de ese día.
+Tests en desarrollo local (PHP no ejecutable via WSL con binario Windows).
+
+| Ref | Descripcion | Estado | Commits |
+|-----|-------------|--------|---------|
+| R5 | Auto-liberar al guardar informe preliminar (texto y archivo) | ✓ | 5a21cba7 |
+| R5 | Toggle resultados_visibles restringido a admin (role_as >= 3) | ✓ | 5a21cba7 |
+| R7 | Portal empresa muestra Informe Final (verde) + Preliminar/Obs (azul) diferenciados | ✓ | 5a21cba7 |
+| R8 | Notificaciones incluyen "— Orden #{codigo}" en el mensaje | ✓ | 5a21cba7 |
+| R9 | Fecha Tentativa eliminada de portal empresa (show, index) | ✓ | 5a21cba7 |
+| R9 ext | Fecha Tentativa eliminada de formularios admin (create, edit) y pdf-informe | ✓ | 0e6b3b0c |
+| R10 | Label editor Quill: "Informe Preliminar / Observaciones" | ✓ | 5a21cba7 |
+| R12 | Fix scroll portal empresa: main-container height:auto !important | ✓ | 5a21cba7 |
+| CO3 | Admins (role_as>=3) pueden eliminar/reemplazar informe final en ordenes entregadas | ✓ | 5a21cba7 |
+
+### Archivos clave Fase 10
+
+- app/Http/Controllers/Admin/OrdenesController.php: guardarInformePreliminar(), subirResultadoArchivo(), toggleResultadosVisibles(), eliminarResultadoArchivo()
+- app/Notifications/CuestionarioCompletadoNotification.php: mensaje con código de orden
+- app/Notifications/EvaluadoAsignadoNotification.php: mensaje con código de orden
+- app/Notifications/ResultadosDisponiblesNotification.php: mensaje con nombre y código de orden
+- resources/views/admin/ordenes/show.blade.php: label "Informe Preliminar / Observaciones", toggle visible solo admin, botón delete informe solo admin
+- resources/views/empresa/ordenes/show.blade.php: tarjeta verde (Informe Final) + tarjeta azul (Preliminar/Obs) cuando resultados_visibles_empresa
+- resources/views/layouts/empresa.blade.php: .main-container { height: auto !important; min-height: calc(100vh - 65px) }
+- resources/views/admin/ordenes/create.blade.php: eliminado input y JS de fechaProgramadaHtml
+- resources/views/admin/ordenes/edit.blade.php: eliminado input Fecha Tentativa (2 instancias) y línea JS
+- resources/views/admin/ordenes/pdf-informe.blade.php: eliminado @elseif con label "(tentativa)"
+
+### Datos de prueba creados (locales)
+
+- 5 órdenes en BD local (ORD-2026-0001 a 0005)
+- Empresa de prueba: `arden67@example.net` / `cliente123`
+- ORD-2026-0003: entregado + visible + 2 evaluados con texto_informe_preliminar → test tarjeta azul
+- ORD-2026-0004: entregado + visible + 1 evaluado con texto + archivo final → test tarjeta verde + azul
+- ORD-2026-0002: en_proceso + not visible + 3 evaluados sin informe → test R5 auto-release
 
 ---
 

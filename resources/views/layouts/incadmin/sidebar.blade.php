@@ -134,7 +134,7 @@
                 @endif
 
                 <!-- Administración -->
-                @if(Auth::user()->role_as >= 2)
+                @if(Auth::user()->role_as >= 3)
                 <li class="menu-category">Administración</li>
                 <li class="sidebar-dropdown">
                     <a href="#" class="{{ Request::is('users','show-user/*','add-user','edit-user/*') ? 'active-dropdown':''  }}">
@@ -147,11 +147,9 @@
                             <li class="{{ Request::is('users','show-user/*','add-user','edit-user/*') ? 'active-page-link':''  }}">
                                 <a href="{{ url('users') }}"><i class="bi bi-people"></i> Usuarios</a>
                             </li>
-                            @if(Auth::user()->role_as >= 3)
                             <li class="{{ Request::is('admin/roles','admin/roles/*') ? 'active-page-link':''  }}">
                                 <a href="{{ url('admin/roles') }}"><i class="bi bi-shield-check"></i> Roles y Permisos</a>
                             </li>
-                            @endif
                         </ul>
                     </div>
                 </li>
@@ -161,6 +159,14 @@
                         <span class="menu-text">Configuración</span>
                     </a>
                 </li>
+                <li class="{{ Request::is('finanzas') ? 'active-page-link':''  }}">
+                    <a href="{{ url('finanzas') }}">
+                        <i class="bi bi-cash-stack"></i>
+                        <span class="menu-text">Finanzas</span>
+                    </a>
+                </li>
+                @elseif(Auth::user()->role_as >= 2)
+                <li class="menu-category">Administración</li>
                 <li class="{{ Request::is('finanzas') ? 'active-page-link':''  }}">
                     <a href="{{ url('finanzas') }}">
                         <i class="bi bi-cash-stack"></i>
