@@ -44,6 +44,8 @@ class ConfigController extends Controller
         $config->wapp_link = $request->input('wapp_link');
         $config->descuento_maximo = $request->input('descuento_maximo', 0);
         $config->impuesto = $request->input('impuesto', 0);
+        $config->nombre_empresa = $request->input('nombre_empresa') ?: null;
+        $config->dias_vigencia_token = $request->input('dias_vigencia_token', 30);
         $config->update();
 
         // $request->session()->flash('alert-success', 'Configuración actualizado correctamente!');

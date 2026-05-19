@@ -82,6 +82,25 @@
                                             <div class="p-3">
                                                 <p class="text-muted mb-4">Información visual y datos de contacto del sistema.</p>
 
+                                                <!-- Identidad de la empresa -->
+                                                <div class="card mb-4 border">
+                                                    <div class="card-header bg-light">
+                                                        <h6 class="mb-0"><i class="bi bi-building me-1"></i> Identidad de la Empresa</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col-md-8 mb-3">
+                                                                <label for="nombre_empresa" class="form-label">Nombre Comercial</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                                                    <input name="nombre_empresa" id="nombre_empresa" type="text" class="form-control" placeholder="Ej: REPRO Guatemala" maxlength="100" value="{{ $config->nombre_empresa }}">
+                                                                </div>
+                                                                <div class="form-text">Aparece en el pie de página de PDFs generados.</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <!-- Logo -->
                                                 <div class="card mb-4 border">
                                                     <div class="card-header bg-light">
@@ -218,6 +237,15 @@
                                                                 </div>
                                                                 <div class="form-text">Porcentaje máximo de descuento aplicable.</div>
                                                             </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="dias_vigencia_token" class="form-label">Vigencia del Link de Formulario (días)</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text"><i class="bi bi-clock-history"></i></span>
+                                                                    <input name="dias_vigencia_token" id="dias_vigencia_token" type="number" class="form-control" min="1" max="365" placeholder="30" value="{{ $config->dias_vigencia_token ?? 30 }}">
+                                                                    <span class="input-group-text bg-light">días</span>
+                                                                </div>
+                                                                <div class="form-text">Días que tiene el candidato para completar el formulario antes de que el link expire.</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -234,7 +262,6 @@
                                         </div>
 
                                         <!-- ===== TAB: PLANTILLAS ===== -->
-                                        <div class="tab-pane fade" id="plantillas" role="tabpanel">
                                             <div class="p-3">
                                                 <div class="text-center py-5">
                                                     <i class="bi bi-file-earmark-text text-muted" style="font-size: 4rem;"></i>

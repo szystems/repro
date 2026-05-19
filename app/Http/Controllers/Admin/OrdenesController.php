@@ -681,7 +681,7 @@ class OrdenesController extends Controller
                 'direccion' => $evaluadoData['direccion'] ?? null,
                 'orden_id' => $orden->id,
                 'token_unico' => Str::random(32),
-                'token_expira_at' => now()->addDays(30),
+                'token_expira_at' => now()->addDays(\App\Models\Config::value('dias_vigencia_token') ?? 30),
                 // Nuevos campos granulares
                 'tipo_servicio' => $evaluadoData['tipo_servicio'],
                 // Regla de negocio: socioeconómico siempre usa formulario preempleo
@@ -837,8 +837,9 @@ class OrdenesController extends Controller
         $orden->load(['empresa', 'creador', 'evaluados.poligrafista', 'evaluados.responsable', 'evaluados.sede']);
 
         $estados = Orden::estadosDisponibles();
+        $config = \App\Models\Config::first();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf', compact('orden', 'estados'));
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf', compact('orden', 'estados', 'config'));
 
         return $pdf->stream('OrdenServicio_' . $orden->codigo_orden . '_' . ($orden->empresa->nombre ?? 'SinEmpresa') . '.pdf');
     }
@@ -856,8 +857,9 @@ class OrdenesController extends Controller
 
         $esEmpresa = Auth::user()->role_as < 2;
         $mostrarInformePreliminar = !$esEmpresa || $orden->resultados_visibles_empresa;
+        $config = \App\Models\Config::first();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf-informe', compact('orden', 'mostrarInformePreliminar'));
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf-informe', compact('orden', 'mostrarInformePreliminar', 'config'));
 
         return $pdf->stream('Informe_' . $orden->codigo_orden . '_' . ($orden->empresa->nombre ?? 'SinEmpresa') . '.pdf');
     }
@@ -887,7 +889,7 @@ class OrdenesController extends Controller
             // Regenerar token si expiró
             $evaluado->update([
                 'token_unico' => EvaluadoOrden::generarToken(),
-                'token_expira_at' => now()->addDays(30),
+                'token_expira_at' => now()->addDays(\App\Models\Config::value('dias_vigencia_token') ?? 30),
             ]);
             $evaluado->refresh();
         }
@@ -1106,7 +1108,7 @@ class OrdenesController extends Controller
                 'completado_at'              => null,
                 'estado_evaluacion'          => 'pendiente',
                 'token_unico'                => EvaluadoOrden::generarToken(),
-                'token_expira_at'            => now()->addDays(30),
+                'token_expira_at'            => now()->addDays(\App\Models\Config::value('dias_vigencia_token') ?? 30),
             ]);
 
             DB::commit();

@@ -11,6 +11,7 @@ class Config extends Model
     protected $table = 'configs';
     protected $fillable = [
         'logo',
+        'nombre_empresa',
         'email',
         'time_zone',
         'currency',
@@ -22,5 +23,6 @@ class Config extends Model
         'wapp_link',
         'descuento_maximo',
         'impuesto',
+        'dias_vigencia_token',
     ];
 }

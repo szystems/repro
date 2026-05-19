@@ -24,14 +24,16 @@ class ConfigFormRequest extends FormRequest
     public function rules()
     {
         return [
-            'currency'          => 'required|string|max:50',
-            'email'             => 'nullable|email|max:255',
-            'fb_link'           => 'nullable|url',
-            'inst_link'         => 'nullable|url',
-            'yt_link'           => 'nullable|url',
-            'wapp_link'         => 'nullable|url',
-            'impuesto'          => 'nullable|numeric|min:0|max:100',
-            'descuento_maximo'  => 'nullable|numeric|min:0|max:100',
+            'currency'              => 'required|string|max:50',
+            'nombre_empresa'        => 'nullable|string|max:100',
+            'email'                 => 'nullable|email|max:255',
+            'fb_link'               => 'nullable|url',
+            'inst_link'             => 'nullable|url',
+            'yt_link'               => 'nullable|url',
+            'wapp_link'             => 'nullable|url',
+            'impuesto'              => 'nullable|numeric|min:0|max:100',
+            'descuento_maximo'      => 'nullable|numeric|min:0|max:100',
+            'dias_vigencia_token'   => 'nullable|integer|min:1|max:365',
         ];
     }
 }

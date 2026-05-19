@@ -297,7 +297,7 @@
     @endforelse
 
     <div class="footer">
-        <p><strong>REPRO Guatemala</strong></p>
+        <p><strong>{{ $config->nombre_empresa ?? 'REPRO Guatemala' }}</strong></p>
         <p>Documento generado el {{ now()->format('d/m/Y H:i') }} | Orden: {{ $orden->codigo_orden }}</p>
         <p style="color: #ffb000;">Este documento es confidencial y de uso exclusivo para el cliente.</p>
     </div>
