@@ -101,23 +101,19 @@
                 <!-- WhatsApp sedes REPRO -->
                 @if(isset($sedesWhatsApp) && $sedesWhatsApp->isNotEmpty())
                 <li class="menu-category">Contacto</li>
-                <li class="sidebar-dropdown">
-                    <a href="#">
-                        <i class="bi bi-whatsapp text-success"></i>
-                        <span class="menu-text">WhatsApp REPRO</span>
-                        <i class="bi bi-chevron-down menu-arrow"></i>
-                    </a>
-                    <div class="sidebar-submenu">
-                        <ul>
-                            @foreach($sedesWhatsApp as $sedeWa)
-                            <li>
-                                <a href="https://wa.me/{{ preg_replace('/\D+/', '', $sedeWa->whatsapp) }}" target="_blank" rel="noopener noreferrer">
-                                    <i class="bi bi-whatsapp text-success"></i> {{ $sedeWa->nombre }}
-                                </a>
-                            </li>
-                            @endforeach
-                        </ul>
+                <li style="position:relative">
+                    <div class="whatsapp-popup" id="whatsapp-submenu">
+                        @foreach($sedesWhatsApp as $sedeWa)
+                        <a href="https://wa.me/{{ preg_replace('/\D+/', '', $sedeWa->whatsapp) }}" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-whatsapp"></i> {{ $sedeWa->nombre }}
+                        </a>
+                        @endforeach
                     </div>
+                    <a href="#" class="whatsapp-sidebar-btn" id="whatsapp-toggle">
+                        <i class="bi bi-whatsapp"></i>
+                        <span class="menu-text">WhatsApp</span>
+                        <i class="bi bi-plus-lg wa-arrow"></i>
+                    </a>
                 </li>
                 @endif
             </ul>
@@ -166,6 +162,26 @@
         if (localStorage.getItem('sidebar-collapsed') === 'true') {
             document.getElementById('sidebar').classList.add('collapsed');
         }
+
+        // Toggle dropdown WhatsApp
+        const waToggle = document.getElementById('whatsapp-toggle');
+        if (waToggle) {
+            waToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                const submenu = document.getElementById('whatsapp-submenu');
+                const isOpen = submenu.style.display === 'block';
+                submenu.style.display = isOpen ? 'none' : 'block';
+                this.classList.toggle('open', !isOpen);
+            });
+            // Cerrar al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!waToggle.contains(e.target)) {
+                    const submenu = document.getElementById('whatsapp-submenu');
+                    if (submenu) { submenu.style.display = 'none'; }
+                    waToggle.classList.remove('open');
+                }
+            });
+        }
     });
 </script>
 
@@ -212,4 +228,60 @@
     .sidebar-wrapper .active-dropdown i.menu-arrow {
         transform: rotate(180deg);
     }
+    .sidebar-wrapper .whatsapp-sidebar-btn {
+        background: #25D366 !important;
+        color: #fff !important;
+        border-radius: 6px;
+        margin: 4px 10px;
+        padding: 7px 12px !important;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    .sidebar-wrapper .whatsapp-sidebar-btn:hover {
+        background: #128C7E !important;
+        color: #fff !important;
+    }
+    .sidebar-wrapper .whatsapp-sidebar-btn .wa-arrow {
+        margin-left: auto;
+        font-size: 0.9rem;
+        transition: transform 0.2s;
+    }
+    .sidebar-wrapper .whatsapp-sidebar-btn.open .wa-arrow {
+        transform: rotate(45deg);
+    }
+    .whatsapp-popup {
+        display: none;
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 10px;
+        right: 10px;
+        background: #fff !important;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        z-index: 9999;
+        overflow: hidden;
+        border: 1px solid #d4edda;
+    }
+    .whatsapp-popup a {
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px !important;
+        color: #1a1a1a !important;
+        background: #fff !important;
+        text-decoration: none;
+        font-size: 0.83rem;
+        border-bottom: 1px solid #f0f0f0 !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+    }
+    .whatsapp-popup a:last-child { border-bottom: none !important; }
+    .whatsapp-popup a:hover {
+        background: #e8f8ef !important;
+        color: #128C7E !important;
+    }
+    .whatsapp-popup a i { color: #25D366 !important; }
 </style>
