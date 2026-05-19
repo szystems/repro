@@ -260,12 +260,6 @@
                                             <input type="tel" class="form-control" name="evaluados[{{ $index }}][telefono]" 
                                                    value="{{ old('evaluados.'.$index.'.telefono', $evaluado->telefono) }}">
                                         </div>
-                                        <div class="col-md-4 mb-2">
-                                            <label class="form-label">Sede/Región Empresa</label>
-                                            <input type="text" class="form-control" name="evaluados[{{ $index }}][sede_region_empresa]"
-                                                   value="{{ old('evaluados.'.$index.'.sede_region_empresa', $evaluado->sede_region_empresa) }}"
-                                                   placeholder="Ej: Regional Norte" maxlength="100">
-                                        </div>
                                     </div>
 
                                     <div class="row">
@@ -293,6 +287,12 @@
                                             <input type="text" class="form-control" name="evaluados[{{ $index }}][direccion]" 
                                                    value="{{ old('evaluados.'.$index.'.direccion', $evaluado->direccion) }}" maxlength="300"
                                                    placeholder="Dirección del evaluado">
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label">Sede/Región Empresa</label>
+                                            <input type="text" class="form-control" name="evaluados[{{ $index }}][sede_region_empresa]"
+                                                   value="{{ old('evaluados.'.$index.'.sede_region_empresa', $evaluado->sede_region_empresa) }}"
+                                                   placeholder="Ej: Regional Norte" maxlength="100">
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <label class="form-label">Observaciones</label>
@@ -478,6 +478,9 @@
                 <label class="form-label">Teléfono</label>
                 <input type="tel" class="form-control evaluado-telefono" name="">
             </div>
+        </div>
+
+        <div class="row">
             <div class="col-md-6 mb-2">
                 <label class="form-label">Sede/Región Empresa</label>
                 <input type="text" class="form-control evaluado-sede-region-empresa" name="" placeholder="Ej: Regional Norte" maxlength="100">

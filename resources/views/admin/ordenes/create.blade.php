@@ -271,10 +271,6 @@ function agregarEvaluado(datos = {}) {
                     </select>
                 </div>
                 <div class="col-md-3 mb-2">
-                    <label class="form-label">Sede/Región Empresa</label>
-                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][sede_region_empresa]" placeholder="Ej: Regional Norte" value="${sedeRegionEmpresa}" maxlength="100">
-                </div>
-                <div class="col-md-3 mb-2">
                     <label class="form-label">Tipo Servicio</label>
                     <select class="form-select" name="evaluados[${contadorEvaluados}][tipo_servicio]" required>
                         <option value="poligrafo" ${tipoServicio === 'poligrafo' ? 'selected' : ''}>Polígrafo</option>
@@ -297,6 +293,10 @@ function agregarEvaluado(datos = {}) {
                 <div class="col-md-6 mb-2">
                     <label class="form-label">Dirección</label>
                     <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][direccion]" placeholder="Dirección del evaluado" value="${direccion}" maxlength="300">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Sede/Región Empresa</label>
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][sede_region_empresa]" placeholder="Ej: Regional Norte" value="${sedeRegionEmpresa}" maxlength="100">
                 </div>
                 <div class="col-md-6 mb-2">
                     <label class="form-label">Observaciones</label>
