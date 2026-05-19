@@ -243,13 +243,13 @@
                 @endif
                 @if($evaluado->sede_region_empresa)
                 <div class="datos-col" style="width: 50%;">
-                    <span class="dato-label">Sede/Región empresa</span>
+                    <span class="dato-label">Sede/Región Empresa</span>
                     <span class="dato-valor">{{ $evaluado->sede_region_empresa }}</span>
                 </div>
                 @endif
-                @if($evaluado->sede && !$evaluado->sede_region_empresa)
+                @if($evaluado->sede)
                 <div class="datos-col" style="width: 50%;">
-                    <span class="dato-label">Sede del candidato</span>
+                    <span class="dato-label">Sede REPRO</span>
                     <span class="dato-valor">{{ $evaluado->sede->nombre }}</span>
                 </div>
                 @endif
