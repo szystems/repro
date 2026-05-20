@@ -135,6 +135,34 @@ class SedesTest extends TestCase
         $this->assertDatabaseHas('sedes', ['id' => $sede->id, 'nombre' => 'Nombre Nuevo', 'capacidad' => 5]);
     }
 
+    public function test_update_guarda_campo_whatsapp(): void
+    {
+        $sede = Sede::factory()->create(['whatsapp' => null]);
+
+        $this->actingAs($this->usuarioRepro())
+            ->put("/update-sede/{$sede->id}", [
+                'nombre'    => $sede->nombre,
+                'whatsapp'  => '+502 5555-1234',
+            ])
+            ->assertRedirect('/sedes');
+
+        $this->assertDatabaseHas('sedes', ['id' => $sede->id, 'whatsapp' => '+502 5555-1234']);
+    }
+
+    public function test_update_guarda_campo_enlace_maps(): void
+    {
+        $sede = Sede::factory()->create(['enlace_maps' => null]);
+
+        $this->actingAs($this->usuarioRepro())
+            ->put("/update-sede/{$sede->id}", [
+                'nombre'      => $sede->nombre,
+                'enlace_maps' => 'https://maps.google.com/example',
+            ])
+            ->assertRedirect('/sedes');
+
+        $this->assertDatabaseHas('sedes', ['id' => $sede->id, 'enlace_maps' => 'https://maps.google.com/example']);
+    }
+
     // -------------------------------------------------------
     // Cambiar estado
     // -------------------------------------------------------

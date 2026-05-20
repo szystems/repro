@@ -74,10 +74,17 @@ class Orden extends Model
     public static function generarCodigoUnico(): string
     {
         $prefijo = 'ORD-' . date('Y') . '-';
-        $numero = static::where('codigo_orden', 'LIKE', $prefijo . '%')
-            ->count() + 1;
-        
-        return $prefijo . str_pad($numero, 4, '0', STR_PAD_LEFT);
+
+        do {
+            $ultimo = static::where('codigo_orden', 'LIKE', $prefijo . '%')
+                ->max('codigo_orden');
+
+            $numero = $ultimo ? ((int) substr($ultimo, strlen($prefijo)) + 1) : 1;
+
+            $codigo = $prefijo . str_pad($numero, 4, '0', STR_PAD_LEFT);
+        } while (static::where('codigo_orden', $codigo)->exists());
+
+        return $codigo;
     }
 
     /**

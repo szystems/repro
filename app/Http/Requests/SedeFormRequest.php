@@ -17,17 +17,19 @@ class SedeFormRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre'    => [
+            'nombre'      => [
                 'required',
                 'string',
                 'max:191',
                 Rule::unique('sedes')->ignore($this->route('id')),
             ],
-            'direccion' => ['nullable', 'string', 'max:500'],
-            'telefono'  => ['nullable', 'string', 'max:30'],
-            'capacidad' => ['nullable', 'integer', 'min:1', 'max:999'],
-            'estado'    => ['nullable', 'integer', 'in:0,1'],
-            'notas'     => ['nullable', 'string'],
+            'direccion'   => ['nullable', 'string', 'max:500'],
+            'telefono'    => ['nullable', 'string', 'max:30'],
+            'whatsapp'    => ['nullable', 'string', 'max:30'],
+            'enlace_maps' => ['nullable', 'url', 'max:500'],
+            'capacidad'   => ['nullable', 'integer', 'min:1', 'max:999'],
+            'estado'      => ['nullable', 'integer', 'in:0,1'],
+            'notas'       => ['nullable', 'string'],
         ];
     }
 

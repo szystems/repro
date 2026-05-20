@@ -244,5 +244,29 @@ class Sprint1BugFixesTest extends TestCase
         $response->assertOk();
         $response->assertSee('Fecha Tentativa');
     }
+
+    // ──────────────────────────────────────────────────────────
+    // Bug producción: generarCodigoUnico usa COUNT en vez de MAX
+    // Si se elimina un registro, COUNT crea código ya existente
+    // ──────────────────────────────────────────────────────────
+
+    public function test_generar_codigo_unico_evita_duplicado_al_eliminar_orden(): void
+    {
+        // Simular estado de producción: ORD-2026-0001 fue eliminada,
+        // ORD-2026-0002 existe. COUNT=1 → el bug generaba ORD-2026-0002 de nuevo.
+        $year = date('Y');
+        Orden::factory()->create(['codigo_orden' => "ORD-{$year}-0002"]);
+
+        $codigo = Orden::generarCodigoUnico();
+
+        $this->assertEquals("ORD-{$year}-0003", $codigo);
+    }
+
+    public function test_generar_codigo_unico_primer_orden_es_0001(): void
+    {
+        $codigo = Orden::generarCodigoUnico();
+
+        $this->assertEquals('ORD-' . date('Y') . '-0001', $codigo);
+    }
 }
 
