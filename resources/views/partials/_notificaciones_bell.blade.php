@@ -6,7 +6,7 @@
         <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle d-none" 
               id="notificacionesCount" style="font-size: 0.65rem; padding: 2px 5px;"></span>
     </a>
-    <div class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 360px; max-height: 420px; overflow-y: auto;" 
+    <div class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 360px; max-height: 420px; overflow-y: auto; z-index: 1050;" 
          aria-labelledby="notificacionesBell">
         <div class="dropdown-header d-flex justify-content-between align-items-center">
             <strong>Notificaciones</strong>
