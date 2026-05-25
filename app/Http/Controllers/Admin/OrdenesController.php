@@ -10,7 +10,9 @@ use App\Models\EvaluadoOrden;
 use App\Models\Empresa;
 use App\Models\Sede;
 use App\Models\User;
+use App\Notifications\EvaluadoAsignadoNotification;
 use App\Notifications\OrdenCreadaNotification;
+use App\Notifications\ResultadoPreliminarNotification;
 use App\Notifications\ResultadosDisponiblesNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -263,6 +265,18 @@ class OrdenesController extends Controller
                 ->get();
             foreach ($usuariosNotificar as $usuario) {
                 $usuario->notify(new OrdenCreadaNotification($orden));
+            }
+
+            // Notificación in-app a usuarios de la empresa (excepto al creador)
+            if ($orden->empresa_id) {
+                $usuariosEmpresa = User::where('empresa_id', $orden->empresa_id)
+                    ->where('role_as', 1)
+                    ->where('estado', 1)
+                    ->where('id', '!=', Auth::id())
+                    ->get();
+                foreach ($usuariosEmpresa as $usuario) {
+                    $usuario->notify(new OrdenCreadaNotification($orden));
+                }
             }
 
             // Redirigir según el rol del usuario
@@ -586,6 +600,9 @@ class OrdenesController extends Controller
             $this->notificarResultadosDisponibles($orden);
         }
 
+        // Notificar que hay un resultado preliminar disponible
+        $this->notificarPreliminarSubido($evaluado);
+
         return back()->with('success', "Informe preliminar de {$evaluado->nombre} {$evaluado->apellidos} guardado y liberado al cliente.");
     }
 
@@ -709,6 +726,9 @@ class OrdenesController extends Controller
                 // Enviar notificación al evaluado si tiene email
                 $this->notificarEvaluadoAsignado($evaluadoCreado);
 
+                // Notificaciones in-app al asignar un nuevo evaluado
+                $this->notificarEvaluadoAsignadoInApp($evaluadoCreado, $esActualizacion);
+
                 // Auto-estado: si tiene email el link fue enviado
                 if (!empty($evaluadoCreado->email)) {
                     $evaluadoCreado->update(['estado_evaluacion' => 'link_enviado']);
@@ -718,6 +738,81 @@ class OrdenesController extends Controller
 
         if ($esActualizacion && !empty($evaluadosExistentes)) {
             EvaluadoOrden::whereIn('id', $evaluadosExistentes)->delete();
+        }
+    }
+
+    /**
+     * Notificaciones in-app cuando se asigna un nuevo evaluado.
+     * Durante creación: solo empresa. Durante actualización: admin/repro + empresa.
+     */
+    private function notificarEvaluadoAsignadoInApp(EvaluadoOrden $evaluado, bool $esActualizacion): void
+    {
+        try {
+            $evaluado->loadMissing('orden.empresa');
+            $orden = $evaluado->orden;
+
+            // Durante actualización de orden: notificar admin/repro
+            if ($esActualizacion) {
+                $usuariosRepro = User::where('role_as', '>=', 2)
+                    ->where('estado', 1)
+                    ->where('id', '!=', Auth::id())
+                    ->get();
+                foreach ($usuariosRepro as $usuario) {
+                    $usuario->notify(new EvaluadoAsignadoNotification($evaluado));
+                }
+            }
+
+            // Siempre: notificar a usuarios de la empresa
+            if ($orden->empresa_id) {
+                $usuariosEmpresa = User::where('empresa_id', $orden->empresa_id)
+                    ->where('role_as', 1)
+                    ->where('estado', 1)
+                    ->get();
+                foreach ($usuariosEmpresa as $usuario) {
+                    $usuario->notify(new EvaluadoAsignadoNotification($evaluado));
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error enviando notificación in-app de evaluado asignado', [
+                'evaluado_id' => $evaluado->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Notificar a admin y empresa cuando se sube un resultado preliminar.
+     */
+    private function notificarPreliminarSubido(EvaluadoOrden $evaluado): void
+    {
+        try {
+            $evaluado->loadMissing('orden.empresa');
+            $orden = $evaluado->orden;
+
+            // Notificar a admins (quien no sea el autor de la subida)
+            $admins = User::where('role_as', '>=', 3)
+                ->where('estado', 1)
+                ->where('id', '!=', Auth::id())
+                ->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new ResultadoPreliminarNotification($evaluado));
+            }
+
+            // Notificar a usuarios de la empresa
+            if ($orden->empresa_id) {
+                $usuariosEmpresa = User::where('empresa_id', $orden->empresa_id)
+                    ->where('role_as', 1)
+                    ->where('estado', 1)
+                    ->get();
+                foreach ($usuariosEmpresa as $usuario) {
+                    $usuario->notify(new ResultadoPreliminarNotification($evaluado));
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error enviando notificación de preliminar subido', [
+                'evaluado_id' => $evaluado->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -858,8 +953,9 @@ class OrdenesController extends Controller
         $esEmpresa = Auth::user()->role_as < 2;
         $mostrarInformePreliminar = !$esEmpresa || $orden->resultados_visibles_empresa;
         $config = \App\Models\Config::first();
+        $estados = Orden::estadosDisponibles();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf-informe', compact('orden', 'mostrarInformePreliminar', 'config'));
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf-informe', compact('orden', 'mostrarInformePreliminar', 'config', 'estados'));
 
         return $pdf->stream('Informe_' . $orden->codigo_orden . '_' . ($orden->empresa->nombre ?? 'SinEmpresa') . '.pdf');
     }
@@ -997,6 +1093,12 @@ class OrdenesController extends Controller
                 $orden->update(['resultados_visibles_empresa' => true]);
                 $this->notificarResultadosDisponibles($orden);
             }
+            // Auto-estado evaluado: pasar a en_proceso si estaba en programado o formulario recibido
+            if (in_array($evaluado->estado_evaluacion, ['programado', 'docs_pendientes'])) {
+                $evaluado->update(['estado_evaluacion' => 'en_proceso']);
+            }
+            // Notificar a admin y empresa que hay un resultado preliminar
+            $this->notificarPreliminarSubido($evaluado);
         }
 
         return back()->with('success', "Archivo de resultado {$tipo} subido correctamente. Los resultados han sido liberados al cliente.");

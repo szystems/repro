@@ -30,9 +30,11 @@
                             <i class="bi bi-geo-alt"></i> {{ $sede->nombre }}
                         </div>
                         <div class="d-flex gap-2">
+                            @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('sedes.editar'))
                             <a href="{{ route('sedes.edit', $sede->id) }}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil"></i> Editar
                             </a>
+                            @endif
                             <a href="{{ route('sedes.index') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="bi bi-arrow-left"></i> Volver
                             </a>

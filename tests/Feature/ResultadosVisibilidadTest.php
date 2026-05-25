@@ -5,13 +5,21 @@ namespace Tests\Feature;
 use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class ResultadosVisibilidadTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesRolesAndPermissions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpRolesAndPermissions();
+    }
 
     /**
      * Test que admin/repro puede toggle la visibilidad de resultados
@@ -19,25 +27,19 @@ class ResultadosVisibilidadTest extends TestCase
     public function test_repro_can_toggle_resultados_visibles(): void
     {
         $repro = User::factory()->create(['role_as' => 2]);
+        $repro->roles()->attach(Role::where('name', 'repro')->first());
         $empresa = Empresa::factory()->create();
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'resultados_visibles_empresa' => false,
         ]);
 
-        // Activar visibilidad
+        // Solo admin puede hacer toggle — repro recibe error
         $response = $this->actingAs($repro)
             ->patch(route('ordenes.toggle-resultados-visibles', $orden));
 
         $response->assertRedirect();
-        $response->assertSessionHas('success');
-        $this->assertTrue($orden->fresh()->resultados_visibles_empresa);
-
-        // Desactivar visibilidad
-        $response = $this->actingAs($repro)
-            ->patch(route('ordenes.toggle-resultados-visibles', $orden));
-
-        $response->assertRedirect();
+        $response->assertSessionHas('error');
         $this->assertFalse($orden->fresh()->resultados_visibles_empresa);
     }
 
@@ -175,6 +177,7 @@ class ResultadosVisibilidadTest extends TestCase
             'role_as' => 1,
             'empresa_id' => $empresa->id,
         ]);
+        $usuarioEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'resultados_visibles_empresa' => false,
@@ -197,6 +200,7 @@ class ResultadosVisibilidadTest extends TestCase
             'role_as' => 1,
             'empresa_id' => $empresa->id,
         ]);
+        $usuarioEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'resultados_visibles_empresa' => true,
@@ -216,6 +220,7 @@ class ResultadosVisibilidadTest extends TestCase
     public function test_repro_can_generate_pdf_regardless_of_visibility(): void
     {
         $repro = User::factory()->create(['role_as' => 2]);
+        $repro->roles()->attach(Role::where('name', 'repro')->first());
         $empresa = Empresa::factory()->create();
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,

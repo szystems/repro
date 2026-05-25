@@ -50,7 +50,7 @@
                 </li>
 
                 <!-- Módulo de Evaluaciones - Para todos excepto usuarios evaluados -->
-                @if(Auth::user()->role_as >= 1)
+                @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('cuestionarios.ver'))
                 <li class="menu-category">Evaluaciones</li>
                 <li class="{{ Request::is('cuestionarios','show-cuestionario/*','add-cuestionario','edit-cuestionario/*') ? 'active-page-link':''  }}">
                     <a href="{{ url('cuestionarios') }}">
@@ -58,8 +58,9 @@
                         <span class="menu-text">Gestión de Cuestionario – Candidatos</span>
                     </a>
                 </li>
+                @endif
 
-                @if(Auth::user()->role_as >= 2)
+                @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('historial_dpi.ver'))
                 <li class="{{ Request::is('cuestionarios/historial-dpi') ? 'active-page-link':''  }}">
                     <a href="{{ route('admin.cuestionarios.historial-dpi') }}">
                         <i class="bi bi-search"></i>
@@ -68,7 +69,8 @@
                 </li>
                 @endif
 
-                <!-- Órdenes de evaluación - Solo para usuarios empresa y superiores -->
+                <!-- Órdenes de evaluación -->
+                @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('ordenes.ver'))
                 <li class="{{ Request::is('ordenes','show-orden/*','add-orden','edit-orden/*') ? 'active-page-link':''  }}">
                     <a href="{{ url('ordenes') }}">
                         <i class="bi bi-file-earmark-text"></i>
@@ -77,8 +79,8 @@
                 </li>
                 @endif
 
-                <!-- Módulo de Empresas (para Admin y usuarios de Repro) -->
-                @if(Auth::user()->role_as >= 2)
+                <!-- Módulo de Empresas (para Admin y usuarios de Repro con permiso) -->
+                @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('empresas.ver'))
                 <li class="menu-category">Empresas</li>
                 <li class="{{ Request::is('empresas','show-empresa/*','add-empresa','edit-empresa/*') ? 'active-page-link':''  }}">
                     <a href="{{ url('empresas') }}">
@@ -88,8 +90,8 @@
                 </li>
                 @endif
 
-                <!-- Módulo de Sedes (solo REPRO, role_as >= 3) -->
-                @if(Auth::user()->role_as >= 3)
+                <!-- Módulo de Sedes (solo REPRO o con permiso sedes.ver) -->
+                @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('sedes.ver'))
                 <li class="{{ Request::is('sedes','show-sede/*','add-sede','edit-sede/*') ? 'active-page-link':''  }}">
                     <a href="{{ url('sedes') }}">
                         <i class="bi bi-geo-alt-fill"></i>
@@ -98,8 +100,8 @@
                 </li>
                 @endif
 
-                <!-- Módulo de Calendario de Programación (role_as >= 2) -->
-                @if(Auth::user()->role_as >= 2)
+                <!-- Módulo de Calendario de Programación -->
+                @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('calendario.ver'))
                 <li class="menu-category">Programación</li>
                 <li class="{{ Request::is('calendario','calendario/*') ? 'active-page-link':''  }}">
                     <a href="{{ url('calendario') }}">
@@ -167,12 +169,19 @@
                 </li>
                 @elseif(Auth::user()->role_as >= 2)
                 <li class="menu-category">Administración</li>
+                @if(Auth::user()->hasPermission('usuarios.ver'))
+                <li class="{{ Request::is('users','show-user/*','add-user','edit-user/*') ? 'active-page-link':''  }}">
+                    <a href="{{ url('users') }}"><i class="bi bi-people"></i> Usuarios</a>
+                </li>
+                @endif
+                @if(Auth::user()->hasPermission('finanzas.ver'))
                 <li class="{{ Request::is('finanzas') ? 'active-page-link':''  }}">
                     <a href="{{ url('finanzas') }}">
                         <i class="bi bi-cash-stack"></i>
                         <span class="menu-text">Finanzas</span>
                     </a>
                 </li>
+                @endif
                 @endif
 
                 <!-- Mis evaluaciones - Para evaluados -->

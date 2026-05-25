@@ -245,6 +245,7 @@ class Phase8FFuncionalidadesComplejasTest extends TestCase
             'role_as' => 2,
             'cargo' => 'Poligrafista',
             'fecha_nacimiento' => '1990-01-15',
+            'permisos_enviados' => '1',
             'permisos_sistema' => ['ordenes.ver', 'evaluaciones.ver', 'reportes.ver'],
         ]);
 

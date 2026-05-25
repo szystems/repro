@@ -13,19 +13,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class Phase8EFuncionalidadesTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, CreatesRolesAndPermissions;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'Repro']);
+        $this->setUpRolesAndPermissions();
     }
 
     // ─── Helpers ───

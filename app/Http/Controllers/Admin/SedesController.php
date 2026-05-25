@@ -9,7 +9,6 @@ use App\Models\Orden;
 use App\Models\Sede;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class SedesController extends Controller
@@ -117,10 +116,6 @@ class SedesController extends Controller
     /** Activar o desactivar una sede. */
     public function cambiarEstado(int $id, int $estado): RedirectResponse
     {
-        if (Auth::user()->role_as < 3) {
-            abort(403);
-        }
-
         $sede = Sede::findOrFail($id);
         $sede->update(['estado' => $estado]);
 
@@ -132,10 +127,6 @@ class SedesController extends Controller
     /** Eliminar una sede (solo si no tiene evaluados asignados). */
     public function destroy(int $id): RedirectResponse
     {
-        if (Auth::user()->role_as < 3) {
-            abort(403);
-        }
-
         $sede = Sede::withCount('evaluados')->findOrFail($id);
 
         if ($sede->evaluados_count > 0) {

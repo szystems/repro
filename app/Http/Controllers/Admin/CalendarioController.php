@@ -171,7 +171,7 @@ class CalendarioController extends Controller
             $request->responsable_id
         );
 
-        return redirect()->route('calendario.dia', ['fecha' => $request->fecha])
+        return redirect()->back()
             ->with('success', 'Cita programada correctamente para ' . $evaluado->nombre . ' ' . $evaluado->apellidos);
     }
 
@@ -200,7 +200,7 @@ class CalendarioController extends Controller
             $request->responsable_id
         );
 
-        return redirect()->route('calendario.dia', ['fecha' => $request->fecha])
+        return redirect()->back()
             ->with('success', 'Cita reprogramada correctamente.');
     }
 

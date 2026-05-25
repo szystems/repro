@@ -81,9 +81,11 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div class="card-title"><i class="bi bi-list-ul"></i> Listado de Sedes</div>
+                        @if(Auth::user()->hasPermission('sedes.crear') || Auth::user()->role_as >= 3)
                         <a href="{{ route('sedes.create') }}" class="btn btn-success btn-sm">
                             <i class="bi bi-plus-circle"></i> Nueva Sede
                         </a>
+                        @endif
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -125,6 +127,7 @@
                                                 <a href="{{ route('sedes.show', $sede->id) }}" class="btn btn-outline-info" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
+                                                @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('sedes.editar'))
                                                 <a href="{{ route('sedes.edit', $sede->id) }}" class="btn btn-outline-warning" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
@@ -144,7 +147,8 @@
                                                         </button>
                                                     </form>
                                                 @endif
-                                                @if($sede->evaluados_count === 0)
+                                                @endif
+                                                @if((Auth::user()->role_as >= 3 || Auth::user()->hasPermission('sedes.eliminar')) && $sede->evaluados_count === 0)
                                                     <form action="{{ route('sedes.destroy', $sede->id) }}" method="POST" class="d-inline">
                                                         @csrf @method('DELETE')
                                                         <button type="submit" class="btn btn-outline-danger" title="Eliminar"

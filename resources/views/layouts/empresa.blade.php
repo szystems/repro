@@ -125,11 +125,13 @@
             height: auto !important;
             overflow: visible !important;
         }
-        /* Navbar fijo al top: se mantiene visible al hacer scroll */
-        .page-header {
+        /* Navbar fijo al top: se mantiene visible al hacer scroll.
+           Sólo aplica al .page-header del nav (hijo directo de .page-wrapper),
+           no a los .page-header del contenido, para evitar solapamiento con dropdowns. */
+        .page-wrapper > .page-header {
             position: sticky;
             top: 0;
-            z-index: 1030;
+            z-index: 1040;
         }
     </style>
 </head>

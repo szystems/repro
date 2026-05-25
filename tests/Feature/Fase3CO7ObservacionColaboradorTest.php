@@ -8,11 +8,12 @@ use App\Models\Orden;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class Fase3CO7ObservacionColaboradorTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesRolesAndPermissions;
 
     protected User $colaborador;
     protected User $empresaUser;
@@ -23,9 +24,7 @@ class Fase3CO7ObservacionColaboradorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'REPRO']);
+        $this->setUpRolesAndPermissions();
 
         $this->empresa = Empresa::factory()->create();
 

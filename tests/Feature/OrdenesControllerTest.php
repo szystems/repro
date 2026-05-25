@@ -10,20 +10,18 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Mail;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class OrdenesControllerTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, CreatesRolesAndPermissions;
 
     protected function setUp(): void
     {
         parent::setUp();
         
-        // Crear roles necesarios
-        $adminRole = Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        $empresaRole = Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        $reproRole = Role::create(['name' => 'repro', 'display_name' => 'Polígrafo']);
+        $this->setUpRolesAndPermissions();
     }
 
     public function test_admin_puede_acceder_a_listado_de_ordenes()

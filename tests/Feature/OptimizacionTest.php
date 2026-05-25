@@ -4,14 +4,22 @@ namespace Tests\Feature;
 
 use App\Models\Config;
 use App\Models\Empresa;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class OptimizacionTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesRolesAndPermissions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpRolesAndPermissions();
+    }
 
     // =============================================
     // 7.1 Named Routes
@@ -97,6 +105,7 @@ class OptimizacionTest extends TestCase
     public function test_empresas_accesible_para_repro_sin_check_inline(): void
     {
         $repro = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $repro->roles()->attach(Role::where('name', 'repro')->first());
 
         $response = $this->actingAs($repro)->get(route('empresas.index'));
 
@@ -106,6 +115,7 @@ class OptimizacionTest extends TestCase
     public function test_empresas_create_accesible_para_repro(): void
     {
         $repro = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $repro->roles()->attach(Role::where('name', 'repro')->first());
 
         $response = $this->actingAs($repro)->get(route('empresas.create'));
 
@@ -115,6 +125,7 @@ class OptimizacionTest extends TestCase
     public function test_empresas_show_accesible_para_repro(): void
     {
         $repro = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $repro->roles()->attach(Role::where('name', 'repro')->first());
         $empresa = Empresa::factory()->create(['estado' => 1]);
 
         $response = $this->actingAs($repro)->get(route('empresas.show', $empresa->id));
@@ -125,6 +136,7 @@ class OptimizacionTest extends TestCase
     public function test_empresas_edit_accesible_para_repro(): void
     {
         $repro = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $repro->roles()->attach(Role::where('name', 'repro')->first());
         $empresa = Empresa::factory()->create(['estado' => 1]);
 
         $response = $this->actingAs($repro)->get(route('empresas.edit', $empresa->id));

@@ -171,7 +171,7 @@
                 <td class="info-label">Fecha solicitud:</td>
                 <td class="info-value">{{ \Carbon\Carbon::parse($orden->fecha_solicitud)->format('d/m/Y') }}</td>
                 <td class="info-label">Estado orden:</td>
-                <td class="info-value">{{ ucfirst($orden->estado) }}</td>
+                <td class="info-value">{{ $estados[$orden->estado] ?? ucfirst($orden->estado) }}</td>
             </tr>
         </table>
     </div>
@@ -226,6 +226,9 @@
                     <span class="dato-valor">
                         @if($evaluado->fecha_realizada)
                             {{ \Carbon\Carbon::parse($evaluado->fecha_realizada)->format('d/m/Y') }}
+                        @elseif($evaluado->fecha_programada)
+                            {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('d/m/Y') }}
+                            <small style="color:#888;">(programada)</small>
                         @else
                             —
                         @endif

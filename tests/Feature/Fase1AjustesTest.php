@@ -10,18 +10,17 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Mail;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class Fase1AjustesTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, CreatesRolesAndPermissions;
 
     protected function setUp(): void
     {
         parent::setUp();
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'REPRO']);
+        $this->setUpRolesAndPermissions();
         Mail::fake();
     }
 

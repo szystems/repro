@@ -4,19 +4,22 @@ namespace Tests\Feature;
 
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
+use App\Models\Role;
 use App\Models\Sede;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class CalendarioTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesRolesAndPermissions;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->setUpRolesAndPermissions();
         // Las fechas de los tests están hardcodeadas en marzo-2026.
         // Congelamos el reloj para que la validación "fecha no anterior a hoy" pase.
         Carbon::setTestNow(Carbon::parse('2026-03-01 08:00:00'));
@@ -31,7 +34,9 @@ class CalendarioTest extends TestCase
     /** Usuario REPRO (role_as = 2). */
     private function usuarioRepro(): User
     {
-        return User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $user = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $user->roles()->attach(Role::where('name', 'repro')->first());
+        return $user;
     }
 
     /** Usuario Admin (role_as = 3). */
@@ -43,7 +48,9 @@ class CalendarioTest extends TestCase
     /** Usuario empresa (role_as = 1). */
     private function usuarioEmpresa(): User
     {
-        return User::factory()->create(['role_as' => 1, 'estado' => 1]);
+        $user = User::factory()->create(['role_as' => 1, 'estado' => 1]);
+        $user->roles()->attach(Role::where('name', 'empresa')->first());
+        return $user;
     }
 
     /** Crear evaluado con orden asociada. */
@@ -272,7 +279,7 @@ class CalendarioTest extends TestCase
                 'sede_id' => $sede->id,
                 'poligrafista_id' => $poligrafista->id,
             ])
-            ->assertRedirect(route('calendario.dia', ['fecha' => '2026-03-20']));
+            ->assertRedirect();
 
         $evaluado->refresh();
         $this->assertEquals('programado', $evaluado->estado_evaluacion);
@@ -533,7 +540,7 @@ class CalendarioTest extends TestCase
                 'sede_id' => $sede->id,
                 'poligrafista_id' => $poligrafista->id,
             ])
-            ->assertRedirect(route('calendario.dia', ['fecha' => '2026-03-22']));
+            ->assertRedirect();
 
         $evaluado->refresh();
         $this->assertEquals('2026-03-22 14:00:00', $evaluado->fecha_programada->format('Y-m-d H:i:s'));

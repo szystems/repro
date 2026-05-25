@@ -15,11 +15,12 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class Fase2DocumentacionTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, CreatesRolesAndPermissions;
 
     protected User $adminUser;
     protected User $empresaUser;
@@ -30,9 +31,7 @@ class Fase2DocumentacionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'REPRO']);
+        $this->setUpRolesAndPermissions();
         Mail::fake();
         Storage::fake('local');
 
@@ -672,8 +671,8 @@ class Fase2DocumentacionTest extends TestCase
 
         $this->orden->refresh();
         $this->assertEquals('preliminar', $this->orden->estado);
-        // No libera visibilidad automáticamente con preliminar
-        $this->assertFalse((bool) $this->orden->resultados_visibles_empresa);
+        // Libera visibilidad automáticamente al subir preliminar
+        $this->assertTrue((bool) $this->orden->resultados_visibles_empresa);
     }
 
     public function test_subir_resultado_preliminar_no_modifica_estado_avanzado(): void
@@ -694,10 +693,13 @@ class Fase2DocumentacionTest extends TestCase
     /** @group co3 */
     public function test_co3_no_se_puede_subir_informe_final_si_orden_entregada(): void
     {
+        $reproUser = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $reproUser->roles()->attach(Role::where('name', 'repro')->first());
+
         $this->orden->update(['estado' => 'entregado']);
         $archivo = UploadedFile::fake()->create('informe_final.pdf', 1000, 'application/pdf');
 
-        $response = $this->actingAs($this->adminUser)->post(
+        $response = $this->actingAs($reproUser)->post(
             route('evaluados.subir-resultado-archivo', $this->evaluado->id),
             ['tipo_resultado' => 'final', 'archivo' => $archivo]
         );
@@ -709,10 +711,13 @@ class Fase2DocumentacionTest extends TestCase
     /** @group co3 */
     public function test_co3_no_se_puede_eliminar_informe_final_si_orden_entregada(): void
     {
+        $reproUser = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $reproUser->roles()->attach(Role::where('name', 'repro')->first());
+
         $this->orden->update(['estado' => 'entregado']);
         $this->evaluado->update(['archivo_resultado_final' => 'resultados/1/informe.pdf']);
 
-        $response = $this->actingAs($this->adminUser)->delete(
+        $response = $this->actingAs($reproUser)->delete(
             route('evaluados.eliminar-resultado-archivo', [$this->evaluado->id, 'final'])
         );
 

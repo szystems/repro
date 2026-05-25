@@ -126,6 +126,7 @@
                                 </div>
                                 @endif
 
+
                                 <!-- Instrucciones Generales -->
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Instrucciones Generales</label>

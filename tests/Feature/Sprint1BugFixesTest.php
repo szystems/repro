@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 /**
@@ -20,15 +21,13 @@ use Tests\TestCase;
  */
 class Sprint1BugFixesTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesRolesAndPermissions;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'Repro']);
+        $this->setUpRolesAndPermissions();
     }
 
     private function crearAdmin(): User
@@ -224,17 +223,18 @@ class Sprint1BugFixesTest extends TestCase
     // N1: Label "Fecha Tentativa" en vistas
     // ──────────────────────────────────────────────────────────
 
-    public function test_n1_vista_crear_orden_usa_label_fecha_tentativa(): void
+    public function test_n1_vista_crear_orden_no_muestra_fecha_tentativa(): void
     {
         $admin = $this->crearAdmin();
 
         $response = $this->actingAs($admin)->get(route('ordenes.create'));
 
         $response->assertOk();
-        $response->assertSee('Fecha Tentativa');
+        $response->assertDontSee('Fecha Tentativa');
+        $response->assertDontSee('Fecha Programada');
     }
 
-    public function test_n1_vista_editar_orden_usa_label_fecha_tentativa(): void
+    public function test_n1_vista_editar_orden_no_muestra_fecha_tentativa(): void
     {
         $admin = $this->crearAdmin();
         $orden = Orden::factory()->create();
@@ -242,7 +242,8 @@ class Sprint1BugFixesTest extends TestCase
         $response = $this->actingAs($admin)->get(route('ordenes.edit', $orden));
 
         $response->assertOk();
-        $response->assertSee('Fecha Tentativa');
+        $response->assertDontSee('Fecha Tentativa');
+        $response->assertDontSee('Fecha Programada');
     }
 
     // ──────────────────────────────────────────────────────────

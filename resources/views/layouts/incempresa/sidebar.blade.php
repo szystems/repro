@@ -98,9 +98,17 @@
                 </li>
                 @endif
 
+                <!-- Sedes REPRO -->
+                <li class="menu-category">Contacto</li>
+                <li class="{{ Request::is('empresa/sedes-repro') ? 'active-page-link':''  }}">
+                    <a href="{{ route('empresa.sedes-repro') }}">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span class="menu-text">Sedes REPRO</span>
+                    </a>
+                </li>
+
                 <!-- WhatsApp sedes REPRO -->
                 @if(isset($sedesWhatsApp) && $sedesWhatsApp->isNotEmpty())
-                <li class="menu-category">Contacto</li>
                 <li style="position:relative">
                     <div class="whatsapp-popup" id="whatsapp-submenu">
                         @foreach($sedesWhatsApp as $sedeWa)

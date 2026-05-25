@@ -164,7 +164,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Repro: gestión de evaluaciones, resultados, ver empresas
         $reproRole = DB::table('roles')->where('name', 'repro')->first();
         $reproPermissions = [
-            'ordenes.ver',
+            'ordenes.ver', 'ordenes.crear', 'ordenes.editar', 'ordenes.eliminar',
             'evaluaciones.ver', 'evaluaciones.crear', 'evaluaciones.editar', 'evaluaciones.realizar',
             'resultados.ver', 'resultados.descargar', 'resultados.editar',
             'cuestionarios.ver',

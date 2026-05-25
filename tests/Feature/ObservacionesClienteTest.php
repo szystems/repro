@@ -11,6 +11,7 @@ use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 /**
@@ -22,15 +23,13 @@ use Tests\TestCase;
  */
 class ObservacionesClienteTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesRolesAndPermissions;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'Repro']);
+        $this->setUpRolesAndPermissions();
     }
 
     private function crearUsuarioEmpresa(?Empresa $empresa = null): User

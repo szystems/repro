@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -43,7 +44,14 @@ class AuditoriaSeguridadTest extends TestCase
     private function crearRepro(): User
     {
         $user = User::factory()->create(['role_as' => 2, 'estado' => 1]);
-        $user->roles()->attach(Role::where('name', 'repro')->first());
+        $reproRole = Role::where('name', 'repro')->first();
+        // Asignar permiso ordenes.eliminar al rol repro para los tests
+        $permission = Permission::firstOrCreate(
+            ['name' => 'ordenes.eliminar'],
+            ['display_name' => 'Eliminar Órdenes', 'module' => 'ordenes']
+        );
+        $reproRole->givePermission($permission);
+        $user->roles()->attach($reproRole);
         return $user;
     }
 
@@ -509,6 +517,71 @@ class AuditoriaSeguridadTest extends TestCase
         $response = $this->actingAs($admin)->get(route('users.show', $otroUsuario->id));
 
         $response->assertOk();
+    }
+
+    // Permisos granulares: rol base desvinculado cuando se asignan permisos individuales
+    // ──────────────────────────────────────────────────────────
+
+    public function test_repro_sin_permisos_individuales_no_hereda_permisos_del_rol_base(): void
+    {
+        $admin = $this->crearAdmin();
+
+        // Crear repro con rol base (que tiene ordenes.eliminar del setUp del crearRepro)
+        $repro = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $reproRole = Role::where('name', 'repro')->first();
+        $reproRole->permissions()->syncWithoutDetaching(
+            Permission::firstOrCreate(['name' => 'sedes.ver'], ['display_name' => 'Ver sedes', 'module' => 'sedes'])->id
+        );
+        $repro->roles()->attach($reproRole);
+
+        // Verificar que hereda sedes.ver del rol base
+        $this->assertTrue($repro->fresh()->hasPermission('sedes.ver'));
+
+        // Admin guarda permisos individuales vacíos (permisos_enviados sin permisos_sistema)
+        $this->actingAs($admin)->put(route('users.update', $repro->id), [
+            'name' => $repro->name,
+            'email' => $repro->email,
+            'role_as' => 2,
+            'fecha_nacimiento' => '1990-01-01',
+            'permisos_enviados' => '1',
+            // permisos_sistema[] ausente = sin permisos
+        ]);
+
+        // Ahora el repro NO debe tener sedes.ver (el rol base fue desvinculado)
+        $repro->refresh();
+        $repro->unsetRelation('roles');
+        $this->assertFalse($repro->hasPermission('sedes.ver'));
+    }
+
+    public function test_repro_con_permiso_individual_solo_tiene_ese_permiso(): void
+    {
+        $admin = $this->crearAdmin();
+
+        $repro = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $reproRole = Role::where('name', 'repro')->first();
+        // Dar al rol base sedes.ver y ordenes.ver
+        $pSedes = Permission::firstOrCreate(['name' => 'sedes.ver'], ['display_name' => 'Ver sedes', 'module' => 'sedes']);
+        $pOrdenes = Permission::firstOrCreate(['name' => 'ordenes.ver'], ['display_name' => 'Ver órdenes', 'module' => 'ordenes']);
+        $reproRole->permissions()->syncWithoutDetaching([$pSedes->id, $pOrdenes->id]);
+        $repro->roles()->attach($reproRole);
+
+        // Admin guarda solo ordenes.ver como permiso individual
+        $this->actingAs($admin)->put(route('users.update', $repro->id), [
+            'name' => $repro->name,
+            'email' => $repro->email,
+            'role_as' => 2,
+            'fecha_nacimiento' => '1990-01-01',
+            'permisos_enviados' => '1',
+            'permisos_sistema' => ['ordenes.ver'],
+        ]);
+
+        $repro->refresh();
+        $repro->unsetRelation('roles');
+
+        // Tiene ordenes.ver (explícito)
+        $this->assertTrue($repro->hasPermission('ordenes.ver'));
+        // NO tiene sedes.ver (no fue seleccionado y el rol base fue desvinculado)
+        $this->assertFalse($repro->hasPermission('sedes.ver'));
     }
 }
 

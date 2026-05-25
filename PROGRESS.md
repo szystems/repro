@@ -2,10 +2,10 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-05-18 (sesion: Deploy ronda Mayo 2026)
-**Suite de tests:** 490/490
-**Deploy a producción:** EJECUTADO el 2026-05-18 (iPage FTP) — 31 archivos subidos, 3 migraciones BD aplicadas, caché limpiado
-**Script deploy:** scripts/deploy_sprint_2026-05-18.sh
+**Ultima actualizacion:** 2026-05-24 (sesion: Fase 16 — Lotes A+B+C+D + fixes PDF completos y deployados)
+**Suite de tests:** 538/538 pasando
+**Deploy a producción:** ✅ COMPLETO 2026-05-24 — todos los lotes deployados, BD sincronizada
+**Script deploy:** scripts/deploy_Fase16_LoteC_2026-05-24.sh
 
 ---
 
@@ -28,6 +28,7 @@
 | Fase 13 | Mejoras dashboard y WhatsApp | COMPLETADA |
 | Fase 14 | Configuracion ampliada | COMPLETADA |
 | Fase 15 | Auditoria de permisos por rol | COMPLETADA |
+| Fase 16 | Observaciones cliente 2026-05-22 | ✅ COMPLETADA Y DEPLOYADA |
 
 ---
 
@@ -717,3 +718,155 @@ Archivos críticos confirmados en servidor:
 ### Resultado final
 
 Producción funcionando con todas las funcionalidades de Fases 1-9. Audit de hashes confirma paridad byte-a-byte entre local y servidor para los 31 archivos críticos del deploy.
+
+---
+
+## Fase 16 — Observaciones cliente 2026-05-22 (post-deploy)
+
+**Origen:** docs/Observaciones cliente/cambios 2205.pdf
+**Estado:** LOTES A + B COMPLETADOS + bugs post-testing corregidos — Lotes C/D pendientes
+
+### Lote A — Quick wins UI + Auditoría de permisos ✅ COMPLETO
+
+| ID | Descripción | Archivos | Estado |
+|----|-------------|----------|--------|
+| 7 | Nombre completo en "Últimas Órdenes" (dashboard admin) | resources/views/admin/index.blade.php | ✅ |
+| 3 | Botón "papelería" en listado de evaluados del reporte | resources/views/admin/reportes/evaluaciones.blade.php | ✅ |
+| 6a | Sidebar: "Sedes REPRO" condicionado por `sedes.ver` | sidebar.blade.php | ✅ |
+| 6b | Sidebar: "Usuarios" condicionado por `usuarios.ver` | sidebar.blade.php | ✅ |
+| SEC | Fix rutas sedes + usuarios con middleware `permission:` granular | routes/web.php, SedesController.php, vistas sedes | ✅ |
+| SEC | Sidebar finanzas condicionado por `finanzas.ver` | sidebar.blade.php | ✅ |
+| SEC | Sidebar calendario condicionado por `calendario.ver` | sidebar.blade.php | ✅ |
+| SEC | Rutas finanzas → `permission:finanzas.ver` | routes/web.php | ✅ |
+| SEC | Rutas calendario → `permission:calendario.ver` / `calendario.editar` | routes/web.php | ✅ |
+| TEST | SeguridadTest actualizado y pasando (49/49) | tests/Feature/SeguridadTest.php | ✅ |
+
+**Resumen técnico Lote A:**
+- Agujero de seguridad detectado y corregido: cualquier `role_as >= 2` podía acceder a sedes/finanzas/calendario sin importar los permisos asignados.
+- Todos los módulos con permisos definidos ahora usan middleware `permission:` granular en rutas.
+- `CheckPermission` ya tenía bypass para `role_as >= 3` (admins), no se modificó.
+- El módulo `empresas` se mantiene en `role:admin,repro` (sin permisos granulares definidos).
+
+### Lote B — Notificaciones por rol
+
+Matriz objetivo:
+
+| Evento | Admin | Colaborador (poligrafo) | Cliente (empresa) |
+|--------|-------|-------------------------|-------------------|
+| Orden creada | ✓ ya | ✓ ya | ✗ FALTA |
+| Candidato asignado | ✗ FALTA | ✗ FALTA | ✗ FALTA |
+| Cuestionario completado | ✗ FALTA | ✓ ya | (no aplica) |
+| Resultado preliminar subido | ✗ FALTA | (no aplica) | ✗ FALTA |
+| Informe final / resultados disponibles | ✓ ya | (no aplica) | ✓ ya |
+
+Acción: auditar destinatarios en cada `Notification` y ajustar. Todas in-app (database channel), no mail.
+
+**Estado Lote B: ✅ COMPLETADO** — 8/8 tests NotificacionesInAppTest pasando. Desplegado a producción vía FTP.
+
+Archivos modificados:
+- `app/Notifications/ResultadoPreliminarNotification.php` — nueva clase
+- `app/Http/Controllers/Admin/OrdenesController.php` — empresa notificada en orden creada; EvaluadoAsignadoNotification in-app; ResultadoPreliminarNotification en preliminar subido
+- `tests/Feature/NotificacionesInAppTest.php` — 8 tests
+
+### Lote C — Info Sedes para cliente ✅ COMPLETO
+
+| ID | Descripción | Archivos | Estado |
+|----|-------------|----------|--------|
+| 4 | Nuevo item de menú "Sedes REPRO" para rol empresa con teléfonos, dirección y mapa | resources/views/layouts/incempresa/sidebar.blade.php + resources/views/empresa/sedes/index.blade.php + ruta + EmpresaController::sedesRepro() | ✅ |
+
+**Detalles:**
+- Ruta: `GET empresa/sedes-repro` → `empresa.sedes-repro` (protegida con `role:empresa`)
+- Vista: cards por sede activa — nombre, dirección, teléfono, enlace WhatsApp (`wa.me/`), botón "Ver en mapa" (cuando tiene `enlace_maps`)
+- Sidebar: ítem "Sedes REPRO" siempre visible en sección "Contacto" (independiente del bloque WhatsApp)
+- Sedes inactivas (`estado=0`) no se muestran
+- **Tests:** 8/8 en `LoteC_SedesReproTest.php` pasando
+- **Suite completa:** 538/538 pasando
+
+### Bugs detectados durante testing post-deploy (sesión 2026-05-22) — ✅ TODOS CORREGIDOS Y DEPLOYADOS
+
+**Bug 1 — Empresa/repro no podía editar su propio perfil** (fix #1)
+- Causa: ruta `edit-user/{id}` estaba dentro del grupo `role:admin`
+- Fix: ruta movida fuera del grupo; controller verifica `Auth::id() == $id || role_as >= 3`
+- Archivos: `routes/web.php`, `app/Http/Controllers/Admin/UsersController.php`
+- Tests: 4 nuevos en `SeguridadTest` (empresa/repro pueden ver su edit, no el de otro → 403)
+
+**Bug 2 — Permisos vuelven al guardar con todos desmarcados** (fix #2 parte A)
+- Causa: HTML no envía arrays vacíos; `$request->has('permisos_sistema')` = false → sync nunca corría
+- Fix: hidden `<input name="permisos_enviados" value="1">`; controller detecta ese campo en vez del array
+- Archivos: `resources/views/admin/user/edit.blade.php`, `UsersController.php`
+
+**Bug 3 — Repro user heredaba permisos del rol base `repro` aunque se desmarcaran todos** (fix #2 parte B)
+- Causa: `hasPermission()` busca en TODOS los roles de `user_role`; el rol base `repro` tiene permisos propios
+- Fix: al guardar permisos individuales de un repro, se desvincula el rol `repro` de `user_role`; `CheckRole` sigue usando campo `role_as` así que `role:repro` / `role:admin,repro` no se rompe
+- Archivos: `UsersController.php`
+
+**Bug 4 — Checkboxes de permisos mostraban permisos heredados como asignados** (fix #2 parte C)
+- Causa: la vista usaba `getAllPermissions()` que incluye permisos heredados del rol base
+- Fix: la vista carga solo permisos del rol personal `user_{id}`
+- Archivos: `resources/views/admin/user/edit.blade.php`
+- Tests: 2 nuevos en `AuditoriaSeguridadTest` (62/62 pasando)
+
+### Lote D — Estados automáticos ✅ COMPLETO Y DEPLOYADO
+
+Estados objetivo según cliente (nomenclatura exacta):
+`Solicitud → (desistió/cancelado) | Link enviado → Llenando formulario → Formulario recibido → Programado → En proceso → Resultado Preliminar (saltable) → Informe completo entregado`
+
+| ID | Descripción | Archivos | Estado |
+|----|-------------|----------|--------|
+| 1a | Renombrar label `docs_pendientes` → "Formulario Recibido" (mantener key) | EvaluadoOrden.php (getEstadoEvaluacionTextoAttribute + estadosEvaluacionDisponibles) | ✅ |
+| 1b | Al subir informe **preliminar**, evaluado pasa a `en_proceso` si está en `programado`/`docs_pendientes`; auto-libera resultados_visibles_empresa=true | OrdenesController::subirResultadoArchivo() | ✅ |
+| 1c | Al programar/reprogramar cita, redirect→back() en lugar de redirect→calendario.dia | CalendarioController::programar(), reprogramar() | ✅ |
+| 2 | Bug "Reprogramar saca y no deja reprogramar" — redirect→back() corrige el problema | CalendarioController::reprogramar() | ✅ |
+
+**Tests:** 8/8 en `LoteD_EstadosAutomaticosTest.php` pasando  
+**Deploy:** FTP iPage — 5 archivos deployados (EvaluadoOrden.php, OrdenesController.php, CalendarioController.php, create.blade.php, edit.blade.php)  
+**Suite completa:** 524/524 tests pasando (incluye corrección de 76 tests pre-existentes que fallaban por Lote A)
+
+### Post-Lote D — Correcciones sesión 2026-05-24
+
+#### Fecha Tentativa (D4) — eliminada correctamente
+- Confirmado: campo `fecha_limite` / "Fecha Tentativa" YA NO aparece en formularios admin ni portal empresa (eliminado en Fase 10 R9 ext)
+- El campo fue re-agregado por error durante el fix de tests en esta sesión → revertido
+- `tests/Feature/Sprint1BugFixesTest.php`: tests N1 actualizados de `assertSee` → `assertDontSee('Fecha Tentativa')` y `assertDontSee('Fecha Programada')`
+- 12/12 Sprint1BugFixesTest pasando ✅
+
+#### PDFs actualizados (sesión 2026-05-24)
+
+**PDF Orden de Servicio (`pdf.blade.php`):**
+- Estado evaluado: antes `ucfirst(estado_evaluacion)` → mostraba `Docs_pendientes`, `En_proceso`
+- Ahora: `$evaluado->estado_evaluacion_texto` (accessor del modelo) → muestra "Formulario Recibido", "En Proceso", etc.
+- Color badge: antes solo cubría 3 estados → ahora usa `$evaluado->estado_evaluacion_color` (todos los estados)
+
+**PDF Informe Candidatos (`pdf-informe.blade.php`):**
+- Fecha evaluación: antes solo `fecha_realizada` → mostraba `—` si no se había realizado aún
+- Ahora: `fecha_realizada` si ya ocurrió, o `fecha_programada` con label "(programada)" como fallback
+- Estado de la orden: antes `ucfirst($orden->estado)` → ahora usa `$estados[$orden->estado]` (mapa de etiquetas legibles)
+- Controller `pdfInforme()`: ahora pasa `$estados = Orden::estadosDisponibles()` a la vista
+
+#### Datos de prueba creados en BD local (sesión 2026-05-24)
+
+| Código | Estado | Empresa | Propósito |
+|--------|--------|---------|-----------|
+| ORD-2026-0013 (ID 13) | en_proceso | Corporación ABC | D1: evaluado Carlos Méndez en `docs_pendientes` → verificar badge "Formulario Recibido" |
+| ORD-2026-0014 (ID 14) | en_proceso | Corporación ABC | D2: Roberto Fuentes (`programado`) + Valentina Torres (`docs_pendientes`) → probar subida de archivo preliminar → auto en_proceso |
+| ORD-2026-0015 (ID 15) | programacion | Industrias XYZ | D3: Diego Hernández + Andrea López (`pendiente`) → probar programar/reprogramar sin redirigir |
+
+**Nota D2:** el auto-avance a `en_proceso` ocurre al subir el **archivo** "Resultado Preliminar" (uploader azul), NO al guardar el texto Quill. El texto Quill libera `resultados_visibles_empresa` y notifica a empresa.
+
+#### Deploy ejecutado 2026-05-24 — scripts/deploy_Fase16_LoteC_2026-05-24.sh
+
+**10/10 archivos subidos, 9/9 MD5 verificados, caché limpiada (60 vistas + OPcache)**
+
+| Archivo | Cambio |
+|---------|--------|
+| `app/Http/Controllers/Admin/OrdenesController.php` | pasa `$estados` a `pdfInforme()` |
+| `app/Http/Controllers/Empresa/EmpresaController.php` | método `sedesRepro()` + import `Sede` |
+| `resources/views/admin/ordenes/pdf.blade.php` | estado badge usa accessor (no raw keys) |
+| `resources/views/admin/ordenes/pdf-informe.blade.php` | fecha fallback + estado orden legible |
+| `resources/views/admin/ordenes/create.blade.php` | sin campo Fecha Tentativa |
+| `resources/views/admin/ordenes/edit.blade.php` | sin campo Fecha Tentativa |
+| `resources/views/empresa/sedes/index.blade.php` | nueva vista sedes (directorio nuevo) |
+| `resources/views/layouts/incempresa/sidebar.blade.php` | ítem "Sedes REPRO" |
+| `routes/web.php` | ruta `empresa.sedes-repro` |
+
+**Migraciones:** Sin nuevas migraciones en este deploy. Las 2 migraciones del 2026-05-18 (`sede_region_empresa`, `dias_vigencia_token`/`nombre_empresa`) tenían las columnas en BD pero no estaban registradas en la tabla `migrations` — corregido en batch 102.

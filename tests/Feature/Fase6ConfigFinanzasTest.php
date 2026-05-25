@@ -6,6 +6,7 @@ use App\Models\Config;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 /**
@@ -14,7 +15,7 @@ use Tests\TestCase;
  */
 class Fase6ConfigFinanzasTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesRolesAndPermissions;
 
     protected User $admin;
     protected User $repro;
@@ -24,14 +25,13 @@ class Fase6ConfigFinanzasTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'Repro']);
-        Role::create(['name' => 'evaluado', 'display_name' => 'Evaluado']);
+        $this->setUpRolesAndPermissions();
 
         $this->admin  = User::factory()->create(['role_as' => 3]);
         $this->repro  = User::factory()->create(['role_as' => 2]);
+        $this->repro->roles()->attach(Role::where('name', 'repro')->first());
         $this->empresa = User::factory()->create(['role_as' => 1]);
+        $this->empresa->roles()->attach(Role::where('name', 'empresa')->first());
 
         Config::create([
             'logo'             => null,

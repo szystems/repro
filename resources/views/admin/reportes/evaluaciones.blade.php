@@ -200,6 +200,7 @@
                                     <th>Estado</th>
                                     <th>Fecha</th>
                                     <th class="text-center">Informe</th>
+                                    <th class="text-center">Papelería</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -260,10 +261,19 @@
                                                 </span>
                                             @endif
                                         </td>
+                                        <td class="text-center">
+                                            @if($evaluado->orden_id)
+                                                <a href="{{ route('ordenes.show', $evaluado->orden_id) }}#heading-evaluado-{{ $evaluado->id }}"
+                                                   class="btn btn-sm btn-outline-secondary"
+                                                   title="Ver papelería y documentos del candidato">
+                                                    <i class="bi bi-folder2-open"></i>
+                                                </a>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center py-4 text-muted">
+                                        <td colspan="10" class="text-center py-4 text-muted">
                                             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                             No se encontraron evaluados con los filtros seleccionados
                                         </td>

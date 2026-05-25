@@ -460,13 +460,8 @@
                         @endif
                     </td>
                     <td class="text-center">
-                        <span class="badge 
-                            @if($evaluado->estado_evaluacion == 'completado') badge-success
-                            @elseif($evaluado->estado_evaluacion == 'en_proceso') badge-primary
-                            @elseif($evaluado->estado_evaluacion == 'programado') badge-info
-                            @else badge-warning
-                            @endif">
-                            {{ ucfirst($evaluado->estado_evaluacion ?? 'Pendiente') }}
+                        <span class="badge badge-{{ $evaluado->estado_evaluacion_color }}">
+                            {{ $evaluado->estado_evaluacion_texto }}
                         </span>
                     </td>
                 </tr>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
+use App\Models\Sede;
 use App\Models\User;
 use App\Models\EvaluadoOrden;
 use Illuminate\Http\Request;
@@ -184,6 +185,20 @@ class EmpresaController extends Controller
         $empresa->update($validated);
 
         return redirect()->route('empresa.mi-empresa')->with('success', 'Información de empresa actualizada correctamente');
+    }
+
+    // ========================================
+    // SEDES REPRO
+    // ========================================
+
+    /**
+     * Mostrar listado de sedes REPRO con info de contacto y mapa.
+     */
+    public function sedesRepro(): \Illuminate\View\View
+    {
+        $sedes = Sede::activas()->orderBy('nombre')->get();
+
+        return view('empresa.sedes.index', compact('sedes'));
     }
 
     // ========================================

@@ -246,9 +246,13 @@
                                                                 <div class="form-text mb-2">
                                                                     Seleccione los permisos que tendrá este usuario REPRO:
                                                                 </div>
+                                                                {{-- Campo oculto para detectar envío aunque no haya casillas marcadas --}}
+                                                                <input type="hidden" name="permisos_enviados" value="1">
                                                                 @php
                                                                     $todosPermisos = \App\Models\Permission::orderBy('module')->get()->groupBy('module');
-                                                                    $permisosUsuario = $user->getAllPermissions()->pluck('name')->toArray();
+                                                                    // Mostrar solo permisos del rol personal (no heredados del rol base repro)
+                                                                    $rolPersonal = \App\Models\Role::where('name', 'user_' . $user->id)->with('permissions')->first();
+                                                                    $permisosUsuario = $rolPersonal ? $rolPersonal->permissions->pluck('name')->toArray() : [];
                                                                     $moduloIconos = [
                                                                         'ordenes' => 'bi-folder',
                                                                         'evaluaciones' => 'bi-clipboard-check',

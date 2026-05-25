@@ -9,19 +9,18 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class BugFixesPhase8ATest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, CreatesRolesAndPermissions;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'Repro']);
+        $this->setUpRolesAndPermissions();
     }
 
     // ─── B1: old() repopula evaluados al fallar validación ───

@@ -156,6 +156,7 @@
                                 @enderror
                             </div>
 
+
                             <div class="mb-3">
                                 <label for="instrucciones_generales" class="form-label">Instrucciones Generales</label>
                                 <textarea class="form-control @error('instrucciones_generales') is-invalid @enderror" 

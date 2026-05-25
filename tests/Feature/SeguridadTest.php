@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Empresa;
+use App\Models\Orden;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -155,35 +158,71 @@ class SeguridadTest extends TestCase
 
     public function test_empresas_admin_accesible_para_repro(): void
     {
-        $this->actingAs($this->usuarioRepro())
+        $this->actingAs($this->usuarioReproConPermiso('empresas.ver'))
             ->get('/empresas')
             ->assertOk();
     }
 
-    public function test_sedes_requiere_rol_admin_o_repro(): void
+    /** Crea un usuario repro (role_as=2) con el permiso indicado. */
+    private function usuarioReproConPermiso(string $permiso): User
+    {
+        $user = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $permission = Permission::firstOrCreate(
+            ['name' => $permiso],
+            ['display_name' => $permiso, 'module' => 'test']
+        );
+        $role = Role::firstOrCreate(['name' => 'test_role_' . $permiso], ['display_name' => 'Test']);
+        $role->givePermission($permission);
+        $user->assignRole('test_role_' . $permiso);
+        return $user;
+    }
+
+    public function test_sedes_requiere_permiso_o_admin(): void
     {
         $this->actingAs($this->usuarioEmpresa())
             ->get('/sedes')
             ->assertForbidden();
+
+        $this->actingAs($this->usuarioRepro())
+            ->get('/sedes')
+            ->assertForbidden();
     }
 
-    public function test_sedes_accesible_para_repro(): void
+    public function test_sedes_accesible_para_admin(): void
     {
-        $this->actingAs($this->usuarioRepro())
+        $this->actingAs($this->usuarioAdmin())
             ->get('/sedes')
             ->assertOk();
     }
 
-    public function test_calendario_requiere_rol_admin_o_repro(): void
+    public function test_sedes_accesible_con_permiso_sedes_ver(): void
+    {
+        $this->actingAs($this->usuarioReproConPermiso('sedes.ver'))
+            ->get('/sedes')
+            ->assertOk();
+    }
+
+    public function test_calendario_requiere_permiso_o_admin(): void
     {
         $this->actingAs($this->usuarioEmpresa())
             ->get('/calendario')
             ->assertForbidden();
+
+        $this->actingAs($this->usuarioRepro())
+            ->get('/calendario')
+            ->assertForbidden();
     }
 
-    public function test_calendario_accesible_para_repro(): void
+    public function test_calendario_accesible_para_admin(): void
     {
-        $this->actingAs($this->usuarioRepro())
+        $this->actingAs($this->usuarioAdmin())
+            ->get('/calendario')
+            ->assertOk();
+    }
+
+    public function test_calendario_accesible_con_permiso_calendario_ver(): void
+    {
+        $this->actingAs($this->usuarioReproConPermiso('calendario.ver'))
             ->get('/calendario')
             ->assertOk();
     }
@@ -231,5 +270,98 @@ class SeguridadTest extends TestCase
         });
 
         $this->assertEquals(302, $response->getStatusCode());
+    }
+
+    // -------------------------------------------------------
+    // 6.5 — Permisos granulares de módulos
+    // -------------------------------------------------------
+
+    public function test_repro_sin_ordenes_crear_no_puede_crear_orden(): void
+    {
+        // usuarioRepro() no tiene rol asignado ni ordenes.crear
+        $this->actingAs($this->usuarioRepro())
+            ->get('/ordenes/create')
+            ->assertForbidden();
+    }
+
+    public function test_repro_con_ordenes_crear_puede_ver_form_orden(): void
+    {
+        $this->actingAs($this->usuarioReproConPermiso('ordenes.crear'))
+            ->get('/ordenes/create')
+            ->assertOk();
+    }
+
+    public function test_repro_sin_ordenes_ver_no_puede_ver_lista_ordenes(): void
+    {
+        $this->actingAs($this->usuarioRepro())
+            ->get('/ordenes')
+            ->assertForbidden();
+    }
+
+    public function test_repro_con_ordenes_ver_puede_ver_lista_ordenes(): void
+    {
+        $this->actingAs($this->usuarioReproConPermiso('ordenes.ver'))
+            ->get('/ordenes')
+            ->assertOk();
+    }
+
+    public function test_repro_sin_empresas_crear_no_puede_crear_empresa(): void
+    {
+        $this->actingAs($this->usuarioRepro())
+            ->get('/add-empresa')
+            ->assertForbidden();
+    }
+
+    public function test_repro_con_empresas_crear_puede_ver_form_empresa(): void
+    {
+        $this->actingAs($this->usuarioReproConPermiso('empresas.crear'))
+            ->get('/add-empresa')
+            ->assertOk();
+    }
+
+    public function test_empresa_sin_ordenes_crear_no_puede_crear_orden(): void
+    {
+        // usuarioEmpresa() solo tiene role_as=1, sin permisos asignados vía rol
+        $this->actingAs($this->usuarioEmpresa())
+            ->get('/ordenes/create')
+            ->assertForbidden();
+    }
+
+    // -------------------------------------------------------
+    // Perfil propio: empresa y repro pueden editar su propio perfil
+    // -------------------------------------------------------
+
+    public function test_empresa_puede_ver_formulario_edicion_su_propio_perfil(): void
+    {
+        $empresa = $this->usuarioEmpresa();
+        $this->actingAs($empresa)
+            ->get(url('edit-user/' . $empresa->id))
+            ->assertOk();
+    }
+
+    public function test_repro_puede_ver_formulario_edicion_su_propio_perfil(): void
+    {
+        $repro = $this->usuarioRepro();
+        $this->actingAs($repro)
+            ->get(url('edit-user/' . $repro->id))
+            ->assertOk();
+    }
+
+    public function test_empresa_no_puede_editar_perfil_de_otro_usuario(): void
+    {
+        $empresa = $this->usuarioEmpresa();
+        $otro = $this->usuarioAdmin();
+        $this->actingAs($empresa)
+            ->get(url('edit-user/' . $otro->id))
+            ->assertForbidden();
+    }
+
+    public function test_repro_no_puede_editar_perfil_de_otro_usuario(): void
+    {
+        $repro = $this->usuarioRepro();
+        $otro = $this->usuarioAdmin();
+        $this->actingAs($repro)
+            ->get(url('edit-user/' . $otro->id))
+            ->assertForbidden();
     }
 }

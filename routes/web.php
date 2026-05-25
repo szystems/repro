@@ -57,17 +57,20 @@ Route::post('/password/email', [\App\Http\Controllers\Auth\ForgotPasswordControl
 Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
-    // Gestión de usuarios: solo Admin (role_as=3)
-    Route::middleware(['role:admin'])->group(function () {
+    // Gestión de usuarios: lectura con permiso usuarios.ver, escritura solo Admin
+    Route::middleware(['permission:usuarios.ver'])->group(function () {
         Route::get('users', [UsersController::class, 'users'])->name('users.index');
         Route::get('show-user/{id}', [UsersController::class, 'showuser'])->name('users.show');
-        Route::get('add-user', [UsersController::class, 'adduser'])->name('users.create');
-        Route::post('insert-user', [UsersController::class, 'insertuser'])->name('users.store');
-        Route::get('edit-user/{id}', [UsersController::class, 'edituser'])->name('users.edit');
-        Route::put('update-user/{id}', [UsersController::class, 'updateuser'])->name('users.update');
-        Route::delete('delete-user/{id}', [UsersController::class, 'destroyuser'])->name('users.destroy');
         Route::get('pdf-users', [UsersController::class, 'pdf'])->name('users.pdf');
         Route::get('pdf-user/{id}', [UsersController::class, 'pdfuser'])->name('users.pdf.show');
+    });
+    // Edición de perfil propio: accesible a cualquier usuario autenticado (auth verificada en controller)
+    Route::get('edit-user/{id}', [UsersController::class, 'edituser'])->name('users.edit');
+    Route::put('update-user/{id}', [UsersController::class, 'updateuser'])->name('users.update');
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('add-user', [UsersController::class, 'adduser'])->name('users.create');
+        Route::post('insert-user', [UsersController::class, 'insertuser'])->name('users.store');
+        Route::delete('delete-user/{id}', [UsersController::class, 'destroyuser'])->name('users.destroy');
     });
 
     // ========================================
@@ -88,70 +91,129 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // ========================================
     // RUTAS ADMIN + REPRO (role_as >= 2)
     // ========================================
-    Route::middleware(['role:admin,repro'])->group(function () {
-        // Finanzas (próximamente)
-        Route::get('finanzas', [ConfigController::class, 'finanzas'])->name('finanzas.index');
-
-        // Módulo de Empresas
+    // ========================================
+    // MÓDULO DE EMPRESAS (acceso granular por permiso)
+    // ========================================
+    Route::middleware(['role:admin,repro', 'permission:empresas.ver'])->group(function () {
         Route::get('empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'index'])->name('empresas.index');
-        Route::get('add-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'create'])->name('empresas.create');
-        Route::post('insert-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'store'])->name('empresas.store');
-        Route::get('edit-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'edit'])->name('empresas.edit');
-        Route::put('update-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'update'])->name('empresas.update');
         Route::get('show-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'show'])->name('empresas.show');
-        Route::patch('cambiar-estado-empresa/{id}/{estado}', [App\Http\Controllers\Admin\EmpresasController::class, 'cambiarEstado'])->name('empresas.cambiar-estado');
         Route::get('pdf-empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'pdf'])->name('empresas.pdf');
         Route::get('pdf-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'pdfEmpresa'])->name('empresas.pdf.show');
+    });
+    Route::middleware(['role:admin,repro', 'permission:empresas.crear'])->group(function () {
+        Route::get('add-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'create'])->name('empresas.create');
+        Route::post('insert-empresa', [App\Http\Controllers\Admin\EmpresasController::class, 'store'])->name('empresas.store');
+    });
+    Route::middleware(['role:admin,repro', 'permission:empresas.editar'])->group(function () {
+        Route::get('edit-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'edit'])->name('empresas.edit');
+        Route::put('update-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'update'])->name('empresas.update');
+        Route::patch('cambiar-estado-empresa/{id}/{estado}', [App\Http\Controllers\Admin\EmpresasController::class, 'cambiarEstado'])->name('empresas.cambiar-estado');
+    });
 
-        // Módulo de Sedes
-        Route::get('sedes', [App\Http\Controllers\Admin\SedesController::class, 'index'])->name('sedes.index');
-        Route::get('add-sede', [App\Http\Controllers\Admin\SedesController::class, 'create'])->name('sedes.create');
-        Route::post('insert-sede', [App\Http\Controllers\Admin\SedesController::class, 'store'])->name('sedes.store');
-        Route::get('show-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'show'])->name('sedes.show');
-        Route::get('edit-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'edit'])->name('sedes.edit');
-        Route::put('update-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'update'])->name('sedes.update');
-        Route::patch('cambiar-estado-sede/{id}/{estado}', [App\Http\Controllers\Admin\SedesController::class, 'cambiarEstado'])->name('sedes.cambiar-estado');
-        Route::delete('delete-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'destroy'])->name('sedes.destroy');
-
-        // Módulo Calendario de Programación
+    // ========================================
+    // FINANZAS Y CALENDARIO (acceso granular por permiso)
+    // ========================================
+    Route::middleware(['permission:finanzas.ver'])->group(function () {
+        Route::get('finanzas', [ConfigController::class, 'finanzas'])->name('finanzas.index');
+    });
+    Route::middleware(['permission:calendario.ver'])->group(function () {
         Route::get('calendario', [App\Http\Controllers\Admin\CalendarioController::class, 'index'])->name('calendario.index');
         Route::get('calendario/dia/{fecha}', [App\Http\Controllers\Admin\CalendarioController::class, 'dia'])->name('calendario.dia');
+    });
+    Route::middleware(['permission:calendario.editar'])->group(function () {
         Route::post('calendario/programar', [App\Http\Controllers\Admin\CalendarioController::class, 'programar'])->name('calendario.programar');
         Route::patch('calendario/evaluados/{evaluado}/reprogramar', [App\Http\Controllers\Admin\CalendarioController::class, 'reprogramar'])->name('calendario.reprogramar');
         Route::delete('calendario/evaluados/{evaluado}/cancelar', [App\Http\Controllers\Admin\CalendarioController::class, 'cancelar'])->name('calendario.cancelar');
     });
 
-    // Rutas para el módulo de Órdenes - Disponible para admin, repro y empresas
-    Route::resource('ordenes', OrdenesController::class)->parameters(['ordenes' => 'orden']);
+    // ========================================
+    // MÓDULO DE SEDES (acceso granular por permiso)
+    // ========================================
+    Route::middleware(['permission:sedes.ver'])->group(function () {
+        Route::get('sedes', [App\Http\Controllers\Admin\SedesController::class, 'index'])->name('sedes.index');
+        Route::get('show-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'show'])->name('sedes.show');
+    });
+    Route::middleware(['permission:sedes.crear'])->group(function () {
+        Route::get('add-sede', [App\Http\Controllers\Admin\SedesController::class, 'create'])->name('sedes.create');
+        Route::post('insert-sede', [App\Http\Controllers\Admin\SedesController::class, 'store'])->name('sedes.store');
+    });
+    Route::middleware(['permission:sedes.editar'])->group(function () {
+        Route::get('edit-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'edit'])->name('sedes.edit');
+        Route::put('update-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'update'])->name('sedes.update');
+        Route::patch('cambiar-estado-sede/{id}/{estado}', [App\Http\Controllers\Admin\SedesController::class, 'cambiarEstado'])->name('sedes.cambiar-estado');
+    });
+    Route::middleware(['permission:sedes.eliminar'])->group(function () {
+        Route::delete('delete-sede/{id}', [App\Http\Controllers\Admin\SedesController::class, 'destroy'])->name('sedes.destroy');
+    });
 
-    // Rutas adicionales para órdenes
-    Route::patch('ordenes/{orden}/cambiar-estado', [OrdenesController::class, 'cambiarEstado'])->name('ordenes.cambiar-estado');
-    Route::patch('ordenes/{orden}/toggle-resultados-visibles', [OrdenesController::class, 'toggleResultadosVisibles'])->name('ordenes.toggle-resultados-visibles');
-    Route::get('ordenes/{orden}/pdf', [OrdenesController::class, 'pdf'])->name('ordenes.pdf');
-    Route::get('ordenes/{orden}/pdf-informe', [OrdenesController::class, 'pdfInforme'])->name('ordenes.pdf-informe');
+    // ========================================
+    // MÓDULO DE ÓRDENES (permission granular)
+    // ========================================
+    // Crear — ANTES de /{orden} para que /ordenes/create no sea capturado como wildcard
+    Route::middleware(['permission:ordenes.crear'])->group(function () {
+        Route::get('ordenes/create', [OrdenesController::class, 'create'])->name('ordenes.create');
+        Route::post('ordenes', [OrdenesController::class, 'store'])->name('ordenes.store');
+    });
+    // Ver
+    Route::middleware(['permission:ordenes.ver'])->group(function () {
+        Route::get('ordenes', [OrdenesController::class, 'index'])->name('ordenes.index');
+        Route::get('ordenes/{orden}', [OrdenesController::class, 'show'])->name('ordenes.show');
+        Route::get('ordenes/{orden}/pdf', [OrdenesController::class, 'pdf'])->name('ordenes.pdf');
+        Route::get('ordenes/{orden}/pdf-informe', [OrdenesController::class, 'pdfInforme'])->name('ordenes.pdf-informe');
+    });
+    // Editar
+    Route::middleware(['permission:ordenes.editar'])->group(function () {
+        Route::get('ordenes/{orden}/edit', [OrdenesController::class, 'edit'])->name('ordenes.edit');
+        Route::put('ordenes/{orden}', [OrdenesController::class, 'update'])->name('ordenes.update');
+        Route::patch('ordenes/{orden}/cambiar-estado', [OrdenesController::class, 'cambiarEstado'])->name('ordenes.cambiar-estado');
+        Route::patch('ordenes/{orden}/toggle-resultados-visibles', [OrdenesController::class, 'toggleResultadosVisibles'])->name('ordenes.toggle-resultados-visibles');
+        Route::post('evaluados/{evaluado}/reenviar-correo', [OrdenesController::class, 'reenviarCorreo'])->name('evaluados.reenviar-correo');
+        Route::patch('evaluados/{evaluado}/cambiar-estado', [OrdenesController::class, 'cambiarEstadoEvaluado'])->name('evaluados.cambiar-estado');
+        Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');
+        Route::post('evaluados/{evaluado}/deshabilitar-cuestionario', [OrdenesController::class, 'deshabilitarCuestionario'])->name('evaluados.deshabilitar-cuestionario');
+    });
+    // Eliminar
+    Route::middleware(['permission:ordenes.eliminar'])->group(function () {
+        Route::delete('ordenes/{orden}', [OrdenesController::class, 'destroy'])->name('ordenes.destroy');
+    });
 
-    // Reenviar correo a evaluado
-    Route::post('evaluados/{evaluado}/reenviar-correo', [OrdenesController::class, 'reenviarCorreo'])->name('evaluados.reenviar-correo');
+    // ========================================
+    // DOCUMENTOS DE EVALUADOS (permission granular)
+    // ========================================
+    Route::middleware(['permission:documentos.ver'])->group(function () {
+        Route::get('documentos-evaluado/{documento}/download', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'download'])->name('documentos-evaluado.download');
+        Route::get('documentos-evaluado/{documento}/preview', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'preview'])->name('documentos-evaluado.preview');
+    });
+    Route::middleware(['permission:documentos.subir'])->group(function () {
+        Route::post('documentos-evaluado', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'store'])->name('documentos-evaluado.store');
+    });
+    Route::middleware(['permission:documentos.verificar'])->group(function () {
+        Route::patch('documentos-evaluado/{documento}/verificar', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'verificar'])->name('documentos-evaluado.verificar');
+    });
+    Route::middleware(['permission:documentos.eliminar'])->group(function () {
+        Route::delete('documentos-evaluado/{documento}', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'destroy'])->name('documentos-evaluado.destroy');
+    });
 
-    // Documentos de evaluados
-    Route::post('documentos-evaluado', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'store'])->name('documentos-evaluado.store');
-    Route::get('documentos-evaluado/{documento}/download', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'download'])->name('documentos-evaluado.download');
-    Route::get('documentos-evaluado/{documento}/preview', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'preview'])->name('documentos-evaluado.preview');
-    Route::patch('documentos-evaluado/{documento}/verificar', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'verificar'])->name('documentos-evaluado.verificar');
-    Route::delete('documentos-evaluado/{documento}', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'destroy'])->name('documentos-evaluado.destroy');
+    // ========================================
+    // RESULTADOS (permission granular)
+    // ========================================
+    Route::middleware(['permission:resultados.ver'])->group(function () {
+        Route::get('evaluados/{evaluado}/resultado-archivo/{tipo}', [OrdenesController::class, 'descargarResultadoArchivo'])->name('evaluados.descargar-resultado-archivo');
+    });
+    Route::middleware(['permission:resultados.editar'])->group(function () {
+        Route::post('evaluados/{evaluado}/resultado-archivo', [OrdenesController::class, 'subirResultadoArchivo'])->name('evaluados.subir-resultado-archivo');
+        Route::delete('evaluados/{evaluado}/resultado-archivo/{tipo}', [OrdenesController::class, 'eliminarResultadoArchivo'])->name('evaluados.eliminar-resultado-archivo');
+    });
 
-    // Archivos de resultado (preliminar / final) — solo REPRO/admin
-    Route::post('evaluados/{evaluado}/resultado-archivo', [OrdenesController::class, 'subirResultadoArchivo'])->name('evaluados.subir-resultado-archivo');
-    Route::get('evaluados/{evaluado}/resultado-archivo/{tipo}', [OrdenesController::class, 'descargarResultadoArchivo'])->name('evaluados.descargar-resultado-archivo');
-    Route::delete('evaluados/{evaluado}/resultado-archivo/{tipo}', [OrdenesController::class, 'eliminarResultadoArchivo'])->name('evaluados.eliminar-resultado-archivo');
-
-    // Cambio de estado evaluado — solo REPRO/admin
-    Route::patch('evaluados/{evaluado}/cambiar-estado', [OrdenesController::class, 'cambiarEstadoEvaluado'])->name('evaluados.cambiar-estado');
-    Route::patch('evaluados/{evaluado}/observacion', [OrdenesController::class, 'actualizarObservacion'])->name('evaluados.actualizar-observacion');
+    // ========================================
+    // INFORME PRELIMINAR Y OBSERVACIÓN (permission granular)
+    // ========================================
+    Route::middleware(['permission:informe_preliminar.editar'])->group(function () {
         Route::patch('evaluados/{evaluado}/informe-preliminar', [OrdenesController::class, 'guardarInformePreliminar'])->name('evaluados.guardar-informe-preliminar');
-    // Rehabilitación de cuestionario — solo REPRO/admin
-    Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');
-    Route::post('evaluados/{evaluado}/deshabilitar-cuestionario', [OrdenesController::class, 'deshabilitarCuestionario'])->name('evaluados.deshabilitar-cuestionario');
+    });
+    Route::middleware(['permission:observacion.editar'])->group(function () {
+        Route::patch('evaluados/{evaluado}/observacion', [OrdenesController::class, 'actualizarObservacion'])->name('evaluados.actualizar-observacion');
+    });
 
     // Notificaciones
     Route::get('notificaciones', [\App\Http\Controllers\NotificacionesController::class, 'index'])->name('notificaciones.index');
@@ -186,13 +248,20 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // ADMINISTRACIÓN DE CUESTIONARIOS (ADMIN Y REPRO)
     // ========================================
     Route::middleware(['role:admin,repro'])->prefix('cuestionarios')->name('admin.cuestionarios.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Admin\CuestionariosController::class, 'index'])->name('index');
-        Route::get('/historial-dpi', [App\Http\Controllers\Admin\CuestionariosController::class, 'historialDpi'])->name('historial-dpi');
-        Route::get('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'show'])->name('show');
-        Route::get('/{cuestionario}/editar', [App\Http\Controllers\Admin\CuestionariosController::class, 'edit'])->name('edit');
-        Route::put('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'update'])->name('update');
-        Route::get('/{cuestionario}/pdf', [App\Http\Controllers\Admin\CuestionariosController::class, 'generarPDF'])->name('pdf');
-        Route::post('/{cuestionario}/completar', [App\Http\Controllers\Admin\CuestionariosController::class, 'marcarCompleto'])->name('completar');
+        // historial-dpi debe registrarse ANTES del wildcard /{cuestionario}
+        Route::middleware(['permission:historial_dpi.ver'])->group(function () {
+            Route::get('/historial-dpi', [App\Http\Controllers\Admin\CuestionariosController::class, 'historialDpi'])->name('historial-dpi');
+        });
+        Route::middleware(['permission:cuestionarios.ver'])->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\CuestionariosController::class, 'index'])->name('index');
+            Route::get('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'show'])->name('show');
+            Route::get('/{cuestionario}/pdf', [App\Http\Controllers\Admin\CuestionariosController::class, 'generarPDF'])->name('pdf');
+        });
+        Route::middleware(['permission:evaluaciones.editar'])->group(function () {
+            Route::get('/{cuestionario}/editar', [App\Http\Controllers\Admin\CuestionariosController::class, 'edit'])->name('edit');
+            Route::put('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'update'])->name('update');
+            Route::post('/{cuestionario}/completar', [App\Http\Controllers\Admin\CuestionariosController::class, 'marcarCompleto'])->name('completar');
+        });
     });
 
     // ========================================
@@ -216,6 +285,8 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
 
         // Órdenes (solo lectura para empresa)
         Route::get('ordenes/{orden}', [EmpresaController::class, 'verOrden'])->name('ordenes.show');
+        // Sedes REPRO (info de contacto para empresa)
+        Route::get('sedes-repro', [EmpresaController::class, 'sedesRepro'])->name('sedes-repro');
         // Cuestionarios (solo lectura)
             Route::get('cuestionarios', [EmpresaController::class, 'cuestionarios'])->name('cuestionarios');
             Route::get('cuestionarios/{evaluado}', [EmpresaController::class, 'verCuestionario'])->name('cuestionarios.show');

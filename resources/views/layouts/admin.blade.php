@@ -127,11 +127,14 @@
                 margin-top: auto;
                 flex-shrink: 0;
             }
-            /* Navbar fijo al top: se mantiene visible al hacer scroll */
-            .page-header {
+            /* Navbar fijo al top: se mantiene visible al hacer scroll.
+               Sólo aplica al .page-header del nav (hijo directo de .page-wrapper),
+               no a los .page-header del contenido (ej. "Panel de Control"),
+               para que el dropdown de notificaciones no quede detrás del título. */
+            .page-wrapper > .page-header {
                 position: sticky;
                 top: 0;
-                z-index: 1030;
+                z-index: 1040;
             }
             /* Bajo el breakpoint xl, cualquier col-xl-N debe apilarse al 100% para
                evitar que el flex item se encoja al ancho del contenido. */

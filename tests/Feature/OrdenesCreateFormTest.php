@@ -6,20 +6,18 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Empresa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class OrdenesCreateFormTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesRolesAndPermissions;
 
     protected function setUp(): void
     {
         parent::setUp();
         
-        // Crear roles
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'repro', 'display_name' => 'REPRO']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
+        $this->setUpRolesAndPermissions();
     }
 
     public function test_admin_puede_ver_formulario_creacion_con_empresas()

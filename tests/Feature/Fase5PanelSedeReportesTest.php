@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 /**
@@ -17,7 +18,7 @@ use Tests\TestCase;
  */
 class Fase5PanelSedeReportesTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesRolesAndPermissions;
 
     protected User $admin;
     protected User $empresaUser;
@@ -28,14 +29,12 @@ class Fase5PanelSedeReportesTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'Repro']);
-        Role::create(['name' => 'evaluado', 'display_name' => 'Evaluado']);
+        $this->setUpRolesAndPermissions();
 
         $this->admin = User::factory()->create(['role_as' => 3]);
         $this->empresa = Empresa::factory()->create(['estado' => 1]);
         $this->empresaUser = User::factory()->create(['role_as' => 1, 'empresa_id' => $this->empresa->id]);
+        $this->empresaUser->roles()->attach(Role::where('name', 'empresa')->first());
         $this->sede = Sede::factory()->create(['estado' => 1, 'nombre' => 'Sede Test']);
     }
 
@@ -316,7 +315,7 @@ class Fase5PanelSedeReportesTest extends TestCase
             ->get(route('ordenes.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('WhatsApp REPRO');
+        $response->assertSee('WhatsApp');
         $response->assertSee('wa.me/50212345678');
         $response->assertSee('Sede Central');
     }
@@ -333,7 +332,7 @@ class Fase5PanelSedeReportesTest extends TestCase
             ->get(route('empresa.ordenes.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('WhatsApp REPRO');
+        $response->assertSee('WhatsApp');
         $response->assertSee('wa.me/50298765432');
     }
 

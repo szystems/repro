@@ -238,6 +238,11 @@ class UsersController extends Controller
         $user = User::with('roles')->find($id);
         $currentUser = Auth::user();
 
+        // Solo el propio usuario puede editar su perfil; editar otros es solo para admin
+        if ((int) Auth::id() !== (int) $id && $currentUser->role_as < 3) {
+            abort(403);
+        }
+
         // Verificar permisos
         if($currentUser->role_as == 1 && $currentUser->empresa_id != $user->empresa_id) {
             return redirect('users')->with('error', 'No tiene permisos para editar este usuario');
@@ -277,6 +282,11 @@ class UsersController extends Controller
     {
         $user = User::find($id);
         $currentUser = Auth::user();
+
+        // Solo el propio usuario puede editar su perfil; editar otros es solo para admin
+        if ((int) Auth::id() !== (int) $id && $currentUser->role_as < 3) {
+            abort(403);
+        }
 
         // Verificar permisos
         if($currentUser->role_as == 1 && $currentUser->empresa_id != $user->empresa_id) {
@@ -362,16 +372,11 @@ class UsersController extends Controller
                 $user->permisos = json_encode($request->input('permisos'));
             }
 
-            // Sincronizar permisos del nuevo sistema roles/permissions
-            if ($currentUser->role_as == 3 && $request->has('permisos_sistema')) {
+            // Sincronizar permisos del nuevo sistema roles/permissions.
+            // Se usa 'permisos_enviados' (campo oculto) para detectar el envío incluso
+            // cuando no hay ninguna casilla marcada (HTML no envía arrays vacíos).
+            if ($request->has('permisos_enviados')) {
                 $permisosSeleccionados = $request->input('permisos_sistema', []);
-                // Crear un rol personal para permisos individuales o sincronizar via role
-                $roleName = $user->role_as == 2 ? 'repro' : ($user->role_as == 1 ? 'empresa' : 'admin');
-                $role = \App\Models\Role::where('name', $roleName)->first();
-                if ($role) {
-                    // Asegurar que el usuario tiene asignado su rol base
-                    $user->roles()->syncWithoutDetaching([$role->id]);
-                }
 
                 // Crear/actualizar rol personal del usuario para permisos granulares
                 $personalRole = \App\Models\Role::firstOrCreate(
@@ -380,6 +385,15 @@ class UsersController extends Controller
                 );
                 $permissionIds = \App\Models\Permission::whereIn('name', $permisosSeleccionados)->pluck('id')->toArray();
                 $personalRole->permissions()->sync($permissionIds);
+
+                // Desasociar el rol base 'repro' y asignar solo el rol personal.
+                // Esto garantiza que el usuario tiene EXACTAMENTE los permisos seleccionados,
+                // sin heredar los permisos del rol compartido repro.
+                // IMPORTANTE: CheckRole usa role_as (no user_role), así que role:repro sigue funcionando.
+                $baseRole = \App\Models\Role::where('name', 'repro')->first();
+                if ($baseRole) {
+                    $user->roles()->detach($baseRole->id);
+                }
                 $user->roles()->syncWithoutDetaching([$personalRole->id]);
             }
         }
