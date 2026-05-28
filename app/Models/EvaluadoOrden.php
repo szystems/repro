@@ -71,6 +71,7 @@ class EvaluadoOrden extends Model
         'resultado_preliminar_at',
         'resultado_final_at',
         'resultado_subido_por',
+        'fecha_programada_original',
     ];
 
     /**
@@ -78,6 +79,7 @@ class EvaluadoOrden extends Model
      */
     protected $dates = [
         'fecha_programada',
+        'fecha_programada_original',
         'fecha_hora_fin',
         'fecha_realizada',
         'token_expira_at',
@@ -100,6 +102,7 @@ class EvaluadoOrden extends Model
             'notificado' => 'boolean',
             'intentos_acceso' => 'integer',
             'fecha_programada' => 'datetime',
+            'fecha_programada_original' => 'datetime',
             'fecha_hora_fin' => 'datetime',
             'token_expira_at' => 'datetime',
             'token_usado_at' => 'datetime',
@@ -254,7 +257,7 @@ class EvaluadoOrden extends Model
     public function scopeProgramados($query)
     {
         return $query->whereNotNull('fecha_programada')
-            ->whereNotIn('estado_evaluacion', ['cancelado', 'desistio', 'inasistencia']);
+            ->whereNotIn('estado_evaluacion', ['cancelado', 'desistio']);
     }
 
     /**
@@ -513,6 +516,7 @@ class EvaluadoOrden extends Model
             'en_sede' => 'En Sede',
             'docs_pendientes' => 'Formulario Recibido',
             'en_proceso' => 'En Proceso',
+            'resultado_preliminar' => 'Resultado Preliminar',
             'completado' => 'Completado',
             'inasistencia' => 'Inasistencia',
             'reprogramado' => 'Reprogramado',
@@ -537,9 +541,10 @@ class EvaluadoOrden extends Model
             'en_sede' => 'warning',
             'docs_pendientes' => 'warning',
             'en_proceso' => 'warning',
+            'resultado_preliminar' => 'info',
             'completado' => 'success',
             'inasistencia' => 'danger',
-            'reprogramado' => 'orange',
+            'reprogramado' => 'warning',
             'cancelado' => 'danger',
             'desistio' => 'dark',
             default => 'secondary'
@@ -659,6 +664,10 @@ class EvaluadoOrden extends Model
      */
     public function reprogramarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null, ?int $responsableId = null): bool
     {
+        // Guardar la fecha original antes de sobreescribir (para registro histórico en calendario)
+        if ($this->fecha_programada) {
+            $this->fecha_programada_original = $this->fecha_programada;
+        }
         $this->fecha_programada = $inicio;
         $this->fecha_hora_fin = $fin;
         $this->poligrafista_id = $poligrafistaId;
@@ -667,7 +676,7 @@ class EvaluadoOrden extends Model
         }
         $this->modalidad = $modalidad;
         $this->responsable_id = $responsableId;
-        $this->estado_evaluacion = 'programado';
+        $this->estado_evaluacion = 'reprogramado';
         return $this->save();
     }
 
@@ -703,7 +712,8 @@ class EvaluadoOrden extends Model
             'programado'     => ['en_sede', 'en_proceso', 'inasistencia', 'reprogramado', 'cancelado', 'desistio'],
             'en_sede'        => ['docs_pendientes', 'en_proceso', 'cancelado'],
             'docs_pendientes'=> ['en_proceso', 'cancelado'],
-            'en_proceso'     => ['completado', 'cancelado'],
+            'en_proceso'     => ['resultado_preliminar', 'completado', 'cancelado'],
+            'resultado_preliminar' => ['completado', 'cancelado'],
             'inasistencia'   => ['reprogramado', 'contactando', 'cancelado', 'desistio'],
             'reprogramado'   => ['contactando', 'programado', 'cancelado', 'desistio'],
             'completado'     => [], // estado final
@@ -829,6 +839,7 @@ class EvaluadoOrden extends Model
             'en_sede' => 'En Sede',
             'docs_pendientes' => 'Formulario Recibido',
             'en_proceso' => 'En Proceso',
+            'resultado_preliminar' => 'Resultado Preliminar',
             'completado' => 'Completado',
             'inasistencia' => 'Inasistencia',
             'reprogramado' => 'Reprogramado',

@@ -287,12 +287,7 @@
                         </div>
                     </div>
                 @endif
-                @if($evaluado->poligrafista)
-                    <div style="margin-top: 5px; font-size: 9px; color: #555;">
-                        Evaluador: {{ $evaluado->poligrafista->name }}
-                    </div>
-                @endif
-            </div>
+
         </div>
     </div>
     @empty

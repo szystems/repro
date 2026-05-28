@@ -82,6 +82,9 @@
                             </td>
                             <td>
                                 <small>{{ Str::limit($documento->nombre_original, 30) }}</small>
+                                @if($documento->notas)
+                                    <br><small class="text-muted fst-italic"><i class="bi bi-chat-left-text"></i> {{ $documento->notas }}</small>
+                                @endif
                             </td>
                             <td><small>{{ $documento->tamano_legible }}</small></td>
                             <td>

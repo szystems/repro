@@ -53,6 +53,20 @@
                                     <a href="{{ route('empresa.ordenes.show', $orden) }}" class="btn btn-outline-primary btn-sm" title="Ver Detalle">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    @if(Auth::user()->hasPermission('ordenes.editar') && !in_array($orden->estado, ['entregado', 'cancelado']) && in_array($orden->estado, ['solicitud', 'autorizacion']))
+                                    <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-outline-warning btn-sm" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    @endif
+                                    @if(Auth::user()->hasPermission('ordenes.eliminar') && !in_array($orden->estado, ['en_proceso', 'preliminar', 'final', 'entregado']))
+                                    <form action="{{ route('ordenes.destroy', $orden) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('¿Está seguro de eliminar esta orden?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    @endif
                                     <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-outline-danger btn-sm" title="Descargar PDF" target="_blank">
                                         <i class="bi bi-file-pdf"></i>
                                     </a>

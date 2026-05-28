@@ -380,4 +380,63 @@ class Phase8CEstadosUXTest extends TestCase
 
         Mail::assertNotQueued(NuevaOrdenSedeMail::class);
     }
+
+    public function test_resultado_preliminar_existe_en_catalogo_de_estados(): void
+    {
+        $estados = EvaluadoOrden::estadosEvaluacionDisponibles();
+
+        $this->assertArrayHasKey('resultado_preliminar', $estados);
+        $this->assertEquals('Resultado Preliminar', $estados['resultado_preliminar']);
+    }
+
+    public function test_transicion_en_proceso_a_resultado_preliminar_es_valida(): void
+    {
+        $transiciones = EvaluadoOrden::transicionesEvaluacion();
+
+        $this->assertContains('resultado_preliminar', $transiciones['en_proceso']);
+    }
+
+    public function test_transicion_resultado_preliminar_a_completado_es_valida(): void
+    {
+        $transiciones = EvaluadoOrden::transicionesEvaluacion();
+
+        $this->assertContains('completado', $transiciones['resultado_preliminar']);
+    }
+
+    public function test_estado_resultado_preliminar_tiene_texto_y_color(): void
+    {
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => Orden::factory()->create()->id,
+            'estado_evaluacion' => 'resultado_preliminar',
+        ]);
+
+        $this->assertEquals('Resultado Preliminar', $evaluado->estado_evaluacion_texto);
+        $this->assertEquals('info', $evaluado->estado_evaluacion_color);
+    }
+
+    public function test_puede_cambiar_estado_de_en_proceso_a_resultado_preliminar(): void
+    {
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => Orden::factory()->create()->id,
+            'estado_evaluacion' => 'en_proceso',
+        ]);
+
+        $resultado = $evaluado->cambiarEstadoEvaluacion('resultado_preliminar');
+
+        $this->assertTrue($resultado);
+        $this->assertEquals('resultado_preliminar', $evaluado->fresh()->estado_evaluacion);
+    }
+
+    public function test_puede_cambiar_estado_de_resultado_preliminar_a_completado(): void
+    {
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => Orden::factory()->create()->id,
+            'estado_evaluacion' => 'resultado_preliminar',
+        ]);
+
+        $resultado = $evaluado->cambiarEstadoEvaluacion('completado');
+
+        $this->assertTrue($resultado);
+        $this->assertEquals('completado', $evaluado->fresh()->estado_evaluacion);
+    }
 }

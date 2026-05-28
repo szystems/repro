@@ -62,11 +62,34 @@ class CalendarioController extends Controller
             $citasPorDia[$dia][$cita->tipo_servicio]++;
         }
 
+        // Contar también reprogramados por su fecha original (registro histórico)
+        $reprogOriginalQuery = EvaluadoOrden::query()
+            ->where('estado_evaluacion', 'reprogramado')
+            ->whereNotNull('fecha_programada_original')
+            ->whereBetween('fecha_programada_original', [$inicioMes, $finMes->copy()->endOfDay()]);
+        if ($sedeId) {
+            $reprogOriginalQuery->where('sede_id', $sedeId);
+        }
+        if ($poligrafistaId) {
+            $reprogOriginalQuery->where('poligrafista_id', $poligrafistaId);
+        }
+        if ($tipoServicio) {
+            $reprogOriginalQuery->where('tipo_servicio', $tipoServicio);
+        }
+        foreach ($reprogOriginalQuery->get() as $cita) {
+            $dia = Carbon::parse($cita->fecha_programada_original)->format('Y-m-d');
+            if (!isset($citasPorDia[$dia])) {
+                $citasPorDia[$dia] = ['total' => 0, 'poligrafo' => 0, 'vsa' => 0, 'socioeconomico' => 0];
+            }
+            $citasPorDia[$dia]['total']++;
+            $citasPorDia[$dia][$cita->tipo_servicio]++;
+        }
+
         // Datos para filtros
         $sedes         = Sede::activas()->orderBy('nombre')->get();
         $poligrafistas = User::poligrafistas()->get();
 
-        // CO9-hist: historial de candidatos completados/inasistencias en este mes
+        // CO9-hist: historial de candidatos completados/inasistencias/reprogramados en este mes
         $historialQuery = EvaluadoOrden::query()
             ->whereIn('estado_evaluacion', ['completado', 'inasistencia', 'desistio', 'cancelado'])
             ->whereBetween('fecha_programada', [$inicioMes, $finMes->copy()->endOfDay()])
@@ -82,7 +105,26 @@ class CalendarioController extends Controller
             $historialQuery->where('tipo_servicio', $tipoServicio);
         }
 
-        $historial = $historialQuery->orderByDesc('fecha_programada')->get();
+        // Incluir reprogramados por fecha original en el historial
+        $historialReprogQuery = EvaluadoOrden::query()
+            ->where('estado_evaluacion', 'reprogramado')
+            ->whereNotNull('fecha_programada_original')
+            ->whereBetween('fecha_programada_original', [$inicioMes, $finMes->copy()->endOfDay()])
+            ->with(['poligrafo', 'sede', 'orden.empresa']);
+        if ($sedeId) {
+            $historialReprogQuery->where('sede_id', $sedeId);
+        }
+        if ($poligrafistaId) {
+            $historialReprogQuery->where('poligrafista_id', $poligrafistaId);
+        }
+        if ($tipoServicio) {
+            $historialReprogQuery->where('tipo_servicio', $tipoServicio);
+        }
+
+        $historial = $historialQuery->get()
+            ->merge($historialReprogQuery->get())
+            ->sortByDesc('fecha_programada')
+            ->values();
 
         return view('admin.calendario.index', compact(
             'fecha', 'inicioMes', 'finMes', 'citasPorDia',
@@ -122,6 +164,18 @@ class CalendarioController extends Controller
 
         $citas = $query->orderBy('fecha_programada')->get();
 
+        // Citas históricas: reprogramados que tenían cita este día (por fecha original)
+        $citasHistoricas = EvaluadoOrden::query()
+            ->where('estado_evaluacion', 'reprogramado')
+            ->whereNotNull('fecha_programada_original')
+            ->whereDate('fecha_programada_original', $fecha)
+            ->with(['poligrafo', 'sede', 'orden.empresa'])
+            ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
+            ->when($poligrafistaId, fn ($q) => $q->where('poligrafista_id', $poligrafistaId))
+            ->when($tipoServicio, fn ($q) => $q->where('tipo_servicio', $tipoServicio))
+            ->orderBy('fecha_programada_original')
+            ->get();
+
         // Generar slots de 30 min
         $slots = $this->generarSlots($fecha);
 
@@ -141,7 +195,8 @@ class CalendarioController extends Controller
         return view('admin.calendario.dia', compact(
             'fechaCarbon', 'fecha', 'citas', 'slots',
             'sedes', 'poligrafistas', 'evaluadosPendientes',
-            'sedeId', 'poligrafistaId', 'tipoServicio'
+            'sedeId', 'poligrafistaId', 'tipoServicio',
+            'citasHistoricas'
         ));
     }
 

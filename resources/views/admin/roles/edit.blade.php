@@ -103,11 +103,32 @@
                                                 @endif
                                             </div>
 
+                                            <div class="col-md-6 mb-3">
+                                                <label for="level" class="form-label">Nivel del Rol <span class="text-danger">*</span></label>
+                                                @if(in_array($role->name, ['admin', 'repro', 'empresa', 'evaluado']))
+                                                    <input type="hidden" name="level" value="{{ $role->level }}">
+                                                    <input type="text" class="form-control" value="{{ ['0' => 'Evaluado', '1' => 'Empresa', '2' => 'Colaborador REPRO', '3' => 'Administrador'][$role->level] ?? 'Desconocido' }}" readonly>
+                                                    <div class="form-text text-warning">El nivel de los roles del sistema no se puede modificar.</div>
+                                                @else
+                                                    <select name="level" id="level" class="form-select" required>
+                                                        <option value="1" {{ old('level', $role->level) == 1 ? 'selected' : '' }}>1 — Empresa (cliente)</option>
+                                                        <option value="2" {{ old('level', $role->level) == 2 ? 'selected' : '' }}>2 — Colaborador REPRO</option>
+                                                        <option value="3" {{ old('level', $role->level) == 3 ? 'selected' : '' }}>3 — Administrador</option>
+                                                    </select>
+                                                    <div class="form-text">Cambiarlo ajusta los permisos disponibles.</div>
+                                                @endif
+                                            </div>
+
                                             <!-- Permisos -->
                                             <div class="col-12 mt-3">
                                                 <h6 class="border-bottom pb-2"><i class="bi bi-key"></i> Permisos del Rol</h6>
                                                 <div class="form-text mb-3">
                                                     Modifique los permisos que tendrán los usuarios con este rol:
+                                                    @if($role->level == 1)
+                                                        <span class="badge bg-info ms-2">
+                                                            <i class="bi bi-funnel"></i> Mostrando solo permisos relevantes para roles de empresa
+                                                        </span>
+                                                    @endif
                                                 </div>
 
                                                 @if(isset($permissions) && $permissions->count() > 0)

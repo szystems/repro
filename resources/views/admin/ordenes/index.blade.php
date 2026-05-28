@@ -167,10 +167,6 @@
                                     <tr>
                                         <td>
                                             <strong>{{ $orden->codigo_orden }}</strong>
-                                            @if($orden->evaluados->count() > 0)
-                                                @php $primero = $orden->evaluados->first(); @endphp
-                                                <br><small class="text-muted">{{ trim($primero->nombre . ' ' . $primero->apellidos) }}@if($orden->evaluados->count() > 1) <span class="badge bg-secondary">+{{ $orden->evaluados->count() - 1 }}</span>@endif</small>
-                                            @endif
                                         </td>
                                         <td>
                                             {{ $orden->empresa->nombre ?? 'N/A' }}
@@ -204,7 +200,17 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-light text-dark">{{ $orden->evaluados_count ?? $orden->evaluados->count() }}</span>
+                                            @forelse($orden->evaluados as $evaluado)
+                                                <div class="{{ $loop->first ? '' : 'mt-1 pt-1 border-top' }}">
+                                                    <small class="d-block text-muted">{{ trim($evaluado->nombre . ' ' . $evaluado->apellidos) }}</small>
+                                                    <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}" style="font-size:0.7em">{{ $evaluado->estado_evaluacion_texto }}</span>
+                                                    @if($evaluado->fecha_programada)
+                                                        <br><small class="text-primary"><i class="bi bi-calendar-event"></i> {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('d/m/Y H:i') }}</small>
+                                                    @endif
+                                                </div>
+                                            @empty
+                                                <span class="text-muted small">Sin evaluados</span>
+                                            @endforelse
                                         </td>
                                         <td>
                                             <div class="small">
@@ -237,7 +243,7 @@
                                                     <i class="bi bi-file-pdf"></i>
                                                 </a>
                                                 
-                                                @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->hasRole('empresa') && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'autorizacion']))))
+                                                @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'autorizacion']))))
                                                 <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-outline-warning" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>

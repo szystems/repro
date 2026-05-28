@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Empresa;
 use App\Models\Orden;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Sede;
 use App\Models\User;
@@ -166,5 +167,198 @@ class EmpresaCrearOrdenTest extends TestCase
 
         $this->assertEquals($sede->id, $evaluado->sede_id);
         $this->assertEquals('Gerente de Ventas', $evaluado->puesto_evaluar);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Botón editar visible en detalle de orden (estado solicitud)
+    // ──────────────────────────────────────────────────────────
+
+    public function test_empresa_con_permiso_editar_ve_boton_editar_en_show(): void
+    {
+        [$user, $empresa] = $this->crearEmpresaUser();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $user->id,
+            'estado'     => 'solicitud',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('empresa.ordenes.show', $orden));
+
+        $response->assertOk();
+        $response->assertSee(route('ordenes.edit', $orden));
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Botón editar visible en listado de órdenes
+    // ──────────────────────────────────────────────────────────
+
+    public function test_empresa_con_permiso_editar_ve_boton_editar_en_index(): void
+    {
+        [$user, $empresa] = $this->crearEmpresaUser();
+        Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $user->id,
+            'estado'     => 'solicitud',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('empresa.ordenes.index'));
+
+        $response->assertOk();
+        $response->assertSee('bi-pencil', false);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Botón editar NO visible para orden entregada
+    // ──────────────────────────────────────────────────────────
+
+    public function test_empresa_no_ve_boton_editar_en_orden_entregada(): void
+    {
+        [$user, $empresa] = $this->crearEmpresaUser();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $user->id,
+            'estado'     => 'entregado',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('empresa.ordenes.show', $orden));
+
+        $response->assertOk();
+        $response->assertDontSee(route('ordenes.edit', $orden));
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Usuario empresa sin permiso editar no ve el botón
+    // ──────────────────────────────────────────────────────────
+
+    public function test_empresa_sin_permiso_editar_no_ve_boton_editar(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $user = User::factory()->create([
+            'role_as'    => 1,
+            'estado'     => 1,
+            'empresa_id' => $empresa->id,
+        ]);
+
+        // Rol empresa sin ordenes.editar
+        $rolSinEditar = Role::create([
+            'name'         => 'empresa_sin_editar',
+            'display_name' => 'Empresa Sin Editar',
+            'level'        => 1,
+        ]);
+        $permVer = Permission::where('name', 'ordenes.ver')->first();
+        if ($permVer) {
+            $rolSinEditar->givePermission($permVer);
+        }
+        $user->roles()->attach($rolSinEditar);
+
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $user->id,
+            'estado'     => 'solicitud',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('empresa.ordenes.show', $orden));
+
+        $response->assertOk();
+        $response->assertDontSee(route('ordenes.edit', $orden));
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Botón eliminar visible en show con permiso y estado deletable
+    // ──────────────────────────────────────────────────────────
+
+    public function test_empresa_con_permiso_eliminar_ve_boton_eliminar_en_show(): void
+    {
+        [$user, $empresa] = $this->crearEmpresaUser();
+        $permEliminar = Permission::firstOrCreate(
+            ['name' => 'ordenes.eliminar'],
+            ['display_name' => 'Eliminar Órdenes', 'module' => 'ordenes']
+        );
+        $user->roles()->first()->givePermission($permEliminar);
+
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $user->id,
+            'estado'     => 'solicitud',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('empresa.ordenes.show', $orden));
+
+        $response->assertOk();
+        $response->assertSee(route('ordenes.destroy', $orden), false);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Botón eliminar visible en index con permiso y estado deletable
+    // ──────────────────────────────────────────────────────────
+
+    public function test_empresa_con_permiso_eliminar_ve_boton_eliminar_en_index(): void
+    {
+        [$user, $empresa] = $this->crearEmpresaUser();
+        $permEliminar = Permission::firstOrCreate(
+            ['name' => 'ordenes.eliminar'],
+            ['display_name' => 'Eliminar Órdenes', 'module' => 'ordenes']
+        );
+        $user->roles()->first()->givePermission($permEliminar);
+
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $user->id,
+            'estado'     => 'autorizacion',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('empresa.ordenes.index'));
+
+        $response->assertOk();
+        $response->assertSee('bi-trash', false);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Botón eliminar NO visible en orden en proceso
+    // ──────────────────────────────────────────────────────────
+
+    public function test_empresa_no_ve_boton_eliminar_en_orden_en_proceso(): void
+    {
+        [$user, $empresa] = $this->crearEmpresaUser();
+        $permEliminar = Permission::firstOrCreate(
+            ['name' => 'ordenes.eliminar'],
+            ['display_name' => 'Eliminar Órdenes', 'module' => 'ordenes']
+        );
+        $user->roles()->first()->givePermission($permEliminar);
+
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $user->id,
+            'estado'     => 'en_proceso',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('empresa.ordenes.show', $orden));
+
+        $response->assertOk();
+        $response->assertDontSee('bi-trash', false);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Empresa no puede eliminar orden de otra empresa
+    // ──────────────────────────────────────────────────────────
+
+    public function test_empresa_no_puede_eliminar_orden_de_otra_empresa(): void
+    {
+        [$user, $empresa] = $this->crearEmpresaUser();
+        $permEliminar = Permission::firstOrCreate(
+            ['name' => 'ordenes.eliminar'],
+            ['display_name' => 'Eliminar Órdenes', 'module' => 'ordenes']
+        );
+        $user->roles()->first()->givePermission($permEliminar);
+
+        $otraEmpresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $otraEmpresa->id,
+            'estado'     => 'solicitud',
+        ]);
+
+        $response = $this->actingAs($user)->delete(route('ordenes.destroy', $orden));
+
+        $response->assertForbidden();
     }
 }

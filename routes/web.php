@@ -60,10 +60,11 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // Gestión de usuarios: lectura con permiso usuarios.ver, escritura solo Admin
     Route::middleware(['permission:usuarios.ver'])->group(function () {
         Route::get('users', [UsersController::class, 'users'])->name('users.index');
-        Route::get('show-user/{id}', [UsersController::class, 'showuser'])->name('users.show');
         Route::get('pdf-users', [UsersController::class, 'pdf'])->name('users.pdf');
         Route::get('pdf-user/{id}', [UsersController::class, 'pdfuser'])->name('users.pdf.show');
     });
+    // Ver perfil: propio sin permiso, ajeno requiere usuarios.ver (validado en controller)
+    Route::get('show-user/{id}', [UsersController::class, 'showuser'])->name('users.show');
     // Edición de perfil propio: accesible a cualquier usuario autenticado (auth verificada en controller)
     Route::get('edit-user/{id}', [UsersController::class, 'edituser'])->name('users.edit');
     Route::put('update-user/{id}', [UsersController::class, 'updateuser'])->name('users.update');
@@ -245,9 +246,9 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     });
 
     // ========================================
-    // ADMINISTRACIÓN DE CUESTIONARIOS (ADMIN Y REPRO)
+    // ADMINISTRACIÓN DE CUESTIONARIOS (ACCESO POR PERMISOS)
     // ========================================
-    Route::middleware(['role:admin,repro'])->prefix('cuestionarios')->name('admin.cuestionarios.')->group(function () {
+    Route::prefix('cuestionarios')->name('admin.cuestionarios.')->group(function () {
         // historial-dpi debe registrarse ANTES del wildcard /{cuestionario}
         Route::middleware(['permission:historial_dpi.ver'])->group(function () {
             Route::get('/historial-dpi', [App\Http\Controllers\Admin\CuestionariosController::class, 'historialDpi'])->name('historial-dpi');

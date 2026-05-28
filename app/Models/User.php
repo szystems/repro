@@ -246,7 +246,10 @@ class User extends Authenticatable
     {
         // Priorizar el nuevo sistema de roles
         if ($this->roles->isNotEmpty()) {
-            return $this->roles->first()->display_name;
+            // Preferir roles custom sobre los roles base genéricos cuando hay varios asignados
+            $baseRoleNames = ['empresa', 'repro', 'admin'];
+            $customRole = $this->roles->first(fn($r) => !in_array($r->name, $baseRoleNames));
+            return ($customRole ?? $this->roles->first())->display_name;
         }
 
         // Fallback al sistema antiguo

@@ -31,11 +31,22 @@
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="card-title">Detalles de la Orden</span>
+                @if(Auth::user()->hasPermission('ordenes.editar') && !in_array($orden->estado, ['entregado', 'cancelado']) && in_array($orden->estado, ['solicitud', 'autorizacion']))
+                <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-warning btn-sm me-1">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                @endif
+                @if(Auth::user()->hasPermission('ordenes.eliminar') && !in_array($orden->estado, ['en_proceso', 'preliminar', 'final', 'entregado']))
+                <form action="{{ route('ordenes.destroy', $orden) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('¿Está seguro de eliminar esta orden? Esta acción no se puede deshacer.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-sm me-1">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                </form>
+                @endif
                 <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-danger btn-sm me-1" target="_blank">
                     <i class="bi bi-file-pdf"></i> Orden de Servicio
-                </a>
-                <a href="{{ route('ordenes.pdf-informe', $orden) }}" class="btn btn-outline-danger btn-sm" target="_blank">
-                    <i class="bi bi-file-person"></i> Informe Candidatos
                 </a>
             </div>
             <div class="card-body">

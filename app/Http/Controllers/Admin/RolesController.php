@@ -12,6 +12,18 @@ use Illuminate\Support\Facades\DB;
 class RolesController extends Controller
 {
     /**
+     * Módulos de permisos relevantes para roles de nivel empresa (level = 1).
+     * Los módulos admin/repro (sedes, finanzas, etc.) no aplican a empresa.
+     *
+     * @var array<string>
+     */
+    private const EMPRESA_MODULES = [
+        'ordenes', 'usuarios', 'cuestionarios', 'documentos',
+        'historial_dpi', 'resultados', 'notificaciones',
+        'informe_preliminar', 'observacion', 'evaluaciones',
+    ];
+
+    /**
      * Mostrar listado de roles
      */
     public function index()
@@ -35,7 +47,8 @@ class RolesController extends Controller
         }
 
         $permissions = Permission::all()->groupBy('module');
-        return view('admin.roles.create', compact('permissions'));
+        $empresaModules = self::EMPRESA_MODULES;
+        return view('admin.roles.create', compact('permissions', 'empresaModules'));
     }
 
     /**
@@ -51,6 +64,7 @@ class RolesController extends Controller
             'name' => 'required|string|max:255|unique:roles,name',
             'display_name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'level' => 'required|integer|in:1,2,3',
             'permissions' => 'array'
         ]);
 
@@ -61,6 +75,7 @@ class RolesController extends Controller
                 'name' => $request->name,
                 'display_name' => $request->display_name,
                 'description' => $request->description,
+                'level' => $request->integer('level'),
             ]);
 
             // Asignar permisos seleccionados
@@ -103,10 +118,18 @@ class RolesController extends Controller
         }
 
         $role = Role::with('permissions')->findOrFail($id);
-        $permissions = Permission::all()->groupBy('module');
+
+        $allPermissions = Permission::all();
+        // Para roles empresa (level 1) solo mostramos los módulos que les aplican.
+        // Para repro/admin se muestran todos.
+        if ($role->level == 1) {
+            $allPermissions = $allPermissions->whereIn('module', self::EMPRESA_MODULES);
+        }
+        $permissions = $allPermissions->groupBy('module');
+        $empresaModules = self::EMPRESA_MODULES;
         $rolePermissions = $role->permissions->pluck('id')->toArray();
-        
-        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+
+        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions', 'empresaModules'));
     }
 
     /**
@@ -124,6 +147,7 @@ class RolesController extends Controller
             'name' => 'required|string|max:255|unique:roles,name,' . $id,
             'display_name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'level' => 'required|integer|in:1,2,3',
             'permissions' => 'array'
         ]);
 
@@ -134,6 +158,7 @@ class RolesController extends Controller
                 'name' => $request->name,
                 'display_name' => $request->display_name,
                 'description' => $request->description,
+                'level' => $request->integer('level'),
             ]);
 
             // Actualizar permisos

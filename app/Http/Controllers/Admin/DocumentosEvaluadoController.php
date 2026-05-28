@@ -40,6 +40,7 @@ class DocumentosEvaluadoController extends Controller
             'subido_por_tipo'    => Auth::user()->role_as >= 2 ? 'repro' : 'empresa',
             'subido_por_user_id' => Auth::id(),
             'estado_verificacion' => 'pendiente',
+            'notas'              => $request->notas ?: null,
         ]);
 
         return back()->with('success', 'Documento "' . $documento->tipo_documento_texto . '" subido correctamente.');

@@ -367,6 +367,12 @@ class OrdenesController extends Controller
             abort(403);
         }
 
+        // Usuario empresa no envía empresa_id en el formulario de edición;
+        // se fuerza desde su sesión para validar y mantener consistencia.
+        if (Auth::user()->role_as == 1) {
+            $request->merge(['empresa_id' => Auth::user()->empresa_id]);
+        }
+
         // Validación
         $validated = $request->validate([
             'empresa_id' => 'required|exists:empresas,id',
@@ -447,10 +453,25 @@ class OrdenesController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
+            $evaluadosPayload = collect($request->input('evaluados', []))
+                ->map(function ($item, $index) {
+                    return [
+                        'index' => $index,
+                        'id' => $item['id'] ?? null,
+                        'dpi' => $item['dpi'] ?? null,
+                        'tipo_servicio' => $item['tipo_servicio'] ?? null,
+                        'nombre' => $item['nombre'] ?? null,
+                        'email' => $item['email'] ?? null,
+                    ];
+                })
+                ->values()
+                ->all();
+
             Log::error('Error al actualizar orden:', [
                 'error' => $e->getMessage(),
                 'orden_id' => $orden->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
+                'evaluados_payload' => $evaluadosPayload,
             ]);
 
             return back()->with('error', 'Error al actualizar la orden: ' . $e->getMessage())
@@ -463,7 +484,16 @@ class OrdenesController extends Controller
      */
     public function destroy(Orden $orden)
     {
-        if (!Auth::user()->hasAnyRole(['admin', 'repro'])) {
+        $user = Auth::user();
+
+        if ($user->hasAnyRole(['admin', 'repro'])) {
+            // Administradores y repro pueden eliminar sin restricción de empresa
+        } elseif ($user->role_as == 1 && $user->hasPermission('ordenes.eliminar')) {
+            // Empresa: solo sus propias órdenes en estados tempranos
+            if ((int) $orden->empresa_id !== (int) $user->empresa_id) {
+                abort(403, 'No tiene permisos para eliminar esta orden.');
+            }
+        } else {
             abort(403, 'No tiene permisos para eliminar órdenes.');
         }
 
@@ -714,11 +744,60 @@ class OrdenesController extends Controller
                 'estado_evaluacion' => 'pendiente'
             ];
 
-            if (isset($evaluadoData['id']) && $esActualizacion) {
-                $evaluado = EvaluadoOrden::find($evaluadoData['id']);
-                if ($evaluado && $evaluado->orden_id === $orden->id) {
-                    $evaluado->update($datosEvaluado);
+            if ($esActualizacion) {
+                $evaluado = null;
+
+                if (!empty($evaluadoData['id'])) {
+                    $evaluado = EvaluadoOrden::find($evaluadoData['id']);
+                    if ($evaluado && $evaluado->orden_id !== $orden->id) {
+                        $evaluado = null;
+                    }
+                }
+
+                if ($evaluado) {
+                    // Preservar campos gestionados por otros procesos (calendario, cuestionario)
+                    $datosActualizacion = array_merge($datosEvaluado, [
+                        'estado_evaluacion' => $evaluado->estado_evaluacion,
+                        'fecha_programada'  => $evaluado->fecha_programada,
+                        'fecha_hora_fin'    => $evaluado->fecha_hora_fin,
+                        'token_unico'       => $evaluado->token_unico,
+                        'token_expira_at'   => $evaluado->token_expira_at,
+                    ]);
+                    $evaluado->update($datosActualizacion);
                     $evaluadosExistentes = array_diff($evaluadosExistentes, [$evaluado->id]);
+                } else {
+                    $duplicado = EvaluadoOrden::where('orden_id', $orden->id)
+                        ->where('dpi', $evaluadoData['dpi'])
+                        ->where('tipo_servicio', $evaluadoData['tipo_servicio'])
+                        ->first();
+
+                    // Si ya existe por clave única (orden+dpi+servicio), tratarlo como actualización
+                    // aunque el id venga vacío, inválido o desalineado desde el frontend.
+                    if ($duplicado) {
+                        $datosActualizacion = array_merge($datosEvaluado, [
+                            'estado_evaluacion' => $duplicado->estado_evaluacion,
+                            'fecha_programada'  => $duplicado->fecha_programada,
+                            'fecha_hora_fin'    => $duplicado->fecha_hora_fin,
+                            'token_unico'       => $duplicado->token_unico,
+                            'token_expira_at'   => $duplicado->token_expira_at,
+                        ]);
+                        $duplicado->update($datosActualizacion);
+                        $evaluadosExistentes = array_diff($evaluadosExistentes, [$duplicado->id]);
+                        continue;
+                    }
+
+                    $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
+
+                    // Enviar notificación al evaluado si tiene email
+                    $this->notificarEvaluadoAsignado($evaluadoCreado);
+
+                    // Notificaciones in-app al asignar un nuevo evaluado
+                    $this->notificarEvaluadoAsignadoInApp($evaluadoCreado, $esActualizacion);
+
+                    // Auto-estado: si tiene email el link fue enviado
+                    if (!empty($evaluadoCreado->email)) {
+                        $evaluadoCreado->update(['estado_evaluacion' => 'link_enviado']);
+                    }
                 }
             } else {
                 $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
@@ -737,7 +816,11 @@ class OrdenesController extends Controller
         }
 
         if ($esActualizacion && !empty($evaluadosExistentes)) {
-            EvaluadoOrden::whereIn('id', $evaluadosExistentes)->delete();
+            Log::warning('Evaluados no enviados durante actualización de orden; se preservan para evitar pérdida de datos.', [
+                'orden_id' => $orden->id,
+                'evaluados_omitidos' => array_values($evaluadosExistentes),
+                'user_id' => Auth::id(),
+            ]);
         }
     }
 
@@ -906,8 +989,8 @@ class OrdenesController extends Controller
         }
 
         // Las empresas pueden editar sus propias órdenes solo si están en estado inicial
-        if (Auth::user()->hasRole('empresa')) {
-            return $orden->empresa_id === Auth::user()->empresa_id
+        if (Auth::user()->role_as == 1) {
+            return (int) $orden->empresa_id === (int) Auth::user()->empresa_id
                 && in_array($orden->estado, ['solicitud', 'autorizacion']);
         }
 

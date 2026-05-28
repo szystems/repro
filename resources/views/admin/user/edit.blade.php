@@ -145,16 +145,12 @@
                                                     <div class="input-group">
                                                         <span class="input-group-text"><i class="bi bi-shield-fill"></i></span>
                                                         <select name="role_as" id="role_as" class="form-select" required>
-                                                            {{-- NOTA: Evaluados ya NO son usuarios del sistema --}}
-                                                            <option value="1" {{ $user->role_as == 1 ? 'selected' : '' }}>
-                                                                Empresa (Usuario empresa cliente)
+                                                            {{-- Opciones dinámicas desde tabla roles (excluye evaluado) --}}
+                                                            @foreach($roles as $role)
+                                                            <option value="{{ $role->id }}" {{ $primaryRoleId == $role->id ? 'selected' : '' }}>
+                                                                {{ $role->display_name }}
                                                             </option>
-                                                            <option value="2" {{ $user->role_as == 2 ? 'selected' : '' }}>
-                                                                Repro (Personal de Repro)
-                                                            </option>
-                                                            <option value="3" {{ $user->role_as == 3 ? 'selected' : '' }}>
-                                                                Administrador (Acceso completo)
-                                                            </option>
+                                                            @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
@@ -422,17 +418,22 @@
                 }
             });
 
+            // Mapa de role_id → level para mostrar/ocultar campos
+            var roleLevels = @json($roleLevels);
+            var oldRoleId = "{{ $primaryRoleId }}";
+
             // Mostrar/ocultar campos según el tipo de usuario
             function updateFieldsVisibility() {
-                var role = $("#role_as").val();
+                var roleId = $("#role_as").val();
+                var level = roleLevels[roleId] || 0;
 
                 // Ocultar todos los campos específicos
                 $(".empresa-fields").hide();
                 $(".repro-fields").hide();
                 $(".principal-check-container").hide();
 
-                // Mostrar campos relevantes según rol seleccionado
-                if (role == "1") {
+                // Mostrar campos relevantes según nivel del rol
+                if (level == 1) {
                     $(".empresa-fields").show();
                     $(".principal-check-container").show();
                     $("#empresa_id").prop('required', true);
@@ -440,20 +441,19 @@
                     $("#empresa_id").prop('required', false);
                 }
 
-                if (role == "2") {
+                if (level == 2) {
                     $(".repro-fields").show();
                     $(".principal-check-container").show();
                 }
             }
 
             $("#role_as").change(function() {
-                var newRole = $(this).val();
-                var oldRole = "{{ $user->role_as }}";
+                var newRoleId = $(this).val();
 
                 // Mostrar mensaje de advertencia si cambia el rol
-                if (newRole != oldRole) {
+                if (newRoleId != oldRoleId) {
                     if (!confirm("¿Está seguro de cambiar el tipo de usuario? Algunos datos específicos podrían perderse.")) {
-                        $(this).val(oldRole);
+                        $(this).val(oldRoleId);
                         return;
                     }
                 }
@@ -475,11 +475,12 @@
                     return false;
                 }
 
-                // Validación específica según el tipo de usuario actual
-                var currentRole = $("#role_as").val() || "{{ $user->role_as }}";
+                // Validación específica según el nivel del rol
+                var currentRoleId = $("#role_as").val() || oldRoleId;
+                var currentLevel = roleLevels[currentRoleId] || {{ $user->role_as }};
 
                 // Validar empresa seleccionada para usuarios tipo empresa
-                if (currentRole == "1") {
+                if (currentLevel == 1) {
                     if ($("#empresa_id").val() == "") {
                         e.preventDefault();
                         alert("Por favor seleccione una empresa para el usuario tipo Empresa");
@@ -489,7 +490,7 @@
                 }
 
                 // Validar cargo para usuarios tipo Repro
-                if (currentRole == "2") {
+                if (currentLevel == 2) {
                     var cargoValue = $("#cargo_repro").val();
 
                     if (!cargoValue || cargoValue.trim() === "") {

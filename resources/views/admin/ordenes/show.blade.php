@@ -58,11 +58,8 @@
                             <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-danger btn-sm me-1" target="_blank">
                                 <i class="bi bi-file-pdf"></i> Orden de Servicio
                             </a>
-                            <a href="{{ route('ordenes.pdf-informe', $orden) }}" class="btn btn-outline-danger btn-sm me-1" target="_blank">
-                                <i class="bi bi-file-person"></i> Informe Candidatos
-                            </a>
 
-                            @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->hasRole('empresa') && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'autorizacion']))))
+                            @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'autorizacion']))))
                             <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil"></i> Editar
                             </a>
@@ -831,8 +828,11 @@
                                     <div class="modal fade" id="modalProgramarEv{{ $evaluado->id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
-                                                <form action="{{ route('calendario.programar') }}" method="POST">
+                                                <form action="{{ $evaluado->fecha_programada ? route('calendario.reprogramar', $evaluado) : route('calendario.programar') }}" method="POST">
                                                     @csrf
+                                                    @if($evaluado->fecha_programada)
+                                                        @method('PATCH')
+                                                    @endif
                                                     <input type="hidden" name="evaluado_orden_id" value="{{ $evaluado->id }}">
                                                     <div class="modal-header">
                                                         <h5 class="modal-title">

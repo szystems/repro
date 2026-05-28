@@ -15,8 +15,13 @@ class ProgramarCitaRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
+        // Al reprogramar (PATCH), el evaluado viene por route model binding — no se necesita en el body.
+        $evaluadoRules = $this->isMethod('PATCH')
+            ? ['nullable', 'integer', 'exists:evaluados_orden,id']
+            : ['required', 'integer', 'exists:evaluados_orden,id'];
+
         return [
-            'evaluado_orden_id' => ['required', 'integer', 'exists:evaluados_orden,id'],
+            'evaluado_orden_id' => $evaluadoRules,
             'fecha'             => ['required', 'date', 'after_or_equal:today'],
             'hora_inicio'       => ['required', 'date_format:H:i'],
             'hora_fin'          => ['required', 'date_format:H:i', 'after:hora_inicio'],

@@ -39,6 +39,7 @@ class UserFormRequest extends FormRequest
             'celular' => 'string|max:20|nullable',
             'direccion' => 'string|max:500|nullable',
             'role_as' => 'integer|nullable',
+            'role_id' => 'integer|nullable|exists:roles,id',
             'cargo' => 'string|max:100|nullable',
             
             // Nuevos campos
@@ -50,15 +51,24 @@ class UserFormRequest extends FormRequest
             'roles.*' => 'exists:roles,name',
         ];
 
-        // Validar empresa_id solo si el role_as es 1 (empresa)
-        if ($this->input('role_as') == 1) {
+        // Determinar el nivel para validación condicional
+        $level = 1;
+        if ($this->input('role_id')) {
+            $role = \App\Models\Role::find($this->input('role_id'));
+            $level = $role?->level ?? 1;
+        } elseif ($this->input('role_as')) {
+            $level = (int) $this->input('role_as');
+        }
+
+        // Validar empresa_id solo si nivel 1 (empresa)
+        if ($level == 1) {
             $rules['empresa_id'] = 'required|integer|exists:empresas,id';
         } else {
             $rules['empresa_id'] = 'nullable|integer';
         }
 
-        // Validar sede_id para usuarios REPRO
-        if ($this->input('role_as') == 2) {
+        // Validar sede_id para nivel 2 (repro)
+        if ($level == 2) {
             $rules['sede_id'] = 'nullable|integer|exists:sedes,id';
         }
 

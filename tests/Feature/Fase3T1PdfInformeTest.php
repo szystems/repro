@@ -73,8 +73,8 @@ class Fase3T1PdfInformeTest extends TestCase
         $response->assertOk();
     }
 
-    // T1d: La vista de detalle muestra ambos botones PDF
-    public function test_vista_show_muestra_dos_botones_pdf(): void
+    // T1d: La vista de detalle muestra el botón PDF de Orden de Servicio (Informe Candidatos eliminado)
+    public function test_vista_show_muestra_boton_pdf_orden_de_servicio(): void
     {
         $admin = $this->crearAdmin();
         $orden = $this->crearOrdenConEvaluado();
@@ -83,8 +83,7 @@ class Fase3T1PdfInformeTest extends TestCase
 
         $response->assertOk();
         $response->assertSee(route('ordenes.pdf', $orden));
-        $response->assertSee(route('ordenes.pdf-informe', $orden));
         $response->assertSee('Orden de Servicio');
-        $response->assertSee('Informe Candidatos');
+        $response->assertDontSee('Informe Candidatos');
     }
 }

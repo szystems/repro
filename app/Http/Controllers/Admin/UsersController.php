@@ -78,9 +78,24 @@ class UsersController extends Controller
     {
         $user = User::find($id);
 
-        // Verificar permisos: usuarios empresa solo pueden ver usuarios de su misma empresa
-        if(Auth::user()->role_as == 1 && Auth::user()->empresa_id != $user->empresa_id) {
-            return redirect('users')->with('status', 'No tiene permisos para ver este usuario');
+        if (!$user) {
+            abort(404);
+        }
+
+        $currentUser = Auth::user();
+        $isOwnProfile = (int) Auth::id() === (int) $id;
+
+        // Cualquier usuario puede ver su propio perfil.
+        // Para ver el perfil de otro usuario: necesita usuarios.ver
+        // y, si es empresa, debe ser de la misma empresa.
+        if (!$isOwnProfile) {
+            if (!$currentUser->hasPermission('usuarios.ver')) {
+                abort(403, 'No tiene permisos para ver este usuario.');
+            }
+
+            if ($currentUser->role_as == 1 && (int) $currentUser->empresa_id !== (int) $user->empresa_id) {
+                return redirect('users')->with('status', 'No tiene permisos para ver este usuario');
+            }
         }
 
         $hoy = Carbon::now('America/Guatemala');
@@ -105,9 +120,14 @@ class UsersController extends Controller
         // Cargar todas las empresas activas para el selector
         $empresas = Empresa::where('estado', 1)->orderBy('nombre', 'asc')->get();
 
-        // Cargar solo roles válidos (admin, repro, empresa)
-        // El rol "evaluado" ya no existe en el sistema
-        $roles = Role::all();
+        // Cargar todos los roles válidos (excluir evaluado), ordenados por nivel desc y nombre
+        $roles = Role::where('name', '!=', 'evaluado')
+            ->orderByDesc('level')
+            ->orderBy('display_name')
+            ->get();
+
+        // Mapa role_id → level para el JavaScript de las vistas
+        $roleLevels = $roles->pluck('level', 'id');
 
         // Cargar todos los permisos agrupados por módulo
         $permissions = Permission::all()->groupBy('module');
@@ -124,6 +144,7 @@ class UsersController extends Controller
             'empresas',
             'empresa_id',
             'roles',
+            'roleLevels',
             'permissions',
             'sedes'
         ));
@@ -134,18 +155,19 @@ class UsersController extends Controller
         $user = new User();
         $currentUser = Auth::user();
 
-        // Verificar permisos antes de asignar rol
-        $requestedRole = $request->input('role_as');
+        // Obtener el rol seleccionado por ID y derivar el nivel de acceso
+        $selectedRole = Role::findOrFail($request->input('role_id'));
+        $requestedLevel = $selectedRole->level;
 
-        if ($requestedRole == 3 && $currentUser->role_as != 3) {
+        if ($requestedLevel >= 3 && $currentUser->role_as != 3) {
             return redirect()->back()->with('error', 'No tiene permisos para crear administradores');
         }
 
-        if ($requestedRole == 2 && $currentUser->role_as != 3) {
+        if ($requestedLevel == 2 && $currentUser->role_as != 3) {
             return redirect()->back()->with('error', 'No tiene permisos para crear usuarios de REPRO');
         }
 
-        if ($requestedRole == 1 && $currentUser->role_as < 2) {
+        if ($requestedLevel == 1 && $currentUser->role_as < 2) {
             return redirect()->back()->with('error', 'No tiene permisos para crear usuarios de empresas');
         }
 
@@ -173,8 +195,8 @@ class UsersController extends Controller
         $user->direccion = $request->input('direccion');
         $user->fecha_nacimiento = $request->input('fecha_nacimiento');
 
-        // Asignar rol
-        $user->role_as = $request->input('role_as');
+        // Asignar nivel de acceso derivado del rol seleccionado
+        $user->role_as = $requestedLevel;
 
         // Campos específicos según el tipo de usuario
         if ($user->role_as == 1) { // Usuario de empresa
@@ -200,21 +222,13 @@ class UsersController extends Controller
 
         $user->save();
 
-        // Asignar rol principal basado en role_as
-        $roleMapping = [
-            1 => 'empresa',
-            2 => 'repro', 
-            3 => 'admin',
-        ];
-        
-        if (isset($roleMapping[$user->role_as])) {
-            $user->assignRole($roleMapping[$user->role_as]);
-        }
+        // Asignar el rol seleccionado directamente por nombre
+        $user->assignRole($selectedRole->name);
 
         // Asignar roles adicionales para usuarios de Repro
         if ($user->role_as == 2 && $request->has('additional_roles')) {
             foreach ($request->input('additional_roles') as $roleName) {
-                if ($roleName !== 'evaluado') { // No permitir rol evaluado a usuarios del sistema
+                if ($roleName !== 'evaluado') {
                     $user->assignRole($roleName);
                 }
             }
@@ -255,8 +269,20 @@ class UsersController extends Controller
         // Cargar todas las empresas activas
         $empresas = Empresa::where('estado', 1)->orderBy('nombre', 'asc')->get();
 
-        // Cargar todos los roles disponibles
-        $roles = Role::all();
+        // Cargar todos los roles válidos (excluir evaluado)
+        $roles = Role::where('name', '!=', 'evaluado')
+            ->orderByDesc('level')
+            ->orderBy('display_name')
+            ->get();
+
+        // Mapa role_id → level para el JavaScript
+        $roleLevels = $roles->pluck('level', 'id');
+
+        // Determinar el rol principal activo del usuario para pre-seleccionar en el form
+        $primaryRoleId = $user->roles
+            ->whereIn('name', $roles->pluck('name')->toArray())
+            ->first()?->id
+            ?? $roles->where('level', $user->role_as)->first()?->id;
 
         // Cargar todos los permisos agrupados por módulo
         $permissions = Permission::all()->groupBy('module');
@@ -272,6 +298,8 @@ class UsersController extends Controller
             'canEditEmpresa',
             'empresas',
             'roles',
+            'roleLevels',
+            'primaryRoleId',
             'permissions',
             'userRoles',
             'sedes'
@@ -294,9 +322,13 @@ class UsersController extends Controller
         }
 
         // Verificar si se intenta cambiar el rol y si tiene permisos
-        if ($request->has('role_as') && $user->role_as != $request->input('role_as')) {
-            if ($currentUser->role_as != 3) {
-                return redirect()->back()->with('error', 'No tiene permisos para cambiar el rol del usuario');
+        if ($request->has('role_id') && $request->input('role_id')) {
+            $newSelectedRole = Role::find($request->input('role_id'));
+            $newLevel = $newSelectedRole?->level ?? $user->role_as;
+            if ($user->role_as != $newLevel) {
+                if ($currentUser->role_as != 3) {
+                    return redirect()->back()->with('error', 'No tiene permisos para cambiar el rol del usuario');
+                }
             }
         }
 
@@ -327,12 +359,23 @@ class UsersController extends Controller
         }
 
         // Actualizar rol si se tiene permiso (solo admin)
-        if ($currentUser->role_as == 3 && $request->has('role_as')) {
-            $user->role_as = $request->input('role_as');
+        if ($currentUser->role_as == 3 && $request->has('role_id') && $request->input('role_id')) {
+            $roleToAssign = Role::find($request->input('role_id'));
+            if ($roleToAssign) {
+                $user->role_as = $roleToAssign->level;
 
-            // Si el usuario ya no es de tipo empresa, limpiar el campo empresa_id
-            if ($user->role_as != 1) {
-                $user->empresa_id = null;
+                // Reemplazar el rol principal preservando el rol personal (user_N) si existe
+                $personalRoleName = 'user_' . $user->id;
+                $nonPersonalRoles = $user->roles->filter(fn($r) => $r->name !== $personalRoleName);
+                foreach ($nonPersonalRoles as $oldRole) {
+                    $user->roles()->detach($oldRole->id);
+                }
+                $user->assignRole($roleToAssign->name);
+
+                // Si ya no es empresa, limpiar empresa_id
+                if ($user->role_as != 1) {
+                    $user->empresa_id = null;
+                }
             }
         }
 
@@ -417,11 +460,6 @@ class UsersController extends Controller
         // Actualizar nuevos campos
         $user->documento_identidad = $request->input('documento_identidad');
         $user->tipo_documento = $request->input('tipo_documento');
-
-        // Actualizar roles si se tienen permisos
-        if ($currentUser->role_as == 3 && $request->has('roles')) {
-            $user->syncRoles($request->input('roles'));
-        }
 
         $user->update();
 

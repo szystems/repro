@@ -202,6 +202,48 @@ class OrdenesControllerTest extends TestCase
         $this->assertEquals('periodica', $evaluado->tipo_formulario);
     }
 
+    public function test_usuario_empresa_puede_editar_su_orden_sin_enviar_empresa_id()
+    {
+        $empresa = Empresa::factory()->create();
+        $usuarioEmpresa = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+        ]);
+        $usuarioEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $usuarioEmpresa->id,
+            'estado' => 'solicitud',
+        ]);
+
+        $response = $this->actingAs($usuarioEmpresa)
+            ->put(route('ordenes.update', $orden), [
+                'observaciones_internas' => 'Edicion desde empresa sin empresa_id',
+                'evaluados' => [
+                    [
+                        'nombre' => 'Cliente Empresa',
+                        'apellidos' => 'Editado',
+                        'dpi' => '3456789012345',
+                        'email' => 'cliente.empresa@test.com',
+                        'telefono' => '55112233',
+                        'tipo_servicio' => 'poligrafo',
+                        'tipo_formulario' => 'preempleo',
+                    ],
+                ],
+            ]);
+
+        $response->assertRedirect(route('empresa.ordenes.show', $orden));
+
+        $orden->refresh();
+        $this->assertEquals($empresa->id, $orden->empresa_id);
+        $this->assertDatabaseHas('evaluados_orden', [
+            'orden_id' => $orden->id,
+            'dpi' => '3456789012345',
+            'nombre' => 'Cliente Empresa',
+        ]);
+    }
+
     public function test_puede_reenviar_correo_a_evaluado()
     {
         Mail::fake();
@@ -364,6 +406,234 @@ class OrdenesControllerTest extends TestCase
 
         $evaluado->refresh();
         $this->assertEquals('Sucursal Centro', $evaluado->sede_region_empresa);
+    }
+
+    public function test_actualizar_orden_agregando_nuevo_evaluado_preserva_existente_y_campos_criticos(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id,
+        ]);
+
+        $evaluadoExistente = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Evaluado',
+            'apellidos' => 'Original',
+            'dpi' => '1111111111111',
+            'email' => 'existente@test.com',
+            'estado_evaluacion' => 'reprogramado',
+            'fecha_programada' => now()->addDays(3),
+            'token_unico' => 'token-existente',
+            'token_expira_at' => now()->addDays(30),
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('ordenes.update', $orden), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    [
+                        'id' => $evaluadoExistente->id,
+                        'nombre' => $evaluadoExistente->nombre,
+                        'apellidos' => $evaluadoExistente->apellidos,
+                        'dpi' => $evaluadoExistente->dpi,
+                        'email' => $evaluadoExistente->email,
+                        'tipo_servicio' => $evaluadoExistente->tipo_servicio,
+                        'tipo_formulario' => $evaluadoExistente->tipo_formulario,
+                    ],
+                    [
+                        'nombre' => 'Evaluado',
+                        'apellidos' => 'Nuevo',
+                        'dpi' => '2222222222222',
+                        'email' => 'nuevo@test.com',
+                        'tipo_servicio' => 'poligrafo',
+                        'tipo_formulario' => 'preempleo',
+                    ],
+                ],
+            ])
+            ->assertStatus(302);
+
+        $orden->refresh();
+        $this->assertCount(2, $orden->evaluados);
+
+        $evaluadoExistente->refresh();
+        $this->assertEquals('reprogramado', $evaluadoExistente->estado_evaluacion);
+        $this->assertNotNull($evaluadoExistente->fecha_programada);
+        $this->assertEquals('token-existente', $evaluadoExistente->token_unico);
+
+        $this->assertDatabaseHas('evaluados_orden', [
+            'orden_id' => $orden->id,
+            'dpi' => '2222222222222',
+        ]);
+    }
+
+    public function test_actualizar_orden_sin_id_en_existente_lo_reconoce_y_permite_agregar_otro(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id,
+        ]);
+
+        $existente = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Evaluado',
+            'apellidos' => 'Prueba',
+            'dpi' => '1234567896541',
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
+            'email' => 'existente@test.com',
+            'estado_evaluacion' => 'reprogramado',
+            'fecha_programada' => now()->addDay(),
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->put(route('ordenes.update', $orden), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    // Simula payload sin id (caso reportado en producción)
+                    [
+                        'nombre' => 'Evaluado',
+                        'apellidos' => 'Prueba',
+                        'dpi' => '1234567896541',
+                        'email' => 'existente@test.com',
+                        'tipo_servicio' => 'poligrafo',
+                        'tipo_formulario' => 'preempleo',
+                    ],
+                    [
+                        'nombre' => 'Maria',
+                        'apellidos' => 'Rivera',
+                        'dpi' => '9999999999999',
+                        'email' => 'maria.rivera@test.com',
+                        'tipo_servicio' => 'vsa',
+                        'tipo_formulario' => 'periodica',
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(302);
+        $response->assertSessionHas('success');
+
+        $this->assertEquals(2, $orden->evaluados()->count());
+        $this->assertEquals(1, $orden->evaluados()->where('dpi', '1234567896541')->count());
+
+        $existente->refresh();
+        $this->assertEquals('reprogramado', $existente->estado_evaluacion);
+        $this->assertNotNull($existente->fecha_programada);
+        $this->assertEquals('Evaluado', $existente->nombre);
+        $this->assertEquals('Prueba', $existente->apellidos);
+
+        $this->assertDatabaseHas('evaluados_orden', [
+            'orden_id' => $orden->id,
+            'dpi' => '9999999999999',
+            'tipo_servicio' => 'vsa',
+        ]);
+    }
+
+    public function test_actualizar_orden_con_mismo_dpi_servicio_sin_id_actualiza_existente_y_no_duplica(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id,
+        ]);
+
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Evaluado',
+            'apellidos' => 'Prueba',
+            'dpi' => '1234567896541',
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
+            'email' => 'existente@test.com',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->put(route('ordenes.update', $orden), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    [
+                        'nombre' => 'Persona',
+                        'apellidos' => 'Distinta',
+                        'dpi' => '1234567896541',
+                        'email' => 'otro@test.com',
+                        'tipo_servicio' => 'poligrafo',
+                        'tipo_formulario' => 'preempleo',
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(302);
+        $response->assertSessionHas('success');
+
+        $this->assertEquals(1, $orden->evaluados()->count());
+
+        $actualizado = $orden->evaluados()->first();
+        $this->assertEquals('Persona', $actualizado->nombre);
+        $this->assertEquals('Distinta', $actualizado->apellidos);
+        $this->assertEquals('otro@test.com', $actualizado->email);
+    }
+
+    public function test_actualizar_orden_con_id_vacio_en_existente_actualiza_y_no_duplica(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id,
+        ]);
+
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Evaluado',
+            'apellidos' => 'Prueba',
+            'dpi' => '1234567896541',
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
+            'email' => 'existente@test.com',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->put(route('ordenes.update', $orden), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    [
+                        'id' => '',
+                        'nombre' => 'Evaluado',
+                        'apellidos' => 'Prueba',
+                        'dpi' => '1234567896541',
+                        'email' => 'existente@test.com',
+                        'tipo_servicio' => 'poligrafo',
+                        'tipo_formulario' => 'preempleo',
+                    ],
+                    [
+                        'nombre' => 'Maria',
+                        'apellidos' => 'Rivera',
+                        'dpi' => '9999999999999',
+                        'email' => 'maria.rivera@test.com',
+                        'tipo_servicio' => 'vsa',
+                        'tipo_formulario' => 'periodica',
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(302);
+        $response->assertSessionHas('success');
+
+        $this->assertEquals(2, $orden->evaluados()->count());
+        $this->assertEquals(1, $orden->evaluados()->where('dpi', '1234567896541')->count());
+        $this->assertEquals(1, $orden->evaluados()->where('dpi', '9999999999999')->count());
     }
 
     // =========================================================

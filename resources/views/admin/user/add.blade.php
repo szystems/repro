@@ -154,29 +154,22 @@
                                                     <label for="role_as" class="form-label">Tipo de Usuario <span class="text-danger">*</span></label>
                                                     <div class="input-group">
                                                         <span class="input-group-text"><i class="bi bi-shield-fill"></i></span>
-                                                        <select name="role_as" id="role_as" class="form-select" required>
+                                                        <select name="role_id" id="role_as" class="form-select" required>
                                                             <option value="" disabled selected>Seleccione tipo de usuario</option>
 
-                                                            {{-- NOTA: Evaluados ya NO son usuarios del sistema --}}
-                                                            {{-- Se crean en tabla evaluados_orden al generar órdenes --}}
-
-                                                            @if($canCreateEmpresa)
-                                                            <option value="1" {{ old('role_as') == '1' ? 'selected' : '' }}>
-                                                                Empresa (Usuario empresa cliente)
-                                                            </option>
-                                                            @endif
-
-                                                            @if($canCreateRepro)
-                                                            <option value="2" {{ old('role_as') == '2' ? 'selected' : '' }}>
-                                                                Repro (Personal de Repro)
-                                                            </option>
-                                                            @endif
-
-                                                            @if($canCreateAdmin)
-                                                            <option value="3" {{ old('role_as') == '3' ? 'selected' : '' }}>
-                                                                Administrador (Acceso completo)
-                                                            </option>
-                                                            @endif
+                                                            {{-- Opciones dinámicas desde tabla roles (excluye evaluado) --}}
+                                                            @foreach($roles as $role)
+                                                                @php
+                                                                    $canShow = ($role->level >= 3 && $canCreateAdmin)
+                                                                        || ($role->level == 2 && $canCreateRepro)
+                                                                        || ($role->level == 1 && $canCreateEmpresa);
+                                                                @endphp
+                                                                @if($canShow)
+                                                                <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
+                                                                    {{ $role->display_name }}
+                                                                </option>
+                                                                @endif
+                                                            @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
@@ -434,9 +427,13 @@
                 }
             });
 
+            // Mapa de role_id → level para mostrar/ocultar campos
+            var roleLevels = @json($roleLevels);
+
             // Mostrar/ocultar campos según el tipo de usuario
             function updateFieldVisibility() {
-                var role = $("#role_as").val();
+                var roleId = $("#role_as").val();
+                var level = roleLevels[roleId] || 0;
 
                 // Ocultar todos los campos específicos primero
                 $(".empresa-fields").hide();
@@ -444,8 +441,8 @@
                 $(".admin-info").hide();
                 $(".principal-check-container").hide();
 
-                // Mostrar campos según el rol seleccionado
-                if (role == "1") { // Empresa
+                // Mostrar campos según el nivel del rol seleccionado
+                if (level == 1) { // Empresa
                     $(".empresa-fields").show();
                     $(".principal-check-container").show();
                     $("#empresa_id").prop('required', true);
@@ -453,12 +450,12 @@
                     $("#empresa_id").prop('required', false);
                 }
 
-                if (role == "2") { // Repro
+                if (level == 2) { // Repro
                     $(".repro-fields").show();
                     $(".principal-check-container").show();
                 }
 
-                if (role == "3") { // Administrador
+                if (level >= 3) { // Administrador
                     $(".admin-info").show();
                 }
             }
@@ -470,9 +467,14 @@
             // Inicializar los campos según el rol seleccionado al cargar
             updateFieldVisibility();
 
-            // Si hay un valor preseleccionado para empresa_id o role_as, configurar correctamente
-            @if((old('role_as') == 1) || (isset($empresa_id) && $empresa_id))
-                $("#role_as").val("1");
+            // Si hay un valor preseleccionado para empresa_id o role_id, configurar correctamente
+            @if(old('role_id') || (isset($empresa_id) && $empresa_id))
+                @if(isset($empresa_id) && $empresa_id && !old('role_id'))
+                {{-- Preseleccionar rol empresa --}}
+                $("#role_as option").each(function() {
+                    if (roleLevels[$(this).val()] == 1) { $(this).prop('selected', true); return false; }
+                });
+                @endif
                 updateFieldVisibility();
             @endif
 
@@ -488,17 +490,18 @@
                     isValid = false;
                 }
 
-                // Validar campos específicos según el rol
-                var role = $("#role_as").val();
+                // Validar campos específicos según el nivel del rol
+                var roleId = $("#role_as").val();
+                var level = roleLevels[roleId] || 0;
 
-                if (role == "1" && $("#empresa_id").val() == "") {
+                if (level == 1 && $("#empresa_id").val() == "") {
                     e.preventDefault();
                     alert("Por favor seleccione una empresa para el usuario tipo Empresa");
                     $("#empresa_id").focus();
                     isValid = false;
                 }
 
-                if (role == "2" && $(".repro-fields:visible input[name='cargo']").val() == "") {
+                if (level == 2 && $(".repro-fields:visible input[name='cargo']").val() == "") {
                     e.preventDefault();
                     alert("Por favor ingrese el cargo para el usuario de Repro");
                     $(".repro-fields input[name='cargo']").focus();

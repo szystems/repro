@@ -166,7 +166,11 @@
                                                 $esSlotInicio = \Carbon\Carbon::parse($cita->fecha_programada)->format('H:i') == $slot['hora'];
                                             @endphp
                                                 @if($esSlotInicio)
-                                                <div class="d-flex align-items-center justify-content-between mb-1 p-2 rounded {{ $colorClase }} bg-opacity-10 border-start border-4 {{ str_replace('bg-', 'border-', explode(' ', $colorClase)[0]) }}">
+                                                @php
+                                                    $esInasistencia = $cita->estado_evaluacion === 'inasistencia';
+                                                    $cardExtraClass = $esInasistencia ? 'opacity-75' : '';
+                                                @endphp
+                                                <div class="d-flex align-items-center justify-content-between mb-1 p-2 rounded {{ $colorClase }} bg-opacity-10 border-start border-4 {{ $esInasistencia ? 'border-danger' : str_replace('bg-', 'border-', explode(' ', $colorClase)[0]) }} {{ $cardExtraClass }}">
                                                     <div>
                                                         <strong>{{ $cita->nombre }} {{ $cita->apellidos }}</strong>
                                                         <small class="text-muted ms-2">{{ $horaInicioCita }} - {{ $horaFinCita }}</small>
@@ -251,6 +255,57 @@
                 </div>
             </div>
         </div>
+
+        {{-- Registro histórico: reprogramados desde este día --}}
+        @if($citasHistoricas->isNotEmpty())
+        <div class="row gx-3 mt-3">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header py-2 bg-warning bg-opacity-10">
+                        <div class="card-title mb-0 text-warning">
+                            <i class="bi bi-clock-history"></i>
+                            Reprogramados desde este día ({{ $citasHistoricas->count() }})
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Candidato</th>
+                                    <th>Hora original</th>
+                                    <th>Nueva fecha</th>
+                                    <th>Empresa</th>
+                                    <th>Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($citasHistoricas as $cita)
+                                <tr>
+                                    <td>
+                                        <strong>{{ $cita->nombre }} {{ $cita->apellidos }}</strong><br>
+                                        <small class="text-muted">{{ $cita->dpi }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ $cita->fecha_programada_original ? \Carbon\Carbon::parse($cita->fecha_programada_original)->format('h:i A') : '—' }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->translatedFormat('d M Y h:i A') : '—' }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ $cita->orden && $cita->orden->empresa ? $cita->orden->empresa->nombre : '—' }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary badge-sm">{{ $cita->tipo_servicio_texto }}</span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
 
     </div>
 </div>

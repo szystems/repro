@@ -333,21 +333,6 @@
                     @endif
                 </td>
             </tr>
-            <tr>
-                <th>Polígrafos Asignados</th>
-                <td>
-                    @php
-                        $poligrafistas = $orden->evaluados->whereNotNull('poligrafista_id')->pluck('poligrafista.name')->unique();
-                    @endphp
-                    @if($poligrafistas->isNotEmpty())
-                        @foreach($poligrafistas as $poligrafista)
-                            <span class="badge badge-info">{{ $poligrafista }}</span>
-                        @endforeach
-                    @else
-                        <span class="text-muted">Sin asignar</span>
-                    @endif
-                </td>
-            </tr>
         </table>
     </div>
 
@@ -436,9 +421,6 @@
                             {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('d/m/Y') }}
                         @else
                             <span class="text-muted">Pendiente</span>
-                        @endif
-                        @if($evaluado->poligrafista)
-                            <br><small>{{ $evaluado->poligrafista->name }}</small>
                         @endif
                     </td>
                     <td>

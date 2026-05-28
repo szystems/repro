@@ -32,6 +32,7 @@ class DocumentoEvaluado extends Model
         'verificado_por',
         'verificado_at',
         'notas_verificacion',
+        'notas',
     ];
 
     protected function casts(): array

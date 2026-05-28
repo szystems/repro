@@ -545,6 +545,7 @@ class CalendarioTest extends TestCase
         $evaluado->refresh();
         $this->assertEquals('2026-03-22 14:00:00', $evaluado->fecha_programada->format('Y-m-d H:i:s'));
         $this->assertEquals('2026-03-22 16:00:00', $evaluado->fecha_hora_fin->format('Y-m-d H:i:s'));
+        $this->assertEquals('reprogramado', $evaluado->estado_evaluacion);
     }
 
     public function test_reprogramar_excluye_evaluado_actual_de_antitraslape(): void
@@ -699,6 +700,101 @@ class CalendarioTest extends TestCase
 
         $enDia = EvaluadoOrden::enDia('2026-03-20')->get();
         $this->assertCount(1, $enDia);
+    }
+
+    public function test_scope_programados_incluye_inasistencia(): void
+    {
+        // inasistencia ya NO se excluye del scope — debe aparecer en el calendario
+        $this->crearEvaluado([
+            'fecha_programada' => '2026-03-20 09:00:00',
+            'estado_evaluacion' => 'inasistencia',
+        ]);
+        $this->crearEvaluado([
+            'fecha_programada' => '2026-03-20 09:00:00',
+            'estado_evaluacion' => 'cancelado', // este SÍ se excluye
+        ]);
+
+        $programados = EvaluadoOrden::programados()->get();
+        $this->assertCount(1, $programados);
+        $this->assertEquals('inasistencia', $programados->first()->estado_evaluacion);
+    }
+
+    public function test_dia_muestra_candidatos_con_inasistencia(): void
+    {
+        $sede = Sede::factory()->create(['estado' => 1]);
+        $poligrafista = $this->usuarioRepro();
+
+        $evaluado = $this->crearEvaluado([
+            'fecha_programada' => '2026-03-15 09:00:00',
+            'fecha_hora_fin'   => '2026-03-15 11:00:00',
+            'sede_id'          => $sede->id,
+            'poligrafista_id'  => $poligrafista->id,
+            'estado_evaluacion' => 'inasistencia',
+        ]);
+
+        $this->actingAs($poligrafista)
+            ->get('/calendario/dia/2026-03-15')
+            ->assertOk()
+            ->assertSee($evaluado->nombre);
+    }
+
+    public function test_reprogramar_guarda_fecha_programada_original(): void
+    {
+        $sede = Sede::factory()->create(['estado' => 1]);
+        $poligrafista = $this->usuarioRepro();
+
+        $evaluado = $this->crearEvaluado([
+            'fecha_programada' => '2026-03-15 09:00:00',
+            'fecha_hora_fin'   => '2026-03-15 11:00:00',
+            'sede_id'          => $sede->id,
+            'poligrafista_id'  => $poligrafista->id,
+            'estado_evaluacion' => 'programado',
+        ]);
+
+        $this->actingAs($poligrafista)
+            ->patch('/calendario/evaluados/' . $evaluado->id . '/reprogramar', [
+                'evaluado_orden_id' => $evaluado->id,
+                'fecha'             => '2026-03-22',
+                'hora_inicio'       => '14:00',
+                'hora_fin'          => '16:00',
+                'sede_id'           => $sede->id,
+                'poligrafista_id'   => $poligrafista->id,
+            ])
+            ->assertRedirect();
+
+        $evaluado->refresh();
+        $this->assertEquals('2026-03-22 14:00:00', $evaluado->fecha_programada->format('Y-m-d H:i:s'));
+        $this->assertEquals('2026-03-15 09:00:00', $evaluado->fecha_programada_original->format('Y-m-d H:i:s'));
+        $this->assertEquals('reprogramado', $evaluado->estado_evaluacion);
+    }
+
+    public function test_dia_muestra_seccion_historica_de_reprogramados(): void
+    {
+        $sede = Sede::factory()->create(['estado' => 1]);
+        $poligrafista = $this->usuarioRepro();
+
+        // Candidato reprogramado: estaba el 15/03, ahora tiene cita el 22/03
+        $evaluado = $this->crearEvaluado([
+            'fecha_programada'          => '2026-03-22 14:00:00',
+            'fecha_programada_original' => '2026-03-15 09:00:00',
+            'fecha_hora_fin'            => '2026-03-22 16:00:00',
+            'sede_id'                   => $sede->id,
+            'poligrafista_id'           => $poligrafista->id,
+            'estado_evaluacion'         => 'reprogramado',
+        ]);
+
+        // El día 22/03 muestra la cita activa (por fecha_programada)
+        $this->actingAs($poligrafista)
+            ->get('/calendario/dia/2026-03-22')
+            ->assertOk()
+            ->assertViewHas('citas', fn ($citas) => $citas->contains('id', $evaluado->id));
+
+        // El día 15/03 muestra la sección histórica (por fecha_programada_original)
+        $this->actingAs($poligrafista)
+            ->get('/calendario/dia/2026-03-15')
+            ->assertOk()
+            ->assertViewHas('citasHistoricas', fn ($historicas) => $historicas->contains('id', $evaluado->id))
+            ->assertSee($evaluado->nombre);
     }
 
     // -------------------------------------------------------

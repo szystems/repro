@@ -98,16 +98,37 @@
                                                 @endif
                                             </div>
 
+                                            <div class="col-md-6 mb-3">
+                                                <label for="level" class="form-label">Nivel del Rol <span class="text-danger">*</span></label>
+                                                <select name="level" id="level" class="form-select" required>
+                                                    <option value="">— Seleccione el nivel —</option>
+                                                    <option value="1" {{ old('level') == 1 ? 'selected' : '' }}>1 — Empresa (cliente)</option>
+                                                    <option value="2" {{ old('level') == 2 ? 'selected' : '' }}>2 — Colaborador REPRO</option>
+                                                    <option value="3" {{ old('level') == 3 ? 'selected' : '' }}>3 — Administrador</option>
+                                                </select>
+                                                <div class="form-text">
+                                                    Determina qué tipo de usuario usará este rol y filtra los permisos disponibles.
+                                                </div>
+                                                @if ($errors->has('level'))
+                                                    <div class="text-danger mt-1">{{ $errors->first('level') }}</div>
+                                                @endif
+                                            </div>
+
                                             <!-- Permisos -->
                                             <div class="col-12 mt-3">
                                                 <h6 class="border-bottom pb-2"><i class="bi bi-key"></i> Permisos del Rol</h6>
                                                 <div class="form-text mb-3">
                                                     Seleccione los permisos que tendrán los usuarios con este rol:
+                                                    <span id="permisos-filtro-nota" class="badge bg-info ms-2 d-none">
+                                                        <i class="bi bi-funnel"></i> Mostrando solo permisos para el nivel seleccionado
+                                                    </span>
                                                 </div>
 
                                                 @if(isset($permissions) && $permissions->count() > 0)
+                                                    @php $empresaModulesJson = json_encode($empresaModules ?? []); @endphp
                                                     @foreach($permissions as $module => $modulePermissions)
-                                                    <div class="card mb-3">
+                                                    @php $minLevel = in_array($module, $empresaModules ?? []) ? 1 : 2; @endphp
+                                                    <div class="card mb-3 permission-module-card" data-module="{{ $module }}" data-min-level="{{ $minLevel }}">
                                                         <div class="card-header">
                                                             <div class="form-check">
                                                                 <input class="form-check-input module-checkbox" type="checkbox" id="module_{{ $module }}" data-module="{{ $module }}">
@@ -199,6 +220,39 @@
     @push('scripts')
     <script>
         $(document).ready(function() {
+            // Filtrar módulos de permisos según el nivel seleccionado
+            function filterModulesByLevel(level) {
+                level = parseInt(level) || 0;
+                $('.permission-module-card').each(function() {
+                    const minLevel = parseInt($(this).data('min-level'));
+                    if (level > 0 && level < minLevel) {
+                        $(this).hide();
+                        // Desmarcar permisos ocultos para no enviarlos
+                        $(this).find('.permission-checkbox').prop('checked', false);
+                        $(this).find('.module-checkbox').prop('checked', false);
+                    } else {
+                        $(this).show();
+                    }
+                });
+                if (level > 0 && level < 3) {
+                    $('#permisos-filtro-nota').removeClass('d-none');
+                } else {
+                    $('#permisos-filtro-nota').addClass('d-none');
+                }
+                updateSummary();
+            }
+
+            // Filtrar al cambiar el nivel
+            $('#level').change(function() {
+                filterModulesByLevel($(this).val());
+            });
+
+            // Aplicar filtro inicial si hay valor old()
+            const initialLevel = $('#level').val();
+            if (initialLevel) {
+                filterModulesByLevel(initialLevel);
+            }
+
             // Manejar selección de módulos completos
             $('.module-checkbox').change(function() {
                 const module = $(this).data('module');
