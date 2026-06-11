@@ -2,10 +2,11 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-06-10 (sesion: Fase 18 Prioridad 4 QA — **Tests Phase8C corregidos + CreatesRolesAndPermissions mejorado (level + permisos admin). Pendiente: cron fallback + deploy**)
+**Ultima actualizacion:** 2026-06-10 — **Fase 18 COMPLETADA, DESPLEGADA e informe enviado al cliente**
 **Suite de tests:** 544 pasando / 2 fallos preexistentes sin relación (rutas creación usuario `show-user`/`insert-user`) — verificado 2026-06-10
-**Deploy a producción:** ✅ COMPLETO 2026-05-27 — commit e3958066 deployado, BD sincronizada
-**Script deploy:** scripts/deploy_Fase16_LoteC_2026-05-24.sh
+**Deploy a producción:** ✅ COMPLETO 2026-06-10 — commit `53c6487c` · https://reproappv2.szystems.com · 6 migraciones Fase 18 aplicadas · caché limpiado
+**Informe cliente:** `docs/Informe_Cliente_2026-06-10.md` (enviado al cliente 2026-06-10)
+**Resumen pre-despliegue:** `docs/resumen_cambios_cliente.md`
 
 ---
 
@@ -30,7 +31,7 @@
 | Fase 15 | Auditoria de permisos por rol | COMPLETADA |
 | Fase 16 | Observaciones cliente 2026-05-22 | ✅ COMPLETADA Y DEPLOYADA |
 | Fase 17 | Transiciones de estado ampliadas (cliente pide control total) | ❌ CANCELADA (reemplazada por Fase 18) |
-| Fase 18 | Rediseño a 4 estados independientes (Formulario/Programación/Evaluación/Orden) | 🔄 Semanas 1-2-3 COMPLETADAS — todos los frontends, selectores, historial, vista candidato. Pendiente: Notificaciones (P3) + QA/deploy (P4) |
+| Fase 18 | Rediseño a 4 estados independientes (Formulario/Programación/Evaluación/Orden) | ✅ COMPLETADA Y DEPLOYADA 2026-06-10 — informe enviado al cliente |
 
 ---
 
@@ -920,7 +921,7 @@ Desde cualquier estado del flujo principal, habilitar como destino todos los est
 ## Fase 18 — Rediseño a 4 estados independientes (planificada 2026-06-04)
 
 **Origen:** PDFs definitivos del cliente `docs/Observaciones cliente/Listado de estados (1).pdf` + `ESTADOS.pdf` + `REPRO Informe de cambios y preguntas Junio 2026.pdf` + captura de flujo.
-**Estado:** 🔄 EN DESARROLLO — Semanas 1-2 completadas + corrección crítica de `estado_evaluacion` (2026-06-10). Pendiente: reglas de sinergia, Semana 3 (frontend), Semana 4 (QA/deploy).
+**Estado:** ✅ COMPLETADA Y DEPLOYADA — 2026-06-10. Semanas 1-4 + corrección `estado_evaluacion` + sinergia S2-S6 + frontend + notificaciones + deploy iPage + informe cliente enviado.
 
 ---
 
@@ -989,13 +990,13 @@ Transiciones: `pendiente_de_evaluacion → {en_proceso, cancelado, desistio}` ·
 | # | Regla | Estado |
 |---|-------|--------|
 | S1 | Estados iniciales: Formulario=`link_enviado` (o `link_pendiente` sin email), Programación=`contactando`, Evaluación=`pendiente_de_evaluacion`, Orden=`orden_recibida` | ✅ Implementado |
-| S2 | **Virtual:** Formulario debe estar `formulario_completado_y_recibido` antes de poder `programar` | ❌ PENDIENTE |
-| S3 | **Presencial:** se puede `programar` con formulario incompleto (se llena en oficina) | ⚠️ Implícito (no hay gating) |
-| S4 | Evaluación no entra a `en_proceso` si Formulario ≠ `formulario_completado_y_recibido` | ❌ PENDIENTE |
-| S5 | Evaluación no entra a `en_proceso` sin haber pasado por `programado` | ❌ PENDIENTE |
-| S6 | Evaluación → `en_revision` dispara Programación → `proceso_realizado` (auto) | ❌ PENDIENTE |
+| S2 | **Virtual:** Formulario debe estar `formulario_completado_y_recibido` antes de poder `programar` | ✅ Implementado |
+| S3 | **Presencial:** se puede `programar` con formulario incompleto (se llena en oficina) | ✅ Implementado |
+| S4 | Evaluación no entra a `en_proceso` si Formulario ≠ `formulario_completado_y_recibido` | ✅ Implementado |
+| S5 | Evaluación no entra a `en_proceso` sin haber pasado por `programado` | ✅ Implementado |
+| S6 | Evaluación → `en_revision` dispara Programación → `proceso_realizado` (auto) | ✅ Implementado |
 | S7 | Todo cambio de estado guarda fecha/hora, estado anterior/nuevo, observación, usuario en `estado_historial` | ✅ Implementado (vía `cambiarEstado*()`) |
-| S8 | Modalidad editable; al cambiar aplica regla a programaciones NUEVAS; citas ya agendadas se respetan | ⚠️ Campo existe; gating S2 pendiente |
+| S8 | Modalidad editable; al cambiar aplica regla a programaciones NUEVAS; citas ya agendadas se respetan | ✅ Implementado |
 
 > ⚠️ **Deuda técnica clave:** `programarEvaluacion()`/`reprogramarEvaluacion()` asignan `estado_programacion` directamente sin pasar por `cambiarEstadoProgramacion()`, por lo que **NO validan transición ni registran historial** de programación. Refactorizar al implementar la sinergia.
 
@@ -1386,10 +1387,11 @@ docker compose exec -T app php artisan test
 - [x] Informe final disponible → **admin y colaborador** reciben notificación in-app además de la empresa (`notificarResultadosDisponibles` — nuevo bloque `$usuariosRepro`).
 
 #### 🧪 Prioridad 4 — Semana 4 (QA y deploy)
-- [ ] Test de migración de datos (aunque las órdenes actuales son de prueba — cliente #5).
-- [ ] Verificar cron activo en iPage para `formulario:auto-transiciones`; si no, fallback on-access.
-- [ ] Deploy FTP iPage + verificación MD5 + limpieza de caché.
-- [x] **Resolver 3 tests preexistentes de creación de usuario** (`Phase8CEstadosUXTest`):
+- [x] **Migración de datos en producción** — 6 migraciones Fase 18 aplicadas vía `deploy_migrate_fase18.php` (2026-06-10). Datos de prueba reacomodados a 4 estados. ENUM `estado_evaluacion` correcto verificado.
+- [x] **Deploy FTP iPage** — `/reproappv2` · commit `53c6487c` · 17/17 archivos críticos verificados · caché + OPcache limpiados · sitio HTTP 200.
+- [x] **Informe cliente** — `docs/Informe_Cliente_2026-06-10.md` enviado al cliente (10/06/2026).
+- [ ] Verificar cron activo en iPage para `formulario:auto-transiciones`; si no, implementar fallback on-access. *(único pendiente post-Fase 18)*
+- [x] **Resolver tests preexistentes de creación de usuario** (`Phase8CEstadosUXTest`):
   - `Phase8CEstadosUXTest` migrado a usar `CreatesRolesAndPermissions` (eliminado setUp manual sin level ni permisos).
   - `test_admin_puede_crear_usuario_repro_con_sede`: ahora pasa `role_id` del rol 'repro' en lugar de `role_as => 2`.
   - `test_admin_show_usuario_repro_muestra_sede`: se resuelve con el trait (admin ahora tiene `usuarios.ver` permission).
@@ -1398,3 +1400,20 @@ docker compose exec -T app php artisan test
 #### 📦 Backlog (fase posterior, fuera de Fase 18)
 - [ ] Notificaciones al candidato por correo/WhatsApp (formulario recibido, papelería aceptada, fecha de programación).
 - [ ] Integración WhatsApp API (diferida — costos Meta, plantillas aprobadas, verificación de número).
+- [ ] Fallback on-access para `formulario:auto-transiciones` si cron no está activo en iPage.
+- [ ] Confirmar con cliente: estado "Llenando", reactivación de "Vencido", nombre "Papelería validada" en vista candidato, saltos adelante en Evaluación.
+
+---
+
+## ✅ Cierre Fase 18 — 2026-06-10
+
+| Hito | Detalle |
+|------|---------|
+| **Commit código** | `53c6487c` — 57 archivos, Fase 18 completa |
+| **Plataforma** | https://reproappv2.szystems.com |
+| **Migraciones** | 6/6 aplicadas en `dbreprov2` (batch 105+) |
+| **Informe cliente** | `docs/Informe_Cliente_2026-06-10.md` — enviado |
+| **Documentación previa** | `docs/resumen_cambios_cliente.md` |
+| **Pendiente operativo** | Cron iPage para auto-transiciones 24h/30d |
+
+**Próximo desarrollo:** según feedback del cliente tras pruebas en producción, o ítems del backlog anterior.
