@@ -201,11 +201,23 @@
                                         </td>
                                         <td>
                                             @forelse($orden->evaluados as $evaluado)
-                                                <div class="{{ $loop->first ? '' : 'mt-1 pt-1 border-top' }}">
-                                                    <small class="d-block text-muted">{{ trim($evaluado->nombre . ' ' . $evaluado->apellidos) }}</small>
-                                                    <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}" style="font-size:0.7em">{{ $evaluado->estado_evaluacion_texto }}</span>
+                                                <div class="{{ $loop->first ? '' : 'mt-2 pt-2 border-top' }}">
+                                                    <small class="d-block text-muted fw-semibold mb-1">{{ trim($evaluado->nombre . ' ' . $evaluado->apellidos) }}</small>
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}" style="font-size:0.65em" title="Evaluación">
+                                                            <i class="bi bi-clipboard-check"></i> {{ $evaluado->estado_evaluacion_texto }}
+                                                        </span>
+                                                        <span class="badge bg-{{ $evaluado->estado_formulario_color }}" style="font-size:0.65em" title="Formulario">
+                                                            <i class="bi bi-file-text"></i> {{ $evaluado->estado_formulario_texto }}
+                                                        </span>
+                                                        <span class="badge bg-{{ $evaluado->estado_programacion_color }}" style="font-size:0.65em" title="Programación">
+                                                            <i class="bi bi-calendar2-check"></i> {{ $evaluado->estado_programacion_texto }}
+                                                        </span>
+                                                    </div>
                                                     @if($evaluado->fecha_programada)
-                                                        <br><small class="text-primary"><i class="bi bi-calendar-event"></i> {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('d/m/Y H:i') }}</small>
+                                                        <small class="text-primary d-block mt-1">
+                                                            <i class="bi bi-calendar-event"></i> {{ \Carbon\Carbon::parse($evaluado->fecha_programada)->format('d/m/Y H:i') }}
+                                                        </small>
                                                     @endif
                                                 </div>
                                             @empty
@@ -243,7 +255,7 @@
                                                     <i class="bi bi-file-pdf"></i>
                                                 </a>
                                                 
-                                                @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'autorizacion']))))
+                                                @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && $orden->estado === 'orden_recibida')))
                                                 <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-outline-warning" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>

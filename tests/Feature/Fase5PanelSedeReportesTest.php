@@ -68,7 +68,7 @@ class Fase5PanelSedeReportesTest extends TestCase
     {
         $orden = Orden::factory()->create([
             'empresa_id' => $this->empresa->id,
-            'estado'     => 'solicitud',
+            'estado'     => 'orden_recibida',
         ]);
         EvaluadoOrden::factory()->create([
             'orden_id'  => $orden->id,
@@ -90,7 +90,7 @@ class Fase5PanelSedeReportesTest extends TestCase
     {
         $orden = Orden::factory()->create([
             'empresa_id' => $this->empresa->id,
-            'estado'     => 'solicitud',
+            'estado'     => 'orden_recibida',
         ]);
         EvaluadoOrden::factory()->create([
             'orden_id'  => $orden->id,
@@ -137,10 +137,10 @@ class Fase5PanelSedeReportesTest extends TestCase
         $empresa1 = Empresa::factory()->create(['nombre' => 'EmpresaFiltradaUnicaA']);
         $empresa2 = Empresa::factory()->create(['nombre' => 'EmpresaFiltradaUnicaB']);
 
-        $orden1 = Orden::factory()->create(['empresa_id' => $empresa1->id, 'estado' => 'solicitud']);
+        $orden1 = Orden::factory()->create(['empresa_id' => $empresa1->id, 'estado' => 'orden_recibida']);
         EvaluadoOrden::factory()->create(['orden_id' => $orden1->id, 'sede_id' => $this->sede->id]);
 
-        $orden2 = Orden::factory()->create(['empresa_id' => $empresa2->id, 'estado' => 'solicitud']);
+        $orden2 = Orden::factory()->create(['empresa_id' => $empresa2->id, 'estado' => 'orden_recibida']);
         EvaluadoOrden::factory()->create(['orden_id' => $orden2->id, 'sede_id' => $sede2->id]);
 
         // Sin filtro, ambas aparecen en la tabla
@@ -242,7 +242,7 @@ class Fase5PanelSedeReportesTest extends TestCase
         EvaluadoOrden::factory()->create([
             'orden_id'          => $orden->id,
             'sede_id'           => $this->sede->id,
-            'estado_evaluacion' => 'completado',
+            'estado_evaluacion' => 'informe_final_enviado',
             'fecha_programada'  => now()->startOfMonth()->addDay(),
             'nombre'            => 'Pedro',
             'apellidos'         => 'Hist',
@@ -283,7 +283,7 @@ class Fase5PanelSedeReportesTest extends TestCase
         EvaluadoOrden::factory()->create([
             'orden_id'          => $orden->id,
             'sede_id'           => $this->sede->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado', 'estado_evaluacion' => 'pendiente_de_evaluacion',
             'fecha_programada'  => now()->startOfMonth()->addDay(),
             'nombre'            => 'Activo',
             'apellidos'         => 'NoHistorial',

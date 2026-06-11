@@ -396,6 +396,9 @@
                             <option value="presencial">Presencial</option>
                             <option value="virtual">Virtual</option>
                         </select>
+                        <small class="text-muted" id="modalModalidadHint" style="display:none">
+                            <i class="bi bi-info-circle"></i> Modalidad cargada del evaluado. Puede cambiarse si es necesario.
+                        </small>
                     </div>
 
                     {{-- Poligrafista --}}
@@ -432,6 +435,39 @@
 </div>
 
 <script>
+    // Mapa de modalidad por evaluado (id → modalidad) para precargar al seleccionar
+    const evaluadoModalidadMap = {
+        @foreach($evaluadosPendientes as $ev)
+        {{ $ev->id }}: '{{ $ev->modalidad ?? '' }}',
+        @endforeach
+    };
+
+    // Al cambiar el evaluado seleccionado, precargar su modalidad guardada
+    document.addEventListener('DOMContentLoaded', function () {
+        const evalSelect = document.getElementById('evaluado_orden_id');
+        const modalidadSelect = document.getElementById('modalModalidad');
+        const modalidadHint = document.getElementById('modalModalidadHint');
+
+        if (evalSelect) {
+            evalSelect.addEventListener('change', function () {
+                const evaluadoId = parseInt(this.value);
+                if (evaluadoId && evaluadoModalidadMap[evaluadoId] !== undefined) {
+                    const mod = evaluadoModalidadMap[evaluadoId];
+                    modalidadSelect.value = mod || '';
+                    // Mostrar hint solo si ya tenía modalidad definida
+                    if (mod) {
+                        modalidadHint.style.display = '';
+                    } else {
+                        modalidadHint.style.display = 'none';
+                    }
+                } else {
+                    modalidadSelect.value = '';
+                    modalidadHint.style.display = 'none';
+                }
+            });
+        }
+    });
+
     /**
      * Preparar modal desde el botón general "Programar cita"
      */
@@ -447,6 +483,9 @@
         document.getElementById('modalHoraFin').value = '10:00';
         document.getElementById('modalSedeId').value = '{{ $sedeId ?? "" }}';
         document.getElementById('modalPoligrafistaId').value = '{{ $poligrafistaId ?? "" }}';
+        document.getElementById('modalModalidad').value = '';
+        document.getElementById('evaluado_orden_id').value = '';
+        document.getElementById('modalModalidadHint').style.display = 'none';
     }
 
     /**

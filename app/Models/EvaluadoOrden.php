@@ -53,6 +53,7 @@ class EvaluadoOrden extends Model
         'fecha_realizada',
         'estado_evaluacion',
         'estado_formulario',
+        'estado_programacion',
         'resultado',
         'notas_poligrafo',
         'token_unico',
@@ -200,6 +201,17 @@ class EvaluadoOrden extends Model
     }
 
     /**
+     * Historial de cambios de estados (Fase 18)
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function historialEstados()
+    {
+        return $this->hasMany(EstadoHistorial::class, 'evaluado_orden_id')
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Usuario que subió el archivo de resultado.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -256,8 +268,9 @@ class EvaluadoOrden extends Model
      */
     public function scopeProgramados($query)
     {
+        // Fase 18: filtra por estado_programacion, ya no por estado_evaluacion
         return $query->whereNotNull('fecha_programada')
-            ->whereNotIn('estado_evaluacion', ['cancelado', 'desistio']);
+            ->whereNotIn('estado_programacion', ['cancelado', 'desistio']);
     }
 
     /**
@@ -265,8 +278,10 @@ class EvaluadoOrden extends Model
      */
     public function scopePendientesProgramar($query)
     {
+        // Fase 18: usa estado_programacion para excluir los que ya no necesitan programación
         return $query->whereNull('fecha_programada')
-            ->whereNotIn('estado_evaluacion', ['cancelado', 'completado', 'desistio', 'inasistencia']);
+            ->whereNotIn('estado_programacion', ['cancelado', 'desistio', 'proceso_realizado'])
+            ->whereNotIn('estado_evaluacion', ['cancelado', 'desistio', 'informe_final_enviado']);
     }
 
     /**
@@ -345,7 +360,7 @@ class EvaluadoOrden extends Model
     {
         return $this->update([
             'cuestionario_completado' => true,
-            'estado_formulario' => 'completado',
+            'estado_formulario' => 'formulario_completado_y_recibido',
             'completado_at' => now(),
             'firma_digital' => $firmaDigital,
             'ip_completado' => $ip ?? request()->ip(),
@@ -420,13 +435,14 @@ class EvaluadoOrden extends Model
      */
     public function getEstadoCuestionarioAttribute(): string
     {
+        // Fase 18: usa los 5 valores nuevos de estado_formulario
         return match($this->estado_formulario) {
-            'completado' => 'Completado',
-            'expirado' => 'Expirado',
-            'en_progreso' => 'En Progreso',
-            'link_enviado' => 'Link Enviado',
-            'pendiente' => 'Pendiente',
-            default => 'Pendiente',
+            'formulario_completado_y_recibido' => 'Completado',
+            'vencido'                          => 'Vencido',
+            'pendiente_de_llenar'              => 'En Progreso',
+            'link_enviado'                     => 'Link Enviado',
+            'link_pendiente'                   => 'Pendiente',
+            default                            => 'Pendiente',
         };
     }
 
@@ -456,7 +472,8 @@ class EvaluadoOrden extends Model
      */
     public function estaProgramado(): bool
     {
-        return $this->estado_evaluacion === 'programado' && !is_null($this->fecha_programada);
+        // Fase 18: la programación vive en estado_programacion
+        return $this->estado_programacion === 'programado' && !is_null($this->fecha_programada);
     }
 
     /**
@@ -464,7 +481,7 @@ class EvaluadoOrden extends Model
      */
     public function evaluacionCompletada(): bool
     {
-        return $this->estado_evaluacion === 'completado' && !is_null($this->fecha_realizada);
+        return $this->estado_evaluacion === 'informe_final_enviado';
     }
 
     /**
@@ -507,22 +524,14 @@ class EvaluadoOrden extends Model
     public function getEstadoEvaluacionTextoAttribute(): string
     {
         return match($this->estado_evaluacion) {
-            'pendiente' => 'Pendiente',
-            'contactando' => 'Contactando',
-            'contactado' => 'Contactado',
-            'link_enviado' => 'Link Enviado',
-            'confirmado' => 'Confirmado',
-            'programado' => 'Programado',
-            'en_sede' => 'En Sede',
-            'docs_pendientes' => 'Formulario Recibido',
-            'en_proceso' => 'En Proceso',
-            'resultado_preliminar' => 'Resultado Preliminar',
-            'completado' => 'Completado',
-            'inasistencia' => 'Inasistencia',
-            'reprogramado' => 'Reprogramado',
-            'cancelado' => 'Cancelado',
-            'desistio' => 'Desistió',
-            default => 'Estado desconocido'
+            'pendiente_de_evaluacion' => 'Pendiente de Evaluación',
+            'en_proceso'              => 'En Proceso',
+            'en_revision'             => 'En Revisión',
+            'resultado_preliminar'    => 'Resultado Preliminar',
+            'informe_final_enviado'   => 'Informe Final Enviado',
+            'cancelado'               => 'Cancelado',
+            'desistio'                => 'Desistió',
+            default                   => 'Estado desconocido',
         };
     }
 
@@ -532,37 +541,80 @@ class EvaluadoOrden extends Model
     public function getEstadoEvaluacionColorAttribute(): string
     {
         return match($this->estado_evaluacion) {
-            'pendiente' => 'secondary',
-            'contactando' => 'info',
-            'contactado' => 'info',
-            'link_enviado' => 'primary',
-            'confirmado' => 'primary',
-            'programado' => 'primary',
-            'en_sede' => 'warning',
-            'docs_pendientes' => 'warning',
-            'en_proceso' => 'warning',
-            'resultado_preliminar' => 'info',
-            'completado' => 'success',
-            'inasistencia' => 'danger',
-            'reprogramado' => 'warning',
-            'cancelado' => 'danger',
-            'desistio' => 'dark',
-            default => 'secondary'
+            'pendiente_de_evaluacion' => 'secondary',
+            'en_proceso'              => 'info',
+            'en_revision'             => 'primary',
+            'resultado_preliminar'    => 'warning',
+            'informe_final_enviado'   => 'success',
+            'cancelado'               => 'danger',
+            'desistio'                => 'dark',
+            default                   => 'secondary',
         };
     }
 
     /**
-     * Obtener color del badge según estado del formulario
+     * Obtener texto legible para estado_formulario
+     */
+    public function getEstadoFormularioTextoAttribute(): string
+    {
+        return match($this->estado_formulario) {
+            'link_pendiente'                   => 'Link Pendiente',
+            'link_enviado'                     => 'Link Enviado',
+            'pendiente_de_llenar'              => 'Pendiente de Llenar',
+            'formulario_completado_y_recibido' => 'Formulario Completado y Recibido',
+            'vencido'                          => 'Vencido',
+            default                            => 'Estado desconocido'
+        };
+    }
+
+    /**
+     * Obtener color del badge según estado_formulario
      */
     public function getEstadoFormularioColorAttribute(): string
     {
         return match($this->estado_formulario) {
-            'pendiente' => 'secondary',
-            'link_enviado' => 'info',
-            'en_progreso' => 'warning',
-            'completado' => 'success',
-            'expirado' => 'danger',
-            default => 'secondary'
+            'link_pendiente'                   => 'secondary',
+            'link_enviado'                     => 'primary',
+            'pendiente_de_llenar'              => 'warning',
+            'formulario_completado_y_recibido' => 'success',
+            'vencido'                          => 'danger',
+            default                            => 'secondary'
+        };
+    }
+
+    /**
+     * Obtener texto legible para estado_programacion
+     */
+    public function getEstadoProgramacionTextoAttribute(): string
+    {
+        return match($this->estado_programacion) {
+            'contactando'       => 'Contactando',
+            'contactado'        => 'Contactado',
+            'programado'        => 'Programado',
+            'proceso_realizado' => 'Proceso Realizado',
+            'reprogramado'      => 'Reprogramado',
+            'inasistencia'      => 'Inasistencia',
+            'desistio'          => 'Desistió',
+            'cancelado'         => 'Cancelado',
+            default             => 'Estado desconocido'
+        };
+    }
+
+    /**
+     * Obtener color del badge según estado_programacion
+     */
+    public function getEstadoProgramacionColorAttribute(): string
+    {
+        return match($this->estado_programacion) {
+            'contactando'       => 'info',
+            'contactado'        => 'info',
+            'programado'        => 'primary',
+            'proceso_realizado' => 'success',
+            'reprogramado'      => 'warning',
+            'inasistencia'      => 'danger',
+            'desistio'          => 'dark',
+            'cancelado'         => 'danger',
+            default             => 'secondary'
         };
     }
 
@@ -647,16 +699,24 @@ class EvaluadoOrden extends Model
      */
     public function programarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null, ?int $responsableId = null): bool
     {
+        $estadoAnterior = $this->estado_programacion;
         $this->fecha_programada = $inicio;
         $this->fecha_hora_fin = $fin;
         $this->poligrafista_id = $poligrafistaId;
         if ($sedeId) {
             $this->sede_id = $sedeId;
         }
-        $this->modalidad = $modalidad;
+        if ($modalidad) {
+            $this->modalidad = $modalidad;
+        }
         $this->responsable_id = $responsableId;
-        $this->estado_evaluacion = 'programado';
-        return $this->save();
+        // Fase 18: la programación se refleja en estado_programacion, no en estado_evaluacion
+        $this->estado_programacion = 'programado';
+        $resultado = $this->save();
+        if ($resultado && $estadoAnterior !== 'programado') {
+            $this->registrarCambioEstado('estado_programacion', $estadoAnterior, 'programado');
+        }
+        return $resultado;
     }
 
     /**
@@ -664,7 +724,7 @@ class EvaluadoOrden extends Model
      */
     public function reprogramarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null, ?int $responsableId = null): bool
     {
-        // Guardar la fecha original antes de sobreescribir (para registro histórico en calendario)
+        $estadoAnterior = $this->estado_programacion;
         if ($this->fecha_programada) {
             $this->fecha_programada_original = $this->fecha_programada;
         }
@@ -674,10 +734,17 @@ class EvaluadoOrden extends Model
         if ($sedeId) {
             $this->sede_id = $sedeId;
         }
-        $this->modalidad = $modalidad;
+        if ($modalidad) {
+            $this->modalidad = $modalidad;
+        }
         $this->responsable_id = $responsableId;
-        $this->estado_evaluacion = 'reprogramado';
-        return $this->save();
+        // Fase 18: la reprogramación se refleja en estado_programacion, no en estado_evaluacion
+        $this->estado_programacion = 'reprogramado';
+        $resultado = $this->save();
+        if ($resultado && $estadoAnterior !== 'reprogramado') {
+            $this->registrarCambioEstado('estado_programacion', $estadoAnterior, 'reprogramado');
+        }
+        return $resultado;
     }
 
     /**
@@ -687,7 +754,8 @@ class EvaluadoOrden extends Model
     {
         $this->fecha_programada = null;
         $this->fecha_hora_fin = null;
-        $this->estado_evaluacion = 'cancelado';
+        // Fase 18: cancelar cita afecta la programación, no la evaluación
+        $this->estado_programacion = 'cancelado';
         return $this->save();
     }
 
@@ -701,24 +769,58 @@ class EvaluadoOrden extends Model
      *
      * @return array<string, string[]>
      */
-    public static function transicionesEvaluacion(): array
+    /**
+     * Fase 18: M\u00e1quina de estados para FORMULARIO (5 valores)
+     * 
+     * @return array<string, string[]>
+     */
+    public static function transicionesFormulario(): array
     {
         return [
-            'pendiente'      => ['contactando', 'contactado', 'programado', 'cancelado', 'desistio'],
-            'contactando'    => ['contactado', 'link_enviado', 'programado', 'cancelado', 'desistio'],
-            'contactado'     => ['link_enviado', 'confirmado', 'programado', 'cancelado', 'desistio'],
-            'link_enviado'   => ['confirmado', 'programado', 'cancelado', 'desistio'],
-            'confirmado'     => ['programado', 'cancelado', 'desistio'],
-            'programado'     => ['en_sede', 'en_proceso', 'inasistencia', 'reprogramado', 'cancelado', 'desistio'],
-            'en_sede'        => ['docs_pendientes', 'en_proceso', 'cancelado'],
-            'docs_pendientes'=> ['en_proceso', 'cancelado'],
-            'en_proceso'     => ['resultado_preliminar', 'completado', 'cancelado'],
-            'resultado_preliminar' => ['completado', 'cancelado'],
-            'inasistencia'   => ['reprogramado', 'contactando', 'cancelado', 'desistio'],
-            'reprogramado'   => ['contactando', 'programado', 'cancelado', 'desistio'],
-            'completado'     => [], // estado final
-            'cancelado'      => ['pendiente'], // reactivar
-            'desistio'       => [], // estado final
+            'link_pendiente'                   => ['link_enviado', 'vencido'],
+            'link_enviado'                     => ['pendiente_de_llenar', 'vencido'],
+            'pendiente_de_llenar'              => ['formulario_completado_y_recibido', 'vencido'],
+            'formulario_completado_y_recibido' => [], // estado final
+            'vencido'                          => [], // estado final
+        ];
+    }
+
+    /**
+     * Fase 18: M\u00e1quina de estados para PROGRAMACI\u00d3N (8 valores sin "Asisti\u00f3")
+     * 
+     * @return array<string, string[]>
+     */
+    public static function transicionesProgramacion(): array
+    {
+        return [
+            'contactando'       => ['contactado', 'desistio', 'cancelado'],
+            'contactado'        => ['programado', 'reprogramado', 'desistio', 'cancelado'],
+            'programado'        => ['proceso_realizado', 'inasistencia', 'reprogramado', 'cancelado'],
+            'proceso_realizado' => [], // estado final
+            'reprogramado'      => ['contactando', 'programado', 'cancelado'],
+            'inasistencia'      => ['reprogramado', 'cancelado'],
+            'desistio'          => ['contactando'], // reactivable per respuesta cliente #8
+            'cancelado'         => [], // estado final
+        ];
+    }
+
+    /**
+     * Fase 18: M\u00e1quina de estados para EVALUACI\u00d3N (7 valores)
+     * 
+     * @return array<string, string[]>
+     */
+    public static function transicionesEvaluacion(): array
+    {
+        // Fase 18 — PDF cliente (p.2): flujo estricto de evaluación física
+        // Cancelado/Desistió SOLO desde pendiente_de_evaluacion (una vez iniciada, es irreversible)
+        return [
+            'pendiente_de_evaluacion' => ['en_proceso', 'cancelado', 'desistio'],
+            'en_proceso'              => ['en_revision'],   // 100% manual (respuesta cliente #2)
+            'en_revision'             => ['resultado_preliminar'],
+            'resultado_preliminar'    => ['informe_final_enviado'],
+            'informe_final_enviado'   => [],                // estado final
+            'cancelado'               => ['pendiente_de_evaluacion'], // reactivable
+            'desistio'                => ['pendiente_de_evaluacion'], // reactivable (respuesta cliente #8)
         ];
     }
 
@@ -742,11 +844,32 @@ class EvaluadoOrden extends Model
 
     /**
      * Cambiar estado de evaluación con validación.
+     * 
+     * Reglas de sinergia aplicadas aquí:
+     * S4 — Al entrar en 'en_proceso': formulario debe estar 'formulario_completado_y_recibido'.
+     * S5 — Al entrar en 'en_proceso': estado_programacion debe ser 'programado' o 'proceso_realizado'.
+     * S6 — Al entrar en 'en_revision': auto-disparar cambiarEstadoProgramacion('proceso_realizado').
+     *
+     * @throws \Illuminate\Validation\ValidationException si S4/S5 no se cumplen
      */
-    public function cambiarEstadoEvaluacion(string $nuevoEstado): bool
+    public function cambiarEstadoEvaluacion(string $nuevoEstado, ?string $observacion = null): bool
     {
         if (!$this->puedeTransicionarEstadoEvaluacion($nuevoEstado)) {
             return false;
+        }
+
+        // S4: formulario completo requerido para iniciar evaluación
+        if ($nuevoEstado === 'en_proceso' && $this->estado_formulario !== 'formulario_completado_y_recibido') {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'estado_evaluacion' => ['El formulario debe estar "Completado y recibido" antes de iniciar la evaluación.'],
+            ]);
+        }
+
+        // S5: debe haber pasado por la programación antes de iniciar evaluación
+        if ($nuevoEstado === 'en_proceso' && !in_array($this->estado_programacion, ['programado', 'proceso_realizado'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'estado_evaluacion' => ['El evaluado debe tener una cita programada antes de iniciar la evaluación.'],
+            ]);
         }
 
         $estadoAnterior = $this->estado_evaluacion;
@@ -754,26 +877,53 @@ class EvaluadoOrden extends Model
         $resultado = $this->save();
 
         if ($resultado) {
-            $this->registrarCambioEstado('estado_evaluacion', $estadoAnterior, $nuevoEstado);
+            $this->registrarCambioEstado('estado_evaluacion', $estadoAnterior, $nuevoEstado, $observacion);
+
+            // S6: al pasar a 'en_revision', marcar la programación como 'proceso_realizado' automáticamente
+            if ($nuevoEstado === 'en_revision' && $this->estado_programacion === 'programado') {
+                $this->cambiarEstadoProgramacion('proceso_realizado'); // sin observacion — es automático
+            }
         }
 
         return $resultado;
     }
 
     /**
-     * Transiciones válidas para estado_formulario.
-     *
-     * @return array<string, string[]>
+     * Verificar si puede transicionar a un nuevo estado de programación.
      */
-    public static function transicionesFormulario(): array
+    public function puedeTransicionarEstadoProgramacion(string $nuevoEstado): bool
     {
-        return [
-            'pendiente'    => ['link_enviado', 'en_progreso'],
-            'link_enviado' => ['en_progreso', 'expirado'],
-            'en_progreso'  => ['completado', 'expirado'],
-            'completado'   => ['pendiente'], // rehabilitar cuestionario
-            'expirado'     => ['pendiente', 'link_enviado'], // reactivar
-        ];
+        if ($this->estado_programacion === $nuevoEstado) {
+            return false;
+        }
+
+        $transiciones = self::transicionesProgramacion();
+
+        if (!isset($transiciones[$this->estado_programacion])) {
+            return false;
+        }
+
+        return in_array($nuevoEstado, $transiciones[$this->estado_programacion]);
+    }
+
+    /**
+     * Cambiar estado de programación con validación.
+     */
+    public function cambiarEstadoProgramacion(string $nuevoEstado, ?string $observacion = null): bool
+    {
+        if (!$this->puedeTransicionarEstadoProgramacion($nuevoEstado)) {
+            return false;
+        }
+
+        $estadoAnterior = $this->estado_programacion;
+        $this->estado_programacion = $nuevoEstado;
+        $resultado = $this->save();
+
+        if ($resultado) {
+            $this->registrarCambioEstado('estado_programacion', $estadoAnterior, $nuevoEstado, $observacion);
+        }
+
+        return $resultado;
     }
 
     /**
@@ -797,7 +947,7 @@ class EvaluadoOrden extends Model
     /**
      * Cambiar estado de formulario con validación.
      */
-    public function cambiarEstadoFormulario(string $nuevoEstado): bool
+    public function cambiarEstadoFormulario(string $nuevoEstado, ?string $observacion = null): bool
     {
         if (!$this->puedeTransicionarEstadoFormulario($nuevoEstado)) {
             return false;
@@ -806,17 +956,17 @@ class EvaluadoOrden extends Model
         $estadoAnterior = $this->estado_formulario;
         $this->estado_formulario = $nuevoEstado;
 
-        // Sincronizar cuestionario_completado (backward compatibility)
-        if ($nuevoEstado === 'completado') {
+        // Fase 18: Sincronizar cuestionario_completado con nuevo estado
+        if ($nuevoEstado === 'formulario_completado_y_recibido') {
             $this->cuestionario_completado = true;
-        } elseif (in_array($nuevoEstado, ['pendiente', 'link_enviado', 'en_progreso', 'expirado'])) {
+        } elseif (in_array($nuevoEstado, ['link_pendiente', 'link_enviado', 'pendiente_de_llenar', 'vencido'])) {
             $this->cuestionario_completado = false;
         }
 
         $resultado = $this->save();
 
         if ($resultado) {
-            $this->registrarCambioEstado('estado_formulario', $estadoAnterior, $nuevoEstado);
+            $this->registrarCambioEstado('estado_formulario', $estadoAnterior, $nuevoEstado, $observacion);
         }
 
         return $resultado;
@@ -829,22 +979,15 @@ class EvaluadoOrden extends Model
      */
     public static function estadosEvaluacionDisponibles(): array
     {
+        // Fase 18 — PDF cliente (p.2): 7 estados de la etapa técnica de evaluación
         return [
-            'pendiente' => 'Pendiente',
-            'contactando' => 'Contactando',
-            'contactado' => 'Contactado',
-            'link_enviado' => 'Link Enviado',
-            'confirmado' => 'Confirmado',
-            'programado' => 'Programado',
-            'en_sede' => 'En Sede',
-            'docs_pendientes' => 'Formulario Recibido',
-            'en_proceso' => 'En Proceso',
-            'resultado_preliminar' => 'Resultado Preliminar',
-            'completado' => 'Completado',
-            'inasistencia' => 'Inasistencia',
-            'reprogramado' => 'Reprogramado',
-            'cancelado' => 'Cancelado',
-            'desistio' => 'Desistió',
+            'pendiente_de_evaluacion' => 'Pendiente de Evaluación',
+            'en_proceso'              => 'En Proceso',
+            'en_revision'             => 'En Revisión',
+            'resultado_preliminar'    => 'Resultado Preliminar',
+            'informe_final_enviado'   => 'Informe Final Enviado',
+            'cancelado'               => 'Cancelado',
+            'desistio'                => 'Desistió',
         ];
     }
 
@@ -855,12 +998,33 @@ class EvaluadoOrden extends Model
      */
     public static function estadosFormularioDisponibles(): array
     {
+        // Fase 18: 5 valores del flujo de formulario
         return [
-            'pendiente' => 'Pendiente',
-            'link_enviado' => 'Link Enviado',
-            'en_progreso' => 'En Progreso',
-            'completado' => 'Completado',
-            'expirado' => 'Expirado',
+            'link_pendiente'                       => 'Link Pendiente',
+            'link_enviado'                         => 'Link Enviado',
+            'pendiente_de_llenar'                  => 'Pendiente de Llenar',
+            'formulario_completado_y_recibido'     => 'Formulario Completado y Recibido',
+            'vencido'                              => 'Vencido',
+        ];
+    }
+
+    /**
+     * Obtener estados disponibles para estado_programacion.
+     *
+     * @return array<string, string>
+     */
+    public static function estadosProgramacionDisponibles(): array
+    {
+        // Fase 18: 8 valores sin "Asistió" según respuesta cliente #3
+        return [
+            'contactando'        => 'Contactando',
+            'contactado'         => 'Contactado',
+            'programado'         => 'Programado',
+            'proceso_realizado'  => 'Proceso Realizado',
+            'reprogramado'       => 'Reprogramado',
+            'inasistencia'       => 'Inasistencia',
+            'desistio'           => 'Desistió',
+            'cancelado'          => 'Cancelado',
         ];
     }
 
@@ -872,9 +1036,11 @@ class EvaluadoOrden extends Model
      */
     public static function camposEstadoValidos(): array
     {
+        // Fase 18: 3 campos de estado independientes
         return [
-            'estado_evaluacion' => array_keys(self::estadosEvaluacionDisponibles()),
-            'estado_formulario' => array_keys(self::estadosFormularioDisponibles()),
+            'estado_formulario'    => array_keys(self::estadosFormularioDisponibles()),
+            'estado_programacion'  => array_keys(self::estadosProgramacionDisponibles()),
+            'estado_evaluacion'    => array_keys(self::estadosEvaluacionDisponibles()),
         ];
     }
 
@@ -900,7 +1066,7 @@ class EvaluadoOrden extends Model
     public function completarEvaluacion(string $resultado, ?string $notas = null): bool
     {
         $this->fecha_realizada = now();
-        $this->estado_evaluacion = 'completado';
+        $this->estado_evaluacion = 'informe_final_enviado';
         $this->resultado = $resultado;
         if ($notas) {
             $this->notas_poligrafo = $notas;

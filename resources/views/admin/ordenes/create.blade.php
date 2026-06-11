@@ -224,6 +224,7 @@ function agregarEvaluado(datos = {}) {
     const observaciones = datos.observaciones || '';
     const tipoServicio = datos.tipo_servicio || 'poligrafo';
     const tipoFormulario = datos.tipo_formulario || 'preempleo';
+    const modalidad = datos.modalidad || 'presencial';
     const puestoEvaluar = datos.puesto_evaluar || '';
     const sedeId = datos.sede_id || '';
     const sedeRegionEmpresa = datos.sede_region_empresa || '';
@@ -287,6 +288,16 @@ function agregarEvaluado(datos = {}) {
                         <option value="especifica" ${tipoFormulario === 'especifica' ? 'selected' : ''}>Específica</option>
                     </select>
                 </div>
+                @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Modalidad</label>
+                    <select class="form-select" name="evaluados[${contadorEvaluados}][modalidad]">
+                        <option value="presencial" ${modalidad === 'presencial' ? 'selected' : ''}>Presencial</option>
+                        <option value="virtual" ${modalidad === 'virtual' ? 'selected' : ''}>Virtual</option>
+                    </select>
+                    <small class="text-muted">Virtual: exige formulario completo antes de programar</small>
+                </div>
+                @endif
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Teléfono</label>
                     <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono]" placeholder="23451234" value="${telefono}">

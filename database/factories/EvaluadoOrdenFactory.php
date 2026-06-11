@@ -44,8 +44,9 @@ class EvaluadoOrdenFactory extends Factory
             'tipo_formulario' => $this->faker->randomElement(['preempleo', 'periodica', 'especifica']),
             'fecha_programada' => $this->faker->optional()->dateTimeBetween('+1 day', '+30 days'),
             'poligrafista_id' => null,
-            'estado_evaluacion' => 'pendiente',
-            'estado_formulario' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
+            'estado_formulario' => 'link_pendiente',
+            'estado_programacion' => 'contactando',
             'resultado' => null,
             'notas_poligrafo' => null,
         ];
@@ -58,7 +59,7 @@ class EvaluadoOrdenFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'cuestionario_completado' => true,
-            'estado_formulario' => 'completado',
+            'estado_formulario' => 'formulario_completado_y_recibido',
             'completado_at' => now()->subDays(rand(1, 10)),
             'firma_digital' => 'data:image/png;base64,iVBORw0KGgo...',
             'ip_completado' => $this->faker->ipv4(),
@@ -73,7 +74,7 @@ class EvaluadoOrdenFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'token_expira_at' => now()->subDays(rand(1, 30)),
             'cuestionario_completado' => false,
-            'estado_formulario' => 'expirado',
+            'estado_formulario' => 'vencido',
         ]);
     }
 
@@ -84,7 +85,7 @@ class EvaluadoOrdenFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'cuestionario_completado' => false,
-            'estado_formulario' => 'en_progreso',
+            'estado_formulario' => 'pendiente_de_llenar',
         ]);
     }
 
@@ -110,9 +111,10 @@ class EvaluadoOrdenFactory extends Factory
             $fin = (clone $inicio)->modify('+2 hours');
 
             return [
-                'fecha_programada' => $inicio,
-                'fecha_hora_fin' => $fin,
-                'estado_evaluacion' => 'programado',
+                'fecha_programada'    => $inicio,
+                'fecha_hora_fin'      => $fin,
+                // Fase 18: la programación se refleja en estado_programacion
+                'estado_programacion' => 'programado',
             ];
         });
     }

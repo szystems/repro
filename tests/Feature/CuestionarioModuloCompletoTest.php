@@ -55,7 +55,7 @@ class CuestionarioModuloCompletoTest extends TestCase
         $this->orden = Orden::factory()->create([
             'empresa_id' => $this->empresa->id,
             'creado_por' => $this->usuario->id,
-            'estado' => 'solicitud'
+            'estado' => 'orden_recibida'
         ]);
         
         // Crear evaluado con token válido

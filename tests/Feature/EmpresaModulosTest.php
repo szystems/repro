@@ -71,7 +71,7 @@ class EmpresaModulosTest extends TestCase
         // Crear algunas órdenes
         $orden = Orden::factory()->create([
             'empresa_id' => $this->empresa->id,
-            'estado' => 'solicitud', // Usar estado válido del enum
+            'estado' => 'orden_recibida', // Usar estado válido del enum
         ]);
 
         EvaluadoOrden::factory()->create([

@@ -31,12 +31,12 @@
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="card-title">Detalles de la Orden</span>
-                @if(Auth::user()->hasPermission('ordenes.editar') && !in_array($orden->estado, ['entregado', 'cancelado']) && in_array($orden->estado, ['solicitud', 'autorizacion']))
+                @if(Auth::user()->hasPermission('ordenes.editar') && $orden->estado === 'orden_recibida')
                 <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-warning btn-sm me-1">
                     <i class="bi bi-pencil"></i> Editar
                 </a>
                 @endif
-                @if(Auth::user()->hasPermission('ordenes.eliminar') && !in_array($orden->estado, ['en_proceso', 'preliminar', 'final', 'entregado']))
+                @if(Auth::user()->hasPermission('ordenes.eliminar') && !in_array($orden->estado, ['en_proceso', 'entregado']))
                 <form action="{{ route('ordenes.destroy', $orden) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('¿Está seguro de eliminar esta orden? Esta acción no se puede deshacer.')">
                     @csrf
                     @method('DELETE')

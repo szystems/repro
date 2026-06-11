@@ -178,17 +178,13 @@ class Orden extends Model
 
     public function getEstadoHumanAttribute(): string
     {
+        // Fase 18: 4 estados simplificados
         return match ($this->estado) {
-            'solicitud'   => 'Solicitud',
-            'autorizacion' => 'Autorización',
-            'requisito'   => 'Requisito',
-            'programacion' => 'Programación',
-            'en_proceso'  => 'Realización de la Prueba',
-            'preliminar'  => 'Informe Preliminar',
-            'final'       => 'Informe Final',
-            'entregado'   => 'Entregado',
-            'cancelado'   => 'Cancelado',
-            default => ucfirst($this->estado),
+            'orden_recibida' => 'Orden Recibida',
+            'en_proceso'     => 'En Proceso',
+            'entregado'      => 'Entregado',
+            'cancelado'      => 'Cancelado',
+            default          => ucfirst($this->estado ?? ''),
         };
     }
 
@@ -198,16 +194,11 @@ class Orden extends Model
     public function getEstadoColorAttribute(): string
     {
         return match ($this->estado) {
-            'solicitud'   => 'secondary',
-            'autorizacion' => 'info',
-            'requisito'   => 'warning',
-            'programacion' => 'primary',
-            'en_proceso'  => 'orange',
-            'preliminar'  => 'purple',
-            'final'       => 'orange',
-            'entregado'   => 'success',
-            'cancelado'   => 'danger',
-            default => 'secondary',
+            'orden_recibida' => 'secondary',
+            'en_proceso'     => 'primary',
+            'entregado'      => 'success',
+            'cancelado'      => 'danger',
+            default          => 'secondary',
         };
     }
 
@@ -244,18 +235,11 @@ class Orden extends Model
             return false;
         }
 
-        // Transiciones del flujo de 8 etapas.
-        // Admin puede saltar pasos, pero no retroceder desde entregado.
-        // cancelado solo puede reactivarse a solicitud.
+        // Fase 18: transiciones del flujo simplificado de 4 estados.
         $transicionesLogicas = [
-            'solicitud'   => ['autorizacion', 'requisito', 'programacion', 'cancelado'],
-            'autorizacion' => ['requisito', 'programacion', 'cancelado'],
-            'requisito'   => ['programacion', 'cancelado'],
-            'programacion' => ['en_proceso', 'cancelado'],
-            'en_proceso'  => ['preliminar', 'final', 'entregado', 'cancelado'],
-            'preliminar'  => ['final', 'entregado', 'cancelado'],
-            'final'       => ['entregado', 'cancelado'],
-            'cancelado'   => ['solicitud'], // reactivar
+            'orden_recibida' => ['en_proceso', 'cancelado'],
+            'en_proceso'     => ['entregado', 'cancelado'],
+            'cancelado'      => ['orden_recibida'], // reactivar
         ];
         
         // Flexible: si hay transiciones definidas, verificar; si no, permitir
@@ -305,21 +289,17 @@ class Orden extends Model
 
     /**
      * Obtener todos los estados válidos con sus etiquetas humanas.
+     * Fase 18: Simplificados a 4 estados
      *
      * @return array<string, string>
      */
     public static function estadosDisponibles(): array
     {
         return [
-            'solicitud'   => 'Solicitud',
-            'autorizacion' => 'Autorización',
-            'requisito'   => 'Requisito',
-            'programacion' => 'Programación',
-            'en_proceso'  => 'Realización de la Prueba',
-            'preliminar'  => 'Informe Preliminar',
-            'final'       => 'Informe Final',
-            'entregado'   => 'Entregado',
-            'cancelado'   => 'Cancelado',
+            'orden_recibida' => 'Orden Recibida',
+            'en_proceso'     => 'En Proceso',
+            'entregado'      => 'Entregado',
+            'cancelado'      => 'Cancelado',
         ];
     }
 
@@ -334,5 +314,75 @@ class Orden extends Model
         return [
             'estado' => array_keys(self::estadosDisponibles()),
         ];
+    }
+
+    /**
+     * Fase 18: Recalcular estado de la orden basándose en estados de evaluados.
+     * 
+     * Lógica:
+     * - Si TODOS completados (evaluación) → entregado
+     * - Si TODOS cancelados → cancelado
+     * - Si al menos uno en proceso/revisión → en_proceso
+     * - Sino → orden_recibida
+     * 
+     * @return bool True si se actualizó el estado
+     */
+    public function recalcularEstado(): bool
+    {
+        $evaluados = $this->evaluados;
+
+        if ($evaluados->isEmpty()) {
+            // Sin evaluados, mantener orden_recibida
+            if ($this->estado !== 'orden_recibida' && $this->estado !== 'cancelado') {
+                $this->estado = 'orden_recibida';
+                return $this->save();
+            }
+            return false;
+        }
+
+        // Fase 18 — PDF p.1: Entregado cuando todos están en informe_final_enviado, cancelado o desistio
+        $estadosTerminales = ['informe_final_enviado', 'cancelado', 'desistio'];
+        $estadosActivosProceso = ['en_proceso', 'en_revision', 'resultado_preliminar'];
+
+        $todosCompletados = $evaluados->every(fn($e) => in_array($e->estado_evaluacion, $estadosTerminales));
+        $todosCancelados  = $evaluados->every(fn($e) => in_array($e->estado_evaluacion, ['cancelado', 'desistio']));
+        $algunoEnProceso  = $evaluados->some(fn($e) => in_array($e->estado_evaluacion, $estadosActivosProceso));
+
+        $nuevoEstado = null;
+
+        // Verificar todosCancelados ANTES de todosCompletados:
+        // si todos son cancelado/desistio, también cumplen "terminales", pero la orden debe ser "cancelado"
+        if ($todosCancelados) {
+            $nuevoEstado = 'cancelado';
+        } elseif ($todosCompletados) {
+            // Mezcla de informe_final_enviado + cancelado/desistio → entregado
+            $nuevoEstado = 'entregado';
+        } elseif ($algunoEnProceso) {
+            $nuevoEstado = 'en_proceso';
+        } else {
+            $nuevoEstado = 'orden_recibida';
+        }
+
+        // Solo actualizar si cambió
+        if ($this->estado !== $nuevoEstado) {
+            $estadoAnterior = $this->estado;
+            $this->estado = $nuevoEstado;
+            $resultado = $this->save();
+
+            if ($resultado) {
+                // Registrar cambio en historial
+                EstadoHistorial::create([
+                    'orden_id' => $this->id,
+                    'campo' => 'estado_orden',
+                    'estado_anterior' => $estadoAnterior,
+                    'estado_nuevo' => $nuevoEstado,
+                    'observacion' => 'Recalculado automáticamente basado en evaluados',
+                ]);
+            }
+
+            return $resultado;
+        }
+
+        return false;
     }
 }

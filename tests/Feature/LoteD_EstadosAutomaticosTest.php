@@ -58,35 +58,37 @@ class LoteD_EstadosAutomaticosTest extends TestCase
     // 1a — Label docs_pendientes → "Formulario Recibido"
     // ─────────────────────────────────────────────────────
 
-    public function test_docs_pendientes_label_es_formulario_recibido(): void
+    public function test_pendiente_evaluacion_label_es_pendiente_de_evaluacion(): void
     {
+        // Fase 18: el estado inicial de evaluacion es pendiente_de_evaluacion
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id'          => Orden::factory()->create()->id,
-            'estado_evaluacion' => 'docs_pendientes',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
         ]);
 
-        $this->assertSame('Formulario Recibido', $evaluado->estado_evaluacion_texto);
+        $this->assertSame('Pendiente de Evaluación', $evaluado->estado_evaluacion_texto);
     }
 
-    public function test_estadosEvaluacionDisponibles_tiene_label_formulario_recibido(): void
+    public function test_estadosEvaluacionDisponibles_tiene_label_pendiente_de_evaluacion(): void
     {
         $estados = EvaluadoOrden::estadosEvaluacionDisponibles();
-        $this->assertSame('Formulario Recibido', $estados['docs_pendientes']);
+        $this->assertSame('Pendiente de Evaluación', $estados['pendiente_de_evaluacion']);
     }
 
     // ─────────────────────────────────────────────────────
     // 1b — Auto-estado en_proceso al subir preliminar
     // ─────────────────────────────────────────────────────
 
-    public function test_subir_preliminar_cambia_estado_evaluado_programado_a_en_proceso(): void
+    public function test_subir_preliminar_no_cambia_estado_evaluacion(): void
     {
+        // Fase 18: subir preliminar NO cambia estado_evaluacion (es 100% manual, respuesta cliente #2)
         Storage::fake('local');
 
         $admin = $this->crearAdmin();
-        $orden = Orden::factory()->create(['estado' => 'programacion']);
+        $orden = Orden::factory()->create(['estado' => 'en_proceso']);
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id'          => $orden->id,
-            'estado_evaluacion' => 'programado',
+            'estado_evaluacion' => 'en_revision',
         ]);
 
         $this->actingAs($admin)->post(route('evaluados.subir-resultado-archivo', $evaluado), [
@@ -95,27 +97,8 @@ class LoteD_EstadosAutomaticosTest extends TestCase
         ])->assertRedirect();
 
         $evaluado->refresh();
-        $this->assertSame('en_proceso', $evaluado->estado_evaluacion);
-    }
-
-    public function test_subir_preliminar_cambia_estado_evaluado_docs_pendientes_a_en_proceso(): void
-    {
-        Storage::fake('local');
-
-        $admin = $this->crearAdmin();
-        $orden = Orden::factory()->create(['estado' => 'programacion']);
-        $evaluado = EvaluadoOrden::factory()->create([
-            'orden_id'          => $orden->id,
-            'estado_evaluacion' => 'docs_pendientes',
-        ]);
-
-        $this->actingAs($admin)->post(route('evaluados.subir-resultado-archivo', $evaluado), [
-            'tipo_resultado' => 'preliminar',
-            'archivo'        => UploadedFile::fake()->create('informe.pdf', 500, 'application/pdf'),
-        ])->assertRedirect();
-
-        $evaluado->refresh();
-        $this->assertSame('en_proceso', $evaluado->estado_evaluacion);
+        // Estado evaluacion NO cambia al subir preliminar
+        $this->assertSame('en_revision', $evaluado->estado_evaluacion);
     }
 
     public function test_subir_preliminar_no_modifica_evaluado_ya_en_proceso(): void
@@ -142,15 +125,17 @@ class LoteD_EstadosAutomaticosTest extends TestCase
     // 1c — Programar cita cambia estado a programado
     // ─────────────────────────────────────────────────────
 
-    public function test_programar_cita_cambia_estado_evaluado_a_programado(): void
+    public function test_programar_cita_cambia_estado_programacion_a_programado(): void
     {
+        // Fase 18: programar cita cambia estado_programacion, no estado_evaluacion
         $repro    = $this->crearReproConPermiso('calendario.editar');
         $sede     = Sede::factory()->create(['estado' => 1]);
         $poli     = User::factory()->create(['role_as' => 2, 'estado' => 1]);
         $orden    = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
-            'orden_id'          => $orden->id,
-            'estado_evaluacion' => 'pendiente',
+            'orden_id'            => $orden->id,
+            'estado_evaluacion'   => 'pendiente_de_evaluacion',
+            'estado_programacion' => 'contactado',
         ]);
 
         $this->actingAs($repro)->post(route('calendario.programar'), [
@@ -164,7 +149,9 @@ class LoteD_EstadosAutomaticosTest extends TestCase
         ])->assertRedirect();
 
         $evaluado->refresh();
-        $this->assertSame('programado', $evaluado->estado_evaluacion);
+        $this->assertSame('programado', $evaluado->estado_programacion);
+        // estado_evaluacion no cambia al programar
+        $this->assertSame('pendiente_de_evaluacion', $evaluado->estado_evaluacion);
     }
 
     // ─────────────────────────────────────────────────────
@@ -179,7 +166,7 @@ class LoteD_EstadosAutomaticosTest extends TestCase
         $orden    = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id'          => $orden->id,
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
         ]);
 
         $origenUrl = route('ordenes.show', $orden);
@@ -205,7 +192,8 @@ class LoteD_EstadosAutomaticosTest extends TestCase
         $orden    = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id'            => $orden->id,
-            'estado_evaluacion'   => 'programado',
+            'estado_evaluacion'   => 'pendiente_de_evaluacion',
+            'estado_programacion' => 'programado',
             'fecha_programada'    => now()->addDay()->toDateTimeString(),
             'fecha_hora_fin'      => now()->addDay()->addHour()->toDateTimeString(),
             'poligrafista_id'     => $poli->id,

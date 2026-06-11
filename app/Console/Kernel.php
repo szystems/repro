@@ -21,6 +21,14 @@ class Kernel extends ConsoleKernel
             ->dailyAt('08:00')
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/recordatorios.log'));
+
+        // Fase 18: Auto-transiciones de estado_formulario (cada hora)
+        //  - link_enviado +24h sin abrir → pendiente_de_llenar
+        //  - cualquier estado incompleto +30 días → vencido
+        $schedule->command('formulario:auto-transiciones')
+            ->hourly()
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/auto-transiciones.log'));
     }
 
     /**

@@ -433,7 +433,6 @@ class Fase2DocumentacionTest extends TestCase
     {
         $evaluadoCompletado = EvaluadoOrden::factory()->completado()->create([
             'orden_id' => $this->orden->id,
-            'estado_evaluacion' => 'completado',
         ]);
 
         $cuestionario = Cuestionario::create([
@@ -463,10 +462,10 @@ class Fase2DocumentacionTest extends TestCase
         $evaluadoCompletado->refresh();
         $cuestionario->refresh();
 
-        // Evaluado resetteado
+        // Evaluado reseteado — Fase 18: formulario vuelve a link_pendiente; evaluacion no cambia
         $this->assertFalse($evaluadoCompletado->cuestionario_completado);
         $this->assertNull($evaluadoCompletado->completado_at);
-        $this->assertEquals('pendiente', $evaluadoCompletado->estado_evaluacion);
+        $this->assertEquals('link_pendiente', $evaluadoCompletado->estado_formulario);
         $this->assertNotEquals($tokenAnterior, $evaluadoCompletado->token_unico);
 
         // Cuestionario reseteado
@@ -482,7 +481,6 @@ class Fase2DocumentacionTest extends TestCase
     {
         $evaluadoCompletado = EvaluadoOrden::factory()->completado()->create([
             'orden_id' => $this->orden->id,
-            'estado_evaluacion' => 'completado',
         ]);
 
         $response = $this->actingAs($this->empresaUser)->post(
@@ -512,7 +510,7 @@ class Fase2DocumentacionTest extends TestCase
         $evaluadoPendiente = EvaluadoOrden::factory()->create([
             'orden_id' => $this->orden->id,
             'cuestionario_completado' => false,
-            'estado_evaluacion' => 'pendiente',
+            'estado_formulario'  => 'link_pendiente',
         ]);
 
         $cuestionario = Cuestionario::create([
@@ -535,7 +533,8 @@ class Fase2DocumentacionTest extends TestCase
         $cuestionario->refresh();
 
         $this->assertTrue($evaluadoPendiente->cuestionario_completado);
-        $this->assertEquals('completado', $evaluadoPendiente->estado_evaluacion);
+        // Fase 18: deshabilitar bloquea el formulario como completado
+        $this->assertEquals('formulario_completado_y_recibido', $evaluadoPendiente->estado_formulario);
         $this->assertTrue($cuestionario->completado);
         $this->assertTrue($cuestionario->bloqueado);
     }
@@ -567,7 +566,6 @@ class Fase2DocumentacionTest extends TestCase
     {
         $evaluadoCompletado = EvaluadoOrden::factory()->completado()->create([
             'orden_id' => $this->orden->id,
-            'estado_evaluacion' => 'completado',
         ]);
 
         $response = $this->actingAs($this->adminUser)->post(
@@ -633,7 +631,10 @@ class Fase2DocumentacionTest extends TestCase
             ['tipo_resultado' => 'final', 'archivo' => $archivo]
         );
 
+        $this->evaluado->refresh();
         $this->orden->refresh();
+
+        $this->assertEquals('informe_final_enviado', $this->evaluado->estado_evaluacion);
         $this->assertEquals('entregado', $this->orden->estado);
         $this->assertTrue((bool) $this->orden->resultados_visibles_empresa);
     }
@@ -659,7 +660,8 @@ class Fase2DocumentacionTest extends TestCase
         Mail::assertQueued(ResultadosDisponiblesMail::class);
     }
 
-    public function test_subir_resultado_preliminar_avanza_estado_a_preliminar(): void
+    // Fase 18: no existe estado 'preliminar'; la orden se mantiene 'en_proceso' al subir preliminar
+    public function test_subir_resultado_preliminar_libera_visibilidad_sin_cambiar_estado_orden(): void
     {
         $this->orden->update(['estado' => 'en_proceso', 'resultados_visibles_empresa' => false]);
         $archivo = UploadedFile::fake()->create('informe_prelim.pdf', 1000, 'application/pdf');
@@ -670,7 +672,8 @@ class Fase2DocumentacionTest extends TestCase
         );
 
         $this->orden->refresh();
-        $this->assertEquals('preliminar', $this->orden->estado);
+        // Fase 18: orden permanece 'en_proceso' (no hay estado 'preliminar')
+        $this->assertEquals('en_proceso', $this->orden->estado);
         // Libera visibilidad automáticamente al subir preliminar
         $this->assertTrue((bool) $this->orden->resultados_visibles_empresa);
     }

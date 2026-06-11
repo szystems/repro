@@ -40,7 +40,7 @@ class Fase7EditorInformePreliminarTest extends TestCase
 
         $this->orden = Orden::factory()->create([
             'empresa_id' => $this->empresa->id,
-            'estado'     => 'preliminar',
+            'estado'     => 'en_proceso',
         ]);
 
         $this->evaluado = EvaluadoOrden::factory()->create([

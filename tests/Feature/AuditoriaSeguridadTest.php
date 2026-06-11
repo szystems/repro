@@ -37,7 +37,13 @@ class AuditoriaSeguridadTest extends TestCase
     private function crearAdmin(): User
     {
         $user = User::factory()->create(['role_as' => 3, 'estado' => 1]);
-        $user->roles()->attach(Role::where('name', 'admin')->first());
+        $adminRole = Role::where('name', 'admin')->first();
+        $permission = Permission::firstOrCreate(
+            ['name' => 'usuarios.ver'],
+            ['display_name' => 'Ver Usuarios', 'module' => 'usuarios']
+        );
+        $adminRole->givePermission($permission);
+        $user->roles()->attach($adminRole);
         return $user;
     }
 
@@ -73,7 +79,7 @@ class AuditoriaSeguridadTest extends TestCase
     public function test_h03_repro_puede_eliminar_orden(): void
     {
         $repro = $this->crearRepro();
-        $orden = Orden::factory()->create(['estado' => 'solicitud']);
+        $orden = Orden::factory()->create(['estado' => 'orden_recibida']);
 
         $response = $this->actingAs($repro)
             ->delete(route('ordenes.destroy', $orden));
@@ -85,7 +91,7 @@ class AuditoriaSeguridadTest extends TestCase
     public function test_h03_admin_puede_eliminar_orden(): void
     {
         $admin = $this->crearAdmin();
-        $orden = Orden::factory()->create(['estado' => 'solicitud']);
+        $orden = Orden::factory()->create(['estado' => 'orden_recibida']);
 
         $response = $this->actingAs($admin)
             ->delete(route('ordenes.destroy', $orden));
@@ -99,7 +105,7 @@ class AuditoriaSeguridadTest extends TestCase
         $empresaUser = $this->crearEmpresaUser();
         $orden = Orden::factory()->create([
             'empresa_id' => $empresaUser->empresa_id,
-            'estado' => 'solicitud',
+            'estado' => 'orden_recibida',
         ]);
 
         $response = $this->actingAs($empresaUser)
@@ -324,17 +330,17 @@ class AuditoriaSeguridadTest extends TestCase
     public function test_h10_orden_cambia_estado_se_registra_en_auditoria(): void
     {
         $admin = $this->crearAdmin();
-        $orden = Orden::factory()->create(['estado' => 'solicitud']);
+        $orden = Orden::factory()->create(['estado' => 'orden_recibida']);
 
         $this->actingAs($admin);
-        $orden->cambiarEstado('autorizacion');
+        $orden->cambiarEstado('en_proceso');
 
-        $this->assertDatabaseHas('auditoria_estados', [
-            'entidad_tipo' => Orden::class,
-            'entidad_id' => $orden->id,
+        // Fase 18: el historial se registra en estado_historial (no auditoria_estados)
+        $this->assertDatabaseHas('estado_historial', [
+            'orden_id' => $orden->id,
             'campo' => 'estado',
-            'estado_anterior' => 'solicitud',
-            'estado_nuevo' => 'autorizacion',
+            'estado_anterior' => 'orden_recibida',
+            'estado_nuevo' => 'en_proceso',
             'user_id' => $admin->id,
         ]);
     }
@@ -345,18 +351,18 @@ class AuditoriaSeguridadTest extends TestCase
         $orden = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
         ]);
 
         $this->actingAs($admin);
-        $evaluado->cambiarEstadoEvaluacion('contactando');
+        $evaluado->cambiarEstadoEvaluacion('en_proceso');
 
-        $this->assertDatabaseHas('auditoria_estados', [
-            'entidad_tipo' => EvaluadoOrden::class,
-            'entidad_id' => $evaluado->id,
+        // Fase 18: el historial se registra en estado_historial
+        $this->assertDatabaseHas('estado_historial', [
+            'evaluado_orden_id' => $evaluado->id,
             'campo' => 'estado_evaluacion',
-            'estado_anterior' => 'pendiente',
-            'estado_nuevo' => 'contactando',
+            'estado_anterior' => 'pendiente_de_evaluacion',
+            'estado_nuevo' => 'en_proceso',
             'user_id' => $admin->id,
         ]);
     }
@@ -367,7 +373,8 @@ class AuditoriaSeguridadTest extends TestCase
 
     public function test_h16_orden_rechaza_estado_fuera_de_catalogo(): void
     {
-        $orden = Orden::factory()->create(['estado' => 'solicitud']);
+        // Fase 18: crear con estado válido, luego intentar uno inválido
+        $orden = Orden::factory()->create();
 
         $this->expectException(\Illuminate\Validation\ValidationException::class);
 
@@ -377,10 +384,10 @@ class AuditoriaSeguridadTest extends TestCase
 
     public function test_h16_evaluado_rechaza_estado_evaluacion_invalido(): void
     {
+        // Fase 18: crear con estado válido, luego intentar uno inválido
         $orden = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
-            'estado_evaluacion' => 'pendiente',
         ]);
 
         $this->expectException(\Illuminate\Validation\ValidationException::class);

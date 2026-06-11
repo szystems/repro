@@ -247,14 +247,8 @@
                 <td class="info-value"><strong>{{ $orden->codigo_orden }}</strong></td>
                 <td class="info-label">Estado:</td>
                 <td class="info-value">
-                    <span class="badge 
-                        @if($orden->estado == 'solicitud') badge-secondary
-                        @elseif($orden->estado == 'en_proceso') badge-primary
-                        @elseif($orden->estado == 'entregado') badge-success
-                        @elseif($orden->estado == 'cancelado') badge-danger
-                        @else badge-info
-                        @endif">
-                        {{ $estados[$orden->estado] ?? ucfirst($orden->estado) }}
+                    <span class="badge badge-{{ $orden->estado_color }}">
+                        {{ $orden->estado_human }}
                     </span>
                 </td>
             </tr>

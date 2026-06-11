@@ -24,7 +24,7 @@ class OrdenFactory extends Factory
         return [
             'empresa_id' => Empresa::factory(),
             'creado_por' => User::factory(),
-            'estado' => 'solicitud',
+            'estado' => 'orden_recibida',
             'fecha_solicitud' => $this->faker->dateTimeBetween('-30 days', '+30 days'),
             'observaciones_internas' => $this->faker->optional()->paragraph(),
             'instrucciones_generales' => $this->faker->optional()->paragraph(),

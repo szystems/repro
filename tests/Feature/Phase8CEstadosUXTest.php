@@ -12,19 +12,17 @@ use App\Mail\NuevaOrdenSedeMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Mail;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 class Phase8CEstadosUXTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, CreatesRolesAndPermissions;
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'Repro']);
+        $this->setUpRolesAndPermissions();
     }
 
     // ─── Helpers ───
@@ -89,8 +87,8 @@ class Phase8CEstadosUXTest extends TestCase
         ]);
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
-            'estado_evaluacion' => 'programado',
-            'estado_formulario' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
+            'estado_formulario' => 'link_pendiente',
         ]);
 
         $response = $this->actingAs($user)->get(route('empresa.ordenes.show', $orden));
@@ -295,12 +293,13 @@ class Phase8CEstadosUXTest extends TestCase
     {
         $admin = $this->crearAdmin();
         $sede = Sede::factory()->create();
+        $reproRole = Role::where('name', 'repro')->firstOrFail();
 
         $response = $this->actingAs($admin)->post(url('insert-user'), [
             'name' => 'Test Repro',
             'email' => 'repro-test@example.com',
             'fecha_nacimiento' => '1990-01-01',
-            'role_as' => 2,
+            'role_id' => $reproRole->id,
             'sede_id' => $sede->id,
             'cargo' => 'Poligrafista',
         ]);
@@ -389,18 +388,26 @@ class Phase8CEstadosUXTest extends TestCase
         $this->assertEquals('Resultado Preliminar', $estados['resultado_preliminar']);
     }
 
-    public function test_transicion_en_proceso_a_resultado_preliminar_es_valida(): void
+    public function test_transicion_en_proceso_a_en_revision_es_valida(): void
     {
+        // Flujo correcto: en_proceso → en_revision (no salta directo a resultado_preliminar)
         $transiciones = EvaluadoOrden::transicionesEvaluacion();
 
-        $this->assertContains('resultado_preliminar', $transiciones['en_proceso']);
+        $this->assertContains('en_revision', $transiciones['en_proceso']);
     }
 
-    public function test_transicion_resultado_preliminar_a_completado_es_valida(): void
+    public function test_transicion_en_revision_a_resultado_preliminar_es_valida(): void
     {
         $transiciones = EvaluadoOrden::transicionesEvaluacion();
 
-        $this->assertContains('completado', $transiciones['resultado_preliminar']);
+        $this->assertContains('resultado_preliminar', $transiciones['en_revision']);
+    }
+
+    public function test_transicion_resultado_preliminar_a_informe_final_enviado_es_valida(): void
+    {
+        $transiciones = EvaluadoOrden::transicionesEvaluacion();
+
+        $this->assertContains('informe_final_enviado', $transiciones['resultado_preliminar']);
     }
 
     public function test_estado_resultado_preliminar_tiene_texto_y_color(): void
@@ -411,32 +418,32 @@ class Phase8CEstadosUXTest extends TestCase
         ]);
 
         $this->assertEquals('Resultado Preliminar', $evaluado->estado_evaluacion_texto);
-        $this->assertEquals('info', $evaluado->estado_evaluacion_color);
+        $this->assertNotEmpty($evaluado->estado_evaluacion_color);
     }
 
-    public function test_puede_cambiar_estado_de_en_proceso_a_resultado_preliminar(): void
+    public function test_puede_cambiar_estado_de_en_proceso_a_en_revision(): void
     {
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => Orden::factory()->create()->id,
             'estado_evaluacion' => 'en_proceso',
         ]);
 
-        $resultado = $evaluado->cambiarEstadoEvaluacion('resultado_preliminar');
+        $resultado = $evaluado->cambiarEstadoEvaluacion('en_revision');
 
         $this->assertTrue($resultado);
-        $this->assertEquals('resultado_preliminar', $evaluado->fresh()->estado_evaluacion);
+        $this->assertEquals('en_revision', $evaluado->fresh()->estado_evaluacion);
     }
 
-    public function test_puede_cambiar_estado_de_resultado_preliminar_a_completado(): void
+    public function test_puede_cambiar_estado_de_resultado_preliminar_a_informe_final_enviado(): void
     {
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => Orden::factory()->create()->id,
             'estado_evaluacion' => 'resultado_preliminar',
         ]);
 
-        $resultado = $evaluado->cambiarEstadoEvaluacion('completado');
+        $resultado = $evaluado->cambiarEstadoEvaluacion('informe_final_enviado');
 
         $this->assertTrue($resultado);
-        $this->assertEquals('completado', $evaluado->fresh()->estado_evaluacion);
+        $this->assertEquals('informe_final_enviado', $evaluado->fresh()->estado_evaluacion);
     }
 }

@@ -338,6 +338,9 @@ Route::prefix('cuestionario')->name('cuestionario.')->middleware('throttle:60,1'
     // Subida de documentos por evaluado
     Route::post('/{token}/subir-documento', [CuestionarioController::class, 'subirDocumento'])->name('subir-documento');
 
-    // Página de completado
+    // Página de completado (detalle con firma, print)
     Route::get('/{token}/completado', [CuestionarioController::class, 'completado'])->name('completado');
+
+    // Vista de estado del proceso — timeline simplificado para el candidato
+    Route::get('/{token}/estado', [CuestionarioController::class, 'estadoCandidato'])->name('estado');
 });

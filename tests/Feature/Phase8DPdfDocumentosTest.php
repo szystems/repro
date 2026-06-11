@@ -149,7 +149,8 @@ class Phase8DPdfDocumentosTest extends TestCase
 
         $evaluado->refresh();
         $this->assertEquals($repro->id, $evaluado->responsable_id);
-        $this->assertEquals('programado', $evaluado->estado_evaluacion);
+        // Fase 18: programar cita cambia estado_programacion, no estado_evaluacion
+        $this->assertEquals('programado', $evaluado->estado_programacion);
     }
 
     public function test_reprogramar_evaluacion_actualiza_responsable(): void

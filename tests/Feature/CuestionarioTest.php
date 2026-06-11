@@ -97,7 +97,7 @@ class CuestionarioTest extends TestCase
     // R1 — Auto-estados en flujo del candidato
     // =========================================================
 
-    public function test_r1_completar_cuestionario_establece_docs_pendientes(): void
+    public function test_r1_completar_cuestionario_establece_formulario_completado(): void
     {
         $empresa = Empresa::factory()->create();
         $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
@@ -105,7 +105,7 @@ class CuestionarioTest extends TestCase
             'orden_id'          => $orden->id,
             'token_unico'       => 'token-r1-completar',
             'token_expira_at'   => now()->addDays(30),
-            'estado_evaluacion' => 'link_enviado',
+            'estado_evaluacion' => 'en_proceso',
             'cuestionario_completado' => false,
         ]);
         \App\Models\Cuestionario::create([
@@ -122,7 +122,8 @@ class CuestionarioTest extends TestCase
         ]);
 
         $evaluado->refresh();
-        $this->assertEquals('docs_pendientes', $evaluado->estado_evaluacion);
+        // Fase 18: el formulario completado se registra en estado_formulario
+        $this->assertEquals('formulario_completado_y_recibido', $evaluado->estado_formulario);
         $this->assertTrue($evaluado->cuestionario_completado);
     }
 }

@@ -161,7 +161,7 @@ class Sprint1BugFixesTest extends TestCase
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
             'fecha_programada' => now()->addDays(5),
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
             'sede_id' => $sede->id,
         ]);
 
@@ -186,7 +186,7 @@ class Sprint1BugFixesTest extends TestCase
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
             'fecha_programada' => now()->addDays(3),
-            'estado_evaluacion' => 'completado',
+            'estado_evaluacion' => 'informe_final_enviado',
         ]);
 
         $response = $this->actingAs($repro)
@@ -210,7 +210,7 @@ class Sprint1BugFixesTest extends TestCase
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
             'fecha_programada' => '2026-06-15 23:59:59',
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
             'sede_id' => $sede->id,
         ]);
 

@@ -98,8 +98,8 @@ class EmpresaController extends Controller
         // En proceso: en_proceso, preliminar, final
         // Completadas: entregado
 
-        $estadosPendientes = ['solicitud', 'autorizacion', 'requisito', 'programacion'];
-        $estadosProceso = ['en_proceso', 'preliminar', 'final'];
+        $estadosPendientes = ['orden_recibida'];
+        $estadosProceso = ['en_proceso'];
 
 
         // Estadísticas de la empresa

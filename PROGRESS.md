@@ -2,9 +2,9 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-05-24 (sesion: Fase 16 — Lotes A+B+C+D + fixes PDF completos y deployados)
-**Suite de tests:** 538/538 pasando
-**Deploy a producción:** ✅ COMPLETO 2026-05-24 — todos los lotes deployados, BD sincronizada
+**Ultima actualizacion:** 2026-06-10 (sesion: Fase 18 Prioridad 4 QA — **Tests Phase8C corregidos + CreatesRolesAndPermissions mejorado (level + permisos admin). Pendiente: cron fallback + deploy**)
+**Suite de tests:** 544 pasando / 2 fallos preexistentes sin relación (rutas creación usuario `show-user`/`insert-user`) — verificado 2026-06-10
+**Deploy a producción:** ✅ COMPLETO 2026-05-27 — commit e3958066 deployado, BD sincronizada
 **Script deploy:** scripts/deploy_Fase16_LoteC_2026-05-24.sh
 
 ---
@@ -29,6 +29,8 @@
 | Fase 14 | Configuracion ampliada | COMPLETADA |
 | Fase 15 | Auditoria de permisos por rol | COMPLETADA |
 | Fase 16 | Observaciones cliente 2026-05-22 | ✅ COMPLETADA Y DEPLOYADA |
+| Fase 17 | Transiciones de estado ampliadas (cliente pide control total) | ❌ CANCELADA (reemplazada por Fase 18) |
+| Fase 18 | Rediseño a 4 estados independientes (Formulario/Programación/Evaluación/Orden) | 🔄 Semanas 1-2-3 COMPLETADAS — todos los frontends, selectores, historial, vista candidato. Pendiente: Notificaciones (P3) + QA/deploy (P4) |
 
 ---
 
@@ -870,3 +872,529 @@ Estados objetivo según cliente (nomenclatura exacta):
 | `routes/web.php` | ruta `empresa.sedes-repro` |
 
 **Migraciones:** Sin nuevas migraciones en este deploy. Las 2 migraciones del 2026-05-18 (`sede_region_empresa`, `dias_vigencia_token`/`nombre_empresa`) tenían las columnas en BD pero no estaban registradas en la tabla `migrations` — corregido en batch 102.
+
+---
+
+## Fase 17 — Transiciones de estado ampliadas (planificada 2026-06-01)
+
+**Origen:** Q&A cliente 2026-06-01 — el cliente quiere más control sobre los estados de evaluación.
+
+**Contexto de la decisión:**
+El cliente notó que al agregar un evaluado con email, el estado salta automáticamente a `Link Enviado` sin pasar por `Pendiente`, y que el selector de estados solo muestra las transiciones permitidas desde el estado actual (no los 15 estados). Después de explicarle el sistema, el cliente propuso ver "todos los estados posibles que siguen en el proceso en orden".
+
+**Solución acordada (compromiso):**
+No eliminar restricciones del todo. En cambio, ampliar las transiciones para que desde cualquier estado se pueda avanzar a **cualquier estado posterior en el flujo principal**, además de las opciones de excepción (`cancelado`, `desistio`, `inasistencia`). No se puede retroceder (excepto `cancelado → pendiente`).
+
+**Flujo principal (orden):**
+`pendiente → contactando → contactado → link_enviado → confirmado → programado → en_sede → docs_pendientes → en_proceso → resultado_preliminar → completado`
+
+**Regla nueva:**
+Desde cualquier estado del flujo principal, habilitar como destino todos los estados que están **después** de él en ese flujo, más las excepciones del estado actual.
+
+**Archivos a modificar:**
+- `app/Models/EvaluadoOrden.php` — método `transicionesEvaluacion()`: ampliar arrays de transiciones permitidas
+
+**Ejemplo del cambio:**
+```php
+// Antes:
+'link_enviado' => ['confirmado', 'programado', 'cancelado', 'desistio'],
+
+// Después:
+'link_enviado' => ['confirmado', 'programado', 'en_sede', 'docs_pendientes', 'en_proceso', 'resultado_preliminar', 'completado', 'cancelado', 'desistio'],
+```
+
+**Tests a crear/actualizar:**
+- `tests/Feature/CalendarioTest.php` o nuevo `Fase17TransicionesTest.php`
+- Verificar que todos los saltos hacia adelante son posibles
+- Verificar que retroceder al estado anterior sigue bloqueado
+- Verificar que `completado` y `desistio` siguen siendo estados finales
+
+**Notas adicionales:**
+- Los cambios automáticos del sistema (programar cita → `programado`, enviar link → `link_enviado`, etc.) no se tocan
+- El estado `cancelado → pendiente` se mantiene como única excepción de retroceso
+- No se modifica nada de `transicionesFormulario()` (estado del cuestionario)
+- **Estado:** ❌ CANCELADA — superada por el rediseño arquitectural de la **Fase 18** (4 estados independientes). El "control total" que pedía el cliente se resuelve mejor separando el estado único en 4 campos en lugar de ampliar transiciones de un único campo monolítico.
+
+---
+
+## Fase 18 — Rediseño a 4 estados independientes (planificada 2026-06-04)
+
+**Origen:** PDFs definitivos del cliente `docs/Observaciones cliente/Listado de estados (1).pdf` + `ESTADOS.pdf` + `REPRO Informe de cambios y preguntas Junio 2026.pdf` + captura de flujo.
+**Estado:** 🔄 EN DESARROLLO — Semanas 1-2 completadas + corrección crítica de `estado_evaluacion` (2026-06-10). Pendiente: reglas de sinergia, Semana 3 (frontend), Semana 4 (QA/deploy).
+
+---
+
+## ⭐ FUENTE DE VERDAD — Las 4 máquinas de estado (DEFINITIVO 2026-06-10)
+
+> **Leer esto ANTES de tocar cualquier lógica de estados.** Esta tabla es la referencia oficial validada contra el PDF del cliente. Los 4 campos son **independientes** y cada candidato muestra 3 badges (Formulario / Programación / Evaluación); el estado de Orden es interno/oculto.
+>
+> **Error histórico corregido:** durante la Semana 1-2, `estado_evaluacion` se implementó por error con los valores del FORMULARIO (`link_pendiente`, `link_enviado`, `pendiente_de_llenar`). Esto era incorrecto: la evaluación física (polígrafo/VSA/socioeconómico) es presencial o por videollamada, **nunca tiene "link"**. Corregido el 2026-06-10.
+
+### 1️⃣ `estado_formulario` — ¿El candidato llenó el formulario? (5 valores, automático)
+
+| Valor (BD) | Etiqueta | Cuándo |
+|------------|----------|--------|
+| `link_pendiente` | Link Pendiente | Estado inicial si NO tiene email |
+| `link_enviado` | Link Enviado | Automático al crear orden con email |
+| `pendiente_de_llenar` | Pendiente de Llenar | Auto +24h sin abrir (job) |
+| `formulario_completado_y_recibido` | Formulario Completado y Recibido | Al enviar el cuestionario (final) |
+| `vencido` | Vencido | Auto +30 días sin completar (job) |
+
+Transiciones: `link_pendiente → {link_enviado, vencido}` · `link_enviado → {pendiente_de_llenar, vencido}` · `pendiente_de_llenar → {formulario_completado_y_recibido, vencido}` · completado/vencido = finales.
+
+### 2️⃣ `estado_programacion` — ¿Ya hay cita? (8 valores, mixto · respuesta cliente #3: SIN "Asistió")
+
+| Valor (BD) | Etiqueta | Cómo cambia |
+|------------|----------|-------------|
+| `contactando` | Contactando | **Inicial**, automático al crear orden |
+| `contactado` | Contactado | Manual |
+| `programado` | Programado | Automático al agendar en calendario |
+| `proceso_realizado` | Proceso Realizado | Automático cuando Evaluación → En revisión |
+| `reprogramado` | Reprogramado | Manual (botón Reprogramar) |
+| `inasistencia` | Inasistencia | Manual (solo tras hora programada) |
+| `desistio` | Desistió | Manual — **reactivable** (cliente #8) |
+| `cancelado` | Cancelado | Manual — final |
+
+Transiciones: `contactando → {contactado, desistio, cancelado}` · `contactado → {programado, reprogramado, desistio, cancelado}` · `programado → {proceso_realizado, inasistencia, reprogramado, cancelado}` · `reprogramado → {contactando, programado, cancelado}` · `inasistencia → {reprogramado, cancelado}` · `desistio → {contactando}` (reactivable) · `proceso_realizado`/`cancelado` = finales.
+> **Nota:** El calendario NO es un campo separado — refleja `estado_programacion` (respuesta cliente #4).
+
+### 3️⃣ `estado_evaluacion` — ¿Etapa técnica de la prueba? (7 valores, manual salvo último paso)
+
+| Valor (BD) | Etiqueta | Cómo cambia |
+|------------|----------|-------------|
+| `pendiente_de_evaluacion` | Pendiente de Evaluación | **Inicial**, automático al crear orden |
+| `en_proceso` | En Proceso | **Manual** cuando se está realizando la prueba (cliente #2) |
+| `en_revision` | En Revisión | Manual |
+| `resultado_preliminar` | Resultado Preliminar | Manual |
+| `informe_final_enviado` | Informe Final Enviado | Automático al subir el informe final |
+| `cancelado` | Cancelado | Manual — **solo desde Pendiente de Evaluación** — reactivable |
+| `desistio` | Desistió | Manual — **solo desde Pendiente de Evaluación** — reactivable |
+
+Transiciones: `pendiente_de_evaluacion → {en_proceso, cancelado, desistio}` · `en_proceso → {en_revision}` · `en_revision → {resultado_preliminar}` · `resultado_preliminar → {informe_final_enviado}` · `informe_final_enviado` = final · `cancelado → {pendiente_de_evaluacion}` · `desistio → {pendiente_de_evaluacion}`.
+> **Restricción dura (PDF p.2):** Cancelado/Desistió SOLO desde `pendiente_de_evaluacion`. Una vez en `en_proceso`, el flujo es irreversible (no retrocede ni se cancela, para proteger el historial).
+
+### 4️⃣ `Orden.estado` — Estado interno general (4 valores, 100% automático, OCULTO)
+
+| Valor (BD) | Etiqueta | Regla automática (`Orden::recalcularEstado()`) |
+|------------|----------|--------------------------------------------------|
+| `orden_recibida` | Orden Recibida | **Inicial**, al crear la orden |
+| `en_proceso` | En Proceso | ≥1 candidato salió de su estado inicial de evaluación |
+| `entregado` | Entregado | TODOS los candidatos en `informe_final_enviado`/`cancelado`/`desistio` |
+| `cancelado` | Cancelado | TODOS los candidatos en `cancelado`/`desistio` |
+
+> Solo visible en "Mis Órdenes" / "Mis Últimas Órdenes" y Listado de Empresas. **No se edita manualmente** (Opción A del cliente).
+
+### 🔀 Reglas de sinergia (cruce entre campos) — PDF p.3
+
+| # | Regla | Estado |
+|---|-------|--------|
+| S1 | Estados iniciales: Formulario=`link_enviado` (o `link_pendiente` sin email), Programación=`contactando`, Evaluación=`pendiente_de_evaluacion`, Orden=`orden_recibida` | ✅ Implementado |
+| S2 | **Virtual:** Formulario debe estar `formulario_completado_y_recibido` antes de poder `programar` | ❌ PENDIENTE |
+| S3 | **Presencial:** se puede `programar` con formulario incompleto (se llena en oficina) | ⚠️ Implícito (no hay gating) |
+| S4 | Evaluación no entra a `en_proceso` si Formulario ≠ `formulario_completado_y_recibido` | ❌ PENDIENTE |
+| S5 | Evaluación no entra a `en_proceso` sin haber pasado por `programado` | ❌ PENDIENTE |
+| S6 | Evaluación → `en_revision` dispara Programación → `proceso_realizado` (auto) | ❌ PENDIENTE |
+| S7 | Todo cambio de estado guarda fecha/hora, estado anterior/nuevo, observación, usuario en `estado_historial` | ✅ Implementado (vía `cambiarEstado*()`) |
+| S8 | Modalidad editable; al cambiar aplica regla a programaciones NUEVAS; citas ya agendadas se respetan | ⚠️ Campo existe; gating S2 pendiente |
+
+> ⚠️ **Deuda técnica clave:** `programarEvaluacion()`/`reprogramarEvaluacion()` asignan `estado_programacion` directamente sin pasar por `cambiarEstadoProgramacion()`, por lo que **NO validan transición ni registran historial** de programación. Refactorizar al implementar la sinergia.
+
+---
+
+### Decisión arquitectural
+
+El campo único `estado_evaluacion` (15 valores) se **descompone en 4 estados independientes**. Cada uno responde a una sola pregunta y se muestra como badge separado en las vistas.
+
+| Campo nuevo | Pregunta | Visibilidad |
+|-------------|----------|-------------|
+| `estado_formulario` (redefinido) | ¿Llenó el formulario? | REPRO, Cliente, Candidato |
+| `estado_programacion` (**NUEVO**) | ¿Ya hay cita? | REPRO, Cliente |
+| `estado_evaluacion` (redefinido, 7 valores) | ¿Etapa técnica? | REPRO, Cliente |
+| `estado_orden` (= `Orden.estado`, simplificado a 4) | Estado interno | **Oculto** salvo "Mis Órdenes" / Listado empresas |
+
+### Máquina de estados estricta (Estado Actual → Siguientes Permitidos)
+
+**1. Formulario** (automático por tiempo/acción):
+```
+Link enviado → {Pendiente de llenar (auto 24h), Llenando (al abrir)}
+Pendiente de llenar → {Llenando, Vencido (auto 30 días)}
+Llenando → {Formulario completado y recibido, Vencido}
+Formulario completado y recibido → (final)
+Vencido → {Llenando, Formulario completado y recibido}   // si reutiliza el enlace
+```
+
+**2. Evaluación** (manual salvo el último paso):
+```
+Pendiente de evaluación → {En proceso, Cancelado, Desistió}
+En proceso            → {En revisión}
+En revisión           → {Resultado Preliminar}
+Resultado Preliminar  → {Informe final enviado}        // auto al subir informe final
+Informe final enviado → (final)
+Cancelado / Desistió  → (final)
+```
+> Restricción dura: `Cancelado`/`Desistió` SOLO desde `Pendiente de evaluación`. A partir de `En proceso` el flujo es irreversible (no retrocede ni se cancela).
+
+**3. Programación** (mixto):
+```
+Contactando      → {Contactado, Programado, Desistió, Cancelado}
+Contactado       → {Programado, Reprogramado, Desistió, Cancelado}
+Programado       → {Asistió, Inasistencia, Reprogramado, Desistió, Cancelado}
+Asistió          → {Proceso realizado}
+Reprogramado     → {Programado}
+Proceso realizado→ (final del tramo)
+```
+> `Programado` (auto al calendarizar). `Proceso realizado` (auto cuando Evaluación → En revisión). `Inasistencia` solo después de la hora programada.
+
+**4. Orden** (100% automático, invisible):
+```
+Orden recibida → En proceso → {Entregado | Cancelado}
+```
+- `En proceso`: ≥1 candidato sale de su estado inicial.
+- `Entregado`: TODOS los candidatos en `Informe final enviado` / `Cancelado` / `Desistió`.
+- `Cancelado`: TODOS en `Cancelado` / `Desistió`.
+
+### Reglas de sinergia (cruce entre estados)
+
+1. Estados iniciales auto: Formulario=`Link enviado`, Evaluación=`Pendiente de evaluación`, Programación=`Contactando`, Orden=`Orden recibida`.
+2. **Virtual:** Formulario debe estar `Completado y recibido` antes de `Programado`.
+3. **Presencial:** puede programarse con formulario en `Link enviado`/`Pendiente`/`Llenando`.
+4. Evaluación no entra a `En proceso` si Formulario ≠ `Completado y recibido` (virtual y presencial).
+5. Evaluación no entra a `En proceso` sin haber pasado por `Programado`.
+6. Evaluación → `En revisión` dispara Programación → `Proceso realizado` (auto).
+7. `Inasistencia`/`Desistió`/`Cancelado` en Programación bloquean el avance de Evaluación.
+8. Todo cambio guarda: fecha/hora, estado anterior, estado nuevo, observación opcional.
+
+### Cambios de base de datos
+
+| Cambio | Detalle |
+|--------|---------|
+| Nueva columna | `estado_programacion VARCHAR` en `evaluados_orden` (default `contactando`) |
+| Redefinir | `estado_evaluacion` → 7 valores nuevos (mapeo desde los 15 actuales) |
+| Confirmar | `estado_formulario` con los 5 valores nuevos |
+| Simplificar | `Orden.estado` a 4 valores automáticos (eliminar autorización/requisito/informe preliminar) |
+| Nueva tabla | `estado_historial` (evaluado_id, campo, estado_anterior, estado_nuevo, observacion, user_id, created_at) |
+| Nuevo campo | `modalidad` (virtual/presencial) en `evaluados_orden` o `ordenes` — **confirmar si ya existe** |
+| Nuevo campo | `motivo_observacion` transversal (o se deriva de `estado_historial`) |
+
+### Job programado (scheduler)
+
+- `app/Console/Kernel.php`: comando que cada hora revisa formularios:
+  - `Link enviado` con +24h sin abrir → `Pendiente de llenar`
+  - cualquier estado no completado con +30 días → `Vencido`
+- Requiere cron activo en producción (iPage) — **verificar disponibilidad de cron**; si no, fallback con check on-access.
+
+### Migración de datos en producción
+
+Mapear cada `estado_evaluacion` actual a los 3 campos nuevos:
+
+| Estado actual | → Formulario | → Programación | → Evaluación |
+|---------------|--------------|----------------|--------------|
+| pendiente | Link enviado | Contactando | Pendiente de evaluación |
+| contactando/contactado | (según cuestionario) | Contactado | Pendiente de evaluación |
+| link_enviado | Link enviado | Contactando | Pendiente de evaluación |
+| confirmado/programado | (según cuestionario) | Programado | Pendiente de evaluación |
+| en_sede | Completado y recibido | Asistió | Pendiente de evaluación |
+| docs_pendientes | Completado y recibido | Programado | Pendiente de evaluación |
+| en_proceso | Completado y recibido | Proceso realizado | En proceso |
+| completado | Completado y recibido | Proceso realizado | Informe final enviado |
+| inasistencia | (sin cambio) | Inasistencia | Pendiente de evaluación |
+| reprogramado | (sin cambio) | Reprogramado | Pendiente de evaluación |
+| cancelado | (sin cambio) | Cancelado | Cancelado |
+| desistio | (sin cambio) | Desistió | Desistió |
+
+### Cronograma — 4 semanas
+
+**Semana 1 — Base de datos y modelos**
+- Migraciones: `estado_programacion`, redefinir `estado_evaluacion`, simplificar `Orden.estado`, tabla `estado_historial`, campo `modalidad`.
+- Backend: actualizar `EvaluadoOrden` (casts, accessors de texto/color para los 3 campos), `Orden::estadosDisponibles()` a 4 valores.
+- Script de migración de datos (mapeo de la tabla anterior) idempotente para producción.
+
+**Semana 2 — Lógica de transiciones, sinergia y jobs**
+- Backend: máquinas de estado por campo (`transicionesFormulario/Programacion/Evaluacion()`), validación de transiciones.
+- Reglas de sinergia (virtual/presencial, En revisión → Proceso realizado, gating de En proceso).
+- Recalculo automático de `estado_orden`.
+- Registro en `estado_historial` en cada cambio.
+- Job/comando programado (24h → Pendiente de llenar, 30 días → Vencido).
+- Controladores: `OrdenesController::cambiarEstadoEvaluado()`, `CalendarioController::programar/reprogramar()`, `CuestionarioController::completar()`.
+
+**Semana 3 — Frontend / vistas**
+- Selector dinámico que muestra solo "siguientes estados permitidos" por campo.
+- 3 badges (Formulario/Programación/Evaluación) en: listado órdenes, listado evaluados, cuestionarios (cliente), reportes.
+- Vista simplificada del candidato (4 estados).
+- Panel/modal de historial de cambios con fecha/hora.
+- Campo Motivo/Observación en cambios de estado.
+- Renombrar columnas Listado de empresas: "Estado" → "Estado de Orden", "Registro" → "Fecha de registro".
+
+**Semana 4 — Tests, QA y deploy**
+- Tests de máquina de estados (transiciones válidas/inválidas por campo).
+- Tests de sinergia (gating virtual/presencial, auto Proceso realizado, recalculo de Orden).
+- Tests del job programado (24h/30 días).
+- Test de migración de datos.
+- Deploy FTP iPage + verificación MD5 + limpieza de caché + verificación de cron.
+
+### Archivos clave a modificar
+
+- `app/Models/EvaluadoOrden.php` — 3 máquinas de estado, accessors, casts.
+- `app/Models/Orden.php` — `estadosDisponibles()` a 4 automáticos + recalculo.
+- `app/Http/Controllers/Admin/OrdenesController.php` — `cambiarEstadoEvaluado()`, gating.
+- `app/Http/Controllers/Admin/CalendarioController.php` — `programar()`, `reprogramar()`.
+- `app/Http/Controllers/CuestionarioController.php` — `completar()` (sincroniza estado_formulario).
+- `app/Console/Kernel.php` + nuevo comando — auto-transiciones por tiempo.
+- Vistas: `admin/ordenes/index`, `admin/ordenes/show`, `reportes/evaluaciones`, `cuestionarios/index`, `empresa/ordenes/*`, vista candidato.
+
+### Contradicciones detectadas (requieren confirmación del cliente)
+
+1. **Captura (1 estado lineal) vs PDFs (4 estados):** la captura muestra `Solicitud → Link Enviado → ... → Completado` en una sola línea; los PDF definen 4 estados separados. Se asume **PDFs definitivos** — confirmar.
+2. **"En Proceso" manual vs automático:** `Listado de estados` dice que debe ser manual; `ESTADOS` lo lista manual también, pero el Lote D lo hizo automático al subir preliminar. Revertir a manual.
+3. **"Desistió" reactivable:** `Listado de estados` lo quiere reactivable como Cancelado; `ESTADOS` lo trata como final. Confirmar.
+4. **Nomenclatura Orden:** `Listado de estados` pide `Pendiente → Recibida`; `ESTADOS` usa `Orden recibida`. Confirmar.
+5. **Campo `modalidad`** (virtual/presencial): confirmar si ya existe o se crea.
+6. **Motivo/Observación:** obligatorio u opcional (el PDF dice ambas cosas en secciones distintas).
+
+### ✅ Respuestas del cliente confirmadas (2026-06-04)
+
+El cliente (Otto Szarata) devolvió el informe con las respuestas dentro de cada pregunta + comentarios finales. Decisiones cerradas:
+
+| # | Pregunta | Respuesta del cliente | Impacto en el desarrollo |
+|---|----------|------------------------|--------------------------|
+| 1 | Modelo definitivo (4 estados) | **Sí**, los 4 estados independientes de los PDF son lo oficial. El último documento manda. | Se procede con el rediseño de 4 campos. |
+| 2 | "En Proceso" ¿manual? | **Manual.** No al subir preliminar, sino **cuando se está realizando la prueba**. | Revertir auto-cambio del Lote D. `En proceso` solo manual. |
+| 3 | Estado "Asistió" | **Se quita.** Programación queda: `Contactando → Contactado → Programado → Proceso realizado → Reprogramado → Inasistencia/Desistió/Cancelado`. Las notas aclaratorias cubren el caso. | **Eliminar `Asistió`** de Programación (8 valores, no 9). |
+| 4 | Calendario vs Programación | **Son el mismo estado.** No hay estado de calendario separado; el calendario refleja el estado de Programación. | UN solo campo `estado_programacion`. El calendario lo lee. |
+| 5 | Migración de datos | **Las órdenes actuales son de prueba, se pueden eliminar.** | No se requiere script de migración de datos complejo; se limpian las órdenes de prueba. |
+| 6 | Motivo/Observación | **Sí**, mismo campo disponible para cualquier situación (salud, papelería, no quiso la prueba, etc.). | Campo de notas/observación transversal en cambios de estado. |
+| 7 | Virtual vs Presencial | **RESUELTO (2026-06-04).** Se agrega campo `modalidad` (Presencial/Virtual) editable en la orden. Presencial: programa sin formulario completo. Virtual: exige formulario completado antes de programar. El cliente preguntó si la modalidad se puede editar → **Sí**, editable en cualquier momento con registro en historial. | Campo `modalidad` editable. Regla condicional al programar. Cambio de modalidad queda en `estado_historial`. Citas ya programadas se respetan; la regla aplica solo a programaciones nuevas. |
+| 8 | "Desistió" reactivable | **Sí, que se pueda reactivar.** | `Desistió` reactivable (como `Cancelado`). |
+| 9 | Notificación al creador | **Sí**, correcto; y otras notificaciones nuevas también. | Aplicar matriz de notificaciones del documento. |
+
+**Comentarios adicionales del cliente:**
+- **Estado de Orden:** solo debe quedar lo del último documento (un solo cuadro, no dos).
+- **Notificaciones al candidato (NUEVO requerimiento):** el cliente pregunta si el candidato puede recibir notificaciones (formulario recibido, papelería validada y aceptada, fecha de programación). → **Evaluar canal**: el candidato no tiene login (accede por token), así que sería por **correo electrónico** o WhatsApp, no in-app.
+- **WhatsApp API (NUEVO requerimiento):** el cliente pregunta si se puede integrar WhatsApp API. → **Recomendación: NO en esta fase.** Diferir a una fase posterior (costos de API de Meta, verificación de número, plantillas aprobadas). Cotizar aparte.
+- **Aclaración importante:** los estados "ya existían, no se creó ninguno" (estado de orden, evaluación, link, calendario/programación). El trabajo es **reorganizarlos en campos separados**, no inventar estados nuevos.
+
+**Ajustes al plan tras las respuestas:**
+- Programación pasa de 9 → **8 valores** (sin `Asistió`).
+- No hay campo `estado_calendario`; el calendario consume `estado_programacion`.
+- Migración de datos simplificada (órdenes actuales son de prueba → se pueden borrar).
+- `En proceso` (Evaluación) **100% manual** (revertir Lote D 1b).
+- `Desistió` reactivable.
+- **Modalidad (pregunta 7) RESUELTA:** campo `modalidad` (Presencial/Virtual) **editable** en cualquier momento desde la orden. Al cambiarla, el sistema aplica la regla correcta a las programaciones nuevas (Virtual exige formulario completo; Presencial no). Las citas ya programadas se respetan. Todo cambio de modalidad se registra en `estado_historial` (fecha/hora/usuario).
+- Backlog nuevo (fase posterior): notificaciones al candidato + WhatsApp API.
+
+**Estado:** ✅ Todas las preguntas de clarificación están RESUELTAS. La Fase 18 está lista para iniciar desarrollo (Semana 1).
+
+### ✅ Semana 1 — Base de datos y modelos (COMPLETADA 2026-06-09)
+
+**Estado:** Migraciones ejecutadas, todos los tests pasan (166 tests, 343 assertions)
+
+#### Archivos creados/modificados:
+
+**Migraciones (4):**
+1. ✅ `database/migrations/2026_06_04_100001_add_estado_programacion_to_evaluados_orden.php`
+   - Agrega campo `estado_programacion` ENUM(8 valores) DEFAULT 'contactando'
+2. ✅ `database/migrations/2026_06_04_100002_create_estado_historial_table.php`
+   - Tabla nueva con evaluado_orden_id, orden_id, campo, estado_anterior/nuevo, observacion, user_id, timestamps
+3. ✅ `database/migrations/2026_06_04_100003_redefine_estado_evaluacion_values.php`
+   - Mapea 15 valores antiguos → 7 nuevos + redefine ENUM
+4. ✅ `database/migrations/2026_06_04_100004_simplify_orden_estado_values.php`
+   - Mapea 9 valores antiguos → 4 nuevos + redefine ENUM
+
+**Modelos (3):**
+1. ✅ `app/Models/EstadoHistorial.php` (nuevo)
+   - Relaciones: evaluadoOrden(), orden(), usuario()
+   - Scopes: deEvaluado(), deOrden(), deCampo(), masRecientes()
+   - Métodos estáticos: obtenerHistorialEvaluado(), obtenerHistorialCampo()
+
+2. ✅ `app/Models/EvaluadoOrden.php` (actualizado)
+   - estadosFormularioDisponibles() → 5 valores actualizados
+   - estadosProgramacionDisponibles() → 8 valores (sin Asistió)
+   - estadosEvaluacionDisponibles() → 7 valores redefinidos
+   - transicionesFormulario(), transicionesProgramacion(), transicionesEvaluacion()
+   - puedeTransicionarEstado*() + cambiarEstado*() para 3 campos
+   - Accessors: getEstadoFormularioTexto/Color, getEstadoProgramacionTexto/Color, getEstadoEvaluacionTexto/Color (actualizados)
+   - Relación: historialEstados()
+   - camposEstadoValidos() actualizado con 3 campos
+
+3. ✅ `app/Models/Orden.php` (actualizado)
+   - estadosDisponibles() → 4 valores (orden_recibida, en_proceso, entregado, cancelado)
+   - recalcularEstado() → lógica automática basada en evaluados + registro en historial
+   - getEstadoColorAttribute() actualizado para 4 valores
+
+**Tests (2):**
+1. ✅ `tests/Unit/Fase18MaquinaEstadosTest.php`
+   - 20+ tests para transiciones de 3 estados
+   - Tests de independencia entre estados
+   - Tests de Orden.recalcularEstado() (4 casos)
+
+2. ✅ `tests/Unit/Fase18SinergiaTest.php`
+   - Tests modalidad virtual/presencial + formulario
+   - Tests modalidad editable + historial
+   - Tests En revisión → Proceso realizado
+   - Tests relaciones + accessors
+
+#### Pasos para ejecutar:
+
+```bash
+# 1. Ejecutar migraciones
+docker compose exec -T app php artisan migrate --no-interaction
+
+# 2. Verificar esquema
+docker compose exec -T app php artisan migrate:status
+
+# 3. Ejecutar tests de Fase 18
+docker compose exec -T app php artisan test --filter=Fase18
+
+# 4. Si tests pasan, ejecutar suite completa
+docker compose exec -T app php artisan test
+```
+
+#### Reglas implementadas:
+
+✅ **Programación** = 8 valores (NO "Asistió" per respuesta cliente #3)  
+✅ **Evaluación "En proceso"** = 100% manual (revertir Lote D 1b si existe, per respuesta cliente #2)  
+✅ **Desistió** = reactivable a "Contactando" (per respuesta cliente #8)  
+✅ **Modalidad** = editable anytime + historial + reglas hacia adelante (Virtual require formulario, Presencial libre)  
+✅ **Historial** = registro automático en estado_historial para todos los cambios de estado + cambios de modalidad  
+✅ **Orden** = recalcularEstado() automático basado en todos los evaluados
+
+#### Verificaciones completadas (2026-06-09):
+
+- [x] Migraciones ejecutadas exitosamente (5 migraciones Fase 18 + fix estado_formulario ENUM)
+- [x] Tests Fase18MaquinaEstadosTest pasan (44 tests ✅)
+- [x] Tests Fase18SinergiaTest pasan (12 tests ✅)
+- [x] Tests Fase5FlujosYCierreTest pasan (55 tests ✅)
+- [x] Tests CalendarioTest pasan ✅
+- [x] Tests CuestionarioTest pasan ✅
+- [x] Tests AuditoriaSeguridadTest pasan (29 tests ✅)
+- [x] estado_programacion ENUM(8 valores) en DB
+- [x] tabla estado_historial con estructura correcta
+- [x] estado_evaluacion redefinido a 7 valores
+- [x] Orden.estado redefinido a 4 valores
+- [x] estado_formulario redefinido a ENUM(5 valores)
+
+---
+
+### ✅ Semana 2 — Lógica de transiciones y sinergia (COMPLETADA 2026-06-10)
+
+**Estado:** 211 tests pasando (464 assertions) — Semana 1 (166) + Semana 2 (45 nuevos).
+
+**Archivos modificados / creados:**
+
+- `app/Http/Controllers/Admin/OrdenesController.php` — Todos los estados viejos actualizados:
+  - `resumen()`: `pendiente` → `orden_recibida`, `completada` → `entregado`
+  - `destroy()`: condición de bloqueo actualizada a estados Fase 18
+  - `cambiarEstado()`: validación → `'orden_recibida,en_proceso,entregado,cancelado'`
+  - `store()/update()`: estado inicial evaluado → Formulario `link_pendiente`/`link_enviado` + Programación `contactando` + Evaluación `pendiente_de_evaluacion` *(corregido 2026-06-10)*
+  - Auto-estado al crear evaluado con email → `cambiarEstadoFormulario('link_enviado')` (SOLO formulario; evaluación NO cambia) *(corregido 2026-06-10)*
+  - Reenviar link → actualiza SOLO `estado_formulario` a `link_enviado` *(corregido 2026-06-10)*
+  - `subirResultadoArchivo()` final → `estado_evaluacion = 'informe_final_enviado'` + `recalcularEstado()` *(corregido 2026-06-10)*
+  - `subirResultadoArchivo()` preliminar → sin auto-cambio de estado (respuesta cliente #2)
+  - `rehabilitarCuestionario()` → reset SOLO `estado_formulario` a `link_pendiente` *(corregido 2026-06-10)*
+  - `deshabilitarCuestionario()` → bloquea `estado_formulario = 'formulario_completado_y_recibido'`
+- `app/Console/Commands/AutoTransicionarEstadosFormulario.php` (NUEVO) — Job:
+  - `link_enviado` +24h (sin expirar) → `pendiente_de_llenar`
+  - cualquier estado incompleto expirado → `vencido`
+  - Opción `--dry-run` para previsualizar sin aplicar
+- `app/Console/Kernel.php` — Programado cada hora (`formulario:auto-transiciones`)
+- `app/Models/EvaluadoOrden.php` — Añadida transición `link_pendiente → vencido`
+- `tests/Unit/Fase18AutoTransicionesTest.php` (NUEVO) — 8 tests del job programado
+- `tests/Feature/Fase2DocumentacionTest.php` — Assertions actualizadas para Fase 18
+
+**Nota sobre cron en producción:** El job `formulario:auto-transiciones` requiere cron activo en iPage. Si no hay cron, implementar fallback on-access (Semana 3/4).
+
+---
+
+### 🔴 Corrección crítica — `estado_evaluacion` rediseñado (2026-06-10)
+
+**Problema detectado durante verificación manual:** al crear una orden, los 3 badges del candidato mostraban `Polígrafo / Link Enviado / Link Enviado`. El campo `estado_evaluacion` se había implementado (Semana 1) reutilizando por error los valores del FORMULARIO. La evaluación física es presencial o por videollamada y **nunca tiene "link"** — debía seguir el flujo técnico del PDF p.2.
+
+**Valores ANTES (incorrectos)** → **DESPUÉS (correctos):**
+
+| Antes (eran de formulario) | Después (PDF p.2) |
+|----------------------------|-------------------|
+| `link_pendiente` | `pendiente_de_evaluacion` *(inicial)* |
+| `link_enviado` | *(eliminado)* |
+| `pendiente_de_llenar` | *(eliminado)* |
+| `en_proceso` | `en_proceso` *(se mantiene)* |
+| `en_revision` | `en_revision` *(se mantiene)* |
+| `completado` | `informe_final_enviado` *(renombrado)* |
+| `cancelado` | `cancelado` *(se mantiene)* |
+| *(faltaba)* | `resultado_preliminar` *(nuevo)* |
+| *(faltaba)* | `desistio` *(nuevo, reactivable)* |
+
+**Archivos modificados en la corrección:**
+- ✅ `database/migrations/2026_06_10_100001_fix_estado_evaluacion_to_correct_values.php` (NUEVO) — VARCHAR temporal → mapeo → ENUM(7 correctos)
+- ✅ `app/Models/EvaluadoOrden.php` — `estadosEvaluacionDisponibles()`, `transicionesEvaluacion()`, accessors texto/color, `evaluacionCompletada()`, scope `sinProgramar()`, `completarEvaluacion()`
+- ✅ `app/Models/Orden.php` — `recalcularEstado()`: terminales = `informe_final_enviado`/`cancelado`/`desistio`; orden de chequeo `todosCancelados` ANTES de `todosCompletados`
+- ✅ `app/Http/Controllers/Admin/OrdenesController.php` — estado inicial, upload final, reenviar link, resumen (`evaluadosCompletados`)
+- ✅ `app/Http/Controllers/Admin/CalendarioController.php` — filtros de historial y disponibles
+- ✅ `resources/views/empresa/ordenes/{index,show}.blade.php` + `admin/ordenes/{index,show}.blade.php` — botón Editar visible solo en `orden_recibida`
+- ✅ Factory + ~15 archivos de tests actualizados a los estados correctos
+
+**Resultado:** 528 tests pasando. 3 fallos restantes son PREEXISTENTES y sin relación (rutas de creación de usuario `insert-user`/`show-user` devuelven 404/403 — investigar aparte).
+
+---
+
+### ⏳ TRABAJO PENDIENTE (estructurado por prioridad)
+
+#### ✅ Prioridad 1 — Reglas de sinergia (COMPLETADA — sesión 2026-06-10)
+
+- [x] **S2 — Gating Virtual:** `CalendarioController::programar()` — si `modalidad === 'virtual'` y `estado_formulario !== 'formulario_completado_y_recibido'` → bloquea con error. `reprogramar()` NO bloquea (citas existentes se respetan).
+- [x] **S4 — Gating En Proceso (formulario):** `EvaluadoOrden::cambiarEstadoEvaluacion('en_proceso')` lanza `ValidationException` si `estado_formulario !== 'formulario_completado_y_recibido'`.
+- [x] **S5 — Gating En Proceso (programado):** `cambiarEstadoEvaluacion('en_proceso')` lanza `ValidationException` si `estado_programacion` no es `programado` ni `proceso_realizado`.
+- [x] **S6 — Auto Proceso Realizado:** `cambiarEstadoEvaluacion('en_revision')` dispara automáticamente `cambiarEstadoProgramacion('proceso_realizado')` (solo si estaba en `programado`).
+- [x] **Deuda técnica:** `programarEvaluacion()`/`reprogramarEvaluacion()` ahora registran historial de `estado_programacion` mediante `registrarCambioEstado()`.
+- [x] **Manejo de excepciones en controller:** `OrdenesController::cambiarEstadoEvaluado()` captura `ValidationException` de S4/S5 y devuelve mensaje de error claro.
+- [x] Tests de sinergia: `tests/Feature/Fase18SinergiaReglasSemana3Test.php` — 16 tests (S2×4, S4×2, S5×2, S6×3, modalidad×3, historial×2).
+
+#### 📋 Especificación funcional — Selector de Modalidad (Presencial/Virtual) [CONFIRMADO por cliente 2026-06-04]
+
+> **Acuerdo textual con el cliente (chat 04/06/2026, Otto Szarata ↔ Stephany Castro Repro).** Propuesta presentada y confirmada ("si todo esta bien comienza con tu recomendación"). Este es el alcance exacto a desarrollar.
+
+**Qué pidió el cliente (literal):**
+- Agregar al **crear/editar la orden** un selector simple de modalidad con dos opciones: **Presencial** o **Virtual**.
+- **Presencial:** se puede programar la cita aunque el formulario NO esté completo (el candidato lo llena en oficina). Sin restricción.
+- **Virtual:** el sistema EXIGE que el formulario esté `formulario_completado_y_recibido` antes de poder programar (no irá presencialmente a llenarlo).
+- El sistema aplica la regla automáticamente según el tipo de proceso (sin que el personal lo recuerde manualmente).
+- **Editable en cualquier momento** desde la orden. Al cambiar, la regla correcta aplica **desde ese momento hacia adelante**.
+- **Consideración crítica confirmada:** si una orden ya tenía una **cita programada siendo Presencial** (sin formulario completo) y luego la cambian a **Virtual**, el sistema **respeta esa cita ya agendada (NO la elimina)**. La regla "formulario antes de programar" solo aplica a **programaciones NUEVAS** posteriores al cambio.
+- Todo cambio de modalidad queda registrado en el historial (fecha/hora/usuario).
+
+**Estado actual del código (COMPLETADO 2026-06-10):**
+- ✅ Campo `modalidad` ENUM(`presencial`,`virtual`) NULLABLE en `evaluados_orden`.
+- ✅ Selector Presencial/Virtual en `admin/ordenes/create.blade.php` (template JS por evaluado).
+- ✅ Selector Presencial/Virtual en `admin/ordenes/edit.blade.php` (evaluados existentes y template nuevo evaluado).
+- ✅ `OrdenesController` guarda `modalidad` al crear y actualizar. Registra cambio en `estado_historial` si cambia al editar.
+- ✅ S2 gating implementado en `CalendarioController::programar()`. `reprogramar()` no bloquea (citas existentes respetadas).
+- ✅ Default `presencial` — sin restricción al programar.
+
+#### 🎨 Prioridad 2 — Semana 3 (Frontend / vistas)
+- [x] **3 badges separados** (Formulario/Programación/Evaluación) en listado de órdenes admin (`admin/ordenes/index.blade.php`). Cada evaluado muestra sus 3 estados + fecha cita si aplica.
+- [x] **Limpiar selector manual de estado de Orden** en `admin/ordenes/show.blade.php`: reemplazadas 9 opciones viejas por las 4 correctas (`orden_recibida`, `en_proceso`, `entregado`, `cancelado`) con nota informativa.
+- [x] **Actualizar mapas de badges** en: `admin/index.blade.php` (2 lugares), `admin/ordenes/pdf.blade.php`, `admin/ordenes/edit.blade.php` → usan accessors `estado_color`/`estado_human` del modelo.
+- [x] **Renombrar columnas** Listado empresa: "Estado" → "Estado de Orden", "Fecha Creación" → "Fecha de Registro". Limpiados estados viejos en lógica de permisos de las vistas empresa.
+- [x] **Selector dinámico** los 3 campos en `admin/ordenes/show.blade.php`: Evaluación, Formulario, **y Programación** — cada uno muestra SOLO los estados permitidos desde el estado actual (usa `transicionesEvaluacion()`, `transicionesFormulario()`, `transicionesProgramacion()`). `OrdenesController::cambiarEstadoEvaluado()` extendido para soportar `tipo_estado=programacion`.
+- [x] **Panel de historial** de cambios (`estado_historial`) en `admin/ordenes/show.blade.php` — expandible con `<details>`, muestra campo, estado anterior→nuevo, usuario y observación de cada entrada registrada.
+- [x] **Campo Motivo/Observación** en los cambios de estado — textarea colapsable con `<details>` en los 3 formularios de cambio de estado. `cambiarEstadoEvaluacion/Formulario/Programacion()` aceptan `?string $observacion`. Controller valida `observacion` (nullable, max 1000) y la pasa al modelo. Se persiste en `estado_historial.observacion` y se muestra en el historial.
+- [x] **Vista candidato** simplificada — `cuestionario/estado.blade.php` con timeline Bootstrap de 4 pasos (Formulario → Evaluación → Revisión → Informe final). Ruta `cuestionario.estado` (`GET /{token}/estado`). `mostrar()` redirige al estado cuando el formulario ya está completado. Cada paso muestra estado visual (✅ done / 🔵 active / gris pending), fecha de cita y modalidad si están disponibles. No expone estados internos al candidato.
+
+#### 🔔 Prioridad 3 — Notificaciones (matriz del PDF p.4)
+- [x] Nueva orden creada → **incluye al creador** como confirmación (eliminado `where('id', '!=', Auth::id())`).
+- [x] Candidato completó cuestionario → **ahora también la empresa** recibe notificación in-app (`CuestionarioController::notificarCuestionarioCompletado`).
+- [x] Resultado preliminar subido → **ahora también colaboradores** (role_as >= 2 en lugar de >= 3 en `notificarPreliminarSubido`).
+- [x] Informe final disponible → **admin y colaborador** reciben notificación in-app además de la empresa (`notificarResultadosDisponibles` — nuevo bloque `$usuariosRepro`).
+
+#### 🧪 Prioridad 4 — Semana 4 (QA y deploy)
+- [ ] Test de migración de datos (aunque las órdenes actuales son de prueba — cliente #5).
+- [ ] Verificar cron activo en iPage para `formulario:auto-transiciones`; si no, fallback on-access.
+- [ ] Deploy FTP iPage + verificación MD5 + limpieza de caché.
+- [x] **Resolver 3 tests preexistentes de creación de usuario** (`Phase8CEstadosUXTest`):
+  - `Phase8CEstadosUXTest` migrado a usar `CreatesRolesAndPermissions` (eliminado setUp manual sin level ni permisos).
+  - `test_admin_puede_crear_usuario_repro_con_sede`: ahora pasa `role_id` del rol 'repro' en lugar de `role_as => 2`.
+  - `test_admin_show_usuario_repro_muestra_sede`: se resuelve con el trait (admin ahora tiene `usuarios.ver` permission).
+  - `CreatesRolesAndPermissions` trait mejorado: roles creados con `level` correcto (admin=3, repro=2, empresa=1), admin recibe todos los permisos del sistema.
+
+#### 📦 Backlog (fase posterior, fuera de Fase 18)
+- [ ] Notificaciones al candidato por correo/WhatsApp (formulario recibido, papelería aceptada, fecha de programación).
+- [ ] Integración WhatsApp API (diferida — costos Meta, plantillas aprobadas, verificación de número).

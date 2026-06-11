@@ -19,10 +19,15 @@ trait CreatesRolesAndPermissions
      */
     protected function setUpRolesAndPermissions(): void
     {
-        $adminRole   = Role::firstOrCreate(['name' => 'admin'],   ['display_name' => 'Administrador']);
-        $reproRole   = Role::firstOrCreate(['name' => 'repro'],   ['display_name' => 'Personal Repro']);
-        $empresaRole = Role::firstOrCreate(['name' => 'empresa'], ['display_name' => 'Usuario Empresa']);
-        Role::firstOrCreate(['name' => 'evaluado'], ['display_name' => 'Evaluado']);
+        $adminRole   = Role::firstOrCreate(['name' => 'admin'],   ['display_name' => 'Administrador',  'level' => 3]);
+        $reproRole   = Role::firstOrCreate(['name' => 'repro'],   ['display_name' => 'Personal Repro', 'level' => 2]);
+        $empresaRole = Role::firstOrCreate(['name' => 'empresa'], ['display_name' => 'Usuario Empresa','level' => 1]);
+        Role::firstOrCreate(['name' => 'evaluado'], ['display_name' => 'Evaluado', 'level' => 0]);
+
+        // Asegurar que el level esté actualizado aunque el rol ya existiera
+        $adminRole->update(['level' => 3]);
+        $reproRole->update(['level' => 2]);
+        $empresaRole->update(['level' => 1]);
 
         $reproPermisos = [
             'ordenes.ver', 'ordenes.crear', 'ordenes.editar', 'ordenes.eliminar',
@@ -55,6 +60,13 @@ trait CreatesRolesAndPermissions
             'ordenes.editar',
         ];
 
+        $todosLosPermisos = array_unique(array_merge($reproPermisos, $empresaPermisos, [
+            'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar',
+            'empresas.ver', 'empresas.crear', 'empresas.editar', 'empresas.eliminar',
+            'sedes.ver', 'sedes.crear', 'sedes.editar', 'sedes.eliminar',
+            'ordenes.ver', 'ordenes.crear', 'ordenes.editar', 'ordenes.eliminar',
+        ]));
+
         foreach ($reproPermisos as $nombre) {
             $perm = Permission::firstOrCreate(
                 ['name' => $nombre],
@@ -69,6 +81,15 @@ trait CreatesRolesAndPermissions
                 ['display_name' => $nombre, 'module' => explode('.', $nombre)[0]]
             );
             $empresaRole->givePermission($perm);
+        }
+
+        // Admin recibe todos los permisos (igual que el seeder de producción)
+        foreach ($todosLosPermisos as $nombre) {
+            $perm = Permission::firstOrCreate(
+                ['name' => $nombre],
+                ['display_name' => $nombre, 'module' => explode('.', $nombre)[0]]
+            );
+            $adminRole->givePermission($perm);
         }
     }
 }

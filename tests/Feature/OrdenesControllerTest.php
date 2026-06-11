@@ -214,7 +214,7 @@ class OrdenesControllerTest extends TestCase
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'creado_por' => $usuarioEmpresa->id,
-            'estado' => 'solicitud',
+            'estado' => 'orden_recibida',
         ]);
 
         $response = $this->actingAs($usuarioEmpresa)
@@ -425,7 +425,7 @@ class OrdenesControllerTest extends TestCase
             'apellidos' => 'Original',
             'dpi' => '1111111111111',
             'email' => 'existente@test.com',
-            'estado_evaluacion' => 'reprogramado',
+            'estado_evaluacion' => 'pendiente_de_evaluacion', 'estado_programacion' => 'reprogramado',
             'fecha_programada' => now()->addDays(3),
             'token_unico' => 'token-existente',
             'token_expira_at' => now()->addDays(30),
@@ -460,7 +460,7 @@ class OrdenesControllerTest extends TestCase
         $this->assertCount(2, $orden->evaluados);
 
         $evaluadoExistente->refresh();
-        $this->assertEquals('reprogramado', $evaluadoExistente->estado_evaluacion);
+        $this->assertEquals('pendiente_de_evaluacion', $evaluadoExistente->estado_evaluacion);
         $this->assertNotNull($evaluadoExistente->fecha_programada);
         $this->assertEquals('token-existente', $evaluadoExistente->token_unico);
 
@@ -489,7 +489,7 @@ class OrdenesControllerTest extends TestCase
             'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
             'email' => 'existente@test.com',
-            'estado_evaluacion' => 'reprogramado',
+            'estado_evaluacion' => 'pendiente_de_evaluacion', 'estado_programacion' => 'reprogramado',
             'fecha_programada' => now()->addDay(),
         ]);
 
@@ -524,7 +524,7 @@ class OrdenesControllerTest extends TestCase
         $this->assertEquals(1, $orden->evaluados()->where('dpi', '1234567896541')->count());
 
         $existente->refresh();
-        $this->assertEquals('reprogramado', $existente->estado_evaluacion);
+        $this->assertEquals('pendiente_de_evaluacion', $existente->estado_evaluacion);
         $this->assertNotNull($existente->fecha_programada);
         $this->assertEquals('Evaluado', $existente->nombre);
         $this->assertEquals('Prueba', $existente->apellidos);
@@ -664,10 +664,13 @@ class OrdenesControllerTest extends TestCase
 
         $evaluado = EvaluadoOrden::where('email', 'juan@example.com')->first();
         $this->assertNotNull($evaluado);
-        $this->assertEquals('link_enviado', $evaluado->estado_evaluacion);
+        // Fase 18: al crear con email se avanza estado_formulario a link_enviado;
+        // estado_evaluacion permanece en pendiente_de_evaluacion (es independiente)
+        $this->assertEquals('link_enviado', $evaluado->estado_formulario);
+        $this->assertEquals('pendiente_de_evaluacion', $evaluado->estado_evaluacion);
     }
 
-    public function test_r1_reenviar_correo_establece_link_enviado(): void
+    public function test_r1_reenviar_correo_establece_link_enviado_formulario(): void
     {
         Mail::fake();
 
@@ -676,20 +679,23 @@ class OrdenesControllerTest extends TestCase
         $sede = \App\Models\Sede::factory()->create(['estado' => 1]);
         $orden = Orden::factory()->create(['empresa_id' => $empresa->id, 'sede_id' => $sede->id]);
         $evaluado = EvaluadoOrden::factory()->create([
-            'orden_id'          => $orden->id,
-            'email'             => 'test@example.com',
-            'estado_evaluacion' => 'pendiente',
-            'token_unico'       => 'test-token-abc',
-            'token_expira_at'   => now()->addDays(30),
+            'orden_id'           => $orden->id,
+            'email'              => 'test@example.com',
+            'estado_formulario'  => 'link_pendiente',
+            'estado_evaluacion'  => 'pendiente_de_evaluacion',
+            'token_unico'        => 'test-token-abc',
+            'token_expira_at'    => now()->addDays(30),
         ]);
 
         $this->actingAs($admin)->post(route('evaluados.reenviar-correo', $evaluado));
 
         $evaluado->refresh();
-        $this->assertEquals('link_enviado', $evaluado->estado_evaluacion);
+        // Reenviar link solo afecta estado_formulario, nunca estado_evaluacion
+        $this->assertEquals('link_enviado', $evaluado->estado_formulario);
+        $this->assertEquals('pendiente_de_evaluacion', $evaluado->estado_evaluacion);
     }
 
-    public function test_r1_subir_resultado_final_marca_evaluado_completado(): void
+    public function test_r1_subir_resultado_final_marca_evaluado_informe_final_enviado(): void
     {
         $admin = User::factory()->create(['role_as' => 3]);
         $empresa = Empresa::factory()->create();
@@ -697,7 +703,7 @@ class OrdenesControllerTest extends TestCase
         $orden = Orden::factory()->create(['empresa_id' => $empresa->id, 'sede_id' => $sede->id, 'estado' => 'en_proceso']);
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id'          => $orden->id,
-            'estado_evaluacion' => 'docs_pendientes',
+            'estado_evaluacion' => 'resultado_preliminar',
         ]);
 
         $archivo = \Illuminate\Http\UploadedFile::fake()->create('informe.pdf', 100, 'application/pdf');
@@ -708,6 +714,6 @@ class OrdenesControllerTest extends TestCase
         ]);
 
         $evaluado->refresh();
-        $this->assertEquals('completado', $evaluado->estado_evaluacion);
+        $this->assertEquals('informe_final_enviado', $evaluado->estado_evaluacion);
     }
 }

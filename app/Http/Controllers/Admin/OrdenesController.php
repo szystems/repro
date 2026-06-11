@@ -106,11 +106,11 @@ class OrdenesController extends Controller
     {
         $totalOrdenes = Orden::count();
         $ordenesActivas = Orden::where('estado', 'en_proceso')->count();
-        $ordenesCompletadas = Orden::where('estado', 'completada')->count();
-        $ordenesPendientes = Orden::where('estado', 'pendiente')->count();
+        $ordenesCompletadas = Orden::where('estado', 'entregado')->count();
+        $ordenesPendientes = Orden::where('estado', 'orden_recibida')->count();
 
         $totalEvaluados = EvaluadoOrden::count();
-        $evaluadosCompletados = EvaluadoOrden::where('estado_evaluacion', 'completado')->count();
+        $evaluadosCompletados = EvaluadoOrden::where('estado_evaluacion', 'informe_final_enviado')->count();
 
         $porEmpresa = Orden::select('empresa_id', DB::raw('COUNT(*) as total'))
             ->with('empresa:id,nombre')
@@ -219,7 +219,7 @@ class OrdenesController extends Controller
                 'tipo_creador' => Auth::user()->role_as >= 2 ? 'repro' : 'empresa',
                 'creado_por' => Auth::id(),
                 'fecha_solicitud' => now()->toDateString(),
-                'estado' => 'solicitud',
+                'estado' => 'orden_recibida',
                 // Sede de REPRO que trabajará la orden — disponible para REPRO y cliente.
                 'sede_id' => $validated['sede_id'] ?? null,
             ];
@@ -258,21 +258,19 @@ class OrdenesController extends Controller
                 $this->notificarUsuariosSede($orden);
             }
 
-            // Notificación in-app a usuarios REPRO/admin (excepto al creador)
+            // Notificación in-app a todos los usuarios REPRO/admin (incluye al creador como confirmación)
             $usuariosNotificar = User::where('role_as', '>=', 2)
                 ->where('estado', 1)
-                ->where('id', '!=', Auth::id())
                 ->get();
             foreach ($usuariosNotificar as $usuario) {
                 $usuario->notify(new OrdenCreadaNotification($orden));
             }
 
-            // Notificación in-app a usuarios de la empresa (excepto al creador)
+            // Notificación in-app a usuarios de la empresa (incluye al creador si es usuario empresa)
             if ($orden->empresa_id) {
                 $usuariosEmpresa = User::where('empresa_id', $orden->empresa_id)
                     ->where('role_as', 1)
                     ->where('estado', 1)
-                    ->where('id', '!=', Auth::id())
                     ->get();
                 foreach ($usuariosEmpresa as $usuario) {
                     $usuario->notify(new OrdenCreadaNotification($orden));
@@ -497,7 +495,7 @@ class OrdenesController extends Controller
             abort(403, 'No tiene permisos para eliminar órdenes.');
         }
 
-        if (in_array($orden->estado, ['en_proceso', 'preliminar', 'final', 'entregado'])) {
+        if (in_array($orden->estado, ['en_proceso', 'entregado'])) {
             return back()->with('error', 'No se puede eliminar una orden que está en proceso o completada.');
         }
 
@@ -520,7 +518,7 @@ class OrdenesController extends Controller
     public function cambiarEstado(Request $request, Orden $orden)
     {
         $request->validate([
-            'nuevo_estado' => 'required|in:solicitud,autorizacion,requisito,programacion,en_proceso,preliminar,final,entregado,cancelado',
+            'nuevo_estado' => 'required|in:orden_recibida,en_proceso,entregado,cancelado',
             'observaciones' => 'nullable|string|max:500'
         ]);
 
@@ -551,17 +549,16 @@ class OrdenesController extends Controller
             return back()->with('error', 'No tiene permisos para realizar esta acción.');
         }
 
-        $estadosEvaluacion = implode(',', array_keys(EvaluadoOrden::estadosEvaluacionDisponibles()));
-        $estadosFormulario = implode(',', array_keys(EvaluadoOrden::estadosFormularioDisponibles()));
-
         $request->validate([
-            'tipo_estado' => 'required|in:evaluacion,formulario',
-            'nuevo_estado' => "required|string",
+            'tipo_estado'  => 'required|in:evaluacion,formulario,programacion',
+            'nuevo_estado' => 'required|string',
+            'observacion'  => 'nullable|string|max:1000',
         ]);
 
-        $tipo = $request->tipo_estado;
+        $tipo        = $request->tipo_estado;
         $nuevoEstado = $request->nuevo_estado;
-        $nombre = "{$evaluado->nombre} {$evaluado->apellidos}";
+        $observacion = $request->filled('observacion') ? trim($request->observacion) : null;
+        $nombre      = "{$evaluado->nombre} {$evaluado->apellidos}";
 
         if ($tipo === 'evaluacion') {
             if (!$evaluado->puedeTransicionarEstadoEvaluacion($nuevoEstado)) {
@@ -569,7 +566,12 @@ class OrdenesController extends Controller
                 return back()->with('error', "No se puede cambiar evaluación de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.");
             }
             $estadoAnterior = $evaluado->estado_evaluacion_texto;
-            $evaluado->cambiarEstadoEvaluacion($nuevoEstado);
+            try {
+                $evaluado->cambiarEstadoEvaluacion($nuevoEstado, $observacion);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $mensajes = collect($e->errors())->flatten()->implode(' ');
+                return back()->with('error', "No se puede iniciar la evaluación para {$nombre}: {$mensajes}");
+            }
             $estadoNuevoTexto = $evaluado->fresh()->estado_evaluacion_texto;
             return back()->with('success', "Estado evaluación de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
         }
@@ -580,9 +582,20 @@ class OrdenesController extends Controller
                 return back()->with('error', "No se puede cambiar formulario de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.");
             }
             $estadoAnterior = EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->estado_formulario] ?? $evaluado->estado_formulario;
-            $evaluado->cambiarEstadoFormulario($nuevoEstado);
+            $evaluado->cambiarEstadoFormulario($nuevoEstado, $observacion);
             $estadoNuevoTexto = EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->fresh()->estado_formulario] ?? $nuevoEstado;
             return back()->with('success', "Estado formulario de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
+        }
+
+        if ($tipo === 'programacion') {
+            if (!$evaluado->puedeTransicionarEstadoProgramacion($nuevoEstado)) {
+                $estadoActual = EvaluadoOrden::estadosProgramacionDisponibles()[$evaluado->estado_programacion] ?? $evaluado->estado_programacion;
+                return back()->with('error', "No se puede cambiar programación de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.");
+            }
+            $estadoAnterior = EvaluadoOrden::estadosProgramacionDisponibles()[$evaluado->estado_programacion] ?? $evaluado->estado_programacion;
+            $evaluado->cambiarEstadoProgramacion($nuevoEstado, $observacion);
+            $estadoNuevoTexto = EvaluadoOrden::estadosProgramacionDisponibles()[$evaluado->fresh()->estado_programacion] ?? $nuevoEstado;
+            return back()->with('success', "Estado programación de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
         }
 
         return back()->with('error', 'Tipo de estado no válido.');
@@ -674,7 +687,7 @@ class OrdenesController extends Controller
                 return;
             }
 
-            // Obtener emails de usuarios de la empresa
+            // Correo a usuarios de la empresa
             $emailsEmpresa = \App\Models\User::where('empresa_id', $empresa->id)
                 ->where('role_as', 1)
                 ->pluck('email')
@@ -690,16 +703,26 @@ class OrdenesController extends Controller
                 ->where('role_as', 1)
                 ->where('estado', 1)
                 ->get();
+
+            // Notificación in-app a admins y colaboradores REPRO (Fase 18 — Prioridad 3)
+            $usuariosRepro = \App\Models\User::where('role_as', '>=', 2)
+                ->where('estado', 1)
+                ->get();
+
             foreach ($orden->evaluados as $evaluado) {
                 foreach ($usuariosEmpresa as $usuario) {
+                    $usuario->notify(new ResultadosDisponiblesNotification($evaluado));
+                }
+                foreach ($usuariosRepro as $usuario) {
                     $usuario->notify(new ResultadosDisponiblesNotification($evaluado));
                 }
             }
 
             Log::info('Notificación de resultados enviada', [
-                'orden_id' => $orden->id,
-                'empresa' => $empresa->nombre,
-                'emails' => $emailsEmpresa->toArray(),
+                'orden_id'      => $orden->id,
+                'empresa'       => $empresa->nombre,
+                'emails'        => $emailsEmpresa->toArray(),
+                'repro_notif'   => $usuariosRepro->count(),
             ]);
         } catch (\Exception $e) {
             Log::error('Error enviando notificación de resultados', [
@@ -741,7 +764,10 @@ class OrdenesController extends Controller
                 'fecha_programada' => $evaluadoData['fecha_programada'] ?? null,
                 'poligrafista_id' => $evaluadoData['poligrafista_id'] ?? null,
                 'observaciones' => $evaluadoData['observaciones'] ?? null,
-                'estado_evaluacion' => 'pendiente'
+                'modalidad'           => $evaluadoData['modalidad'] ?? 'presencial',
+                'estado_evaluacion'   => 'pendiente_de_evaluacion',
+                'estado_formulario'   => 'link_pendiente',
+                'estado_programacion' => 'contactando',
             ];
 
             if ($esActualizacion) {
@@ -756,6 +782,7 @@ class OrdenesController extends Controller
 
                 if ($evaluado) {
                     // Preservar campos gestionados por otros procesos (calendario, cuestionario)
+                    $modalidadAnterior = $evaluado->modalidad;
                     $datosActualizacion = array_merge($datosEvaluado, [
                         'estado_evaluacion' => $evaluado->estado_evaluacion,
                         'fecha_programada'  => $evaluado->fecha_programada,
@@ -764,6 +791,17 @@ class OrdenesController extends Controller
                         'token_expira_at'   => $evaluado->token_expira_at,
                     ]);
                     $evaluado->update($datosActualizacion);
+                    // Registrar cambio de modalidad en historial
+                    $nuevaModalidad = $datosActualizacion['modalidad'] ?? $evaluado->modalidad;
+                    if ($modalidadAnterior !== $nuevaModalidad) {
+                        \App\Models\EstadoHistorial::create([
+                            'evaluado_orden_id' => $evaluado->id,
+                            'campo'             => 'modalidad',
+                            'estado_anterior'   => $modalidadAnterior,
+                            'estado_nuevo'      => $nuevaModalidad,
+                            'responsable_id'    => auth()->id(),
+                        ]);
+                    }
                     $evaluadosExistentes = array_diff($evaluadosExistentes, [$evaluado->id]);
                 } else {
                     $duplicado = EvaluadoOrden::where('orden_id', $orden->id)
@@ -774,6 +812,7 @@ class OrdenesController extends Controller
                     // Si ya existe por clave única (orden+dpi+servicio), tratarlo como actualización
                     // aunque el id venga vacío, inválido o desalineado desde el frontend.
                     if ($duplicado) {
+                        $modalidadAnteriorDuplicado = $duplicado->modalidad;
                         $datosActualizacion = array_merge($datosEvaluado, [
                             'estado_evaluacion' => $duplicado->estado_evaluacion,
                             'fecha_programada'  => $duplicado->fecha_programada,
@@ -782,6 +821,16 @@ class OrdenesController extends Controller
                             'token_expira_at'   => $duplicado->token_expira_at,
                         ]);
                         $duplicado->update($datosActualizacion);
+                        $nuevaModalidadDuplicado = $datosActualizacion['modalidad'] ?? $duplicado->modalidad;
+                        if ($modalidadAnteriorDuplicado !== $nuevaModalidadDuplicado) {
+                            \App\Models\EstadoHistorial::create([
+                                'evaluado_orden_id' => $duplicado->id,
+                                'campo'             => 'modalidad',
+                                'estado_anterior'   => $modalidadAnteriorDuplicado,
+                                'estado_nuevo'      => $nuevaModalidadDuplicado,
+                                'responsable_id'    => auth()->id(),
+                            ]);
+                        }
                         $evaluadosExistentes = array_diff($evaluadosExistentes, [$duplicado->id]);
                         continue;
                     }
@@ -794,9 +843,10 @@ class OrdenesController extends Controller
                     // Notificaciones in-app al asignar un nuevo evaluado
                     $this->notificarEvaluadoAsignadoInApp($evaluadoCreado, $esActualizacion);
 
-                    // Auto-estado: si tiene email el link fue enviado
+                    // Fase 18: si tiene email, el link del formulario fue enviado (solo formulario)
+                    // estado_evaluacion permanece en 'pendiente_de_evaluacion' — es independiente
                     if (!empty($evaluadoCreado->email)) {
-                        $evaluadoCreado->update(['estado_evaluacion' => 'link_enviado']);
+                        $evaluadoCreado->cambiarEstadoFormulario('link_enviado');
                     }
                 }
             } else {
@@ -808,9 +858,9 @@ class OrdenesController extends Controller
                 // Notificaciones in-app al asignar un nuevo evaluado
                 $this->notificarEvaluadoAsignadoInApp($evaluadoCreado, $esActualizacion);
 
-                // Auto-estado: si tiene email el link fue enviado
+                // Fase 18: si tiene email, el link del formulario fue enviado (solo formulario)
                 if (!empty($evaluadoCreado->email)) {
-                    $evaluadoCreado->update(['estado_evaluacion' => 'link_enviado']);
+                    $evaluadoCreado->cambiarEstadoFormulario('link_enviado');
                 }
             }
         }
@@ -872,8 +922,8 @@ class OrdenesController extends Controller
             $evaluado->loadMissing('orden.empresa');
             $orden = $evaluado->orden;
 
-            // Notificar a admins (quien no sea el autor de la subida)
-            $admins = User::where('role_as', '>=', 3)
+            // Notificar a admins y colaboradores (role_as >= 2), excepto quien subió el archivo
+            $admins = User::where('role_as', '>=', 2)
                 ->where('estado', 1)
                 ->where('id', '!=', Auth::id())
                 ->get();
@@ -991,7 +1041,7 @@ class OrdenesController extends Controller
         // Las empresas pueden editar sus propias órdenes solo si están en estado inicial
         if (Auth::user()->role_as == 1) {
             return (int) $orden->empresa_id === (int) Auth::user()->empresa_id
-                && in_array($orden->estado, ['solicitud', 'autorizacion']);
+                && $orden->estado === 'orden_recibida';
         }
 
         return false;
@@ -1086,9 +1136,9 @@ class OrdenesController extends Controller
                 'usuario' => Auth::user()->name,
             ]);
 
-            // Auto-estado: link reenviado
-            if (in_array($evaluado->estado_evaluacion, ['pendiente', 'link_enviado'])) {
-                $evaluado->update(['estado_evaluacion' => 'link_enviado']);
+            // Fase 18: reenviar link solo afecta estado_formulario, nunca estado_evaluacion
+            if ($evaluado->estado_formulario === 'link_pendiente') {
+                $evaluado->cambiarEstadoFormulario('link_enviado');
             }
 
             return back()->with('success', "Correo reenviado exitosamente a {$evaluado->email}");
@@ -1154,32 +1204,38 @@ class OrdenesController extends Controller
         // Auto-liberar resultados al cliente según tipo de archivo subido
         $orden = $evaluado->orden;
         if ($tipo === 'final') {
-            // Subir informe final → estado entregado + visibilidad automática
-            $orden->forzarEstado('entregado', 'Informe final subido automáticamente');
+            // Fase 18: subir informe final = cierre del proceso → forzar 'informe_final_enviado'
+            $estadoAnteriorEv = $evaluado->estado_evaluacion;
+            if ($estadoAnteriorEv !== 'informe_final_enviado') {
+                $evaluado->update(['estado_evaluacion' => 'informe_final_enviado']);
+                \App\Models\EstadoHistorial::create([
+                    'evaluado_orden_id' => $evaluado->id,
+                    'campo'             => 'estado_evaluacion',
+                    'estado_anterior'   => $estadoAnteriorEv,
+                    'estado_nuevo'      => 'informe_final_enviado',
+                    'observacion'       => 'Informe final subido',
+                    'user_id'           => Auth::id(),
+                ]);
+            }
+
             $orden->update(['resultados_visibles_empresa' => true]);
+            $orden->unsetRelation('evaluados');
+            $orden->recalcularEstado();
             $orden->refresh();
             $this->notificarResultadosDisponibles($orden);
-
-            // Auto-estado evaluado: completado
-            $evaluado->update(['estado_evaluacion' => 'completado']);
 
             return back()->with('success', 'Archivo de resultado final subido. Los resultados han sido liberados automáticamente al cliente.');
         }
 
-        // Subir preliminar → avanzar estado + auto-liberar al cliente
+        // Subir preliminar → liberar resultados al cliente (Fase 18: sin auto-cambio de estado)
         if ($tipo === 'preliminar') {
-            $estadosTempranos = ['solicitud', 'autorizacion', 'requisito', 'programacion', 'en_proceso'];
-            if (in_array($orden->estado, $estadosTempranos)) {
-                $orden->forzarEstado('preliminar', 'Resultado preliminar subido automáticamente');
-            }
+            // Fase 18: la orden no tiene estado 'preliminar'; se mantiene 'en_proceso'
+            // hasta que recalcularEstado() la marque como 'entregado' cuando corresponda.
             if (!$orden->resultados_visibles_empresa) {
                 $orden->update(['resultados_visibles_empresa' => true]);
                 $this->notificarResultadosDisponibles($orden);
             }
-            // Auto-estado evaluado: pasar a en_proceso si estaba en programado o formulario recibido
-            if (in_array($evaluado->estado_evaluacion, ['programado', 'docs_pendientes'])) {
-                $evaluado->update(['estado_evaluacion' => 'en_proceso']);
-            }
+            // Fase 18 (respuesta cliente #2): 'en_proceso' es 100% MANUAL, no automático al subir preliminar.
             // Notificar a admin y empresa que hay un resultado preliminar
             $this->notificarPreliminarSubido($evaluado);
         }
@@ -1291,7 +1347,7 @@ class OrdenesController extends Controller
                 'cuestionario_completado'    => false,
                 'cuestionario_completado_at' => null,
                 'completado_at'              => null,
-                'estado_evaluacion'          => 'pendiente',
+                'estado_formulario'          => 'link_pendiente',
                 'token_unico'                => EvaluadoOrden::generarToken(),
                 'token_expira_at'            => now()->addDays((int) (\App\Models\Config::value('dias_vigencia_token') ?? 30)),
             ]);
@@ -1349,8 +1405,8 @@ class OrdenesController extends Controller
                 'cuestionario_completado'    => true,
                 'cuestionario_completado_at' => now(),
                 'completado_at'              => now(),
-                'estado_evaluacion'          => 'completado',
-                'token_expira_at'            => now(), // Expirar token inmediatamente
+                'estado_formulario'          => 'formulario_completado_y_recibido',
+                'token_expira_at'            => now(),
             ]);
 
             DB::commit();

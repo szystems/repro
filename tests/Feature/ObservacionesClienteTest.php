@@ -107,7 +107,7 @@ class ObservacionesClienteTest extends TestCase
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'creado_por' => $userEmpresa->id,
-            'estado' => 'solicitud',
+            'estado' => 'orden_recibida',
             'resultados_visibles_empresa' => false,
         ]);
 
@@ -144,7 +144,7 @@ class ObservacionesClienteTest extends TestCase
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'creado_por' => $userEmpresa->id,
-            'estado' => 'solicitud',
+            'estado' => 'orden_recibida',
             'resultados_visibles_empresa' => false,
         ]);
         EvaluadoOrden::factory()->create(['orden_id' => $orden->id]);

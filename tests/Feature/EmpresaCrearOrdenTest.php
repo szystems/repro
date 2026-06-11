@@ -79,7 +79,7 @@ class EmpresaCrearOrdenTest extends TestCase
 
         $orden = Orden::where('empresa_id', $empresa->id)->first();
         $this->assertNotNull($orden);
-        $this->assertEquals('solicitud', $orden->estado);
+        $this->assertEquals('orden_recibida', $orden->estado);
         $this->assertEquals('empresa', $orden->tipo_creador);
         $this->assertEquals($user->id, $orden->creado_por);
         $this->assertCount(1, $orden->evaluados);
@@ -179,7 +179,7 @@ class EmpresaCrearOrdenTest extends TestCase
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'creado_por' => $user->id,
-            'estado'     => 'solicitud',
+            'estado'     => 'orden_recibida',
         ]);
 
         $response = $this->actingAs($user)->get(route('empresa.ordenes.show', $orden));
@@ -198,7 +198,7 @@ class EmpresaCrearOrdenTest extends TestCase
         Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'creado_por' => $user->id,
-            'estado'     => 'solicitud',
+            'estado'     => 'orden_recibida',
         ]);
 
         $response = $this->actingAs($user)->get(route('empresa.ordenes.index'));
@@ -254,7 +254,7 @@ class EmpresaCrearOrdenTest extends TestCase
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'creado_por' => $user->id,
-            'estado'     => 'solicitud',
+            'estado'     => 'orden_recibida',
         ]);
 
         $response = $this->actingAs($user)->get(route('empresa.ordenes.show', $orden));
@@ -279,7 +279,7 @@ class EmpresaCrearOrdenTest extends TestCase
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'creado_por' => $user->id,
-            'estado'     => 'solicitud',
+            'estado'     => 'orden_recibida',
         ]);
 
         $response = $this->actingAs($user)->get(route('empresa.ordenes.show', $orden));
@@ -304,7 +304,7 @@ class EmpresaCrearOrdenTest extends TestCase
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
             'creado_por' => $user->id,
-            'estado'     => 'autorizacion',
+            'estado'     => 'orden_recibida',
         ]);
 
         $response = $this->actingAs($user)->get(route('empresa.ordenes.index'));
@@ -354,7 +354,7 @@ class EmpresaCrearOrdenTest extends TestCase
         $otraEmpresa = Empresa::factory()->create();
         $orden = Orden::factory()->create([
             'empresa_id' => $otraEmpresa->id,
-            'estado'     => 'solicitud',
+            'estado'     => 'orden_recibida',
         ]);
 
         $response = $this->actingAs($user)->delete(route('ordenes.destroy', $orden));

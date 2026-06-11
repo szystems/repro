@@ -64,7 +64,7 @@ class CalendarioController extends Controller
 
         // Contar también reprogramados por su fecha original (registro histórico)
         $reprogOriginalQuery = EvaluadoOrden::query()
-            ->where('estado_evaluacion', 'reprogramado')
+            ->where('estado_programacion', 'reprogramado')
             ->whereNotNull('fecha_programada_original')
             ->whereBetween('fecha_programada_original', [$inicioMes, $finMes->copy()->endOfDay()]);
         if ($sedeId) {
@@ -90,8 +90,12 @@ class CalendarioController extends Controller
         $poligrafistas = User::poligrafistas()->get();
 
         // CO9-hist: historial de candidatos completados/inasistencias/reprogramados en este mes
+        // Fase 18: 'completado' sigue en estado_evaluacion; 'inasistencia/desistio/cancelado' ahora en estado_programacion
         $historialQuery = EvaluadoOrden::query()
-            ->whereIn('estado_evaluacion', ['completado', 'inasistencia', 'desistio', 'cancelado'])
+            ->where(function ($q) {
+                $q->where('estado_evaluacion', 'informe_final_enviado')
+                  ->orWhereIn('estado_programacion', ['inasistencia', 'desistio', 'cancelado']);
+            })
             ->whereBetween('fecha_programada', [$inicioMes, $finMes->copy()->endOfDay()])
             ->with(['poligrafo', 'sede', 'orden.empresa']);
 
@@ -107,7 +111,7 @@ class CalendarioController extends Controller
 
         // Incluir reprogramados por fecha original en el historial
         $historialReprogQuery = EvaluadoOrden::query()
-            ->where('estado_evaluacion', 'reprogramado')
+            ->where('estado_programacion', 'reprogramado')
             ->whereNotNull('fecha_programada_original')
             ->whereBetween('fecha_programada_original', [$inicioMes, $finMes->copy()->endOfDay()])
             ->with(['poligrafo', 'sede', 'orden.empresa']);
@@ -166,7 +170,7 @@ class CalendarioController extends Controller
 
         // Citas históricas: reprogramados que tenían cita este día (por fecha original)
         $citasHistoricas = EvaluadoOrden::query()
-            ->where('estado_evaluacion', 'reprogramado')
+            ->where('estado_programacion', 'reprogramado')
             ->whereNotNull('fecha_programada_original')
             ->whereDate('fecha_programada_original', $fecha)
             ->with(['poligrafo', 'sede', 'orden.empresa'])
@@ -185,8 +189,10 @@ class CalendarioController extends Controller
 
         // Evaluados disponibles para programar: excluye solo estados terminales (no filtra por fecha_programada,
         // ya que un evaluado puede reprogramarse o aún no tener fecha asignada)
+        // Fase 18: excluir evaluados en estados terminales de evaluacion Y de programacion
         $evaluadosPendientes = EvaluadoOrden::query()
-            ->whereNotIn('estado_evaluacion', ['cancelado', 'completado', 'desistio', 'inasistencia'])
+            ->whereNotIn('estado_evaluacion', ['cancelado', 'desistio', 'informe_final_enviado'])
+            ->whereNotIn('estado_programacion', ['cancelado', 'desistio'])
             ->with('orden.empresa')
             ->orderBy('created_at', 'desc')
             ->limit(200)
@@ -209,6 +215,14 @@ class CalendarioController extends Controller
         $sede     = Sede::findOrFail($request->sede_id);
         $inicio   = $request->getInicio();
         $fin      = $request->getFin();
+
+        // S2 — Gating Virtual: si la modalidad es virtual, el formulario debe estar completado
+        $modalidadEfectiva = $request->modalidad ?? $evaluado->modalidad ?? 'presencial';
+        if ($modalidadEfectiva === 'virtual' && $evaluado->estado_formulario !== 'formulario_completado_y_recibido') {
+            return back()->withErrors([
+                'modalidad' => 'Este evaluado tiene modalidad Virtual. El formulario debe estar "Completado y recibido" antes de programar la cita.',
+            ])->withInput();
+        }
 
         // Validar anti-traslape
         if ($sede->tieneTraslape($request->poligrafista_id, $inicio, $fin)) {

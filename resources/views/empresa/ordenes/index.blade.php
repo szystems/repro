@@ -28,9 +28,9 @@
                         <thead>
                             <tr>
                                 <th>Código</th>
-                                <th>Estado</th>
+                                <th>Estado de Orden</th>
                                 <th>Fecha Solicitud</th>
-                                <th>Fecha Creación</th>
+                                <th>Fecha de Registro</th>
                                 <th>Evaluados</th>
                                 <th>Acciones</th>
                             </tr>
@@ -53,12 +53,12 @@
                                     <a href="{{ route('empresa.ordenes.show', $orden) }}" class="btn btn-outline-primary btn-sm" title="Ver Detalle">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    @if(Auth::user()->hasPermission('ordenes.editar') && !in_array($orden->estado, ['entregado', 'cancelado']) && in_array($orden->estado, ['solicitud', 'autorizacion']))
+                                    @if(Auth::user()->hasPermission('ordenes.editar') && $orden->estado === 'orden_recibida')
                                     <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-outline-warning btn-sm" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     @endif
-                                    @if(Auth::user()->hasPermission('ordenes.eliminar') && !in_array($orden->estado, ['en_proceso', 'preliminar', 'final', 'entregado']))
+                                    @if(Auth::user()->hasPermission('ordenes.eliminar') && !in_array($orden->estado, ['en_proceso', 'entregado']))
                                     <form action="{{ route('ordenes.destroy', $orden) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('¿Está seguro de eliminar esta orden?')">
                                         @csrf
                                         @method('DELETE')

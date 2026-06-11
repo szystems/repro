@@ -59,7 +59,7 @@
                                 <i class="bi bi-file-pdf"></i> Orden de Servicio
                             </a>
 
-                            @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && in_array($orden->estado, ['solicitud', 'autorizacion']))))
+                            @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && $orden->estado === 'orden_recibida')))
                             <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil"></i> Editar
                             </a>
@@ -243,16 +243,15 @@
                                 <label class="form-label">Cambiar Estado</label>
                                 <select class="form-select" name="nuevo_estado" required>
                                     <option value="">Seleccionar nuevo estado...</option>
-                                    <option value="solicitud" {{ $orden->estado == 'solicitud' ? 'disabled' : '' }}>Solicitud</option>
-                                    <option value="autorizacion" {{ $orden->estado == 'autorizacion' ? 'disabled' : '' }}>Autorización</option>
-                                    <option value="requisito" {{ $orden->estado == 'requisito' ? 'disabled' : '' }}>Requisito</option>
-                                    <option value="programacion" {{ $orden->estado == 'programacion' ? 'disabled' : '' }}>Programación</option>
-                                    <option value="en_proceso" {{ $orden->estado == 'en_proceso' ? 'disabled' : '' }}>Realización de la Prueba</option>
-                                    <option value="preliminar" {{ $orden->estado == 'preliminar' ? 'disabled' : '' }}>Informe Preliminar</option>
-                                    <option value="final" {{ $orden->estado == 'final' ? 'disabled' : '' }}>Informe Final</option>
-                                    <option value="entregado" {{ $orden->estado == 'entregado' ? 'disabled' : '' }}>Entregado</option>
-                                    <option value="cancelado" {{ $orden->estado == 'cancelado' ? 'disabled' : '' }}>Cancelado</option>
+                                    @foreach($estados as $key => $label)
+                                        @if($key !== $orden->estado)
+                                            <option value="{{ $key }}">{{ $label }}</option>
+                                        @endif
+                                    @endforeach
                                 </select>
+                                <small class="text-muted mt-1 d-block">
+                                    <i class="bi bi-info-circle"></i> El estado se actualiza automáticamente. Cambio manual solo si es necesario.
+                                </small>
                             </div>
 
                             <div class="mb-3">
@@ -388,6 +387,15 @@
                                                 <span class="badge bg-{{ $evaluado->estado_formulario_color }}" title="Estado Formulario">
                                                     <i class="bi bi-file-text"></i> {{ \App\Models\EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->estado_formulario] ?? ucfirst($evaluado->estado_formulario) }}
                                                 </span>
+                                                @if($evaluado->modalidad)
+                                                    <span class="badge bg-{{ $evaluado->modalidad === 'virtual' ? 'purple' : 'secondary' }}" title="Modalidad">
+                                                        <i class="bi bi-{{ $evaluado->modalidad === 'virtual' ? 'camera-video' : 'building' }}"></i> {{ ucfirst($evaluado->modalidad) }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-light text-muted border" title="Modalidad sin definir">
+                                                        <i class="bi bi-question-circle"></i> Sin modalidad
+                                                    </span>
+                                                @endif
                                                 @if($evaluado->documentos->count() > 0)
                                                     <span class="badge bg-secondary" title="Documentos"><i class="bi bi-folder2-open"></i> {{ $evaluado->documentos->count() }}</span>
                                                 @endif
@@ -441,12 +449,19 @@
                                                     @if($evaluado->sede)
                                                         <br><small class="text-muted"><i class="bi bi-geo-alt"></i> {{ $evaluado->sede->nombre }}</small>
                                                     @endif
-                                                    @if($evaluado->modalidad)
-                                                        <br><small><span class="badge bg-{{ $evaluado->modalidad == 'presencial' ? 'info' : 'purple' }}">{{ ucfirst($evaluado->modalidad) }}</span></small>
-                                                    @endif
                                                 @else
                                                     <span class="text-muted">Sin programar</span>
                                                 @endif
+                                                {{-- Modalidad siempre visible, independiente de si hay cita --}}
+                                                <br><small>
+                                                    @if($evaluado->modalidad)
+                                                        <span class="badge bg-{{ $evaluado->modalidad === 'virtual' ? 'purple' : 'secondary' }}">
+                                                            <i class="bi bi-{{ $evaluado->modalidad === 'virtual' ? 'camera-video' : 'building' }}"></i> {{ ucfirst($evaluado->modalidad) }}
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-light text-muted border"><i class="bi bi-question-circle"></i> Sin modalidad</span>
+                                                    @endif
+                                                </small>
                                                 @if($evaluado->poligrafista)
                                                     <br><small class="text-muted"><i class="bi bi-person"></i> {{ $evaluado->poligrafista->name }}</small>
                                                 @endif
@@ -527,21 +542,31 @@
                                         @endif
 
                                         {{-- Estados del evaluado --}}
-                                        <div class="row mb-3">
+                                        @php
+                                            $nombresEval = \App\Models\EvaluadoOrden::estadosEvaluacionDisponibles();
+                                            $nombresForm = \App\Models\EvaluadoOrden::estadosFormularioDisponibles();
+                                            $nombresProg = \App\Models\EvaluadoOrden::estadosProgramacionDisponibles();
+                                            $transicionesEval = Auth::user()->role_as >= 2
+                                                ? (\App\Models\EvaluadoOrden::transicionesEvaluacion()[$evaluado->estado_evaluacion] ?? [])
+                                                : [];
+                                            $transicionesForm = Auth::user()->role_as >= 2
+                                                ? (\App\Models\EvaluadoOrden::transicionesFormulario()[$evaluado->estado_formulario] ?? [])
+                                                : [];
+                                            $transicionesProg = Auth::user()->role_as >= 2
+                                                ? (\App\Models\EvaluadoOrden::transicionesProgramacion()[$evaluado->estado_programacion] ?? [])
+                                                : [];
+                                        @endphp
+                                        <div class="row mb-3 g-2">
                                             {{-- Estado de Evaluación --}}
-                                            <div class="col-md-6">
-                                                <small class="text-muted d-block mb-1">Estado Evaluación</small>
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block mb-1"><i class="bi bi-clipboard2-check"></i> Estado Evaluación</small>
                                                 <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">{{ $evaluado->estado_evaluacion_texto }}</span>
-                                                @if(Auth::user()->role_as >= 2)
-                                                    @php
-                                                        $transicionesEval = \App\Models\EvaluadoOrden::transicionesEvaluacion()[$evaluado->estado_evaluacion] ?? [];
-                                                        $nombresEval = \App\Models\EvaluadoOrden::estadosEvaluacionDisponibles();
-                                                    @endphp
-                                                    @if(count($transicionesEval) > 0)
-                                                    <form action="{{ route('evaluados.cambiar-estado', $evaluado->id) }}" method="POST" class="mt-1 d-flex gap-1 align-items-center">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <input type="hidden" name="tipo_estado" value="evaluacion">
+                                                @if(Auth::user()->role_as >= 2 && count($transicionesEval) > 0)
+                                                <form action="{{ route('evaluados.cambiar-estado', $evaluado->id) }}" method="POST" class="mt-1">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="tipo_estado" value="evaluacion">
+                                                    <div class="d-flex gap-1 align-items-center">
                                                         <select name="nuevo_estado" class="form-select form-select-sm" style="max-width: 180px;" required>
                                                             <option value="">Cambiar a...</option>
                                                             @foreach($transicionesEval as $estado)
@@ -551,30 +576,30 @@
                                                         <button type="submit" class="btn btn-outline-primary btn-sm" title="Cambiar estado evaluación">
                                                             <i class="bi bi-arrow-right-circle"></i>
                                                         </button>
-                                                    </form>
-                                                    @endif
+                                                    </div>
+                                                    <details class="mt-1">
+                                                        <summary class="text-muted" style="font-size:0.75rem;cursor:pointer;">+ Motivo / observación (opcional)</summary>
+                                                        <textarea name="observacion" class="form-control form-control-sm mt-1" rows="2" maxlength="1000" placeholder="Ej: Candidato reagendó por viaje..."></textarea>
+                                                    </details>
+                                                </form>
                                                 @endif
                                             </div>
 
                                             {{-- Estado del Formulario --}}
-                                            <div class="col-md-6">
-                                                <small class="text-muted d-block mb-1">Estado Formulario</small>
-                                                <span class="badge bg-{{ $evaluado->estado_formulario_color }}">{{ \App\Models\EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->estado_formulario] ?? ucfirst($evaluado->estado_formulario) }}</span>
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block mb-1"><i class="bi bi-file-earmark-text"></i> Estado Formulario</small>
+                                                <span class="badge bg-{{ $evaluado->estado_formulario_color }}">{{ $nombresForm[$evaluado->estado_formulario] ?? ucfirst($evaluado->estado_formulario) }}</span>
                                                 @if($evaluado->completado_at)
-                                                    <small class="text-muted ms-1">{{ \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') }}</small>
+                                                    <small class="text-muted ms-1 d-block">{{ \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') }}</small>
                                                 @elseif($evaluado->token_expira_at)
-                                                    <small class="text-muted ms-1">Expira: {{ \Carbon\Carbon::parse($evaluado->token_expira_at)->format('d/m/Y') }}</small>
+                                                    <small class="text-muted ms-1 d-block">Expira: {{ \Carbon\Carbon::parse($evaluado->token_expira_at)->format('d/m/Y') }}</small>
                                                 @endif
-                                                @if(Auth::user()->role_as >= 2)
-                                                    @php
-                                                        $transicionesForm = \App\Models\EvaluadoOrden::transicionesFormulario()[$evaluado->estado_formulario] ?? [];
-                                                        $nombresForm = \App\Models\EvaluadoOrden::estadosFormularioDisponibles();
-                                                    @endphp
-                                                    @if(count($transicionesForm) > 0)
-                                                    <form action="{{ route('evaluados.cambiar-estado', $evaluado->id) }}" method="POST" class="mt-1 d-flex gap-1 align-items-center">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <input type="hidden" name="tipo_estado" value="formulario">
+                                                @if(Auth::user()->role_as >= 2 && count($transicionesForm) > 0)
+                                                <form action="{{ route('evaluados.cambiar-estado', $evaluado->id) }}" method="POST" class="mt-1">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="tipo_estado" value="formulario">
+                                                    <div class="d-flex gap-1 align-items-center">
                                                         <select name="nuevo_estado" class="form-select form-select-sm" style="max-width: 180px;" required>
                                                             <option value="">Cambiar a...</option>
                                                             @foreach($transicionesForm as $estado)
@@ -584,11 +609,109 @@
                                                         <button type="submit" class="btn btn-outline-primary btn-sm" title="Cambiar estado formulario">
                                                             <i class="bi bi-arrow-right-circle"></i>
                                                         </button>
-                                                    </form>
-                                                    @endif
+                                                    </div>
+                                                    <details class="mt-1">
+                                                        <summary class="text-muted" style="font-size:0.75rem;cursor:pointer;">+ Motivo / observación (opcional)</summary>
+                                                        <textarea name="observacion" class="form-control form-control-sm mt-1" rows="2" maxlength="1000" placeholder="Ej: Candidato confirmó recepción del formulario..."></textarea>
+                                                    </details>
+                                                </form>
+                                                @endif
+                                            </div>
+
+                                            {{-- Estado de Programación --}}
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block mb-1"><i class="bi bi-calendar-check"></i> Estado Programación</small>
+                                                @php $estadoProg = $nombresProg[$evaluado->estado_programacion] ?? ucfirst($evaluado->estado_programacion ?? '—'); @endphp
+                                                @php
+                                                    $colorProg = match($evaluado->estado_programacion ?? '') {
+                                                        'programado'        => 'success',
+                                                        'proceso_realizado' => 'primary',
+                                                        'reprogramado'      => 'warning',
+                                                        'inasistencia'      => 'danger',
+                                                        'desistio'          => 'dark',
+                                                        'cancelado'         => 'danger',
+                                                        'contactando'       => 'info',
+                                                        'contactado'        => 'secondary',
+                                                        default             => 'secondary',
+                                                    };
+                                                @endphp
+                                                <span class="badge bg-{{ $colorProg }}">{{ $estadoProg }}</span>
+                                                @if(Auth::user()->role_as >= 2 && count($transicionesProg) > 0)
+                                                <form action="{{ route('evaluados.cambiar-estado', $evaluado->id) }}" method="POST" class="mt-1">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="tipo_estado" value="programacion">
+                                                    <div class="d-flex gap-1 align-items-center">
+                                                        <select name="nuevo_estado" class="form-select form-select-sm" style="max-width: 180px;" required>
+                                                            <option value="">Cambiar a...</option>
+                                                            @foreach($transicionesProg as $estado)
+                                                                <option value="{{ $estado }}">{{ $nombresProg[$estado] ?? ucfirst($estado) }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <button type="submit" class="btn btn-outline-primary btn-sm" title="Cambiar estado programación">
+                                                            <i class="bi bi-arrow-right-circle"></i>
+                                                        </button>
+                                                    </div>
+                                                    <details class="mt-1">
+                                                        <summary class="text-muted" style="font-size:0.75rem;cursor:pointer;">+ Motivo / observación (opcional)</summary>
+                                                        <textarea name="observacion" class="form-control form-control-sm mt-1" rows="2" maxlength="1000" placeholder="Ej: Inasistencia sin previo aviso..."></textarea>
+                                                    </details>
+                                                </form>
                                                 @endif
                                             </div>
                                         </div>
+
+                                        {{-- Historial de cambios de estado --}}
+                                        @if(Auth::user()->role_as >= 2)
+                                        @php $historial = $evaluado->historialEstados()->with('usuario')->get(); @endphp
+                                        @if($historial->isNotEmpty())
+                                        <div class="mb-3">
+                                            <details>
+                                                <summary class="text-muted small" style="cursor:pointer;">
+                                                    <i class="bi bi-clock-history"></i> Historial de cambios ({{ $historial->count() }})
+                                                </summary>
+                                                <div class="table-responsive mt-2">
+                                                    <table class="table table-sm table-bordered small mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>Fecha</th>
+                                                                <th>Campo</th>
+                                                                <th>Anterior</th>
+                                                                <th>Nuevo</th>
+                                                                <th>Usuario</th>
+                                                                <th>Observación</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($historial as $entrada)
+                                                            <tr>
+                                                                <td class="text-nowrap">{{ $entrada->created_at->format('d/m/Y H:i') }}</td>
+                                                                <td>
+                                                                    @php
+                                                                        $campoLabel = match($entrada->campo) {
+                                                                            'estado_evaluacion'   => 'Evaluación',
+                                                                            'estado_formulario'   => 'Formulario',
+                                                                            'estado_programacion' => 'Programación',
+                                                                            'estado_orden'        => 'Orden',
+                                                                            'modalidad'           => 'Modalidad',
+                                                                            default               => ucfirst($entrada->campo),
+                                                                        };
+                                                                    @endphp
+                                                                    <span class="badge bg-light text-dark border">{{ $campoLabel }}</span>
+                                                                </td>
+                                                                <td class="text-muted">{{ $entrada->estado_anterior ?: '—' }}</td>
+                                                                <td><strong>{{ $entrada->estado_nuevo }}</strong></td>
+                                                                <td>{{ $entrada->usuario?->name ?? 'Sistema' }}</td>
+                                                                <td class="text-muted">{{ $entrada->observacion ?: '—' }}</td>
+                                                            </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </details>
+                                        </div>
+                                        @endif
+                                        @endif
 
                                         {{-- Acciones del evaluado --}}
                                         <div class="mb-3">

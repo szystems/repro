@@ -134,7 +134,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => $fecha->copy()->addHours(2),
             'sede_id' => $sede->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
             'tipo_servicio' => 'poligrafo',
         ]);
         $this->crearEvaluado([
@@ -142,7 +142,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => $fecha->copy()->setTime(16, 0),
             'sede_id' => $sede->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
             'tipo_servicio' => 'vsa',
         ]);
 
@@ -166,14 +166,14 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => $fecha->copy()->addHours(2),
             'sede_id' => $sedeA->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
         $this->crearEvaluado([
             'fecha_programada' => $fecha,
             'fecha_hora_fin' => $fecha->copy()->addHours(2),
             'sede_id' => $sedeB->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $this->actingAs($poligrafista)
@@ -211,7 +211,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => '2026-03-15 11:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $this->actingAs($poligrafista)
@@ -224,7 +224,7 @@ class CalendarioTest extends TestCase
     {
         $evaluadoPendiente = $this->crearEvaluado([
             'fecha_programada' => null,
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
         ]);
 
         $this->actingAs($this->usuarioRepro())
@@ -247,7 +247,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => $fechaFutura . ' 11:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $polA->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         // Sin filtro de evaluador, el botón Agendar debe seguir visible en ese slot
@@ -266,7 +266,7 @@ class CalendarioTest extends TestCase
         $sede = Sede::factory()->create(['estado' => 1]);
         $poligrafista = $this->usuarioRepro();
         $evaluado = $this->crearEvaluado([
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
             'fecha_programada' => null,
         ]);
 
@@ -282,7 +282,7 @@ class CalendarioTest extends TestCase
             ->assertRedirect();
 
         $evaluado->refresh();
-        $this->assertEquals('programado', $evaluado->estado_evaluacion);
+        $this->assertEquals('programado', $evaluado->estado_programacion);
         $this->assertEquals('2026-03-20 09:00:00', $evaluado->fecha_programada->format('Y-m-d H:i:s'));
         $this->assertEquals('2026-03-20 11:00:00', $evaluado->fecha_hora_fin->format('Y-m-d H:i:s'));
         $this->assertEquals($sede->id, $evaluado->sede_id);
@@ -347,11 +347,11 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => '2026-03-20 12:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $evaluado2 = $this->crearEvaluado([
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
             'fecha_programada' => null,
         ]);
 
@@ -369,7 +369,7 @@ class CalendarioTest extends TestCase
 
         // El evaluado no debe haber cambiado
         $evaluado2->refresh();
-        $this->assertEquals('pendiente', $evaluado2->estado_evaluacion);
+        $this->assertEquals('pendiente_de_evaluacion', $evaluado2->estado_evaluacion);
     }
 
     public function test_antitraslape_permite_citas_consecutivas(): void
@@ -383,11 +383,11 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => '2026-03-20 12:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $evaluado2 = $this->crearEvaluado([
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
             'fecha_programada' => null,
         ]);
 
@@ -404,7 +404,7 @@ class CalendarioTest extends TestCase
             ->assertRedirect();
 
         $evaluado2->refresh();
-        $this->assertEquals('programado', $evaluado2->estado_evaluacion);
+        $this->assertEquals('programado', $evaluado2->estado_programacion);
     }
 
     public function test_antitraslape_permite_diferente_sede(): void
@@ -419,11 +419,11 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => '2026-03-20 12:00:00',
             'sede_id' => $sedeA->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $evaluado2 = $this->crearEvaluado([
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
             'fecha_programada' => null,
         ]);
 
@@ -440,7 +440,7 @@ class CalendarioTest extends TestCase
             ->assertRedirect();
 
         $evaluado2->refresh();
-        $this->assertEquals('programado', $evaluado2->estado_evaluacion);
+        $this->assertEquals('programado', $evaluado2->estado_programacion);
     }
 
     public function test_antitraslape_permite_diferente_poligrafista(): void
@@ -455,11 +455,11 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => '2026-03-20 12:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $polA->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $evaluado2 = $this->crearEvaluado([
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
             'fecha_programada' => null,
         ]);
 
@@ -476,7 +476,7 @@ class CalendarioTest extends TestCase
             ->assertRedirect();
 
         $evaluado2->refresh();
-        $this->assertEquals('programado', $evaluado2->estado_evaluacion);
+        $this->assertEquals('programado', $evaluado2->estado_programacion);
     }
 
     public function test_antitraslape_ignora_citas_canceladas(): void
@@ -494,7 +494,7 @@ class CalendarioTest extends TestCase
         ]);
 
         $evaluado2 = $this->crearEvaluado([
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
             'fecha_programada' => null,
         ]);
 
@@ -511,7 +511,7 @@ class CalendarioTest extends TestCase
             ->assertRedirect();
 
         $evaluado2->refresh();
-        $this->assertEquals('programado', $evaluado2->estado_evaluacion);
+        $this->assertEquals('programado', $evaluado2->estado_programacion);
     }
 
     // -------------------------------------------------------
@@ -528,7 +528,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => '2026-03-15 11:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $this->actingAs($poligrafista)
@@ -545,7 +545,7 @@ class CalendarioTest extends TestCase
         $evaluado->refresh();
         $this->assertEquals('2026-03-22 14:00:00', $evaluado->fecha_programada->format('Y-m-d H:i:s'));
         $this->assertEquals('2026-03-22 16:00:00', $evaluado->fecha_hora_fin->format('Y-m-d H:i:s'));
-        $this->assertEquals('reprogramado', $evaluado->estado_evaluacion);
+        $this->assertEquals('reprogramado', $evaluado->estado_programacion);
     }
 
     public function test_reprogramar_excluye_evaluado_actual_de_antitraslape(): void
@@ -558,7 +558,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => '2026-03-20 11:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         // Reprogramar misma fecha, ajustar solo la hora (9:30 - 11:30)
@@ -592,7 +592,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => '2026-03-20 11:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $this->actingAs($poligrafista)
@@ -600,7 +600,8 @@ class CalendarioTest extends TestCase
             ->assertRedirect(route('calendario.dia', ['fecha' => '2026-03-20']));
 
         $evaluado->refresh();
-        $this->assertEquals('cancelado', $evaluado->estado_evaluacion);
+        // Fase 18: cancelar cita afecta estado_programacion
+        $this->assertEquals('cancelado', $evaluado->estado_programacion);
         $this->assertNull($evaluado->fecha_programada);
         $this->assertNull($evaluado->fecha_hora_fin);
     }
@@ -615,7 +616,7 @@ class CalendarioTest extends TestCase
         $orden = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
             'fecha_programada' => null,
         ]);
 
@@ -636,7 +637,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => '2026-03-20 11:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $this->actingAs($poligrafista)
@@ -653,15 +654,16 @@ class CalendarioTest extends TestCase
     {
         $this->crearEvaluado([
             'fecha_programada' => '2026-03-20 09:00:00',
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
         $this->crearEvaluado([
             'fecha_programada' => null,
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
         ]);
+        // Fase 18: la exclusión del scope programados se basa en estado_programacion
         $this->crearEvaluado([
             'fecha_programada' => '2026-03-20 09:00:00',
-            'estado_evaluacion' => 'cancelado',
+            'estado_programacion' => 'cancelado',
         ]);
 
         $programados = EvaluadoOrden::programados()->get();
@@ -672,15 +674,16 @@ class CalendarioTest extends TestCase
     {
         $this->crearEvaluado([
             'fecha_programada' => null,
-            'estado_evaluacion' => 'pendiente',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
         ]);
+        // Fase 18: 'contactado' es un valor de estado_programacion, no estado_evaluacion
         $this->crearEvaluado([
             'fecha_programada' => null,
-            'estado_evaluacion' => 'contactado',
+            'estado_programacion' => 'contactado',
         ]);
         $this->crearEvaluado([
             'fecha_programada' => '2026-03-20 09:00:00',
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $pendientes = EvaluadoOrden::pendientesProgramar()->get();
@@ -691,11 +694,11 @@ class CalendarioTest extends TestCase
     {
         $this->crearEvaluado([
             'fecha_programada' => '2026-03-20 09:00:00',
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
         $this->crearEvaluado([
             'fecha_programada' => '2026-03-21 09:00:00',
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $enDia = EvaluadoOrden::enDia('2026-03-20')->get();
@@ -707,16 +710,17 @@ class CalendarioTest extends TestCase
         // inasistencia ya NO se excluye del scope — debe aparecer en el calendario
         $this->crearEvaluado([
             'fecha_programada' => '2026-03-20 09:00:00',
-            'estado_evaluacion' => 'inasistencia',
+            'estado_programacion' => 'inasistencia',
         ]);
+        // Fase 18: la exclusión del scope se basa en estado_programacion
         $this->crearEvaluado([
             'fecha_programada' => '2026-03-20 09:00:00',
-            'estado_evaluacion' => 'cancelado', // este SÍ se excluye
+            'estado_programacion' => 'cancelado',
         ]);
 
         $programados = EvaluadoOrden::programados()->get();
         $this->assertCount(1, $programados);
-        $this->assertEquals('inasistencia', $programados->first()->estado_evaluacion);
+        $this->assertEquals('inasistencia', $programados->first()->estado_programacion);
     }
 
     public function test_dia_muestra_candidatos_con_inasistencia(): void
@@ -729,7 +733,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin'   => '2026-03-15 11:00:00',
             'sede_id'          => $sede->id,
             'poligrafista_id'  => $poligrafista->id,
-            'estado_evaluacion' => 'inasistencia',
+            'estado_programacion' => 'inasistencia',
         ]);
 
         $this->actingAs($poligrafista)
@@ -748,7 +752,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin'   => '2026-03-15 11:00:00',
             'sede_id'          => $sede->id,
             'poligrafista_id'  => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         $this->actingAs($poligrafista)
@@ -765,7 +769,7 @@ class CalendarioTest extends TestCase
         $evaluado->refresh();
         $this->assertEquals('2026-03-22 14:00:00', $evaluado->fecha_programada->format('Y-m-d H:i:s'));
         $this->assertEquals('2026-03-15 09:00:00', $evaluado->fecha_programada_original->format('Y-m-d H:i:s'));
-        $this->assertEquals('reprogramado', $evaluado->estado_evaluacion);
+        $this->assertEquals('reprogramado', $evaluado->estado_programacion);
     }
 
     public function test_dia_muestra_seccion_historica_de_reprogramados(): void
@@ -780,7 +784,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin'            => '2026-03-22 16:00:00',
             'sede_id'                   => $sede->id,
             'poligrafista_id'           => $poligrafista->id,
-            'estado_evaluacion'         => 'reprogramado',
+            'estado_programacion'        => 'reprogramado',
         ]);
 
         // El día 22/03 muestra la cita activa (por fecha_programada)
@@ -811,7 +815,7 @@ class CalendarioTest extends TestCase
             'fecha_hora_fin' => '2026-03-20 12:00:00',
             'sede_id' => $sede->id,
             'poligrafista_id' => $poligrafista->id,
-            'estado_evaluacion' => 'programado',
+            'estado_programacion' => 'programado',
         ]);
 
         // Rango que se cruza: 10:00 - 13:00

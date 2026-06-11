@@ -78,12 +78,12 @@ class ReportesTest extends TestCase
         $empresa = Empresa::factory()->create(['estado' => 1]);
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
-            'estado' => 'solicitud',
+            'estado' => 'orden_recibida',
         ]);
         
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
-            'estado_evaluacion' => 'completado',
+            'estado_evaluacion' => 'informe_final_enviado',
         ]);
 
         $response = $this->actingAs($admin)->get(route('reportes.evaluaciones'));
@@ -124,7 +124,7 @@ class ReportesTest extends TestCase
 
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
-            'estado_evaluacion' => 'completado',
+            'estado_evaluacion' => 'informe_final_enviado',
         ]);
 
         $response = $this->actingAs($user)->get(route('reportes.evaluaciones'));

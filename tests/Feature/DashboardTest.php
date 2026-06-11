@@ -36,7 +36,7 @@ class DashboardTest extends TestCase
         $empresa = Empresa::factory()->create(['estado' => 1]);
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
-            'estado' => 'solicitud',
+            'estado' => 'orden_recibida',
         ]);
 
         $response = $this->actingAs($admin)->get(route('dashboard'));
@@ -84,7 +84,7 @@ class DashboardTest extends TestCase
 
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
-            'estado' => 'solicitud',
+            'estado' => 'orden_recibida',
         ]);
 
         $response = $this->actingAs($user)->get(route('dashboard'));
@@ -112,7 +112,7 @@ class DashboardTest extends TestCase
         // Crear órdenes en diferentes estados
         Orden::factory()->create([
             'empresa_id' => $empresas[0]->id,
-            'estado' => 'solicitud',
+            'estado' => 'orden_recibida',
         ]);
         Orden::factory()->create([
             'empresa_id' => $empresas[1]->id,

@@ -38,9 +38,9 @@ class CuestionarioController extends Controller
                 ->with(['orden.empresa'])
                 ->firstOrFail();
 
-            // Verificar si ya completó el cuestionario
+            // Verificar si ya completó el cuestionario — mostrar estado del proceso
             if ($evaluado->cuestionario_completado) {
-                return view('cuestionario.completado', compact('evaluado'));
+                return redirect()->route('cuestionario.estado', ['token' => $token]);
             }
 
             // Registrar acceso (comentado temporalmente para debug)
@@ -437,7 +437,8 @@ class CuestionarioController extends Controller
             $evaluado->cuestionario_completado = true;
             $evaluado->cuestionario_completado_at = now();
             $evaluado->completado_at = now();
-            $evaluado->estado_evaluacion = 'docs_pendientes'; // Formulario recibido, pendiente de revisar
+            // Fase 18: el formulario completado se registra en estado_formulario
+            $evaluado->estado_formulario = 'formulario_completado_y_recibido';
             $evaluado->ip_acceso = $request->ip();
             $evaluado->save();
 
@@ -471,6 +472,38 @@ class CuestionarioController extends Controller
         }
 
         return view('cuestionario.completado', compact('evaluado'));
+    }
+
+    /**
+     * Vista de estado del proceso — timeline simplificado para el candidato (Fase 18, Semana 3).
+     * Accesible en cualquier momento con el mismo token. No requiere que el formulario esté completo.
+     */
+    public function estadoCandidato(string $token)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->with(['orden.empresa'])
+            ->firstOrFail();
+
+        // Calcular el paso activo (1-4) según los estados actuales
+        $pasoActivo = 1;
+
+        if ($evaluado->estado_formulario === 'formulario_completado_y_recibido') {
+            $pasoActivo = 2;
+        }
+
+        if (in_array($evaluado->estado_programacion, ['programado', 'reprogramado', 'proceso_realizado'])) {
+            $pasoActivo = 3;
+        }
+
+        if ($evaluado->estado_evaluacion === 'informe_final_enviado') {
+            $pasoActivo = 4;
+        }
+
+        // Estados que indican proceso cancelado o detenido
+        $cancelado = in_array($evaluado->estado_evaluacion, ['cancelado', 'desistio'])
+            || $evaluado->estado_programacion === 'cancelado';
+
+        return view('cuestionario.estado', compact('evaluado', 'pasoActivo', 'cancelado', 'token'));
     }
 
     // ========================================
@@ -651,16 +684,29 @@ class CuestionarioController extends Controller
             $evaluado->loadMissing('orden.empresa');
 
             // Notificación in-app a usuarios REPRO/admin
-            $usuariosNotificar = User::where('role_as', '>=', 2)
+            $usuariosRepro = User::where('role_as', '>=', 2)
                 ->where('estado', 1)
                 ->get();
-            foreach ($usuariosNotificar as $usuario) {
+            foreach ($usuariosRepro as $usuario) {
                 $usuario->notify(new CuestionarioCompletadoNotification($evaluado));
             }
 
+            // Notificación in-app a usuarios de la empresa (Fase 18 — Prioridad 3)
+            $empresaId = $evaluado->orden->empresa_id ?? null;
+            if ($empresaId) {
+                $usuariosEmpresa = User::where('empresa_id', $empresaId)
+                    ->where('role_as', 1)
+                    ->where('estado', 1)
+                    ->get();
+                foreach ($usuariosEmpresa as $usuario) {
+                    $usuario->notify(new CuestionarioCompletadoNotification($evaluado));
+                }
+            }
+
             Log::info('Notificaciones in-app de cuestionario completado enviadas', [
-                'evaluado_id' => $evaluado->id,
-                'destinatarios' => $usuariosNotificar->count(),
+                'evaluado_id'   => $evaluado->id,
+                'repro'         => $usuariosRepro->count(),
+                'empresa'       => isset($usuariosEmpresa) ? $usuariosEmpresa->count() : 0,
             ]);
 
         } catch (\Exception $e) {

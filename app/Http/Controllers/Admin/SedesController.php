@@ -63,9 +63,9 @@ class SedesController extends Controller
         // Búsqueda por nombre o DPI
         $search = $request->input('search');
 
-        $estadosActivos  = ['solicitud', 'autorizacion', 'requisito', 'programacion', 'en_proceso', 'preliminar', 'final'];
+        $estadosActivos    = ['orden_recibida', 'en_proceso'];
         $estadosRealizados = ['entregado'];
-        $estadosPendientes = ['solicitud', 'autorizacion', 'requisito'];
+        $estadosPendientes = ['orden_recibida'];
 
         // Candidatos de esta sede (a través de evaluados_orden.sede_id)
         $baseQuery = EvaluadoOrden::where('sede_id', $sede->id)

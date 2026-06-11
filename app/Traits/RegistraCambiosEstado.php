@@ -2,14 +2,17 @@
 
 namespace App\Traits;
 
-use App\Models\AuditoriaEstado;
+use App\Models\EstadoHistorial;
+use App\Models\Orden;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Request;
 
 trait RegistraCambiosEstado
 {
     /**
-     * Registra una transición de estado en la tabla de auditoría.
+     * Registra una transición de estado en estado_historial (Fase 18).
+     *
+     * Detecta automáticamente si el modelo es una Orden o un EvaluadoOrden
+     * para asignar el FK correcto.
      */
     protected function registrarCambioEstado(
         string $campo,
@@ -17,15 +20,20 @@ trait RegistraCambiosEstado
         string $estadoNuevo,
         ?string $observaciones = null
     ): void {
-        AuditoriaEstado::create([
-            'entidad_tipo' => static::class,
-            'entidad_id' => $this->getKey(),
-            'campo' => $campo,
+        $data = [
+            'campo'           => $campo,
             'estado_anterior' => $estadoAnterior,
-            'estado_nuevo' => $estadoNuevo,
-            'user_id' => Auth::id(),
-            'ip' => Request::ip(),
-            'observaciones' => $observaciones,
-        ]);
+            'estado_nuevo'    => $estadoNuevo,
+            'observacion'     => $observaciones,
+            'user_id'         => Auth::id(),
+        ];
+
+        if ($this instanceof Orden) {
+            $data['orden_id'] = $this->getKey();
+        } else {
+            $data['evaluado_orden_id'] = $this->getKey();
+        }
+
+        EstadoHistorial::create($data);
     }
 }

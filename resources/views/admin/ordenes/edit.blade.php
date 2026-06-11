@@ -283,6 +283,16 @@
                                                 <option value="especifica" {{ old('evaluados.'.$index.'.tipo_formulario', $evaluado->tipo_formulario) == 'especifica' ? 'selected' : '' }}>Específica</option>
                                             </select>
                                         </div>
+                                        @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label">Modalidad</label>
+                                            <select class="form-select" name="evaluados[{{ $index }}][modalidad]">
+                                                <option value="presencial" {{ old('evaluados.'.$index.'.modalidad', $evaluado->modalidad ?? 'presencial') == 'presencial' ? 'selected' : '' }}>Presencial</option>
+                                                <option value="virtual" {{ old('evaluados.'.$index.'.modalidad', $evaluado->modalidad ?? 'presencial') == 'virtual' ? 'selected' : '' }}>Virtual</option>
+                                            </select>
+                                            <small class="text-muted">Virtual: exige formulario completo antes de programar</small>
+                                        </div>
+                                        @endif
                                         <div class="col-md-6 mb-2">
                                             <label class="form-label">Dirección</label>
                                             <input type="text" class="form-control" name="evaluados[{{ $index }}][direccion]" 
@@ -382,14 +392,8 @@
                         </div>
                         <div class="card-body">
                             <div class="text-center">
-                                <span class="badge fs-6
-                                    @if($orden->estado == 'solicitud') bg-secondary
-                                    @elseif($orden->estado == 'en_proceso') bg-primary
-                                    @elseif($orden->estado == 'entregado') bg-success
-                                    @elseif($orden->estado == 'cancelado') bg-danger
-                                    @else bg-info
-                                    @endif">
-                                    {{ $estados[$orden->estado] ?? $orden->estado }}
+                                <span class="badge fs-6 bg-{{ $orden->estado_color }}">
+                                    {{ $orden->estado_human }}
                                 </span>
                             </div>
                             
@@ -508,6 +512,16 @@
                     <option value="especifica">Específica</option>
                 </select>
             </div>
+            @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+            <div class="col-md-6 mb-2">
+                <label class="form-label">Modalidad</label>
+                <select class="form-select evaluado-modalidad" name="">
+                    <option value="presencial" selected>Presencial</option>
+                    <option value="virtual">Virtual</option>
+                </select>
+                <small class="text-muted">Virtual: exige formulario completo antes de programar</small>
+            </div>
+            @endif
         </div>
         
         @if(Auth::user()->hasAnyRole(['admin', 'repro']))
@@ -575,6 +589,8 @@ document.addEventListener('DOMContentLoaded', function() {
         newEvaluado.querySelector('.evaluado-telefono').name = `evaluados[${evaluadoIndex}][telefono]`;
         newEvaluado.querySelector('.evaluado-tipo-servicio').name = `evaluados[${evaluadoIndex}][tipo_servicio]`;
         newEvaluado.querySelector('.evaluado-tipo-formulario').name = `evaluados[${evaluadoIndex}][tipo_formulario]`;
+        const modalidadEl = newEvaluado.querySelector('.evaluado-modalidad');
+        if (modalidadEl) modalidadEl.name = `evaluados[${evaluadoIndex}][modalidad]`;
         @if(Auth::user()->hasAnyRole(['admin', 'repro']))
         const poligrafistaSelect = newEvaluado.querySelector('.evaluado-poligrafista');
         if (poligrafistaSelect) {

@@ -65,7 +65,9 @@ class Sede extends Model
             ->where('poligrafista_id', $poligrafistaId)
             ->where('fecha_programada', '<', $fin)
             ->where('fecha_hora_fin', '>', $inicio)
-            ->whereNotIn('estado_evaluacion', ['cancelado', 'desistio', 'inasistencia']);
+            // Fase 18: excluir por estado_programacion (cancelado/desistio/inasistencia) y estado_evaluacion (cancelado)
+            ->whereNotIn('estado_programacion', ['cancelado', 'desistio', 'inasistencia'])
+            ->whereNotIn('estado_evaluacion', ['cancelado']);
 
         if ($excludeEvaluadoId) {
             $query->where('id', '<>', $excludeEvaluadoId);
