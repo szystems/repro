@@ -9,7 +9,7 @@
                 <i class="bi bi-search"></i>
             </div>
             <div class="page-title">
-                <h5>Historial por DPI</h5>
+                <h5>Historial por DPI o nombre</h5>
             </div>
         </div>
     </div>
@@ -23,12 +23,12 @@
                     <div class="card-body">
                         <form method="GET" action="{{ route('admin.cuestionarios.historial-dpi') }}" class="row g-3 align-items-end">
                             <div class="col-md-8">
-                                <label class="form-label fw-bold">Número de DPI</label>
-                                <input type="text" name="dpi" class="form-control" 
-                                       placeholder="Ingrese los 13 dígitos del DPI" 
-                                       value="{{ $dpi }}" 
-                                       pattern="[0-9]{13}" maxlength="13" required>
-                                <small class="text-muted">13 dígitos sin espacios ni guiones</small>
+                                <label class="form-label fw-bold">DPI o nombre del candidato</label>
+                                <input type="text" name="buscar" class="form-control"
+                                       placeholder="DPI (13 dígitos) o nombre/apellidos"
+                                       value="{{ $buscar }}"
+                                       minlength="2" maxlength="100" required>
+                                <small class="text-muted">Puede buscar por DPI completo o por parte del nombre o apellidos</small>
                             </div>
                             <div class="col-md-4">
                                 <button type="submit" class="btn btn-primary w-100">
@@ -42,14 +42,14 @@
         </div>
 
         {{-- Resultados --}}
-        @if($dpi)
+        @if($buscar)
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title mb-0">
                             <i class="bi bi-clock-history me-2"></i>
-                            Historial del DPI: <code>{{ $dpi }}</code>
+                            Resultados para: <code>{{ $buscar }}</code>
                             <span class="badge bg-secondary ms-2">{{ $historial->count() }} {{ $historial->count() == 1 ? 'registro' : 'registros' }}</span>
                         </h5>
                     </div>
@@ -57,7 +57,7 @@
                         @if($historial->isEmpty())
                             <div class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1"></i>
-                                <p class="mt-2">No se encontraron registros para este DPI.</p>
+                                <p class="mt-2">No se encontraron registros para esta búsqueda.</p>
                             </div>
                         @else
                             <div class="table-responsive">
@@ -65,11 +65,12 @@
                                     <thead>
                                         <tr>
                                             <th>Nombre</th>
+                                            <th>DPI</th>
                                             <th>Empresa</th>
                                             <th>Orden</th>
                                             <th>Servicio</th>
-                                            <th>Estado Evaluación</th>
-                                            <th>Cuestionario</th>
+                                            <th>Estado de Evaluación</th>
+                                            <th>Progreso del cuestionario</th>
                                             <th>Fecha</th>
                                             <th>Acciones</th>
                                         </tr>
@@ -78,6 +79,7 @@
                                         @foreach($historial as $evaluado)
                                         <tr>
                                             <td><strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong></td>
+                                            <td><code>{{ $evaluado->dpi ?? '—' }}</code></td>
                                             <td>{{ $evaluado->orden->empresa->nombre ?? 'N/A' }}</td>
                                             <td>
                                                 <a href="{{ route('ordenes.show', $evaluado->orden_id) }}" class="text-decoration-none">

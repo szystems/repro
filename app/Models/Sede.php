@@ -45,27 +45,24 @@ class Sede extends Model
     }
 
     /**
-     * Verifica si hay traslape de horario usando solapamiento de rangos.
+     * Verifica si la sede alcanzó su capacidad máxima en un rango horario.
      *
-     * Reglas de negocio:
-     *   - Misma sede + mismo poligrafista + rango que se cruza → NO permitido
-     *   - Diferente sede o diferente poligrafista             → Permitido
-     *   - Citas canceladas/desistió/inasistencia              → Ignoradas
+     * Fase 19: el límite es por sede (campo capacidad), no por poligrafista.
+     * Un mismo evaluador puede tener varias citas simultáneas si la sede tiene cupo.
      *
      * Fórmula de solapamiento: existente.inicio < nuevo.fin AND existente.fin > nuevo.inicio
      *
-     * @param int      $poligrafistaId
-     * @param string   $inicio           Fecha-hora inicio (Y-m-d H:i:s)
-     * @param string   $fin              Fecha-hora fin (Y-m-d H:i:s)
+     * @param int      $poligrafistaId     Ignorado (compatibilidad de firma)
+     * @param string   $inicio             Fecha-hora inicio (Y-m-d H:i:s)
+     * @param string   $fin                Fecha-hora fin (Y-m-d H:i:s)
      * @param int|null $excludeEvaluadoId  Excluir al reprogramar
      */
-    public function tieneTraslape(int $poligrafistaId, string $inicio, string $fin, ?int $excludeEvaluadoId = null): bool
+    public function tieneTraslape(?int $poligrafistaId, string $inicio, string $fin, ?int $excludeEvaluadoId = null): bool
     {
         $query = $this->evaluados()
-            ->where('poligrafista_id', $poligrafistaId)
+            ->whereNotNull('fecha_programada')
             ->where('fecha_programada', '<', $fin)
             ->where('fecha_hora_fin', '>', $inicio)
-            // Fase 18: excluir por estado_programacion (cancelado/desistio/inasistencia) y estado_evaluacion (cancelado)
             ->whereNotIn('estado_programacion', ['cancelado', 'desistio', 'inasistencia'])
             ->whereNotIn('estado_evaluacion', ['cancelado']);
 
@@ -73,7 +70,10 @@ class Sede extends Model
             $query->where('id', '<>', $excludeEvaluadoId);
         }
 
-        return $query->exists();
+        $ocupadas = $query->count();
+        $capacidad = max(1, (int) $this->capacidad);
+
+        return $ocupadas >= $capacidad;
     }
 
     /**

@@ -54,9 +54,9 @@
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="form-group">
-                                            <label for="filtro_estado" class="form-label">Estado</label>
+                                            <label for="filtro_estado" class="form-label">Progreso del cuestionario</label>
                                             <select class="form-control" id="filtro_estado" name="estado">
-                                                <option value="">Todos los estados</option>
+                                                <option value="">Todos</option>
                                                 <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
                                                 <option value="en_progreso" {{ request('estado') == 'en_progreso' ? 'selected' : '' }}>En Progreso</option>
                                                 <option value="completado" {{ request('estado') == 'completado' ? 'selected' : '' }}>Completado</option>
@@ -269,8 +269,10 @@
                                     <th>Empresa</th>
                                     <th>Sede</th>
                                     <th>Servicio / Formulario</th>
-                                    <th>Estado</th>
-                                    <th>Progreso</th>
+                                    <th>Estado de Formulario</th>
+                                    <th>Estado de Programación</th>
+                                    <th>Estado de Evaluación</th>
+                                    <th>Progreso cuestionario</th>
                                     <th>
                                         <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}"
                                            class="text-white text-decoration-none">
@@ -286,15 +288,17 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($cuestionarios as $cuestionario)
+                                @forelse($evaluados as $evaluado)
                                     @php
-                                        $evaluado = $cuestionario->evaluadoOrden;
+                                        $cuestionario = $evaluado->cuestionario;
                                         $orden = $evaluado->orden;
                                         $empresa = $orden->empresa;
-                                        $progreso = $cuestionario->calcularProgreso();
+                                        $progreso = $cuestionario
+                                            ? $cuestionario->calcularProgreso()
+                                            : ($evaluado->cuestionario_completado ? 100 : 0);
                                     @endphp
                                     <tr>
-                                        <td class="font-weight-bold">#{{ $cuestionario->id }}</td>
+                                        <td class="font-weight-bold">#{{ $evaluado->id }}</td>
                                         <td>
                                             <a href="{{ route('ordenes.show', $orden) }}"
                                                class="text-decoration-none"
@@ -346,30 +350,24 @@
                                                 @if($evaluado->tipo_formulario)
                                                     <span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $evaluado->tipo_formulario)) }}</span>
                                                 @else
-                                                    <span class="badge bg-light text-dark">{{ ucfirst(str_replace('_', ' ', $cuestionario->tipo_formulario ?? 'Estándar')) }}</span>
+                                                    <span class="badge bg-light text-dark">{{ ucfirst(str_replace('_', ' ', $evaluado->tipo_formulario ?? 'Estándar')) }}</span>
                                                 @endif
                                             </div>
                                         </td>
                                         <td>
-                                            @switch($cuestionario->estado)
-                                                @case('pendiente')
-                                                    <span class="badge bg-warning">
-                                                        <i class="bi bi-clock"></i> Pendiente
-                                                    </span>
-                                                    @break
-                                                @case('en_progreso')
-                                                    <span class="badge bg-info">
-                                                        <i class="bi bi-pencil-square"></i> En Progreso
-                                                    </span>
-                                                    @break
-                                                @case('completado')
-                                                    <span class="badge bg-success">
-                                                        <i class="bi bi-check-circle"></i> Completado
-                                                    </span>
-                                                    @break
-                                                @default
-                                                    <span class="badge bg-secondary">Desconocido</span>
-                                            @endswitch
+                                            <span class="badge bg-{{ $evaluado->estado_formulario_color }}">
+                                                {{ $evaluado->estado_formulario_texto }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $evaluado->estado_programacion_color }}">
+                                                {{ $evaluado->estado_programacion_texto }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">
+                                                {{ $evaluado->estado_evaluacion_texto }}
+                                            </span>
                                         </td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
@@ -382,15 +380,21 @@
                                                     {{ $progreso }}%
                                                 </div>
                                             </div>
-                                            <small class="text-muted">{{ $cuestionario->seccion_actual }}/{{ $cuestionario->total_secciones }} secciones</small>
+                                            <small class="text-muted">
+                                                @if($cuestionario)
+                                                    {{ $cuestionario->seccion_actual }}/{{ $cuestionario->total_secciones }} secciones
+                                                @else
+                                                    Sin iniciar
+                                                @endif
+                                            </small>
                                         </td>
                                         <td>
                                             <div class="d-flex flex-column">
-                                                <small>{{ $cuestionario->created_at->format('d/m/Y') }}</small>
-                                                <small class="text-muted">{{ $cuestionario->created_at->format('H:i') }}</small>
-                                                @if($cuestionario->completado_at)
+                                                <small>{{ $evaluado->created_at->format('d/m/Y') }}</small>
+                                                <small class="text-muted">{{ $evaluado->created_at->format('H:i') }}</small>
+                                                @if($evaluado->completado_at)
                                                     <small class="text-success">
-                                                        <i class="bi bi-check"></i> {{ $cuestionario->completado_at->format('d/m/Y H:i') }}
+                                                        <i class="bi bi-check"></i> {{ $evaluado->completado_at->format('d/m/Y H:i') }}
                                                     </small>
                                                 @endif
                                             </div>
@@ -402,6 +406,7 @@
                                                     <i class="bi bi-gear"></i>
                                                 </button>
                                                 <ul class="dropdown-menu">
+                                                    @if($cuestionario)
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('admin.cuestionarios.show', $cuestionario) }}">
                                                             <i class="bi bi-eye"></i> Ver Detalles
@@ -435,6 +440,14 @@
                                                             </form>
                                                         </li>
                                                     @endif
+                                                    @else
+                                                    <li>
+                                                        <span class="dropdown-item-text text-muted small">
+                                                            <i class="bi bi-info-circle"></i> El candidato aún no abre el formulario
+                                                        </span>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    @endif
                                                     <li>
                                                         <a class="dropdown-item text-primary"
                                                            href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}"
@@ -448,7 +461,7 @@
                                                             <i class="bi bi-clipboard"></i> Copiar Enlace
                                                         </button>
                                                     </li>
-                                                    @if($evaluado->email && !$cuestionario->completado)
+                                                    @if($evaluado->email && (!$cuestionario || !$cuestionario->completado))
                                                         <li><hr class="dropdown-divider"></li>
                                                         <li>
                                                             <form action="{{ route('evaluados.reenviar-correo', $evaluado) }}"
@@ -467,10 +480,10 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="text-center py-4">
+                                        <td colspan="13" class="text-center py-4">
                                             <div class="text-muted">
                                                 <i class="bi bi-inbox fs-1 mb-3 d-block"></i>
-                                                <p class="mb-0">No se encontraron cuestionarios con los filtros aplicados</p>
+                                                <p class="mb-0">No se encontraron candidatos con los filtros aplicados</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -480,16 +493,16 @@
                     </div>
 
                     {{-- Paginación --}}
-                    @if($cuestionarios->hasPages())
+                    @if($evaluados->hasPages())
                         <div class="d-flex justify-content-between align-items-center mt-4">
                             <div>
                                 <small class="text-muted">
-                                    Mostrando {{ $cuestionarios->firstItem() }} a {{ $cuestionarios->lastItem() }}
-                                    de {{ $cuestionarios->total() }} resultados
+                                    Mostrando {{ $evaluados->firstItem() }} a {{ $evaluados->lastItem() }}
+                                    de {{ $evaluados->total() }} resultados
                                 </small>
                             </div>
                             <div>
-                                {{ $cuestionarios->appends(request()->query())->links() }}
+                                {{ $evaluados->appends(request()->query())->links() }}
                             </div>
                         </div>
                     @endif

@@ -216,7 +216,7 @@
                                     <th>Poligrafista</th>
                                     <th>Tipo</th>
                                     <th>Fecha</th>
-                                    <th>Estado</th>
+                                    <th>Estado de Evaluación</th>
                                 </tr>
                             </thead>
                             <tbody>

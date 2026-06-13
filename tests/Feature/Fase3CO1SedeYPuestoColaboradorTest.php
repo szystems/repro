@@ -17,9 +17,9 @@ class Fase3CO1SedeYPuestoColaboradorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Role::create(['name' => 'admin', 'display_name' => 'Administrador']);
-        Role::create(['name' => 'empresa', 'display_name' => 'Empresa']);
-        Role::create(['name' => 'repro', 'display_name' => 'REPRO']);
+        Role::create(['name' => 'admin', 'display_name' => 'Administrador', 'level' => 3]);
+        Role::create(['name' => 'empresa', 'display_name' => 'Empresa', 'level' => 1]);
+        Role::create(['name' => 'repro', 'display_name' => 'REPRO', 'level' => 2]);
 
         $this->adminUser = User::factory()->create(['role_as' => 3, 'estado' => 1]);
         $this->adminUser->roles()->attach(Role::where('name', 'admin')->first());
@@ -29,10 +29,12 @@ class Fase3CO1SedeYPuestoColaboradorTest extends TestCase
     {
         $sede = Sede::factory()->create(['estado' => 1]);
 
+        $reproRole = Role::where('name', 'repro')->first();
+
         $response = $this->actingAs($this->adminUser)->post(route('users.store'), [
             'name'              => 'Colaborador Test',
             'email'             => 'colab@test.com',
-            'role_as'           => 2,
+            'role_id'           => $reproRole->id,
             'cargo'             => 'Poligrafista',
             'sede_id'           => $sede->id,
             'telefono'          => '55551234',

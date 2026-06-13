@@ -46,6 +46,7 @@ class ConfigController extends Controller
         $config->impuesto = $request->input('impuesto', 0);
         $config->nombre_empresa = $request->input('nombre_empresa') ?: null;
         $config->dias_vigencia_token = $request->input('dias_vigencia_token', 30);
+        $config->historial_visible_empresa = $request->boolean('historial_visible_empresa');
         $config->update();
 
         // $request->session()->flash('alert-success', 'Configuración actualizado correctamente!');

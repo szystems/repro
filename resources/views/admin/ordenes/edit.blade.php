@@ -68,9 +68,9 @@
                                     <small class="text-muted">El código no se puede modificar</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Estado</label>
+                                    <label class="form-label">Estado de Orden</label>
                                     <input type="text" class="form-control" value="{{ $estados[$orden->estado] ?? $orden->estado }}" disabled>
-                                    <small class="text-muted">Use el panel lateral para cambiar el estado</small>
+                                    <small class="text-muted">Use el panel lateral para cambiar el estado de la orden</small>
                                 </div>
                             </div>
 
@@ -290,7 +290,7 @@
                                                 <option value="presencial" {{ old('evaluados.'.$index.'.modalidad', $evaluado->modalidad ?? 'presencial') == 'presencial' ? 'selected' : '' }}>Presencial</option>
                                                 <option value="virtual" {{ old('evaluados.'.$index.'.modalidad', $evaluado->modalidad ?? 'presencial') == 'virtual' ? 'selected' : '' }}>Virtual</option>
                                             </select>
-                                            <small class="text-muted">Virtual: exige formulario completo antes de programar</small>
+                                            <small class="text-muted">La modalidad se guarda al guardar la orden o al programar la cita.</small>
                                         </div>
                                         @endif
                                         <div class="col-md-6 mb-2">
@@ -385,10 +385,10 @@
                         </div>
                     </div>
 
-                    <!-- Información del Estado -->
+                    <!-- Información del Estado de Orden -->
                     <div class="card mt-3">
                         <div class="card-header">
-                            <div class="card-title">Estado Actual</div>
+                            <div class="card-title">Estado de Orden</div>
                         </div>
                         <div class="card-body">
                             <div class="text-center">
@@ -401,7 +401,7 @@
                             <hr>
                             <small class="text-muted">
                                 <i class="bi bi-info-circle"></i>
-                                Para cambiar el estado, vaya a la página de visualización de la orden.
+                                Para cambiar el estado de la orden, vaya a la página de visualización de la orden.
                             </small>
                             @endif
                         </div>
@@ -519,7 +519,7 @@
                     <option value="presencial" selected>Presencial</option>
                     <option value="virtual">Virtual</option>
                 </select>
-                <small class="text-muted">Virtual: exige formulario completo antes de programar</small>
+                <small class="text-muted">La modalidad se guarda al guardar la orden o al programar la cita.</small>
             </div>
             @endif
         </div>
@@ -552,12 +552,11 @@ document.addEventListener('DOMContentLoaded', function() {
             item.querySelector('.evaluado-number').textContent = number;
             item.dataset.index = index;
             
-            // Actualizar names de los inputs
-            const inputs = item.querySelectorAll('input[name^="evaluados["]');
-            inputs.forEach(input => {
-                const fieldName = input.name.split('][')[1]?.replace(']', '');
-                if (fieldName) {
-                    input.name = `evaluados[${index}][${fieldName}]`;
+            // Actualizar names de inputs, selects y textareas
+            item.querySelectorAll('input[name^="evaluados["], select[name^="evaluados["], textarea[name^="evaluados["]').forEach(el => {
+                const match = el.name.match(/^evaluados\[\d+\]\[([^\]]+)\]$/);
+                if (match) {
+                    el.name = `evaluados[${index}][${match[1]}]`;
                 }
             });
         });

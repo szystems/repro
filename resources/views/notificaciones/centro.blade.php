@@ -39,7 +39,7 @@
                         <form method="GET" action="{{ route('notificaciones.centro') }}">
                             <div class="row g-2 align-items-end">
                                 <div class="col-md-2">
-                                    <label class="form-label">Estado</label>
+                                    <label class="form-label">Estado de lectura</label>
                                     <select class="form-select" name="estado">
                                         <option value="">Todas</option>
                                         <option value="no_leida" {{ request('estado') == 'no_leida' ? 'selected' : '' }}>No leídas</option>

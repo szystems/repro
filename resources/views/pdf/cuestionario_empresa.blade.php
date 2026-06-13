@@ -92,7 +92,7 @@
                 <td class="info-value">{{ ucfirst($evaluado->tipo_servicio ?? 'N/A') }}</td>
             </tr>
             <tr>
-                <td class="info-label">Estado:</td>
+                <td class="info-label">Progreso del cuestionario:</td>
                 <td class="info-value">
                     <span class="badge {{ $evaluado->cuestionario_completado ? 'badge-success' : 'badge-secondary' }}">
                         {{ $evaluado->cuestionario_completado ? 'Completado' : 'Pendiente' }}
@@ -176,7 +176,7 @@
                         <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 5%;">#</th>
                         <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 40%;">Tipo de Documento</th>
                         <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 35%;">Archivo</th>
-                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 20%;">Estado</th>
+                        <th style="background-color: #000555; color: #ffb000; border-left: none; text-align: center; width: 20%;">Estado de Verificación</th>
                     </tr>
                 </thead>
                 <tbody>

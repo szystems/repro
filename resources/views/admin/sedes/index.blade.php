@@ -51,7 +51,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-3 mb-2">
-                                    <label class="form-label">Estado</label>
+                                    <label class="form-label">Estado de Sede</label>
                                     <select name="estado" class="form-select">
                                         <option value="">Todos</option>
                                         <option value="1" {{ isset($estado) && $estado == '1' ? 'selected' : '' }}>Activas</option>
@@ -98,7 +98,7 @@
                                         <th>Teléfono</th>
                                         <th class="text-center">Capacidad</th>
                                         <th class="text-center">Evaluados</th>
-                                        <th class="text-center">Estado</th>
+                                        <th class="text-center">Estado de Sede</th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>

@@ -76,7 +76,7 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">Estado</label>
+                                <label class="form-label">Progreso cuestionario</label>
                                 <select name="estado" class="form-select">
                                     <option value="">Todos</option>
                                     <option value="completado" {{ request('estado') == 'completado' ? 'selected' : '' }}>Completados</option>
@@ -195,9 +195,12 @@
                                     <th>Empresa</th>
                                     <th>Evaluado</th>
                                     <th>DPI</th>
+                                    <th>Teléfono</th>
                                     <th>Servicio</th>
                                     <th>Formulario</th>
-                                    <th>Estado</th>
+                                    <th>Estado de Formulario</th>
+                                    <th>Estado de Programación</th>
+                                    <th>Estado de Evaluación</th>
                                     <th>Fecha</th>
                                     <th class="text-center">Informe</th>
                                     <th class="text-center">Papelería</th>
@@ -214,6 +217,7 @@
                                         <td>{{ Str::limit($evaluado->orden->empresa->nombre ?? 'N/A', 25) }}</td>
                                         <td>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</td>
                                         <td>{{ $evaluado->dpi }}</td>
+                                        <td>{{ $evaluado->telefono ?? $evaluado->celular ?? '—' }}</td>
                                         <td>
                                             @php
                                                 $servicioColors = [
@@ -232,11 +236,19 @@
                                             </span>
                                         </td>
                                         <td>
-                                            @if($evaluado->cuestionario_completado)
-                                                <span class="badge bg-success">Completado</span>
-                                            @else
-                                                <span class="badge bg-warning">Pendiente</span>
-                                            @endif
+                                            <span class="badge bg-{{ $evaluado->estado_formulario_color }}">
+                                                {{ $evaluado->estado_formulario_texto }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $evaluado->estado_programacion_color }}">
+                                                {{ $evaluado->estado_programacion_texto }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">
+                                                {{ $evaluado->estado_evaluacion_texto }}
+                                            </span>
                                         </td>
                                         <td>{{ $evaluado->created_at->format('d/m/Y') }}</td>
                                         <td class="text-center">
@@ -273,7 +285,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="text-center py-4 text-muted">
+                                        <td colspan="12" class="text-center py-4 text-muted">
                                             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                             No se encontraron evaluados con los filtros seleccionados
                                         </td>

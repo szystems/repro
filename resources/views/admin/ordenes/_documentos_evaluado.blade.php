@@ -63,7 +63,7 @@
                             <th>Archivo</th>
                             <th>Tamaño</th>
                             <th>Subido por</th>
-                            <th>Estado</th>
+                            <th>Estado de Verificación</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>

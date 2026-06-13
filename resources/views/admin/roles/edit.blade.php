@@ -175,7 +175,7 @@
                                     <div class="col-md-4">
                                         <div class="card mb-3">
                                             <div class="card-header">
-                                                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Estado Actual</h6>
+                                                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Estado del Rol</h6>
                                             </div>
                                             <div class="card-body">
                                                 <table class="table table-sm table-borderless">

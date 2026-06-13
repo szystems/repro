@@ -36,15 +36,6 @@
                     <i class="bi bi-pencil"></i> Editar
                 </a>
                 @endif
-                @if(Auth::user()->hasPermission('ordenes.eliminar') && !in_array($orden->estado, ['en_proceso', 'entregado']))
-                <form action="{{ route('ordenes.destroy', $orden) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('¿Está seguro de eliminar esta orden? Esta acción no se puede deshacer.')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-sm me-1">
-                        <i class="bi bi-trash"></i> Eliminar
-                    </button>
-                </form>
-                @endif
                 <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-danger btn-sm me-1" target="_blank">
                     <i class="bi bi-file-pdf"></i> Orden de Servicio
                 </a>
@@ -56,7 +47,7 @@
                         <div class="fs-4 text-primary">{{ $orden->codigo_orden }}</div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Estado Actual</label>
+                        <label class="form-label fw-bold">Estado de Orden</label>
                         <div>
                             <span class="badge fs-6 bg-{{ $orden->estado_color }}">{{ $orden->estado_human }}</span>
                         </div>
@@ -240,6 +231,10 @@
                             </div>
                         </div>
                         @endif
+                    @endif
+
+                    @if($historialVisibleEmpresa ?? false)
+                        @include('partials._historial_estados_evaluado', ['evaluado' => $evaluado, 'paraEmpresa' => true])
                     @endif
 
                     {{-- Sección de documentos/papelería --}}

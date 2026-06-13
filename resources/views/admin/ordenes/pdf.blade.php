@@ -245,7 +245,7 @@
             <tr>
                 <td class="info-label">Código:</td>
                 <td class="info-value"><strong>{{ $orden->codigo_orden }}</strong></td>
-                <td class="info-label">Estado:</td>
+                <td class="info-label">Estado de Orden:</td>
                 <td class="info-value">
                     <span class="badge badge-{{ $orden->estado_color }}">
                         {{ $orden->estado_human }}
@@ -368,7 +368,7 @@
                     <th style="width: 13%;">Programación</th>
                     <th style="width: 12%;">Responsable</th>
                     <th style="width: 12%;">Contacto</th>
-                    <th style="width: 10%;">Estado</th>
+                    <th style="width: 10%;">Estado de Evaluación</th>
                 </tr>
             </thead>
             <tbody>

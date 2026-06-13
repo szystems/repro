@@ -239,7 +239,7 @@
                         <td>{{ $empresa->sitio_web ?? 'No definido' }}</td>
                     </tr>
                     <tr>
-                        <th style="height: 18px;">Estado</th>
+                        <th style="height: 18px;">Estado de Empresa</th>
                         <td>
                             <span class="badge {{ $empresa->estado ? 'badge-success' : 'badge-danger' }}">
                                 {{ $empresa->getEstadoTexto() }}

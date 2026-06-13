@@ -272,7 +272,7 @@
             <strong>Tipo Servicio:</strong> {{ ucfirst($filtros['tipo_servicio'] ?? 'Todos') }}
         </div>
         <div class="filter-item">
-            <strong>Estado:</strong> {{ ucfirst($filtros['estado'] ?? 'Todos') }}
+            <strong>Progreso cuestionario:</strong> {{ ucfirst($filtros['estado'] ?? 'Todos') }}
         </div>
     </div>
 
@@ -304,13 +304,15 @@
             <tr>
                 <th style="width: 10%;">Código Orden</th>
                 <th style="width: 15%;">Empresa</th>
-                <th style="width: 17%;">Evaluado</th>
-                <th style="width: 10%;">DPI</th>
-                <th style="width: 10%;">Servicio</th>
-                <th style="width: 10%;">Formulario</th>
-                <th style="width: 10%;">Puesto</th>
-                <th style="width: 8%;">Estado</th>
-                <th style="width: 10%;">Fecha</th>
+                <th style="width: 9%;">Evaluado</th>
+                <th style="width: 9%;">DPI</th>
+                <th style="width: 8%;">Teléfono</th>
+                <th style="width: 8%;">Servicio</th>
+                <th style="width: 8%;">Formulario</th>
+                <th style="width: 10%;">Estado de Formulario</th>
+                <th style="width: 10%;">Estado de Programación</th>
+                <th style="width: 10%;">Estado de Evaluación</th>
+                <th style="width: 8%;">Fecha</th>
             </tr>
         </thead>
         <tbody>
@@ -320,23 +322,21 @@
                     <td>{{ Str::limit($evaluado->orden->empresa->nombre ?? 'N/A', 20) }}</td>
                     <td>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</td>
                     <td>{{ $evaluado->dpi }}</td>
+                    <td>{{ $evaluado->telefono ?? $evaluado->celular ?? '—' }}</td>
                     <td>
                         <span class="badge badge-{{ $evaluado->tipo_servicio == 'poligrafo' ? 'primary' : ($evaluado->tipo_servicio == 'vsa' ? 'info' : 'warning') }}">
                             {{ ucfirst($evaluado->tipo_servicio) }}
                         </span>
                     </td>
                     <td>{{ $evaluado->tipo_formulario_texto ?? 'N/A' }}</td>
-                    <td>{{ Str::limit($evaluado->puesto ?? 'N/A', 15) }}</td>
-                    <td>
-                        <span class="badge badge-{{ $evaluado->cuestionario_completado ? 'success' : 'warning' }}">
-                            {{ $evaluado->cuestionario_completado ? 'Completado' : 'Pendiente' }}
-                        </span>
-                    </td>
+                    <td>{{ $evaluado->estado_formulario_texto }}</td>
+                    <td>{{ $evaluado->estado_programacion_texto }}</td>
+                    <td>{{ $evaluado->estado_evaluacion_texto }}</td>
                     <td>{{ $evaluado->created_at->format('d/m/Y') }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 20px;">
+                    <td colspan="10" style="text-align: center; padding: 20px;">
                         No se encontraron evaluados con los filtros seleccionados
                     </td>
                 </tr>

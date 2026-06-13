@@ -199,7 +199,7 @@
                         <span class="detail-value">{{ $empresa }}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Estado Orden:</span>
+                        <span class="detail-label">Estado de Orden:</span>
                         <span class="detail-value">{{ ucfirst($orden->estado ?? 'N/A') }}</span>
                     </div>
                 </div>

@@ -58,7 +58,7 @@
                                         <th>Teléfono</th>
                                         <th>Cargo</th>
                                         <th>Tipo</th>
-                                        <th>Estado</th>
+                                        <th>Estado de Usuario</th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>

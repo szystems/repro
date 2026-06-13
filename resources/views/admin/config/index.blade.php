@@ -250,6 +250,25 @@
                                                     </div>
                                                 </div>
 
+                                                <div class="card mb-4 border">
+                                                    <div class="card-header bg-light">
+                                                        <h6 class="mb-0"><i class="bi bi-eye me-1"></i> Visibilidad para Clientes</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                                   id="historial_visible_empresa" name="historial_visible_empresa" value="1"
+                                                                   {{ ($config->historial_visible_empresa ?? true) ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="historial_visible_empresa">
+                                                                Historial de cambios visible para empresas
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-text">
+                                                            Si está activo, las empresas cliente pueden ver el historial de estados y observaciones en el detalle de cada orden.
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div class="d-flex gap-2 justify-content-end mt-2">
                                                     <button type="reset" class="btn btn-outline-secondary">
                                                         <i class="bi bi-arrow-counterclockwise"></i> Restablecer

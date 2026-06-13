@@ -32,25 +32,24 @@ class CuestionariosController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Cuestionario::with(['evaluadoOrden.orden.empresa', 'evaluadoOrden.orden.sede'])
+        $query = EvaluadoOrden::with(['orden.empresa', 'orden.sede', 'cuestionario'])
+            ->whereHas('orden', fn ($q) => $q->activas())
             ->orderBy('created_at', 'desc');
 
-        // Filtros
         if ($request->filled('empresa_id')) {
-            $query->whereHas('evaluadoOrden.orden', function($q) use ($request) {
+            $query->whereHas('orden', function ($q) use ($request) {
                 $q->where('empresa_id', $request->empresa_id);
             });
         }
 
         if ($request->filled('tipo_servicio')) {
-            $query->whereHas('evaluadoOrden', function($q) use ($request) {
-                $q->where('tipo_servicio', $request->tipo_servicio);
-            });
+            $query->where('tipo_servicio', $request->tipo_servicio);
         }
 
         if ($request->filled('sede_id')) {
-            $query->whereHas('evaluadoOrden.orden', function($q) use ($request) {
-                $q->where('sede_id', $request->sede_id);
+            $query->where(function ($q) use ($request) {
+                $q->where('sede_id', $request->sede_id)
+                    ->orWhereHas('orden', fn ($oq) => $oq->where('sede_id', $request->sede_id));
             });
         }
 
@@ -58,16 +57,20 @@ class CuestionariosController extends Controller
             $query->where('tipo_formulario', $request->tipo_formulario);
         }
 
-        // Filtro por estado (usa campo 'estado' del request mapeado a lógica de completado/progreso)
         if ($request->filled('estado')) {
             match ($request->estado) {
-                'completado'  => $query->where('completado', true),
-                'en_progreso' => $query->where('completado', false)->where('seccion_actual', '>', 1),
-                'pendiente'   => $query->where('completado', false)->where('seccion_actual', '<=', 1),
-                default       => null,
+                'completado' => $query->where('cuestionario_completado', true),
+                'en_progreso' => $query->where('cuestionario_completado', false)
+                    ->whereHas('cuestionario', fn ($q) => $q->where('seccion_actual', '>', 1)),
+                'pendiente' => $query->where('cuestionario_completado', false)
+                    ->where(function ($q) {
+                        $q->doesntHave('cuestionario')
+                            ->orWhereHas('cuestionario', fn ($c) => $c->where('seccion_actual', '<=', 1));
+                    }),
+                default => null,
             };
         } elseif ($request->filled('completado')) {
-            $query->where('completado', $request->boolean('completado'));
+            $query->where('cuestionario_completado', $request->boolean('completado'));
         }
 
         if ($request->filled('fecha_desde')) {
@@ -78,48 +81,55 @@ class CuestionariosController extends Controller
             $query->whereDate('created_at', '<=', $request->fecha_hasta);
         }
 
-        // Búsqueda por nombre o DPI
         if ($request->filled('buscar')) {
             $busqueda = $request->buscar;
-            $query->whereHas('evaluadoOrden', function($q) use ($busqueda) {
+            $query->where(function ($q) use ($busqueda) {
                 $q->where('nombre', 'LIKE', "%{$busqueda}%")
-                  ->orWhere('dpi', 'LIKE', "%{$busqueda}%");
+                    ->orWhere('apellidos', 'LIKE', "%{$busqueda}%")
+                    ->orWhere('dpi', 'LIKE', "%{$busqueda}%")
+                    ->orWhere('telefono', 'LIKE', "%{$busqueda}%")
+                    ->orWhere('email', 'LIKE', "%{$busqueda}%");
             });
         }
 
-        $cuestionarios = $query->paginate(20)->appends($request->query());
+        if ($request->filled('sort')) {
+            $direction = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
+            $query->reorder()->orderBy(
+                in_array($request->sort, ['id', 'created_at'], true) ? $request->sort : 'created_at',
+                $direction
+            );
+        }
 
-        // Estadísticas consolidadas en una sola query
-        $statsRaw = Cuestionario::select([
-            DB::raw('COUNT(*) as total'),
-            DB::raw("SUM(CASE WHEN completado = 1 THEN 1 ELSE 0 END) as completados"),
-            DB::raw("SUM(CASE WHEN completado = 0 AND seccion_actual > 1 THEN 1 ELSE 0 END) as en_progreso"),
-            DB::raw("SUM(CASE WHEN completado = 0 AND seccion_actual <= 1 THEN 1 ELSE 0 END) as pendientes"),
-            DB::raw("SUM(CASE WHEN seccion_actual = 1 THEN 1 ELSE 0 END) as iniciados"),
-            DB::raw("SUM(CASE WHEN completado = 1 AND DATE(completado_at) = CURDATE() THEN 1 ELSE 0 END) as completados_hoy"),
-            DB::raw('ROUND(AVG(progreso_porcentaje), 1) as progreso_promedio'),
-        ])->first();
+        $evaluados = $query->paginate(20)->appends($request->query());
 
-        $porTipo = Cuestionario::select('tipo_formulario', DB::raw('count(*) as total'))
-            ->groupBy('tipo_formulario')
-            ->pluck('total', 'tipo_formulario')
-            ->toArray();
+        $baseStats = EvaluadoOrden::whereHas('orden', fn ($q) => $q->activas());
 
         $estadisticas = [
-            'total' => (int) $statsRaw->total,
-            'completados' => (int) $statsRaw->completados,
-            'en_progreso' => (int) $statsRaw->en_progreso,
-            'pendientes' => (int) $statsRaw->pendientes,
-            'iniciados' => (int) $statsRaw->iniciados,
-            'completados_hoy' => (int) $statsRaw->completados_hoy,
-            'progreso_promedio' => (float) ($statsRaw->progreso_promedio ?? 0),
-            'por_tipo' => $porTipo,
-            'por_estado' => [
-                'completados' => (int) $statsRaw->completados,
-                'en_progreso' => (int) $statsRaw->en_progreso,
-                'pendientes' => (int) $statsRaw->pendientes,
-                'iniciados' => (int) $statsRaw->iniciados,
-            ]
+            'total' => (clone $baseStats)->count(),
+            'completados' => (clone $baseStats)->where('cuestionario_completado', true)->count(),
+            'en_progreso' => (clone $baseStats)->where('cuestionario_completado', false)
+                ->whereHas('cuestionario', fn ($q) => $q->where('seccion_actual', '>', 1))->count(),
+            'pendientes' => (clone $baseStats)->where('cuestionario_completado', false)
+                ->where(function ($q) {
+                    $q->doesntHave('cuestionario')
+                        ->orWhereHas('cuestionario', fn ($c) => $c->where('seccion_actual', '<=', 1));
+                })->count(),
+            'iniciados' => (clone $baseStats)->whereHas('cuestionario', fn ($q) => $q->where('seccion_actual', 1))->count(),
+            'completados_hoy' => (clone $baseStats)->where('cuestionario_completado', true)
+                ->whereDate('completado_at', today())->count(),
+            'progreso_promedio' => round((float) Cuestionario::avg('progreso_porcentaje') ?? 0, 1),
+            'por_tipo' => (clone $baseStats)->select('tipo_formulario', DB::raw('count(*) as total'))
+                ->groupBy('tipo_formulario')
+                ->pluck('total', 'tipo_formulario')
+                ->toArray(),
+            'por_estado' => [],
+        ];
+
+        $estadisticas['por_estado'] = [
+            'completados' => $estadisticas['completados'],
+            'en_progreso' => $estadisticas['en_progreso'],
+            'pendientes' => $estadisticas['pendientes'],
+            'iniciados' => $estadisticas['iniciados'],
         ];
 
         // Datos para filtros
@@ -133,7 +143,7 @@ class CuestionariosController extends Controller
         ];
 
         return view('admin.cuestionarios.index', compact(
-            'cuestionarios', 
+            'evaluados',
             'empresas',
             'sedes',
             'tiposFormulario',
@@ -294,19 +304,23 @@ class CuestionariosController extends Controller
      */
     public function historialDpi(Request $request)
     {
-        $dpi = null;
+        $buscar = null;
         $historial = collect();
 
-        if ($request->filled('dpi')) {
-            $request->validate([
-                'dpi' => 'required|string|size:13|regex:/^[0-9]{13}$/'
-            ]);
+        $termino = trim((string) $request->input('buscar', $request->input('dpi', '')));
 
-            $dpi = $request->dpi;
-            $historial = EvaluadoOrden::historialPorDpi($dpi);
+        if ($termino !== '') {
+            if (!preg_match('/^\d{13}$/', $termino) && (strlen($termino) < 2 || strlen($termino) > 100)) {
+                return back()
+                    ->withErrors(['buscar' => 'Ingrese un DPI de 13 dígitos o un nombre/apellido de al menos 2 caracteres.'])
+                    ->withInput();
+            }
+
+            $buscar = $termino;
+            $historial = EvaluadoOrden::buscarHistorial($buscar);
         }
 
-        return view('admin.cuestionarios.historial-dpi', compact('historial', 'dpi'));
+        return view('admin.cuestionarios.historial-dpi', compact('historial', 'buscar'));
     }
 
     /**

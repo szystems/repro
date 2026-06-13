@@ -411,10 +411,42 @@ class EvaluadoOrden extends Model
      */
     public static function historialPorDpi(string $dpi)
     {
-        return self::where('dpi', $dpi)
-            ->with(['orden.empresa', 'cuestionario']) // TODO: agregar 'evaluaciones' cuando se cree el modelo
-            ->orderBy('created_at', 'desc')
-            ->get();
+        return self::buscarHistorial($dpi);
+    }
+
+    public static function buscarHistorial(string $termino)
+    {
+        return self::buscarCandidatos($termino);
+    }
+
+    public static function buscarPorEmpresa(int $empresaId, string $termino)
+    {
+        return self::buscarCandidatos($termino, $empresaId);
+    }
+
+    public static function buscarCandidatos(string $termino, ?int $empresaId = null)
+    {
+        $termino = trim($termino);
+
+        $query = self::with(['orden', 'cuestionario']);
+
+        if ($empresaId !== null) {
+            $query->whereHas('orden', fn ($q) => $q->where('empresa_id', $empresaId)->activas());
+        } else {
+            $query->with(['orden.empresa']);
+        }
+
+        if (preg_match('/^\d{13}$/', $termino)) {
+            $query->where('dpi', $termino);
+        } else {
+            $query->where(function ($q) use ($termino) {
+                $q->where('nombre', 'LIKE', "%{$termino}%")
+                    ->orWhere('apellidos', 'LIKE', "%{$termino}%")
+                    ->orWhereRaw("CONCAT(nombre, ' ', apellidos) LIKE ?", ["%{$termino}%"]);
+            });
+        }
+
+        return $query->orderBy('created_at', 'desc')->get();
     }
 
     // ========================================
@@ -697,12 +729,14 @@ class EvaluadoOrden extends Model
      * @param int    $poligrafistaId
      * @param int|null $sedeId
      */
-    public function programarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null, ?int $responsableId = null): bool
+    public function programarEvaluacion(string $inicio, string $fin, ?int $poligrafistaId = null, ?int $sedeId = null, ?string $modalidad = null, ?int $responsableId = null): bool
     {
         $estadoAnterior = $this->estado_programacion;
         $this->fecha_programada = $inicio;
         $this->fecha_hora_fin = $fin;
-        $this->poligrafista_id = $poligrafistaId;
+        if ($poligrafistaId) {
+            $this->poligrafista_id = $poligrafistaId;
+        }
         if ($sedeId) {
             $this->sede_id = $sedeId;
         }
@@ -722,7 +756,7 @@ class EvaluadoOrden extends Model
     /**
      * Reprogramar evaluación (actualizar fecha/hora).
      */
-    public function reprogramarEvaluacion(string $inicio, string $fin, int $poligrafistaId, ?int $sedeId = null, ?string $modalidad = null, ?int $responsableId = null): bool
+    public function reprogramarEvaluacion(string $inicio, string $fin, ?int $poligrafistaId = null, ?int $sedeId = null, ?string $modalidad = null, ?int $responsableId = null): bool
     {
         $estadoAnterior = $this->estado_programacion;
         if ($this->fecha_programada) {
@@ -730,7 +764,9 @@ class EvaluadoOrden extends Model
         }
         $this->fecha_programada = $inicio;
         $this->fecha_hora_fin = $fin;
-        $this->poligrafista_id = $poligrafistaId;
+        if ($poligrafistaId) {
+            $this->poligrafista_id = $poligrafistaId;
+        }
         if ($sedeId) {
             $this->sede_id = $sedeId;
         }

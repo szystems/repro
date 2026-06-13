@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $config = Config::first();
         $data = ['config' => $config];
@@ -30,7 +30,22 @@ class AdminController extends Controller
             $layout = 'layouts.evaluado';
         } elseif ($user->role_as == 1) {
             $layout = 'layouts.empresa';
-            $data = array_merge($data, $this->getEmpresaStats($user));
+            $empresaData = $this->getEmpresaStats($user);
+
+            $buscar = trim((string) $request->input('buscar', ''));
+            if ($buscar !== '' && $user->empresa_id) {
+                if (!preg_match('/^\d{13}$/', $buscar) && (strlen($buscar) < 2 || strlen($buscar) > 100)) {
+                    $empresaData['errorBusqueda'] = 'Ingrese un DPI de 13 dígitos o un nombre/apellido de al menos 2 caracteres.';
+                } else {
+                    $empresaData['buscar'] = $buscar;
+                    $empresaData['resultadosBusqueda'] = EvaluadoOrden::buscarPorEmpresa(
+                        (int) $user->empresa_id,
+                        $buscar
+                    );
+                }
+            }
+
+            $data = array_merge($data, $empresaData);
         } elseif ($user->role_as >= 2) {
             $layout = 'layouts.admin';
             $data = array_merge($data, $this->getAdminStats());
@@ -55,18 +70,18 @@ class AdminController extends Controller
         // Contadores principales
         $totalEmpresas = Empresa::where('estado', 1)->count();
         $totalUsuarios = User::where('estado', 1)->count();
-        $totalOrdenes = Orden::count();
+        $totalOrdenes = Orden::activas()->count();
         $totalEvaluados = EvaluadoOrden::count();
 
         // Órdenes por estado
-        $ordenesPorEstado = Orden::select('estado', DB::raw('count(*) as total'))
+        $ordenesPorEstado = Orden::activas()->select('estado', DB::raw('count(*) as total'))
             ->groupBy('estado')
             ->pluck('total', 'estado')
             ->toArray();
 
         // Órdenes del mes actual
-        $ordenesEsteMes = Orden::where('created_at', '>=', $inicioMes)->count();
-        $ordenesMesAnterior = Orden::whereBetween('created_at', [$inicioMesAnterior, $finMesAnterior])->count();
+        $ordenesEsteMes = Orden::activas()->where('created_at', '>=', $inicioMes)->count();
+        $ordenesMesAnterior = Orden::activas()->whereBetween('created_at', [$inicioMesAnterior, $finMesAnterior])->count();
         $variacionOrdenes = $ordenesMesAnterior > 0 
             ? round((($ordenesEsteMes - $ordenesMesAnterior) / $ordenesMesAnterior) * 100, 1) 
             : ($ordenesEsteMes > 0 ? 100 : 0);
@@ -154,13 +169,15 @@ class AdminController extends Controller
         $inicioMes = Carbon::now()->startOfMonth();
 
         // Órdenes de la empresa
-        $totalOrdenes = Orden::where('empresa_id', $empresaId)->count();
+        $totalOrdenes = Orden::where('empresa_id', $empresaId)->activas()->count();
         $ordenesEsteMes = Orden::where('empresa_id', $empresaId)
+            ->activas()
             ->where('created_at', '>=', $inicioMes)
             ->count();
 
         // Órdenes por estado
         $ordenesPorEstado = Orden::where('empresa_id', $empresaId)
+            ->activas()
             ->select('estado', DB::raw('count(*) as total'))
             ->groupBy('estado')
             ->pluck('total', 'estado')
@@ -168,16 +185,17 @@ class AdminController extends Controller
 
         // Evaluados de la empresa
         $totalEvaluados = EvaluadoOrden::whereHas('orden', function($q) use ($empresaId) {
-            $q->where('empresa_id', $empresaId);
+            $q->where('empresa_id', $empresaId)->activas();
         })->count();
 
         // Cuestionarios completados
         $cuestionariosCompletados = EvaluadoOrden::whereHas('orden', function($q) use ($empresaId) {
-            $q->where('empresa_id', $empresaId);
+            $q->where('empresa_id', $empresaId)->activas();
         })->where('cuestionario_completado', true)->count();
 
         // Últimas órdenes
         $ultimasOrdenes = Orden::where('empresa_id', $empresaId)
+            ->activas()
             ->with('evaluados')
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -185,6 +203,7 @@ class AdminController extends Controller
 
         // Órdenes pendientes
         $ordenesPendientes = Orden::where('empresa_id', $empresaId)
+            ->activas()
             ->whereNotIn('estado', ['entregado', 'cancelado'])
             ->count();
 

@@ -54,7 +54,7 @@
                                        value="{{ request('fecha_fin') }}">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Estado Empresa</label>
+                                <label class="form-label">Estado de Empresa</label>
                                 <select name="estado" class="form-select">
                                     <option value="">Todas</option>
                                     <option value="1" {{ request('estado') === '1' ? 'selected' : '' }}>Activas</option>
@@ -233,7 +233,7 @@
                                     <th class="text-center">Órdenes</th>
                                     <th class="text-center">Completadas</th>
                                     <th class="text-center">Pendientes</th>
-                                    <th>Estado</th>
+                                    <th>Estado de Empresa</th>
                                     <th>Registro</th>
                                 </tr>
                             </thead>

@@ -85,7 +85,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="estado" class="form-label">Estado <span class="text-danger">*</span></label>
+                                    <label for="estado" class="form-label">Estado de Usuario <span class="text-danger">*</span></label>
                                     <select class="form-select @error('estado') is-invalid @enderror" id="estado" name="estado" required>
                                         <option value="1" {{ old('estado', $usuario->estado) == 1 ? 'selected' : '' }}>Activo</option>
                                         <option value="0" {{ old('estado', $usuario->estado) == 0 ? 'selected' : '' }}>Inactivo</option>

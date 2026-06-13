@@ -175,7 +175,7 @@
             <strong>Fecha Fin:</strong> {{ $filtros['fecha_fin'] ?? 'Sin filtro' }}
         </div>
         <div class="filter-item">
-            <strong>Estado:</strong> {{ $filtros['estado'] == '1' ? 'Activas' : ($filtros['estado'] == '0' ? 'Inactivas' : 'Todas') }}
+            <strong>Estado de Empresa:</strong> {{ $filtros['estado'] == '1' ? 'Activas' : ($filtros['estado'] == '0' ? 'Inactivas' : 'Todas') }}
         </div>
     </div>
 
@@ -203,7 +203,7 @@
                 <th style="width: 12%;">Teléfono</th>
                 <th style="width: 10%;">Órdenes</th>
                 <th style="width: 10%;">Completadas</th>
-                <th style="width: 8%;">Estado</th>
+                <th style="width: 8%;">Estado de Empresa</th>
                 <th style="width: 8%;">Registro</th>
             </tr>
         </thead>

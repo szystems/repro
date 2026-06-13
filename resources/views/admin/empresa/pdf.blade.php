@@ -174,7 +174,7 @@
                 <th>Contacto</th>
                 <th>Sitio Web</th>
                 <th>Usuarios</th>
-                <th>Estado</th>
+                <th>Estado de Empresa</th>
             </tr>
         </thead>
         <tbody>

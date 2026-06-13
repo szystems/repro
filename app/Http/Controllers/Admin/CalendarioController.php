@@ -216,19 +216,16 @@ class CalendarioController extends Controller
         $inicio   = $request->getInicio();
         $fin      = $request->getFin();
 
-        // S2 — Gating Virtual: si la modalidad es virtual, el formulario debe estar completado
-        $modalidadEfectiva = $request->modalidad ?? $evaluado->modalidad ?? 'presencial';
-        if ($modalidadEfectiva === 'virtual' && $evaluado->estado_formulario !== 'formulario_completado_y_recibido') {
-            return back()->withErrors([
-                'modalidad' => 'Este evaluado tiene modalidad Virtual. El formulario debe estar "Completado y recibido" antes de programar la cita.',
-            ])->withInput();
-        }
-
-        // Validar anti-traslape
+        // Validar capacidad de la sede (Fase 19: sin límite por poligrafista)
         if ($sede->tieneTraslape($request->poligrafista_id, $inicio, $fin)) {
-            return back()->withErrors([
-                'traslape' => 'El poligrafista ya tiene una cita en esta sede que se cruza con el horario seleccionado.',
-            ])->withInput();
+            $capacidad = max(1, (int) $sede->capacidad);
+            $mensaje = "La sede \"{$sede->nombre}\" ya tiene {$capacidad} cita(s) en ese horario (capacidad máxima).";
+
+            return back()
+                ->withErrors(['traslape' => $mensaje])
+                ->with('error', $mensaje)
+                ->with('programar_evaluado_id', $evaluado->id)
+                ->withInput();
         }
 
         $evaluado->programarEvaluacion(
@@ -255,9 +252,14 @@ class CalendarioController extends Controller
 
         // Validar anti-traslape (excluyendo este evaluado)
         if ($sede->tieneTraslape($request->poligrafista_id, $inicio, $fin, $evaluado->id)) {
-            return back()->withErrors([
-                'traslape' => 'El poligrafista ya tiene una cita en esta sede que se cruza con el horario seleccionado.',
-            ])->withInput();
+            $capacidad = max(1, (int) $sede->capacidad);
+            $mensaje = "La sede \"{$sede->nombre}\" ya tiene {$capacidad} cita(s) en ese horario (capacidad máxima).";
+
+            return back()
+                ->withErrors(['traslape' => $mensaje])
+                ->with('error', $mensaje)
+                ->with('programar_evaluado_id', $evaluado->id)
+                ->withInput();
         }
 
         $evaluado->reprogramarEvaluacion(

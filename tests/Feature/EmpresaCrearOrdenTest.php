@@ -264,10 +264,10 @@ class EmpresaCrearOrdenTest extends TestCase
     }
 
     // ──────────────────────────────────────────────────────────
-    // Botón eliminar visible en show con permiso y estado deletable
+    // Fase 19: empresa ya no elimina órdenes (solo admin archiva)
     // ──────────────────────────────────────────────────────────
 
-    public function test_empresa_con_permiso_eliminar_ve_boton_eliminar_en_show(): void
+    public function test_empresa_no_ve_boton_eliminar_en_show(): void
     {
         [$user, $empresa] = $this->crearEmpresaUser();
         $permEliminar = Permission::firstOrCreate(
@@ -285,7 +285,8 @@ class EmpresaCrearOrdenTest extends TestCase
         $response = $this->actingAs($user)->get(route('empresa.ordenes.show', $orden));
 
         $response->assertOk();
-        $response->assertSee(route('ordenes.destroy', $orden), false);
+        $response->assertDontSee('bi-trash', false);
+        $response->assertDontSee('Eliminar', false);
     }
 
     // ──────────────────────────────────────────────────────────

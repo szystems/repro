@@ -167,7 +167,7 @@
                                             @endphp
                                                 @if($esSlotInicio)
                                                 @php
-                                                    $esInasistencia = $cita->estado_evaluacion === 'inasistencia';
+                                                    $esInasistencia = $cita->estado_programacion === 'inasistencia';
                                                     $cardExtraClass = $esInasistencia ? 'opacity-75' : '';
                                                 @endphp
                                                 <div class="d-flex align-items-center justify-content-between mb-1 p-2 rounded {{ $colorClase }} bg-opacity-10 border-start border-4 {{ $esInasistencia ? 'border-danger' : str_replace('bg-', 'border-', explode(' ', $colorClase)[0]) }} {{ $cardExtraClass }}">
@@ -177,7 +177,10 @@
                                                         <br>
                                                         <small>
                                                             <span class="badge {{ $colorClase }} badge-sm">{{ $cita->tipo_servicio_texto }}</span>
-                                                            <span class="badge bg-{{ $cita->estado_evaluacion_color }} badge-sm" title="Estado evaluación">{{ $cita->estado_evaluacion_texto }}</span>
+                                                            <span class="badge bg-{{ $cita->estado_evaluacion_color }} badge-sm" title="Estado de Evaluación">{{ $cita->estado_evaluacion_texto }}</span>
+                                                            @if($cita->estado_programacion === 'inasistencia')
+                                                                <span class="badge bg-danger badge-sm" title="Estado de Programación">Inasistencia</span>
+                                                            @endif
                                                             @if($cita->sede)
                                                                 <i class="bi bi-geo-alt"></i> {{ $cita->sede->nombre }}
                                                             @endif
@@ -201,12 +204,12 @@
                                                             @method('PATCH')
                                                             <input type="hidden" name="tipo_estado" value="evaluacion">
                                                             <select name="nuevo_estado" class="form-select form-select-sm py-0" style="max-width: 155px; font-size: 0.75rem;" required>
-                                                                <option value="">Estado...</option>
+                                                                <option value="">Estado de evaluación...</option>
                                                                 @foreach($transEval as $est)
                                                                     <option value="{{ $est }}">{{ $nombresEval[$est] ?? ucfirst($est) }}</option>
                                                                 @endforeach
                                                             </select>
-                                                            <button type="submit" class="btn btn-outline-primary btn-sm py-0" title="Cambiar estado">
+                                                            <button type="submit" class="btn btn-outline-primary btn-sm py-0" title="Cambiar estado de evaluación">
                                                                 <i class="bi bi-arrow-right-circle"></i>
                                                             </button>
                                                         </form>
@@ -404,8 +407,8 @@
                     {{-- Poligrafista --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Poligrafista / Evaluador</label>
-                        <select name="poligrafista_id" id="modalPoligrafistaId" class="form-select" required>
-                            <option value="">Seleccionar evaluador...</option>
+                        <select name="poligrafista_id" id="modalPoligrafistaId" class="form-select">
+                            <option value="">Sin asignar</option>
                             @foreach($poligrafistas as $pol)
                                 <option value="{{ $pol->id }}">{{ $pol->name }}</option>
                             @endforeach

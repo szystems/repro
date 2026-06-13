@@ -32,6 +32,12 @@ class OrdenesController extends Controller
     {
         $query = Orden::with(['empresa', 'creador', 'poligrafista']);
 
+        if ($request->boolean('archivadas') && Auth::user()->role_as >= 3) {
+            $query->archivadas();
+        } else {
+            $query->activas();
+        }
+
         // Filtros por rol
         if (Auth::user()->role_as == 1) {
             // Usuario empresa: solo ve sus órdenes
@@ -104,15 +110,15 @@ class OrdenesController extends Controller
      */
     public function resumen(): \Illuminate\View\View
     {
-        $totalOrdenes = Orden::count();
-        $ordenesActivas = Orden::where('estado', 'en_proceso')->count();
-        $ordenesCompletadas = Orden::where('estado', 'entregado')->count();
-        $ordenesPendientes = Orden::where('estado', 'orden_recibida')->count();
+        $totalOrdenes = Orden::activas()->count();
+        $ordenesActivas = Orden::activas()->where('estado', 'en_proceso')->count();
+        $ordenesCompletadas = Orden::activas()->where('estado', 'entregado')->count();
+        $ordenesPendientes = Orden::activas()->where('estado', 'orden_recibida')->count();
 
         $totalEvaluados = EvaluadoOrden::count();
         $evaluadosCompletados = EvaluadoOrden::where('estado_evaluacion', 'informe_final_enviado')->count();
 
-        $porEmpresa = Orden::select('empresa_id', DB::raw('COUNT(*) as total'))
+        $porEmpresa = Orden::activas()->select('empresa_id', DB::raw('COUNT(*) as total'))
             ->with('empresa:id,nombre')
             ->groupBy('empresa_id')
             ->orderByDesc('total')
@@ -314,6 +320,7 @@ class OrdenesController extends Controller
             'empresa',
             'creador',
             'sede',
+            'archivadaPor',
             'evaluados' => function($query) {
                 $query->with(['poligrafista', 'responsable', 'sede', 'cuestionario', 'documentos'])->orderBy('nombre');
             }
@@ -478,38 +485,40 @@ class OrdenesController extends Controller
     }
 
     /**
-     * Eliminar orden
+     * Archivar orden (solo admin — conserva expediente)
+     */
+    public function archivar(Orden $orden)
+    {
+        if (Auth::user()->role_as < 3) {
+            abort(403, 'Solo el administrador puede archivar órdenes.');
+        }
+
+        if ($orden->archivada) {
+            return back()->with('warning', "La orden {$orden->codigo_orden} ya está archivada.");
+        }
+
+        $orden->update([
+            'archivada' => true,
+            'archivada_at' => now(),
+            'archivada_por' => Auth::id(),
+        ]);
+
+        Log::info('Orden archivada', [
+            'orden_id' => $orden->id,
+            'codigo_orden' => $orden->codigo_orden,
+            'archivada_por' => Auth::id(),
+        ]);
+
+        return redirect()->route('ordenes.index')
+            ->with('success', "Orden {$orden->codigo_orden} archivada correctamente.");
+    }
+
+    /**
+     * Eliminar orden (deshabilitado — usar archivar)
      */
     public function destroy(Orden $orden)
     {
-        $user = Auth::user();
-
-        if ($user->hasAnyRole(['admin', 'repro'])) {
-            // Administradores y repro pueden eliminar sin restricción de empresa
-        } elseif ($user->role_as == 1 && $user->hasPermission('ordenes.eliminar')) {
-            // Empresa: solo sus propias órdenes en estados tempranos
-            if ((int) $orden->empresa_id !== (int) $user->empresa_id) {
-                abort(403, 'No tiene permisos para eliminar esta orden.');
-            }
-        } else {
-            abort(403, 'No tiene permisos para eliminar órdenes.');
-        }
-
-        if (in_array($orden->estado, ['en_proceso', 'entregado'])) {
-            return back()->with('error', 'No se puede eliminar una orden que está en proceso o completada.');
-        }
-
-        $codigoOrden = $orden->codigo_orden;
-        $orden->delete();
-
-        // Redirigir según el rol del usuario
-        if (Auth::user()->role_as == 1) {
-            return redirect()->route('empresa.ordenes.index')
-                ->with('success', "Orden {$codigoOrden} eliminada exitosamente.");
-        }
-
-        return redirect()->route('ordenes.index')
-            ->with('success', "Orden {$codigoOrden} eliminada exitosamente.");
+        abort(403, 'Las órdenes no se eliminan. Use la opción de archivar (solo administrador).');
     }
 
     /**
@@ -737,8 +746,12 @@ class OrdenesController extends Controller
      */
     private function procesarEvaluados(Orden $orden, array $evaluados, bool $esActualizacion = false): void
     {
+        $evaluadosExistentes = [];
+        $evaluadosPorIndice = collect();
+
         if ($esActualizacion) {
             $evaluadosExistentes = $orden->evaluados->pluck('id')->toArray();
+            $evaluadosPorIndice = $orden->evaluados()->orderBy('id')->get()->values();
         }
 
         foreach ($evaluados as $index => $evaluadoData) {
@@ -780,29 +793,16 @@ class OrdenesController extends Controller
                     }
                 }
 
-                if ($evaluado) {
-                    // Preservar campos gestionados por otros procesos (calendario, cuestionario)
-                    $modalidadAnterior = $evaluado->modalidad;
-                    $datosActualizacion = array_merge($datosEvaluado, [
-                        'estado_evaluacion' => $evaluado->estado_evaluacion,
-                        'fecha_programada'  => $evaluado->fecha_programada,
-                        'fecha_hora_fin'    => $evaluado->fecha_hora_fin,
-                        'token_unico'       => $evaluado->token_unico,
-                        'token_expira_at'   => $evaluado->token_expira_at,
-                    ]);
-                    $evaluado->update($datosActualizacion);
-                    // Registrar cambio de modalidad en historial
-                    $nuevaModalidad = $datosActualizacion['modalidad'] ?? $evaluado->modalidad;
-                    if ($modalidadAnterior !== $nuevaModalidad) {
-                        \App\Models\EstadoHistorial::create([
-                            'evaluado_orden_id' => $evaluado->id,
-                            'campo'             => 'modalidad',
-                            'estado_anterior'   => $modalidadAnterior,
-                            'estado_nuevo'      => $nuevaModalidad,
-                            'responsable_id'    => auth()->id(),
-                        ]);
+                // Fallback por posición cuando el id se pierde en el frontend (p. ej. cambio de DPI)
+                if (!$evaluado && $evaluadosPorIndice->has($index)) {
+                    $candidatoIndice = $evaluadosPorIndice[$index];
+                    if (in_array($candidatoIndice->id, $evaluadosExistentes, true)) {
+                        $evaluado = $candidatoIndice;
                     }
-                    $evaluadosExistentes = array_diff($evaluadosExistentes, [$evaluado->id]);
+                }
+
+                if ($evaluado) {
+                    $this->actualizarEvaluadoEnOrden($evaluado, $datosEvaluado, $evaluadosExistentes);
                 } else {
                     $duplicado = EvaluadoOrden::where('orden_id', $orden->id)
                         ->where('dpi', $evaluadoData['dpi'])
@@ -812,26 +812,7 @@ class OrdenesController extends Controller
                     // Si ya existe por clave única (orden+dpi+servicio), tratarlo como actualización
                     // aunque el id venga vacío, inválido o desalineado desde el frontend.
                     if ($duplicado) {
-                        $modalidadAnteriorDuplicado = $duplicado->modalidad;
-                        $datosActualizacion = array_merge($datosEvaluado, [
-                            'estado_evaluacion' => $duplicado->estado_evaluacion,
-                            'fecha_programada'  => $duplicado->fecha_programada,
-                            'fecha_hora_fin'    => $duplicado->fecha_hora_fin,
-                            'token_unico'       => $duplicado->token_unico,
-                            'token_expira_at'   => $duplicado->token_expira_at,
-                        ]);
-                        $duplicado->update($datosActualizacion);
-                        $nuevaModalidadDuplicado = $datosActualizacion['modalidad'] ?? $duplicado->modalidad;
-                        if ($modalidadAnteriorDuplicado !== $nuevaModalidadDuplicado) {
-                            \App\Models\EstadoHistorial::create([
-                                'evaluado_orden_id' => $duplicado->id,
-                                'campo'             => 'modalidad',
-                                'estado_anterior'   => $modalidadAnteriorDuplicado,
-                                'estado_nuevo'      => $nuevaModalidadDuplicado,
-                                'responsable_id'    => auth()->id(),
-                            ]);
-                        }
-                        $evaluadosExistentes = array_diff($evaluadosExistentes, [$duplicado->id]);
+                        $this->actualizarEvaluadoEnOrden($duplicado, $datosEvaluado, $evaluadosExistentes);
                         continue;
                     }
 
@@ -872,6 +853,39 @@ class OrdenesController extends Controller
                 'user_id' => Auth::id(),
             ]);
         }
+    }
+
+    /**
+     * Actualiza un evaluado existente preservando estados y datos gestionados por otros flujos.
+     */
+    private function actualizarEvaluadoEnOrden(EvaluadoOrden $evaluado, array $datosEvaluado, array &$evaluadosExistentes): void
+    {
+        $modalidadAnterior = $evaluado->modalidad;
+        $datosActualizacion = array_merge($datosEvaluado, [
+            'estado_evaluacion'          => $evaluado->estado_evaluacion,
+            'estado_formulario'          => $evaluado->estado_formulario,
+            'estado_programacion'        => $evaluado->estado_programacion,
+            'cuestionario_completado'    => $evaluado->cuestionario_completado,
+            'cuestionario_completado_at' => $evaluado->cuestionario_completado_at,
+            'fecha_programada'           => $evaluado->fecha_programada,
+            'fecha_hora_fin'             => $evaluado->fecha_hora_fin,
+            'token_unico'                => $evaluado->token_unico,
+            'token_expira_at'            => $evaluado->token_expira_at,
+        ]);
+        $evaluado->update($datosActualizacion);
+
+        $nuevaModalidad = $datosActualizacion['modalidad'] ?? $evaluado->modalidad;
+        if ($modalidadAnterior !== $nuevaModalidad) {
+            \App\Models\EstadoHistorial::create([
+                'evaluado_orden_id' => $evaluado->id,
+                'campo'             => 'modalidad',
+                'estado_anterior'   => $modalidadAnterior,
+                'estado_nuevo'      => $nuevaModalidad,
+                'user_id'           => auth()->id(),
+            ]);
+        }
+
+        $evaluadosExistentes = array_values(array_diff($evaluadosExistentes, [$evaluado->id]));
     }
 
     /**

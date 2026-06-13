@@ -9,6 +9,9 @@ class Config extends Model
 {
     use HasFactory;
     protected $table = 'configs';
+    protected $attributes = [
+        'historial_visible_empresa' => true,
+    ];
     protected $fillable = [
         'logo',
         'nombre_empresa',
@@ -24,5 +27,20 @@ class Config extends Model
         'descuento_maximo',
         'impuesto',
         'dias_vigencia_token',
+        'historial_visible_empresa',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'historial_visible_empresa' => 'boolean',
+        ];
+    }
+
+    public static function historialVisibleParaEmpresa(): bool
+    {
+        $config = static::first();
+
+        return $config ? (bool) $config->historial_visible_empresa : true;
+    }
 }

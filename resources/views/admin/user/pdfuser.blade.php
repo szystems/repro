@@ -296,7 +296,7 @@
                         <span class="badge badge-warning">{{ $edad }} años</span>
                     @endif
                 </td>
-                <th width="20%">Estado</th>
+                <th width="20%">Estado de Usuario</th>
                 <td width="30%">
                     <span class="badge {{ $usuario->estado ? 'badge-success' : 'badge-danger' }}">
                         {{ $usuario->estado ? 'Activo' : 'Inactivo' }}
@@ -345,7 +345,7 @@
                 </td>
             </tr>
             <tr>
-                <th>Estado Cuenta</th>
+                <th>Estado de Cuenta</th>
                 <td>
                     <span class="badge {{ $usuario->estado ? 'badge-success' : 'badge-danger' }}">
                         {{ $usuario->estado ? 'Activa' : 'Desactivada' }}

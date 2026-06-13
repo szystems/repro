@@ -177,6 +177,9 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::middleware(['permission:ordenes.eliminar'])->group(function () {
         Route::delete('ordenes/{orden}', [OrdenesController::class, 'destroy'])->name('ordenes.destroy');
     });
+    Route::middleware(['role:admin'])->group(function () {
+        Route::patch('ordenes/{orden}/archivar', [OrdenesController::class, 'archivar'])->name('ordenes.archivar');
+    });
 
     // ========================================
     // DOCUMENTOS DE EVALUADOS (permission granular)

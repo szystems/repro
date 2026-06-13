@@ -636,6 +636,59 @@ class OrdenesControllerTest extends TestCase
         $this->assertEquals(1, $orden->evaluados()->where('dpi', '9999999999999')->count());
     }
 
+    public function test_actualizar_orden_cambio_dpi_sin_id_preserva_estados_y_no_duplica(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id,
+        ]);
+
+        $existente = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'PRUEBA',
+            'apellidos' => 'NUMERO PRUEBA DUPLICACIÓN',
+            'dpi' => '1111111111111',
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
+            'email' => 'prueba@test.com',
+            'estado_formulario' => 'formulario_completado_y_recibido',
+            'estado_programacion' => 'programado',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
+            'cuestionario_completado' => true,
+            'cuestionario_completado_at' => now(),
+            'fecha_programada' => now()->addDay(),
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('ordenes.update', $orden), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    [
+                        'nombre' => 'PRUEBA',
+                        'apellidos' => 'NUMERO PRUEBA DUPLICACIÓN',
+                        'dpi' => '2222222222222',
+                        'email' => 'prueba@test.com',
+                        'tipo_servicio' => 'poligrafo',
+                        'tipo_formulario' => 'preempleo',
+                    ],
+                ],
+            ])
+            ->assertStatus(302);
+
+        $this->assertEquals(1, $orden->evaluados()->count());
+
+        $existente->refresh();
+        $this->assertEquals('2222222222222', $existente->dpi);
+        $this->assertEquals('formulario_completado_y_recibido', $existente->estado_formulario);
+        $this->assertEquals('programado', $existente->estado_programacion);
+        $this->assertTrue($existente->cuestionario_completado);
+        $this->assertNotNull($existente->fecha_programada);
+    }
+
     // =========================================================
     // R1 — Auto-cambio de estados por acciones
     // =========================================================

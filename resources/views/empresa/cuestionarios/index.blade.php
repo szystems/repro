@@ -74,7 +74,7 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="estado" class="form-label small">Estado</label>
+                                <label for="estado" class="form-label small">Progreso del cuestionario</label>
                                 <select class="form-select form-select-sm" id="estado" name="estado">
                                     <option value="">Todos</option>
                                     <option value="completado" {{ request('estado') == 'completado' ? 'selected' : '' }}>Completados</option>
@@ -112,7 +112,7 @@
                                             <th>DPI</th>
                                             <th>Orden</th>
                                             <th>Servicio</th>
-                                            <th>Estado</th>
+                                            <th>Progreso del cuestionario</th>
                                             <th>Fecha</th>
                                             <th class="text-center">Acciones</th>
                                         </tr>

@@ -69,14 +69,14 @@ class NotificacionesInAppTest extends TestCase
         Notification::assertSentTo($this->empresa, OrdenCreadaNotification::class);
     }
 
-    /** Orden creada NO notifica al creador */
-    public function test_orden_creada_no_notifica_al_creador(): void
+    /** Orden creada también notifica al creador (Fase 18) */
+    public function test_orden_creada_notifica_al_creador(): void
     {
         Notification::fake();
 
         $this->actingAs($this->admin)->post(route('ordenes.store'), $this->ordenPayload());
 
-        Notification::assertNotSentTo($this->admin, OrdenCreadaNotification::class);
+        Notification::assertSentTo($this->admin, OrdenCreadaNotification::class);
     }
 
     /** EvaluadoAsignado in-app se envía a empresa cuando se crea orden */

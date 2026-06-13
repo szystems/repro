@@ -64,18 +64,34 @@
                 <li class="{{ Request::is('cuestionarios/historial-dpi') ? 'active-page-link':''  }}">
                     <a href="{{ route('admin.cuestionarios.historial-dpi') }}">
                         <i class="bi bi-search"></i>
-                        <span class="menu-text">Historial por DPI</span>
+                        <span class="menu-text">Historial por DPI o nombre</span>
                     </a>
                 </li>
                 @endif
 
-                <!-- Órdenes de evaluación -->
+                <!-- Órdenes de evaluación e informes -->
                 @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('ordenes.ver'))
-                <li class="{{ Request::is('ordenes','show-orden/*','add-orden','edit-orden/*') ? 'active-page-link':''  }}">
-                    <a href="{{ url('ordenes') }}">
+                <li class="sidebar-dropdown">
+                    <a href="#" class="{{ Request::is('ordenes','show-orden/*','add-orden','edit-orden/*','reportes/evaluaciones','reportes/empresas') ? 'active-dropdown':''  }}">
                         <i class="bi bi-file-earmark-text"></i>
                         <span class="menu-text">Órdenes de Evaluación</span>
+                        <i class="bi bi-chevron-down menu-arrow"></i>
                     </a>
+                    <div class="sidebar-submenu">
+                        <ul>
+                            <li class="{{ Request::is('ordenes','show-orden/*','add-orden','edit-orden/*') ? 'active-page-link':''  }}">
+                                <a href="{{ url('ordenes') }}"><i class="bi bi-list-ul"></i> Listado de órdenes</a>
+                            </li>
+                            <li class="{{ Request::is('reportes/evaluaciones') ? 'active-page-link':''  }}">
+                                <a href="{{ url('reportes/evaluaciones') }}"><i class="bi bi-file-bar-graph"></i> Estadísticas de Evaluaciones</a>
+                            </li>
+                            @if(Auth::user()->role_as >= 2)
+                            <li class="{{ Request::is('reportes/empresas') ? 'active-page-link':''  }}">
+                                <a href="{{ url('reportes/empresas') }}"><i class="bi bi-building-fill-check"></i> Empresas y Evaluaciones</a>
+                            </li>
+                            @endif
+                        </ul>
+                    </div>
                 </li>
                 @endif
 
@@ -108,30 +124,6 @@
                         <i class="bi bi-calendar3"></i>
                         <span class="menu-text">Calendario</span>
                     </a>
-                </li>
-                @endif
-
-                <!-- Módulo de Reportes -->
-                @if(Auth::user()->role_as >= 1)
-                <li class="menu-category">Reportes</li>
-                <li class="sidebar-dropdown">
-                    <a href="#" class="{{ Request::is('reportes/*') ? 'active-dropdown':''  }}">
-                        <i class="bi bi-graph-up"></i>
-                        <span class="menu-text">Informes y Estadísticas</span>
-                        <i class="bi bi-chevron-down menu-arrow"></i>
-                    </a>
-                    <div class="sidebar-submenu">
-                        <ul>
-                            <li class="{{ Request::is('reportes/evaluaciones') ? 'active-page-link':''  }}">
-                                <a href="{{ url('reportes/evaluaciones') }}"><i class="bi bi-file-bar-graph"></i> Estadísticas de Evaluaciones</a>
-                            </li>
-                            @if(Auth::user()->role_as >= 2)
-                            <li class="{{ Request::is('reportes/empresas') ? 'active-page-link':''  }}">
-                                <a href="{{ url('reportes/empresas') }}"><i class="bi bi-building-fill-check"></i> Empresas y Evaluaciones</a>
-                            </li>
-                            @endif
-                        </ul>
-                    </div>
                 </li>
                 @endif
 

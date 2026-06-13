@@ -110,7 +110,7 @@
                         <div class="card bg-light">
                             <div class="card-body">
                                 <h6 class="card-title"><i class="fas fa-briefcase"></i> Situación Laboral</h6>
-                                <p class="mb-1"><strong>Estado:</strong> {{ ucfirst(str_replace('_', ' ', $historialLaboral['situacion_laboral_actual'] ?? 'No especificado')) }}</p>
+                                <p class="mb-1"><strong>Situación laboral:</strong> {{ ucfirst(str_replace('_', ' ', $historialLaboral['situacion_laboral_actual'] ?? 'No especificado')) }}</p>
                                 <p class="mb-1"><strong>Experiencia:</strong> {{ $historialLaboral['anos_experiencia_laboral'] ?? 'No especificada' }} años</p>
                                 @php
                                     $ingresosPrincipales = floatval($situacionEconomica['ingresos_principales'] ?? 0);

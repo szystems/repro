@@ -130,8 +130,11 @@ class CuestionarioModuloCompletoTest extends TestCase
 
         $response = $this->get("/cuestionario/{$this->evaluado->token_unico}");
 
+        $response->assertRedirect(route('cuestionario.estado', ['token' => $this->evaluado->token_unico]));
+
+        $response = $this->get(route('cuestionario.completado', ['token' => $this->evaluado->token_unico]));
         $response->assertStatus(200);
-        $response->assertSee('Completado');
+        $response->assertSee('Cuestionario Completado');
     }
 
     // =========================================================================

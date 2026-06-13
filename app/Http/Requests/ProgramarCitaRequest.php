@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class ProgramarCitaRequest extends FormRequest
 {
@@ -25,7 +27,7 @@ class ProgramarCitaRequest extends FormRequest
             'fecha'             => ['required', 'date', 'after_or_equal:today'],
             'hora_inicio'       => ['required', 'date_format:H:i'],
             'hora_fin'          => ['required', 'date_format:H:i', 'after:hora_inicio'],
-            'poligrafista_id'   => ['required', 'integer', 'exists:users,id'],
+            'poligrafista_id'   => ['nullable', 'integer', 'exists:users,id'],
             'sede_id'           => ['required', 'integer', 'exists:sedes,id'],
             'modalidad'         => ['nullable', 'in:presencial,virtual'],
             'responsable_id'    => ['nullable', 'integer', 'exists:users,id'],
@@ -45,7 +47,6 @@ class ProgramarCitaRequest extends FormRequest
             'hora_fin.required'          => 'La hora de fin es obligatoria.',
             'hora_fin.date_format'       => 'La hora de fin debe tener formato HH:MM.',
             'hora_fin.after'             => 'La hora de fin debe ser posterior a la hora de inicio.',
-            'poligrafista_id.required'   => 'Debe asignar un poligrafista.',
             'poligrafista_id.exists'     => 'El poligrafista seleccionado no existe.',
             'sede_id.required'           => 'Debe seleccionar una sede.',
             'sede_id.exists'             => 'La sede seleccionada no existe.',
@@ -66,5 +67,18 @@ class ProgramarCitaRequest extends FormRequest
     public function getFin(): string
     {
         return $this->fecha . ' ' . $this->hora_fin . ':00';
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        $evaluadoId = $this->input('evaluado_orden_id') ?? $this->route('evaluado')?->id;
+
+        throw new HttpResponseException(
+            redirect()->back()
+                ->withInput()
+                ->withErrors($validator)
+                ->with('error', $validator->errors()->first())
+                ->with('programar_evaluado_id', $evaluadoId)
+        );
     }
 }

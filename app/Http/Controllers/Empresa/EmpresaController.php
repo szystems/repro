@@ -44,9 +44,23 @@ class EmpresaController extends Controller
             abort(403, 'Acceso no autorizado. Esta orden no pertenece a su empresa.');
         }
 
-        $orden->load(['evaluados.documentos.subidoPor', 'evaluados.cuestionario']);
+        if ($orden->archivada) {
+            abort(404);
+        }
 
-        return view('empresa.ordenes.show', compact('orden'));
+        $orden->load([
+            'evaluados' => function ($query) {
+                $query->with([
+                    'documentos.subidoPor',
+                    'cuestionario',
+                    'historialEstados.usuario',
+                ]);
+            },
+        ]);
+
+        $historialVisibleEmpresa = \App\Models\Config::historialVisibleParaEmpresa();
+
+        return view('empresa.ordenes.show', compact('orden', 'historialVisibleEmpresa'));
     }
     /**
      * Listar órdenes de la empresa (solo lectura)
@@ -60,6 +74,7 @@ class EmpresaController extends Controller
 
         // Eager loading y conteo de evaluados
         $ordenes = $empresa->ordenes()
+            ->activas()
             ->withCount('evaluados')
             ->with(['evaluados' => function ($q) {
                 $q->orderBy('id')->limit(1);
@@ -104,15 +119,15 @@ class EmpresaController extends Controller
 
         // Estadísticas de la empresa
         $stats = [
-            'total_ordenes' => $empresa->ordenes()->count(),
-            'ordenes_pendientes' => $empresa->ordenes()->whereIn('estado', $estadosPendientes)->count(),
-            'ordenes_proceso' => $empresa->ordenes()->whereIn('estado', $estadosProceso)->count(),
-            'ordenes_completadas' => $empresa->ordenes()->where('estado', 'entregado')->count(),
+            'total_ordenes' => $empresa->ordenes()->activas()->count(),
+            'ordenes_pendientes' => $empresa->ordenes()->activas()->whereIn('estado', $estadosPendientes)->count(),
+            'ordenes_proceso' => $empresa->ordenes()->activas()->whereIn('estado', $estadosProceso)->count(),
+            'ordenes_completadas' => $empresa->ordenes()->activas()->where('estado', 'entregado')->count(),
             'total_evaluados' => EvaluadoOrden::whereHas('orden', function($q) use ($empresa) {
-                $q->where('empresa_id', $empresa->id);
+                $q->where('empresa_id', $empresa->id)->activas();
             })->count(),
             'cuestionarios_completados' => EvaluadoOrden::whereHas('orden', function($q) use ($empresa) {
-                $q->where('empresa_id', $empresa->id);
+                $q->where('empresa_id', $empresa->id)->activas();
             })->where('cuestionario_completado', true)->count(),
             'usuarios_activos' => $empresa->usuariosActivos()->count(),
         ];
@@ -377,7 +392,7 @@ class EmpresaController extends Controller
         $empresa = Auth::user()->empresa;
 
         $query = EvaluadoOrden::whereHas('orden', function($q) use ($empresa) {
-            $q->where('empresa_id', $empresa->id);
+            $q->where('empresa_id', $empresa->id)->activas();
         })->with(['orden']);
 
         // Filtro por estado de cuestionario
@@ -408,18 +423,18 @@ class EmpresaController extends Controller
         $cuestionarios = $query->orderBy('created_at', 'desc')->paginate(15);
 
         // Órdenes para el filtro
-        $ordenes = $empresa->ordenes()->orderBy('created_at', 'desc')->get();
+        $ordenes = $empresa->ordenes()->activas()->orderBy('created_at', 'desc')->get();
 
         // Estadísticas
         $stats = [
             'total' => EvaluadoOrden::whereHas('orden', function($q) use ($empresa) {
-                $q->where('empresa_id', $empresa->id);
+                $q->where('empresa_id', $empresa->id)->activas();
             })->count(),
             'completados' => EvaluadoOrden::whereHas('orden', function($q) use ($empresa) {
-                $q->where('empresa_id', $empresa->id);
+                $q->where('empresa_id', $empresa->id)->activas();
             })->where('cuestionario_completado', true)->count(),
             'pendientes' => EvaluadoOrden::whereHas('orden', function($q) use ($empresa) {
-                $q->where('empresa_id', $empresa->id);
+                $q->where('empresa_id', $empresa->id)->activas();
             })->where('cuestionario_completado', false)->count(),
         ];
 

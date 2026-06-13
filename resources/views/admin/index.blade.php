@@ -326,7 +326,7 @@
                                     <th>Código</th>
                                     <th>Empresa</th>
                                     <th>Evaluados</th>
-                                    <th>Estado</th>
+                                    <th>Estado de Orden</th>
                                     <th>Fecha</th>
                                 </tr>
                             </thead>
@@ -480,6 +480,118 @@
     ======================================== --}}
     @if(Auth::user()->role_as == 1)
 
+    <!-- Búsqueda de candidatos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-start border-4 border-info">
+                <div class="card-body">
+                    <form method="GET" action="{{ route('dashboard') }}" class="row g-3 align-items-end">
+                        <div class="col-md-9">
+                            <label for="buscar_candidato" class="form-label fw-bold mb-1">
+                                <i class="bi bi-search me-1"></i> Buscar candidato por DPI o nombre
+                            </label>
+                            <input type="text"
+                                   id="buscar_candidato"
+                                   name="buscar"
+                                   class="form-control"
+                                   placeholder="DPI (13 dígitos) o nombre/apellidos"
+                                   value="{{ $buscar ?? '' }}"
+                                   maxlength="100">
+                            <small class="text-muted">Busca en todas tus órdenes activas</small>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-info w-100 text-white">
+                                <i class="bi bi-search me-1"></i> Buscar
+                            </button>
+                            @if(!empty($buscar))
+                            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary w-100 mt-2">
+                                <i class="bi bi-x-lg"></i> Limpiar
+                            </a>
+                            @endif
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if(!empty($errorBusqueda))
+    <div class="alert alert-warning">{{ $errorBusqueda }}</div>
+    @endif
+
+    @if(!empty($buscar))
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-person-lines-fill me-2"></i>
+                        Resultados para: <code>{{ $buscar }}</code>
+                        <span class="badge bg-secondary ms-2">{{ ($resultadosBusqueda ?? collect())->count() }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if(($resultadosBusqueda ?? collect())->isEmpty())
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No se encontraron candidatos con esa búsqueda en tus órdenes.
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Candidato</th>
+                                        <th>DPI</th>
+                                        <th>Orden</th>
+                                        <th>Estado de Formulario</th>
+                                        <th>Estado de Programación</th>
+                                        <th>Estado de Evaluación</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($resultadosBusqueda as $evaluado)
+                                    <tr>
+                                        <td><strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong></td>
+                                        <td><code>{{ $evaluado->dpi ?? '—' }}</code></td>
+                                        <td>
+                                            <a href="{{ route('empresa.ordenes.show', $evaluado->orden) }}" class="text-decoration-none">
+                                                {{ $evaluado->orden->codigo_orden }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $evaluado->estado_formulario_color }}">
+                                                {{ $evaluado->estado_formulario_texto }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $evaluado->estado_programacion_color }}">
+                                                {{ $evaluado->estado_programacion_texto }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">
+                                                {{ $evaluado->estado_evaluacion_texto }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('empresa.ordenes.show', $evaluado->orden) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> Ver orden
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Tarjetas de estadísticas para empresa -->
     <div class="row mb-4">
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
@@ -620,7 +732,7 @@
                                 <tr>
                                     <th>Código</th>
                                     <th>Evaluados</th>
-                                    <th>Estado</th>
+                                    <th>Estado de Orden</th>
                                     <th>Fecha</th>
                                 </tr>
                             </thead>

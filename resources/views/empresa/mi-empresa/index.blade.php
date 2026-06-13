@@ -248,7 +248,7 @@
                                         <th>Email</th>
                                         <th>Cargo</th>
                                         <th>Tipo</th>
-                                        <th>Estado</th>
+                                        <th>Estado de Usuario</th>
                                     </tr>
                                 </thead>
                                 <tbody>

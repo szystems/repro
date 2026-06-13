@@ -54,7 +54,7 @@
                     <tr>
                         <th>Tipo</th>
                         <th>Archivo</th>
-                        <th>Estado</th>
+                        <th>Estado de Verificación</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>

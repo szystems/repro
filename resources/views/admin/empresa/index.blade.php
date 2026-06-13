@@ -41,7 +41,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-3 mb-2">
-                                    <label class="form-label">Estado</label>
+                                    <label class="form-label">Estado de Empresa</label>
                                     <select name="estado" class="form-select">
                                         <option value="">Todos</option>
                                         <option value="1" {{ isset($estado) && $estado == '1' ? 'selected' : '' }}>Activas</option>
@@ -68,7 +68,7 @@
                                 @endif
                                 @if(isset($estado) && $estado != '')
                                     <span class="badge bg-light text-dark">
-                                        Estado: {{ $estado == '1' ? 'Activas' : 'Inactivas' }}
+                                        Estado de Empresa: {{ $estado == '1' ? 'Activas' : 'Inactivas' }}
                                     </span>
                                 @endif
                             </div>
@@ -111,7 +111,7 @@
                                         <th>NIT</th>
                                         <th>Contacto</th>
                                         <th>Usuarios</th>
-                                        <th>Estado</th>
+                                        <th>Estado de Empresa</th>
                                         <th width="150">Acciones</th>
                                     </tr>
                                 </thead>

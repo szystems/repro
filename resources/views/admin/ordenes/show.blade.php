@@ -32,8 +32,23 @@
         @endif
 
         @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" id="alert-programar-cita">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            @if(session('programar_evaluado_id'))
+                <strong>No se pudo programar la cita:</strong>
+            @endif
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @elseif($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" id="alert-programar-cita">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>No se pudo programar la cita:</strong>
+            <ul class="mb-0 mt-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         @endif
@@ -42,6 +57,19 @@
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-circle me-2"></i>{{ session('warning') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+
+        @if($orden->archivada)
+        <div class="alert alert-secondary">
+            <i class="bi bi-archive me-2"></i>
+            Esta orden está <strong>archivada</strong>
+            @if($orden->archivada_at)
+                desde {{ $orden->archivada_at->format('d/m/Y H:i') }}
+            @endif
+            @if($orden->archivadaPor)
+                por {{ $orden->archivadaPor->name }}
+            @endif
         </div>
         @endif
 
@@ -59,10 +87,20 @@
                                 <i class="bi bi-file-pdf"></i> Orden de Servicio
                             </a>
 
-                            @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && $orden->estado === 'orden_recibida')))
+                            @if(!in_array($orden->estado, ['entregado', 'cancelado']) && !$orden->archivada && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && $orden->estado === 'orden_recibida')))
                             <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil"></i> Editar
                             </a>
+                            @endif
+
+                            @if(Auth::user()->role_as >= 3 && !$orden->archivada)
+                            <form action="{{ route('ordenes.archivar', $orden) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Archivar la orden {{ $orden->codigo_orden }}? El expediente se conserva pero dejará de aparecer en los listados.')">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-archive"></i> Archivar
+                                </button>
+                            </form>
                             @endif
                         </div>
                     </div>
@@ -74,7 +112,7 @@
                                 <div class="fs-4 text-primary">{{ $orden->codigo_orden }}</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Estado Actual</label>
+                                <label class="form-label fw-bold">Estado de Orden</label>
                                 <div>
                                     <span class="badge fs-6 bg-{{ $orden->estado_color }}">
                                         {{ $orden->estado_human }}
@@ -226,11 +264,11 @@
                 </div>
             </div>
 
-            <!-- Panel de Estado -->
+            <!-- Panel de Estado de Orden -->
             <div class="col-xl-4">
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">Control de Estado</div>
+                        <div class="card-title">Control de Estado de Orden</div>
                     </div>
                     <div class="card-body">
 
@@ -240,9 +278,9 @@
                             @method('PATCH')
 
                             <div class="mb-3">
-                                <label class="form-label">Cambiar Estado</label>
+                                <label class="form-label">Cambiar Estado de Orden</label>
                                 <select class="form-select" name="nuevo_estado" required>
-                                    <option value="">Seleccionar nuevo estado...</option>
+                                    <option value="">Seleccionar nuevo estado de orden...</option>
                                     @foreach($estados as $key => $label)
                                         @if($key !== $orden->estado)
                                             <option value="{{ $key }}">{{ $label }}</option>
@@ -250,17 +288,17 @@
                                     @endforeach
                                 </select>
                                 <small class="text-muted mt-1 d-block">
-                                    <i class="bi bi-info-circle"></i> El estado se actualiza automáticamente. Cambio manual solo si es necesario.
+                                    <i class="bi bi-info-circle"></i> El estado de la orden se actualiza automáticamente. Cambio manual solo si es necesario.
                                 </small>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Observaciones del cambio</label>
-                                <textarea class="form-control" name="observaciones" rows="2" placeholder="Motivo del cambio de estado..."></textarea>
+                                <label class="form-label">Observaciones del cambio de estado de orden</label>
+                                <textarea class="form-control" name="observaciones" rows="2" placeholder="Motivo del cambio de estado de orden..."></textarea>
                             </div>
 
                             <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-arrow-repeat"></i> Cambiar Estado
+                                <i class="bi bi-arrow-repeat"></i> Cambiar Estado de Orden
                             </button>
                         </form>
 
@@ -381,10 +419,10 @@
                                                     @else Socioeconómico
                                                     @endif
                                                 </span>
-                                                <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}" title="Estado Evaluación">
+                                                <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}" title="Estado de Evaluación">
                                                     <i class="bi bi-clipboard-check"></i> {{ $evaluado->estado_evaluacion_texto }}
                                                 </span>
-                                                <span class="badge bg-{{ $evaluado->estado_formulario_color }}" title="Estado Formulario">
+                                                <span class="badge bg-{{ $evaluado->estado_formulario_color }}" title="Estado de Formulario">
                                                     <i class="bi bi-file-text"></i> {{ \App\Models\EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->estado_formulario] ?? ucfirst($evaluado->estado_formulario) }}
                                                 </span>
                                                 @if($evaluado->modalidad)
@@ -559,7 +597,7 @@
                                         <div class="row mb-3 g-2">
                                             {{-- Estado de Evaluación --}}
                                             <div class="col-md-4">
-                                                <small class="text-muted d-block mb-1"><i class="bi bi-clipboard2-check"></i> Estado Evaluación</small>
+                                                <small class="text-muted d-block mb-1"><i class="bi bi-clipboard2-check"></i> Estado de Evaluación</small>
                                                 <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">{{ $evaluado->estado_evaluacion_texto }}</span>
                                                 @if(Auth::user()->role_as >= 2 && count($transicionesEval) > 0)
                                                 <form action="{{ route('evaluados.cambiar-estado', $evaluado->id) }}" method="POST" class="mt-1">
@@ -585,9 +623,9 @@
                                                 @endif
                                             </div>
 
-                                            {{-- Estado del Formulario --}}
+                                            {{-- Estado de Formulario --}}
                                             <div class="col-md-4">
-                                                <small class="text-muted d-block mb-1"><i class="bi bi-file-earmark-text"></i> Estado Formulario</small>
+                                                <small class="text-muted d-block mb-1"><i class="bi bi-file-earmark-text"></i> Estado de Formulario</small>
                                                 <span class="badge bg-{{ $evaluado->estado_formulario_color }}">{{ $nombresForm[$evaluado->estado_formulario] ?? ucfirst($evaluado->estado_formulario) }}</span>
                                                 @if($evaluado->completado_at)
                                                     <small class="text-muted ms-1 d-block">{{ \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') }}</small>
@@ -620,7 +658,7 @@
 
                                             {{-- Estado de Programación --}}
                                             <div class="col-md-4">
-                                                <small class="text-muted d-block mb-1"><i class="bi bi-calendar-check"></i> Estado Programación</small>
+                                                <small class="text-muted d-block mb-1"><i class="bi bi-calendar-check"></i> Estado de Programación</small>
                                                 @php $estadoProg = $nombresProg[$evaluado->estado_programacion] ?? ucfirst($evaluado->estado_programacion ?? '—'); @endphp
                                                 @php
                                                     $colorProg = match($evaluado->estado_programacion ?? '') {
@@ -689,10 +727,10 @@
                                                                 <td>
                                                                     @php
                                                                         $campoLabel = match($entrada->campo) {
-                                                                            'estado_evaluacion'   => 'Evaluación',
-                                                                            'estado_formulario'   => 'Formulario',
-                                                                            'estado_programacion' => 'Programación',
-                                                                            'estado_orden'        => 'Orden',
+                                                                            'estado_evaluacion'   => 'Estado de Evaluación',
+                                                                            'estado_formulario'   => 'Estado de Formulario',
+                                                                            'estado_programacion' => 'Estado de Programación',
+                                                                            'estado_orden'        => 'Estado de Orden',
                                                                             'modalidad'           => 'Modalidad',
                                                                             default               => ucfirst($entrada->campo),
                                                                         };
@@ -965,21 +1003,35 @@
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body">
+                                                        @php
+                                                            $fechaModal = old('fecha', $evaluado->fecha_programada
+                                                                ? \Carbon\Carbon::parse($evaluado->fecha_programada)->format('Y-m-d')
+                                                                : now()->format('Y-m-d'));
+                                                            $horaInicioModal = old('hora_inicio', $evaluado->fecha_programada
+                                                                ? \Carbon\Carbon::parse($evaluado->fecha_programada)->format('H:i')
+                                                                : '09:00');
+                                                            $horaFinModal = old('hora_fin', $evaluado->fecha_hora_fin
+                                                                ? \Carbon\Carbon::parse($evaluado->fecha_hora_fin)->format('H:i')
+                                                                : '10:00');
+                                                            $sedeModal = old('sede_id', $evaluado->sede_id ?? $orden->sede_id);
+                                                            $poligrafistaModal = old('poligrafista_id', $evaluado->poligrafista_id ?? (Auth::user()->role_as >= 2 ? Auth::id() : null));
+                                                            $responsableModal = old('responsable_id', $evaluado->responsable_id);
+                                                        @endphp
                                                         <div class="mb-3">
                                                             <label class="form-label fw-bold">Fecha</label>
                                                             <input type="date" name="fecha" class="form-control" required
                                                                    min="{{ now()->format('Y-m-d') }}"
-                                                                   value="{{ $evaluado->fecha_programada ? \Carbon\Carbon::parse($evaluado->fecha_programada)->format('Y-m-d') : '' }}">
+                                                                   value="{{ $fechaModal }}">
                                                         </div>
                                                         <div class="row mb-3">
                                                             <div class="col-6">
                                                                 <label class="form-label fw-bold">Hora inicio</label>
-                                                                <select name="hora_inicio" class="form-select" required>
+                                                                <select name="hora_inicio" class="form-select hora-inicio-programar" required>
                                                                     @for($h = 8; $h < 18; $h++)
                                                                         @for($m = 0; $m < 60; $m += 30)
                                                                             @php $horaOpt = sprintf('%02d:%02d', $h, $m); @endphp
                                                                             <option value="{{ $horaOpt }}"
-                                                                                {{ $evaluado->fecha_programada && \Carbon\Carbon::parse($evaluado->fecha_programada)->format('H:i') == $horaOpt ? 'selected' : '' }}>
+                                                                                {{ $horaInicioModal == $horaOpt ? 'selected' : '' }}>
                                                                                 {{ \Carbon\Carbon::parse($horaOpt)->format('h:i A') }}
                                                                             </option>
                                                                         @endfor
@@ -988,7 +1040,7 @@
                                                             </div>
                                                             <div class="col-6">
                                                                 <label class="form-label fw-bold">Hora fin</label>
-                                                                <select name="hora_fin" class="form-select" required>
+                                                                <select name="hora_fin" class="form-select hora-fin-programar" required>
                                                                     @for($h = 8; $h <= 18; $h++)
                                                                         @for($m = 0; $m < 60; $m += 30)
                                                                             @php
@@ -996,7 +1048,7 @@
                                                                                 if ($h == 18 && $m > 0) continue;
                                                                             @endphp
                                                                             <option value="{{ $horaOpt }}"
-                                                                                {{ $evaluado->fecha_hora_fin && \Carbon\Carbon::parse($evaluado->fecha_hora_fin)->format('H:i') == $horaOpt ? 'selected' : '' }}>
+                                                                                {{ $horaFinModal == $horaOpt ? 'selected' : '' }}>
                                                                                 {{ \Carbon\Carbon::parse($horaOpt)->format('h:i A') }}
                                                                             </option>
                                                                         @endfor
@@ -1009,8 +1061,8 @@
                                                             <select name="sede_id" class="form-select" required>
                                                                 <option value="">Seleccionar sede...</option>
                                                                 @foreach($sedes as $sede)
-                                                                    <option value="{{ $sede->id }}" {{ ($evaluado->sede_id ?? $orden->sede_id) == $sede->id ? 'selected' : '' }}>
-                                                                        {{ $sede->nombre }}
+                                                                    <option value="{{ $sede->id }}" {{ (string) $sedeModal === (string) $sede->id ? 'selected' : '' }}>
+                                                                        {{ $sede->nombre }} (Cap: {{ $sede->capacidad ?? 1 }})
                                                                     </option>
                                                                 @endforeach
                                                             </select>
@@ -1018,7 +1070,7 @@
                                                         <div class="mb-3">
                                                             <label class="form-label fw-bold">Modalidad</label>
                                                             @php
-                                                                $modalidadDefault = $evaluado->modalidad;
+                                                                $modalidadDefault = old('modalidad', $evaluado->modalidad);
                                                                 if (!$modalidadDefault) {
                                                                     $modalidadDefault = match($evaluado->tipo_servicio) {
                                                                         'poligrafo' => 'presencial',
@@ -1032,13 +1084,14 @@
                                                                 <option value="presencial" {{ $modalidadDefault == 'presencial' ? 'selected' : '' }}>Presencial</option>
                                                                 <option value="virtual" {{ $modalidadDefault == 'virtual' ? 'selected' : '' }}>Virtual</option>
                                                             </select>
+                                                            <small class="text-muted">La modalidad se guarda al guardar la orden o al programar la cita.</small>
                                                         </div>
                                                         <div class="mb-3">
                                                             <label class="form-label fw-bold">Poligrafista / Evaluador</label>
-                                                            <select name="poligrafista_id" class="form-select" required>
-                                                                <option value="">Seleccionar evaluador...</option>
+                                                            <select name="poligrafista_id" class="form-select">
+                                                                <option value="">Sin asignar</option>
                                                                 @foreach($poligrafistas as $pol)
-                                                                    <option value="{{ $pol->id }}" {{ $evaluado->poligrafista_id == $pol->id ? 'selected' : '' }}>
+                                                                    <option value="{{ $pol->id }}" {{ (string) $poligrafistaModal === (string) $pol->id ? 'selected' : '' }}>
                                                                         {{ $pol->name }}
                                                                     </option>
                                                                 @endforeach
@@ -1049,7 +1102,7 @@
                                                             <select name="responsable_id" class="form-select">
                                                                 <option value="">Sin asignar</option>
                                                                 @foreach($poligrafistas as $pol)
-                                                                    <option value="{{ $pol->id }}" {{ $evaluado->responsable_id == $pol->id ? 'selected' : '' }}>
+                                                                    <option value="{{ $pol->id }}" {{ (string) $responsableModal === (string) $pol->id ? 'selected' : '' }}>
                                                                         {{ $pol->name }} {{ $pol->cargo ? '('.$pol->cargo.')' : '' }}
                                                                     </option>
                                                                 @endforeach
@@ -1294,6 +1347,49 @@ document.querySelectorAll('[id^="editor-preliminar-"]').forEach(function(editorE
             hiddenInput.value = quill.root.innerHTML;
         });
     }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Ajustar hora fin si queda igual o antes que hora inicio (modal programar en orden)
+    document.querySelectorAll('.modal').forEach(function(modal) {
+        const inicio = modal.querySelector('.hora-inicio-programar');
+        const fin = modal.querySelector('.hora-fin-programar');
+        if (!inicio || !fin) return;
+
+        function asegurarHoraFinValida() {
+            const opciones = Array.from(fin.options).map(function(o) { return o.value; });
+            const idxInicio = opciones.indexOf(inicio.value);
+            if (idxInicio === -1) return;
+            const idxFin = opciones.indexOf(fin.value);
+            if (idxFin <= idxInicio && opciones[idxInicio + 1]) {
+                fin.value = opciones[idxInicio + 1];
+            }
+        }
+
+        inicio.addEventListener('change', asegurarHoraFinValida);
+        asegurarHoraFinValida();
+    });
+
+@if(session('programar_evaluado_id') || session('error') || $errors->any())
+    // Limpiar backdrop huérfano tras validación fallida
+    document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+
+    document.querySelectorAll('.modal.show').forEach(function(modal) {
+        modal.classList.remove('show');
+        modal.style.display = '';
+        modal.setAttribute('aria-hidden', 'true');
+    });
+
+    const alertEl = document.getElementById('alert-programar-cita');
+    if (alertEl) {
+        alertEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+@endif
 });
 </script>
 @endpush

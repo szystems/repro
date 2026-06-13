@@ -83,7 +83,7 @@
                                 <div class="fw-medium">{{ $empresa->nit ?? 'No definido' }}</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label text-muted">Estado:</label>
+                                <label class="form-label text-muted">Estado de Empresa:</label>
                                 <div>
                                     <span class="badge {{ $empresa->estado ? 'bg-success' : 'bg-danger' }} p-2">
                                         {{ $empresa->getEstadoTexto() }}

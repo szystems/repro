@@ -56,9 +56,9 @@
                                 @endif
 
                                 <div class="col-md-2 mb-2">
-                                    <label class="form-label">Estado</label>
+                                    <label class="form-label">Estado de Orden</label>
                                     <select class="form-select" name="estado">
-                                        <option value="">Todos los estados</option>
+                                        <option value="">Todos</option>
                                         @foreach($estados as $key => $valor)
                                         <option value="{{ $key }}" {{ request('estado') == $key ? 'selected' : '' }}>
                                             {{ $valor }}
@@ -103,6 +103,16 @@
                                     <input type="date" class="form-control" name="fecha_hasta" value="{{ request('fecha_hasta') }}">
                                 </div>
 
+                                @if(Auth::user()->role_as >= 3)
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label">Vista</label>
+                                    <select class="form-select" name="archivadas">
+                                        <option value="">Órdenes activas</option>
+                                        <option value="1" {{ request('archivadas') == '1' ? 'selected' : '' }}>Órdenes archivadas</option>
+                                    </select>
+                                </div>
+                                @endif
+
                                 <div class="col-md-2 mb-2">
                                     <label class="form-label">&nbsp;</label>
                                     <div class="d-flex gap-1">
@@ -123,7 +133,12 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">Lista de Órdenes</div>
+                        <div class="card-title">
+                            Lista de Órdenes
+                            @if(request('archivadas') == '1')
+                                <span class="badge bg-secondary ms-2">Archivadas</span>
+                            @endif
+                        </div>
                         <div class="card-options">
                             <a href="{{ route('ordenes.create') }}" class="btn btn-primary btn-sm">
                                 <i class="bi bi-plus-circle"></i> Nueva Orden
@@ -153,7 +168,7 @@
                                         <th>Código</th>
                                         <th>Empresa</th>
                                         <th>Tipos de Servicio</th>
-                                        <th>Estado</th>
+                                        <th>Estado de Orden</th>
                                         <th>Evaluados</th>
                                         <th>Fechas</th>
                                         @if(Auth::user()->role_as >= 2)
@@ -204,13 +219,13 @@
                                                 <div class="{{ $loop->first ? '' : 'mt-2 pt-2 border-top' }}">
                                                     <small class="d-block text-muted fw-semibold mb-1">{{ trim($evaluado->nombre . ' ' . $evaluado->apellidos) }}</small>
                                                     <div class="d-flex flex-wrap gap-1">
-                                                        <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}" style="font-size:0.65em" title="Evaluación">
+                                                        <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}" style="font-size:0.65em" title="Estado de Evaluación">
                                                             <i class="bi bi-clipboard-check"></i> {{ $evaluado->estado_evaluacion_texto }}
                                                         </span>
-                                                        <span class="badge bg-{{ $evaluado->estado_formulario_color }}" style="font-size:0.65em" title="Formulario">
+                                                        <span class="badge bg-{{ $evaluado->estado_formulario_color }}" style="font-size:0.65em" title="Estado de Formulario">
                                                             <i class="bi bi-file-text"></i> {{ $evaluado->estado_formulario_texto }}
                                                         </span>
-                                                        <span class="badge bg-{{ $evaluado->estado_programacion_color }}" style="font-size:0.65em" title="Programación">
+                                                        <span class="badge bg-{{ $evaluado->estado_programacion_color }}" style="font-size:0.65em" title="Estado de Programación">
                                                             <i class="bi bi-calendar2-check"></i> {{ $evaluado->estado_programacion_texto }}
                                                         </span>
                                                     </div>
@@ -261,12 +276,12 @@
                                                 </a>
                                                 @endif
 
-                                                @if(Auth::user()->hasRole('admin'))
-                                                <form action="{{ route('ordenes.destroy', $orden) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('¿Está seguro de eliminar esta orden?')">
+                                                @if(Auth::user()->role_as >= 3 && !$orden->archivada)
+                                                <form action="{{ route('ordenes.archivar', $orden) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('¿Archivar la orden {{ $orden->codigo_orden }}? El expediente se conserva pero dejará de aparecer en los listados.')">
                                                     @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-outline-danger" title="Eliminar">
-                                                        <i class="bi bi-trash"></i>
+                                                    @method('PATCH')
+                                                    <button type="submit" class="btn btn-outline-secondary" title="Archivar orden">
+                                                        <i class="bi bi-archive"></i>
                                                     </button>
                                                 </form>
                                                 @endif

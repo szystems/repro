@@ -170,7 +170,7 @@
             <tr>
                 <td class="info-label">Fecha solicitud:</td>
                 <td class="info-value">{{ \Carbon\Carbon::parse($orden->fecha_solicitud)->format('d/m/Y') }}</td>
-                <td class="info-label">Estado orden:</td>
+                <td class="info-label">Estado de Orden:</td>
                 <td class="info-value">{{ $estados[$orden->estado] ?? ucfirst($orden->estado) }}</td>
             </tr>
         </table>

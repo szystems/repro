@@ -295,7 +295,7 @@ function agregarEvaluado(datos = {}) {
                         <option value="presencial" ${modalidad === 'presencial' ? 'selected' : ''}>Presencial</option>
                         <option value="virtual" ${modalidad === 'virtual' ? 'selected' : ''}>Virtual</option>
                     </select>
-                    <small class="text-muted">Virtual: exige formulario completo antes de programar</small>
+                        <small class="text-muted">La modalidad se guarda al guardar la orden o al programar la cita.</small>
                 </div>
                 @endif
                 <div class="col-md-3 mb-2">

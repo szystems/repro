@@ -113,7 +113,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6 mb-3">
-                                                    <label for="estado" class="form-label">Estado</label>
+                                                    <label for="estado" class="form-label">Estado de Empresa</label>
                                                     <div class="input-group">
                                                         <span class="input-group-text"><i class="bi bi-toggle-on"></i></span>
                                                         <select name="estado" id="estado" class="form-select">

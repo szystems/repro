@@ -738,7 +738,7 @@ class Fase5FlujosYCierreTest extends TestCase
             ->get(route('ordenes.show', $this->orden->id));
 
         $response->assertStatus(200);
-        $response->assertSee('Estado Formulario');
+        $response->assertSee('Estado de Formulario');
         $response->assertSee('Pendiente de Llenar');
     }
 

@@ -58,7 +58,7 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="estado" class="form-label">Estado</label>
+                                            <label for="estado" class="form-label">Estado del cuestionario</label>
                                             <select class="form-control @error('estado') is-invalid @enderror" 
                                                     id="estado" 
                                                     name="estado">

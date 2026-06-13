@@ -99,12 +99,13 @@ class Fase18SinergiaReglasSemana3Test extends TestCase
     // S2: Gating Virtual al programar
     // ========================================
 
-    public function test_s2_virtual_sin_formulario_completo_bloquea_programar(): void
+    public function test_fase19_virtual_sin_formulario_completo_permite_programar(): void
     {
         $this->actingAs($this->repro);
 
         $this->evaluado->modalidad = 'virtual';
         $this->evaluado->estado_formulario = 'link_enviado'; // no completado
+        $this->evaluado->estado_programacion = 'contactado';
         $this->evaluado->save();
 
         $sede = Sede::factory()->create();
@@ -119,8 +120,8 @@ class Fase18SinergiaReglasSemana3Test extends TestCase
             'modalidad'         => 'virtual',
         ]);
 
-        $response->assertSessionHasErrors('modalidad');
-        $this->assertNull($this->evaluado->fresh()->fecha_programada);
+        $response->assertSessionHasNoErrors();
+        $this->assertNotNull($this->evaluado->fresh()->fecha_programada);
     }
 
     public function test_s2_virtual_con_formulario_completo_permite_programar(): void

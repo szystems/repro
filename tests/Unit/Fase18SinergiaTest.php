@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
  * Fase 18 - Tests para las reglas de sinergia entre estados
  * 
  * Valida:
- * 1. Modalidad virtual requiere formulario completado para programar
+ * 1. Modalidad virtual permite programar sin formulario (Fase 19 — S2 eliminado)
  * 2. Modalidad presencial permite programar sin formulario
  * 3. Modalidad editable con historial
  * 4. En revisión → Proceso realizado automático
@@ -40,19 +40,17 @@ class Fase18SinergiaTest extends TestCase
     }
 
     // ========================================
-    // Tests: Modalidad Virtual requiere formulario
+    // Tests: Modalidad Virtual (Fase 19 — sin bloqueo por formulario al programar)
     // ========================================
 
-    public function test_modalidad_virtual_no_permite_programar_sin_formulario_completado(): void
+    public function test_modalidad_virtual_permite_programar_sin_formulario_completado(): void
     {
         $this->evaluado->modalidad = 'virtual';
         $this->evaluado->estado_formulario = 'pendiente_de_llenar';
         $this->evaluado->estado_programacion = 'contactado';
         $this->evaluado->save();
 
-        // Intentar programar sin formulario completado debe fallar
-        $puedeProgramar = $this->evaluado->estado_formulario === 'formulario_completado_y_recibido';
-        $this->assertFalse($puedeProgramar);
+        $this->assertTrue($this->evaluado->puedeTransicionarEstadoProgramacion('programado'));
     }
 
     public function test_modalidad_virtual_permite_programar_con_formulario_completado(): void
@@ -62,9 +60,7 @@ class Fase18SinergiaTest extends TestCase
         $this->evaluado->estado_programacion = 'contactado';
         $this->evaluado->save();
 
-        // Ahora sí puede programar
-        $puedeProgramar = $this->evaluado->estado_formulario === 'formulario_completado_y_recibido';
-        $this->assertTrue($puedeProgramar);
+        $this->assertTrue($this->evaluado->puedeTransicionarEstadoProgramacion('programado'));
     }
 
     // ========================================

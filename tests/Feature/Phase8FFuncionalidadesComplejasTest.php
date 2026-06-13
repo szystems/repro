@@ -70,9 +70,9 @@ class Phase8FFuncionalidadesComplejasTest extends TestCase
             ],
         ]);
 
-        // El repro debe recibir la notificación (admin no, porque es el creador)
+        // Fase 18: admin creador también recibe la notificación
         Notification::assertSentTo($repro, OrdenCreadaNotification::class);
-        Notification::assertNotSentTo($admin, OrdenCreadaNotification::class);
+        Notification::assertSentTo($admin, OrdenCreadaNotification::class);
     }
 
     public function test_api_notificaciones_devuelve_json(): void

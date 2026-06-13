@@ -76,7 +76,31 @@ class AuditoriaSeguridadTest extends TestCase
     // H-03: REPRO puede eliminar órdenes
     // ──────────────────────────────────────────────────────────
 
-    public function test_h03_repro_puede_eliminar_orden(): void
+    public function test_h03_repro_no_puede_archivar_orden(): void
+    {
+        $repro = $this->crearRepro();
+        $orden = Orden::factory()->create(['estado' => 'orden_recibida']);
+
+        $response = $this->actingAs($repro)
+            ->patch(route('ordenes.archivar', $orden));
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('ordenes', ['id' => $orden->id, 'archivada' => false]);
+    }
+
+    public function test_h03_admin_puede_archivar_orden(): void
+    {
+        $admin = $this->crearAdmin();
+        $orden = Orden::factory()->create(['estado' => 'orden_recibida']);
+
+        $response = $this->actingAs($admin)
+            ->patch(route('ordenes.archivar', $orden));
+
+        $response->assertRedirect(route('ordenes.index'));
+        $this->assertDatabaseHas('ordenes', ['id' => $orden->id, 'archivada' => true]);
+    }
+
+    public function test_h03_repro_no_puede_eliminar_orden(): void
     {
         $repro = $this->crearRepro();
         $orden = Orden::factory()->create(['estado' => 'orden_recibida']);
@@ -84,11 +108,11 @@ class AuditoriaSeguridadTest extends TestCase
         $response = $this->actingAs($repro)
             ->delete(route('ordenes.destroy', $orden));
 
-        $response->assertRedirect(route('ordenes.index'));
-        $this->assertDatabaseMissing('ordenes', ['id' => $orden->id]);
+        $response->assertForbidden();
+        $this->assertDatabaseHas('ordenes', ['id' => $orden->id]);
     }
 
-    public function test_h03_admin_puede_eliminar_orden(): void
+    public function test_h03_admin_no_puede_eliminar_orden_permanentemente(): void
     {
         $admin = $this->crearAdmin();
         $orden = Orden::factory()->create(['estado' => 'orden_recibida']);
@@ -96,8 +120,8 @@ class AuditoriaSeguridadTest extends TestCase
         $response = $this->actingAs($admin)
             ->delete(route('ordenes.destroy', $orden));
 
-        $response->assertRedirect(route('ordenes.index'));
-        $this->assertDatabaseMissing('ordenes', ['id' => $orden->id]);
+        $response->assertForbidden();
+        $this->assertDatabaseHas('ordenes', ['id' => $orden->id]);
     }
 
     public function test_h03_empresa_no_puede_eliminar_orden(): void
@@ -352,6 +376,8 @@ class AuditoriaSeguridadTest extends TestCase
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
             'estado_evaluacion' => 'pendiente_de_evaluacion',
+            'estado_formulario' => 'formulario_completado_y_recibido',
+            'estado_programacion' => 'programado',
         ]);
 
         $this->actingAs($admin);

@@ -63,7 +63,7 @@
                                 </div>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label text-muted small">Estado</label>
+                                <label class="form-label text-muted small">Estado de Sede</label>
                                 <div>
                                     @if($sede->estado)
                                         <span class="badge bg-success">Activa</span>
@@ -171,7 +171,7 @@
                                             <th>DPI</th>
                                             <th>Empresa</th>
                                             <th>Servicio</th>
-                                            <th>Estado proceso</th>
+                                            <th>Estado de Orden</th>
                                             <th></th>
                                         </tr>
                                     </thead>

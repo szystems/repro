@@ -78,7 +78,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label text-muted small">Estado:</label>
+                                <label class="form-label text-muted small">Estado del cuestionario:</label>
                                 <div>
                                     @if($evaluado->cuestionario_completado)
                                         <span class="badge bg-success p-2">

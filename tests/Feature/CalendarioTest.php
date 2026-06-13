@@ -311,7 +311,30 @@ class CalendarioTest extends TestCase
     {
         $this->actingAs($this->usuarioRepro())
             ->post('/calendario/programar', [])
-            ->assertSessionHasErrors(['evaluado_orden_id', 'fecha', 'hora_inicio', 'hora_fin', 'sede_id', 'poligrafista_id']);
+            ->assertSessionHasErrors(['evaluado_orden_id', 'fecha', 'hora_inicio', 'hora_fin', 'sede_id']);
+    }
+
+    public function test_programar_sin_poligrafista_es_valido(): void
+    {
+        $sede = Sede::factory()->create(['estado' => 1, 'capacidad' => 1]);
+        $evaluado = $this->crearEvaluado([
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
+            'fecha_programada' => null,
+        ]);
+
+        $this->actingAs($this->usuarioRepro())
+            ->post('/calendario/programar', [
+                'evaluado_orden_id' => $evaluado->id,
+                'fecha' => '2026-03-20',
+                'hora_inicio' => '09:00',
+                'hora_fin' => '11:00',
+                'sede_id' => $sede->id,
+            ])
+            ->assertRedirect();
+
+        $evaluado->refresh();
+        $this->assertEquals('programado', $evaluado->estado_programacion);
+        $this->assertNotNull($evaluado->fecha_programada);
     }
 
     public function test_programar_valida_hora_fin_posterior_a_inicio(): void
@@ -338,7 +361,7 @@ class CalendarioTest extends TestCase
 
     public function test_antitraslape_rechaza_solapamiento_mismo_poligrafista_misma_sede(): void
     {
-        $sede = Sede::factory()->create(['estado' => 1]);
+        $sede = Sede::factory()->create(['estado' => 1, 'capacidad' => 1]);
         $poligrafista = $this->usuarioRepro();
 
         // Cita existente: 9:00 - 12:00
@@ -445,7 +468,7 @@ class CalendarioTest extends TestCase
 
     public function test_antitraslape_permite_diferente_poligrafista(): void
     {
-        $sede = Sede::factory()->create(['estado' => 1]);
+        $sede = Sede::factory()->create(['estado' => 1, 'capacidad' => 2]);
         $polA = $this->usuarioRepro();
         $polB = $this->usuarioRepro();
 
@@ -472,6 +495,39 @@ class CalendarioTest extends TestCase
                 'hora_fin' => '12:00',
                 'sede_id' => $sede->id,
                 'poligrafista_id' => $polB->id,
+            ])
+            ->assertRedirect();
+
+        $evaluado2->refresh();
+        $this->assertEquals('programado', $evaluado2->estado_programacion);
+    }
+
+    public function test_antitraslape_permite_mismo_poligrafista_si_sede_tiene_capacidad(): void
+    {
+        $sede = Sede::factory()->create(['estado' => 1, 'capacidad' => 2]);
+        $poligrafista = $this->usuarioRepro();
+
+        $this->crearEvaluado([
+            'fecha_programada' => '2026-03-20 09:00:00',
+            'fecha_hora_fin' => '2026-03-20 12:00:00',
+            'sede_id' => $sede->id,
+            'poligrafista_id' => $poligrafista->id,
+            'estado_programacion' => 'programado',
+        ]);
+
+        $evaluado2 = $this->crearEvaluado([
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
+            'fecha_programada' => null,
+        ]);
+
+        $this->actingAs($poligrafista)
+            ->post('/calendario/programar', [
+                'evaluado_orden_id' => $evaluado2->id,
+                'fecha' => '2026-03-20',
+                'hora_inicio' => '10:00',
+                'hora_fin' => '13:00',
+                'sede_id' => $sede->id,
+                'poligrafista_id' => $poligrafista->id,
             ])
             ->assertRedirect();
 
@@ -807,7 +863,7 @@ class CalendarioTest extends TestCase
 
     public function test_sede_tiene_traslape_con_rango_cruzado(): void
     {
-        $sede = Sede::factory()->create(['estado' => 1]);
+        $sede = Sede::factory()->create(['estado' => 1, 'capacidad' => 1]);
         $poligrafista = $this->usuarioRepro();
 
         $this->crearEvaluado([

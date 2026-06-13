@@ -38,6 +38,9 @@ class Orden extends Model
         'requerimientos_generales',
         'prioridad',
         'resultados_visibles_empresa',
+        'archivada',
+        'archivada_at',
+        'archivada_por',
         'documentos_adjuntos',
     ];
 
@@ -49,6 +52,8 @@ class Orden extends Model
         'fecha_limite' => 'date',
         'documentos_adjuntos' => 'array',
         'resultados_visibles_empresa' => 'boolean',
+        'archivada' => 'boolean',
+        'archivada_at' => 'datetime',
         // H-09: PII cifrado en base de datos
         'observaciones_internas' => 'encrypted',
     ];
@@ -111,6 +116,11 @@ class Orden extends Model
         return $this->belongsTo(User::class, 'creado_por');
     }
 
+    public function archivadaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'archivada_por');
+    }
+
     /**
      * Relación con poligrafista asignado
      */
@@ -146,6 +156,16 @@ class Orden extends Model
     public function scopePorEmpresa($query, int $empresaId)
     {
         return $query->where('empresa_id', $empresaId);
+    }
+
+    public function scopeActivas($query)
+    {
+        return $query->where('archivada', false);
+    }
+
+    public function scopeArchivadas($query)
+    {
+        return $query->where('archivada', true);
     }
 
     public function scopeCreatedBy($query, int $userId)

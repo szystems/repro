@@ -74,7 +74,7 @@
     </div>
 
     <div class="col-md-2 mb-3">
-        <label class="form-label fw-semibold">Estado</label>
+        <label class="form-label fw-semibold">Estado de Sede</label>
         <select name="estado" class="form-select @error('estado') is-invalid @enderror">
             <option value="1" {{ old('estado', $sede->estado ?? 1) == 1 ? 'selected' : '' }}>Activa</option>
             <option value="0" {{ old('estado', $sede->estado ?? 1) == 0 ? 'selected' : '' }}>Inactiva</option>

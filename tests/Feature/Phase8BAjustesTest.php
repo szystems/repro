@@ -178,7 +178,7 @@ class Phase8BAjustesTest extends TestCase
         $response = $this->actingAs($admin)
             ->get(route('admin.cuestionarios.historial-dpi'));
         $response->assertStatus(200);
-        $response->assertSee('Historial por DPI');
+        $response->assertSee('Historial por DPI o nombre');
     }
 
     public function test_historial_dpi_busca_evaluado_por_dpi(): void
@@ -198,7 +198,7 @@ class Phase8BAjustesTest extends TestCase
         ]);
 
         $response = $this->actingAs($admin)
-            ->get(route('admin.cuestionarios.historial-dpi', ['dpi' => '1234567890123']));
+            ->get(route('admin.cuestionarios.historial-dpi', ['buscar' => '1234567890123']));
         $response->assertStatus(200);
         $response->assertSee('Carlos');
         $response->assertSee('López');
@@ -210,7 +210,7 @@ class Phase8BAjustesTest extends TestCase
         $admin->roles()->attach(Role::where('name', 'admin')->first());
 
         $response = $this->actingAs($admin)
-            ->get(route('admin.cuestionarios.historial-dpi', ['dpi' => '9999999999999']));
+            ->get(route('admin.cuestionarios.historial-dpi', ['buscar' => '9999999999999']));
         $response->assertStatus(200);
         $response->assertSee('No se encontraron registros');
     }
@@ -222,7 +222,7 @@ class Phase8BAjustesTest extends TestCase
 
         $response = $this->actingAs($admin)->get(url('dashboard'));
         $response->assertStatus(200);
-        $response->assertSee('Historial por DPI');
+        $response->assertSee('Historial por DPI o nombre');
     }
 
     // ─── 8B.7: Dirección del evaluado ───
