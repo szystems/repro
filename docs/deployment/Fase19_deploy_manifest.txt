@@ -1,5 +1,6 @@
 # Fase 19 — Manifiesto de deploy (git diff a096ed0b..8093ab0a)
-# 58 archivos de aplicación + public/deploy_migrate_fase19.php (one-shot, no en git)
+# 58 archivos de aplicación · verificado en FTP 2026-06-13 (58/58 tamaños OK)
+# Commits: 8093ab0a (código) · 14a95f47 (este manifiesto)
 
 app/Exports/EvaluacionesExport.php
 app/Http/Controllers/Admin/AdminController.php

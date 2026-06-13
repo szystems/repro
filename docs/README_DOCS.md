@@ -27,7 +27,7 @@ docs/
 | Documento | Propósito | Actualizado | Estado |
 |-----------|-----------|-------------|--------|
 | **ESTADO_ACTUAL.md** | Estado completo del proyecto | 23/01/2026 | ✅ CURRENT |
-| **CONTEXTO_AGENTES.md** | Contexto rápido para agentes IA | 23/01/2026 | ✅ CURRENT |
+| **CONTEXTO_AGENTES.md** | Contexto rápido para agentes IA | 13/06/2026 | ✅ CURRENT |
 | **AUDITORIA_NOVIEMBRE_2025.md** | Reporte de auditoría | 15/11/2025 | ✅ HISTÓRICO |
 
 ## 🏗️ DOCUMENTOS TÉCNICOS (`technical/`)

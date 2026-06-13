@@ -1,9 +1,11 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 23 de enero de 2026  
-**Estado:** ✅ MÓDULOS PRINCIPALES + NUEVAS FUNCIONALIDADES COMPLETADAS  
-**Versión:** 2.2.0 Producción  
+**Fecha de Contexto:** 13 de junio de 2026  
+**Estado:** ✅ FASE 19 DESPLEGADA EN PRODUCCIÓN  
+**Versión:** 2.3.0 Producción  
+**Plataforma:** https://reproappv2.szystems.com  
+**Repo:** https://github.com/szystems/repro · branch `master` · commit `14a95f47`
 
 ---
 
@@ -12,19 +14,23 @@
 ### 🎯 PROPÓSITO DEL SISTEMA
 REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA y socioeconómicas para empresas. Los usuarios empresariales crean órdenes con múltiples evaluados, los evaluados completan cuestionarios digitales, y REPRO realiza las evaluaciones y entrega resultados.
 
-### ⚡ ESTADO ACTUAL (Enero 2026)
-- ✅ **OPERACIONAL:** 9 módulos principales funcionando
-- ✅ **CUESTIONARIOS:** Flujo completo implementado + reenvío manual de correos
-- ✅ **PDFs:** Diseño unificado con branding REPRO (logo horizontal)
-- ✅ **ÓRDENES:** Sistema de estados completo
-- ✅ **SEGURO:** Sistema de permisos granular
-- ✅ **ÍNTEGRO:** Base de datos 100% consistente
-- ✅ **DASHBOARD:** Estadísticas por rol (Admin/REPRO vs Empresa)
-- ✅ **REPORTES:** Evaluaciones y Empresas con exportación PDF/Excel
-- ✅ **NOTIFICACIONES:** Emails automáticos y manuales
-- ✅ **PORTAL EMPRESA:** Navegación completa para usuarios empresa
-- ✅ **TESTS:** 79+ tests automatizados pasando
-- ✅ **PRODUCCIÓN:** Listo para despliegue (código limpio)
+### ⚡ ESTADO ACTUAL (Junio 2026)
+- ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 desplegadas en iPage (`reproappv2.szystems.com`)
+- ✅ **4 ESTADOS INDEPENDIENTES:** Formulario / Programación / Evaluación / Orden (Fase 18)
+- ✅ **FASE 19:** Fix duplicación órdenes, capacidad por sede, historial empresa, archivar órdenes, búsqueda DPI/nombre
+- ✅ **TESTS:** 653 tests pasando (PHPUnit 11, PHP 8.3, Docker `repro-app`)
+- ✅ **SEGURIDAD:** Permisos granulares + middleware `role` / `permission`
+- ✅ **NOTIFICACIONES:** In-app ampliadas (creador, empresa, colaboradores — Fase 18)
+- ⏳ **PENDIENTE OPS:** Cron iPage para auto-transiciones formulario 24h/30d (o fallback on-access)
+
+### 📚 Documentación clave
+| Documento | Uso |
+|-----------|-----|
+| `PROGRESS.md` | Seguimiento activo por fase |
+| `docs/Fase19_Alcance_Definitivo_2026-06-12.md` | Alcance Fase 19 aprobado |
+| `docs/Informe_Cliente_2026-06-12_Fase19.md` | Informe para el cliente |
+| `docs/deployment/Fase19_deploy_manifest.txt` | 58 archivos del último deploy |
+| `docs/status/CONTEXTO_AGENTES.md` | Este archivo |
 
 ---
 
@@ -69,17 +75,26 @@ EVALUADOS → NO SON USUARIOS → Acceso por token único
 
 ### 4. ÓRDENES ✅
 - CRUD completo con múltiples evaluados
-- 10 estados de workflow
 - Códigos únicos: ORD-YYYY-NNNN
 - PDF de orden con evaluados
-- Cambio de estados con observaciones
-- **NUEVO:** Botón reenviar correo a evaluados
+- Cambio de estados con observaciones e historial (`estado_historial`)
+- **Fase 18:** 4 estados independientes por candidato (ver abajo)
+- **Fase 19:** Editar orden sin duplicar candidatos · archivar (solo admin, no borrar)
+- **Fase 19:** Filtro órdenes archivadas (admin)
 
-**Estados:**
+**Estados por candidato (Fase 18 — modelo vigente):**
 ```
-solicitud → autorizacion → requisito → programacion → 
-en_proceso → analisis → preliminar → final → entregado/cancelado
+estado_formulario    → 5 valores (link_enviado, pendiente_de_llenar, formulario_completado_y_recibido, etc.)
+estado_programacion  → 8 valores (contactando, programado, inasistencia, proceso_realizado, etc.)
+estado_evaluacion    → 7 valores (pendiente_de_evaluacion → en_proceso → en_revision → informe_final_enviado)
+Orden.estado         → 4 valores automáticos: orden_recibida, en_proceso, entregado, cancelado
 ```
+
+**Sinergia vigente (Fase 19):**
+- S4: En Proceso exige formulario completado
+- S5: En Proceso exige haber estado Programado
+- S2 eliminado: Virtual puede programarse sin formulario
+- Capacidad de citas por `sedes.capacidad`, no por poligrafista
 
 ### 5. CUESTIONARIOS (ADMIN) ✅
 - Ver, editar, marcar completo
@@ -98,14 +113,11 @@ en_proceso → analisis → preliminar → final → entregado/cancelado
 - Guardado automático
 - Página de confirmación
 
-### 7. DASHBOARD ✅ (NUEVO)
-- Estadísticas diferenciadas por rol
-- Tarjetas: Órdenes, Evaluados, Completados, Pendientes
-- Listas de recientes con acciones rápidas
-- Accesos directos a funcionalidades
+### 7. DASHBOARD ✅
+- Estadísticas diferenciadas por rol (Admin/REPRO vs Empresa)
+- **Fase 19:** Búsqueda de candidatos por DPI o nombre (dashboard empresa)
 
 **Ruta:** `GET /dashboard`
-**Tests:** 6 tests pasando
 
 ### 8. REPORTES ✅ (NUEVO)
 - Reporte de Evaluaciones con filtros
@@ -122,18 +134,14 @@ GET /reportes/evaluaciones/excel - Exportar Excel
 ```
 **Tests:** 10 tests pasando
 
-### 9. PORTAL EMPRESA ✅ (NUEVO)
-- Dashboard específico para usuarios empresa
-- Navegación completa: órdenes, evaluados, cuestionarios
-- Visualización de resultados cuando disponibles
-- Redirección automática después de crear/editar órdenes
-- Botones "Copiar enlace" para compartir links de cuestionarios
-- Acceso restringido a cuestionarios según `resultadosDisponiblesParaEmpresa()`
+### 9. PORTAL EMPRESA ✅
+- Dashboard con búsqueda de candidatos (Fase 19)
+- Navegación: órdenes, evaluados, cuestionarios
+- **Fase 19:** Historial de estados visible (config `historial_visible_empresa`, default ON)
+- Visualización de resultados cuando `resultados_visibles_empresa` activo
+- No ve órdenes archivadas
 
-**Controlador:** `EmpresaController.php`
-**Métodos:**
-- `verOrden($id)` - Ver detalle de orden con evaluados
-- `verCuestionario($id)` - Ver cuestionario completado (si disponible)
+**Controlador:** `EmpresaController.php` · `AdminController.php` (dashboard empresa)
 
 ### 10. NOTIFICACIONES EMAIL ✅
 - Email al asignar evaluado (automático)
@@ -403,16 +411,14 @@ php artisan view:clear
 
 ## RESUMEN DE TESTS
 
-| Módulo | Tests | Estado |
-|--------|-------|--------|
-| Dashboard | 6 | ✅ Pasando |
-| Reportes | 10 | ✅ Pasando |
-| Notificaciones | 8 | ✅ Pasando |
-| Órdenes | 7 | ✅ Pasando |
-| Cuestionarios | 34 | ✅ 32 pasando, 2 pendientes |
-| Portal Empresa | 5 | ✅ Pasando |
-| Otros | 9 | ✅ Pasando |
-| **TOTAL** | **79+** | **✅ Funcionando** |
+| Área | Tests | Estado |
+|------|-------|--------|
+| Suite completa | 653 | ✅ Pasando (2026-06-13) |
+| Fase 19 | `Fase19Sprint3Test` | ✅ Historial, archivar, búsqueda |
+| Sinergia | `Fase18SinergiaReglasSemana3Test` | ✅ S4, S5, S2 eliminado |
+| Calendario | `CalendarioTest` | ✅ Capacidad sede |
+
+**Ejecutar:** `docker exec repro-app php -d memory_limit=512M vendor/bin/phpunit`
 
 ---
 
@@ -460,21 +466,20 @@ return redirect()->route('ordenes.index')->with('status', '...');
 ## DESPLIEGUE EN PRODUCCIÓN
 
 ### Hosting: iPage
-- **URL:** https://reproapp.szystems.com/
+- **URL:** https://reproappv2.szystems.com
 - **Guía:** `docs/deployment/IPAGE_DEPLOY.md`
-- **Archivos especiales:**
-  - `.env_ipage` → Renombrar a `.env` en servidor
-  - `.htaccess_ipage_root` → Renombrar a `.htaccess` en raíz
+- **Manifiesto Fase 19:** `docs/deployment/Fase19_deploy_manifest.txt` (58 archivos)
+- **Último deploy:** 2026-06-13 · commits `8093ab0a`, `14a95f47` · migraciones batch 111
 
-### Carpetas a subir:
+### Carpetas típicas a subir (FTP):
 ```
-app/, bootstrap/, config/, database/, public/,
-resources/, routes/, storage/, vendor/
+app/, database/, resources/, routes/  (+ vendor/ en deploy completo)
 ```
 
-### Archivos raíz a subir:
+### Migraciones Fase 19 (ya aplicadas en prod):
 ```
-artisan, composer.json, composer.lock, server.php
+2026_06_10_120000_add_historial_visible_empresa_to_configs_table
+2026_06_10_120001_add_archivada_fields_to_ordenes_table
 ```
 
 ---
@@ -487,5 +492,5 @@ artisan, composer.json, composer.lock, server.php
 
 ---
 
-**Última actualización:** 23 de enero de 2026  
-**Estado:** ✅ ACTUALIZADO Y VÁLIDO  
+**Última actualización:** 13 de junio de 2026  
+**Estado:** ✅ Fase 19 desplegada — contexto alineado con `PROGRESS.md`

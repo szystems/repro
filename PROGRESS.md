@@ -2,10 +2,11 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-06-10 — **Fase 18 COMPLETADA, DESPLEGADA e informe enviado al cliente**
-**Suite de tests:** 544 pasando / 2 fallos preexistentes sin relación (rutas creación usuario `show-user`/`insert-user`) — verificado 2026-06-10
-**Deploy a producción:** ✅ COMPLETO 2026-06-10 — commit `53c6487c` · https://reproappv2.szystems.com · 6 migraciones Fase 18 aplicadas · caché limpiado
-**Informe cliente:** `docs/Informe_Cliente_2026-06-10.md` (enviado al cliente 2026-06-10)
+**Ultima actualizacion:** 2026-06-13 — **Fase 19 COMPLETADA, DESPLEGADA y verificada en producción**
+**Suite de tests:** 653 pasando — verificado 2026-06-13 (Fase 19 + regresión S4/S5)
+**Deploy a producción:** ✅ COMPLETO 2026-06-13 — commits `8093ab0a` + `14a95f47` · https://reproappv2.szystems.com · 2 migraciones Fase 19 (batch 111) · 58/58 archivos verificados FTP
+**Informe cliente:** `docs/Informe_Cliente_2026-06-12_Fase19.md` · Fase 18: `docs/Informe_Cliente_2026-06-10.md`
+**Alcance Fase 19:** `docs/Fase19_Alcance_Definitivo_2026-06-12.md` · Manifiesto deploy: `docs/deployment/Fase19_deploy_manifest.txt`
 **Resumen pre-despliegue:** `docs/resumen_cambios_cliente.md`
 
 ---
@@ -32,6 +33,7 @@
 | Fase 16 | Observaciones cliente 2026-05-22 | ✅ COMPLETADA Y DEPLOYADA |
 | Fase 17 | Transiciones de estado ampliadas (cliente pide control total) | ❌ CANCELADA (reemplazada por Fase 18) |
 | Fase 18 | Rediseño a 4 estados independientes (Formulario/Programación/Evaluación/Orden) | ✅ COMPLETADA Y DEPLOYADA 2026-06-10 — informe enviado al cliente |
+| Fase 19 | Ajustes confirmados cliente 11/06 (duplicación, capacidad sede, historial empresa, archivar, búsqueda) | ✅ COMPLETADA Y DEPLOYADA 2026-06-13 — informe listo para cliente |
 
 ---
 
@@ -1416,4 +1418,39 @@ docker compose exec -T app php artisan test
 | **Documentación previa** | `docs/resumen_cambios_cliente.md` |
 | **Pendiente operativo** | Cron iPage para auto-transiciones 24h/30d |
 
-**Próximo desarrollo:** según feedback del cliente tras pruebas en producción, o ítems del backlog anterior.
+**Próximo desarrollo:** según feedback del cliente tras pruebas Fase 18 (ya desplegada).
+
+---
+
+## ✅ Cierre Fase 19 — 2026-06-13
+
+| Hito | Detalle |
+|------|---------|
+| **Commit código** | `8093ab0a` — 73 archivos (fix duplicación, capacidad sede, historial empresa, archivar, búsqueda DPI/nombre) |
+| **Commit manifiesto** | `14a95f47` — `docs/deployment/Fase19_deploy_manifest.txt` (58 archivos app) |
+| **Plataforma** | https://reproappv2.szystems.com |
+| **Migraciones** | 2/2 aplicadas en `dbreprov2` (batch 111): `historial_visible_empresa`, `ordenes.archivada` |
+| **Verificación deploy** | 58/58 tamaños OK en FTP · MD5 OK en 6 archivos críticos · HTTP 200 |
+| **Informe cliente** | `docs/Informe_Cliente_2026-06-12_Fase19.md` |
+| **Tests** | 653 pasando (`Fase19Sprint3Test`, sinergia S4/S5, `CalendarioTest` capacidad sede) |
+
+### Entregables Fase 19 (Sprints 1–4)
+
+| Sprint | Entregas |
+|--------|----------|
+| 1 P0 | Fix duplicación al editar orden · capacidad por sede · quitar S2 (Virtual sin formulario al programar) |
+| 2 UI | Etiquetas "Estado de…" · cuestionarios 3 estados + progreso · reportes · calendario inasistencia · sidebar informes · poligrafista/responsable opcionales |
+| 3 Features | Historial visible empresa (config default ON) · historial búsqueda por nombre · archivar órdenes (solo admin) · búsqueda dashboard cliente |
+| 4 QA/Deploy | Regresión S4/S5 · 653 tests · informe cliente · deploy iPage verificado |
+
+### Reglas de sinergia vigentes (post-Fase 19)
+
+- **S4 ACTIVO:** En Proceso exige formulario completado
+- **S5 ACTIVO:** En Proceso exige haber estado Programado
+- **S2 ELIMINADO:** Virtual puede programarse sin formulario completado
+- **Capacidad:** límite por `sedes.capacidad`, no por poligrafista
+- **Órdenes:** archivar (admin), no borrar
+
+**Pendiente operativo (heredado):** Cron iPage para `formulario:auto-transiciones` 24h/30d; fallback on-access si no hay cron.
+
+**Próximo desarrollo:** feedback del cliente tras revisión Fase 19 en producción.
