@@ -2,8 +2,8 @@
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
 **Fecha de Contexto:** 16 de junio de 2026  
-**Estado:** 🔄 FASE 20 EN CURSO (hotfix enlace cuestionario) · Fase 19 desplegada  
-**Versión:** 2.3.1 Desarrollo  
+**Estado:** ✅ FASE 20 DESPLEGADA · Fase 19 en producción  
+**Versión:** 2.3.1 Producción  
 **Plataforma:** https://reproappv2.szystems.com  
 **Repo:** https://github.com/szystems/repro · branch `master` · commit `14a95f47`
 
@@ -16,7 +16,7 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 
 ### ⚡ ESTADO ACTUAL (Junio 2026)
 - ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 desplegadas en iPage (`reproappv2.szystems.com`)
-- 🔄 **FASE 20 (en curso):** Hotfix enlace cuestionario — vista dedicada 404, logging, vigencia token mínima
+- 🔄 **FASE 20 (desplegada 2026-06-16):** Hotfix enlace cuestionario — vista dedicada 404, logging, vigencia token mínima
 - ✅ **4 ESTADOS INDEPENDIENTES:** Formulario / Programación / Evaluación / Orden (Fase 18)
 - ✅ **FASE 19:** Fix duplicación órdenes, capacidad por sede, historial empresa, archivar órdenes, búsqueda DPI/nombre
 - ✅ **TESTS:** 653+ tests (PHPUnit 11, PHP 8.3, Docker `repro-app`)

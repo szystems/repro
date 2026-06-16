@@ -2,9 +2,8 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-06-16 — **Fase 20 en curso** (hotfix enlace cuestionario 404)
-**Suite de tests:** 653+ pasando — verificado 2026-06-13 (Fase 19 + regresión S4/S5)
-**Deploy a producción:** ✅ COMPLETO 2026-06-13 — commits `8093ab0a` + `14a95f47` · https://reproappv2.szystems.com · 2 migraciones Fase 19 (batch 111) · 58/58 archivos verificados FTP
+**Ultima actualizacion:** 2026-06-16 — **Fase 20 DESPLEGADA en producción**
+**Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
 **Informe cliente:** `docs/Informe_Cliente_2026-06-12_Fase19.md` · Fase 18: `docs/Informe_Cliente_2026-06-10.md`
 **Alcance Fase 19:** `docs/Fase19_Alcance_Definitivo_2026-06-12.md` · Manifiesto deploy: `docs/deployment/Fase19_deploy_manifest.txt`
 **Resumen pre-despliegue:** `docs/resumen_cambios_cliente.md`
@@ -34,7 +33,7 @@
 | Fase 17 | Transiciones de estado ampliadas (cliente pide control total) | ❌ CANCELADA (reemplazada por Fase 18) |
 | Fase 18 | Rediseño a 4 estados independientes (Formulario/Programación/Evaluación/Orden) | ✅ COMPLETADA Y DEPLOYADA 2026-06-10 — informe enviado al cliente |
 | Fase 19 | Ajustes confirmados cliente 11/06 (duplicación, capacidad sede, historial empresa, archivar, búsqueda) | ✅ COMPLETADA Y DEPLOYADA 2026-06-13 — informe listo para cliente |
-| Fase 20 | Hotfix enlace cuestionario — UX 404, logging, vigencia token | 🔄 EN CURSO (2026-06-16) |
+| Fase 20 | Hotfix enlace cuestionario — UX 404, logging, vigencia token | ✅ DEPLOYADA 2026-06-16 |
 
 ---
 
@@ -1478,8 +1477,14 @@ Mejorar diagnóstico y UX del acceso público `/cuestionario/{token}` sin cambia
 
 ### Pendiente Fase 20 (post-hotfix)
 - Validar expiración en `terminos()` / `estadoCandidato()` (consistencia)
-- Diagnosticar caso concreto del cliente en producción (URL + BD)
-- **Deploy a iPage** (commit + manifiesto) — código listo, pendiente subida
+- Diagnosticar caso concreto del cliente en producción (URL + BD + logs `Acceso a cuestionario rechazado`)
+- Push GitHub commit `45c89dc5` (pendiente aprobación remota)
+
+### Deploy 2026-06-16
+- **FTP:** 5 archivos según `docs/deployment/Fase20_deploy_manifest.txt`
+- **Migraciones:** ninguna
+- **Caché:** `deploy_cache_fase20.php` ejecutado y auto-eliminado (56 vistas + OPcache)
+- **Verificación:** `/login` HTTP 200 · `/cuestionario/token-invalido-*` muestra vista dedicada
 
 ### Archivos tocados
 - `app/Http/Controllers/CuestionarioController.php`
