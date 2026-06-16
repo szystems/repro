@@ -764,7 +764,7 @@ class OrdenesController extends Controller
                 'direccion' => $evaluadoData['direccion'] ?? null,
                 'orden_id' => $orden->id,
                 'token_unico' => Str::random(32),
-                'token_expira_at' => now()->addDays((int) (\App\Models\Config::value('dias_vigencia_token') ?? 30)),
+                'token_expira_at' => EvaluadoOrden::calcularExpiracionToken(),
                 // Nuevos campos granulares
                 'tipo_servicio' => $evaluadoData['tipo_servicio'],
                 // Regla de negocio: socioeconómico siempre usa formulario preempleo
@@ -1132,7 +1132,7 @@ class OrdenesController extends Controller
             // Regenerar token si expiró
             $evaluado->update([
                 'token_unico' => EvaluadoOrden::generarToken(),
-                'token_expira_at' => now()->addDays((int) (\App\Models\Config::value('dias_vigencia_token') ?? 30)),
+                'token_expira_at' => EvaluadoOrden::calcularExpiracionToken(),
             ]);
             $evaluado->refresh();
         }
@@ -1363,7 +1363,7 @@ class OrdenesController extends Controller
                 'completado_at'              => null,
                 'estado_formulario'          => 'link_pendiente',
                 'token_unico'                => EvaluadoOrden::generarToken(),
-                'token_expira_at'            => now()->addDays((int) (\App\Models\Config::value('dias_vigencia_token') ?? 30)),
+                'token_expira_at'            => EvaluadoOrden::calcularExpiracionToken(),
             ]);
 
             DB::commit();

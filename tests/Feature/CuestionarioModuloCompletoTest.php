@@ -98,6 +98,7 @@ class CuestionarioModuloCompletoTest extends TestCase
         $response = $this->get('/cuestionario/token-invalido-12345');
 
         $response->assertStatus(404);
+        $response->assertSee('Enlace no válido');
     }
 
     /**
@@ -114,8 +115,9 @@ class CuestionarioModuloCompletoTest extends TestCase
 
         $response = $this->get("/cuestionario/{$evaluadoExpirado->token_unico}");
 
-        // Token expirado debe retornar 404 (no encontrado/inválido)
+        // Token expirado debe retornar 404 con mensaje específico
         $response->assertStatus(404);
+        $response->assertSee('Enlace expirado');
     }
 
     /**

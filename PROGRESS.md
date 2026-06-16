@@ -2,8 +2,8 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-06-13 — **Fase 19 COMPLETADA, DESPLEGADA y verificada en producción**
-**Suite de tests:** 653 pasando — verificado 2026-06-13 (Fase 19 + regresión S4/S5)
+**Ultima actualizacion:** 2026-06-16 — **Fase 20 en curso** (hotfix enlace cuestionario 404)
+**Suite de tests:** 653+ pasando — verificado 2026-06-13 (Fase 19 + regresión S4/S5)
 **Deploy a producción:** ✅ COMPLETO 2026-06-13 — commits `8093ab0a` + `14a95f47` · https://reproappv2.szystems.com · 2 migraciones Fase 19 (batch 111) · 58/58 archivos verificados FTP
 **Informe cliente:** `docs/Informe_Cliente_2026-06-12_Fase19.md` · Fase 18: `docs/Informe_Cliente_2026-06-10.md`
 **Alcance Fase 19:** `docs/Fase19_Alcance_Definitivo_2026-06-12.md` · Manifiesto deploy: `docs/deployment/Fase19_deploy_manifest.txt`
@@ -34,6 +34,7 @@
 | Fase 17 | Transiciones de estado ampliadas (cliente pide control total) | ❌ CANCELADA (reemplazada por Fase 18) |
 | Fase 18 | Rediseño a 4 estados independientes (Formulario/Programación/Evaluación/Orden) | ✅ COMPLETADA Y DEPLOYADA 2026-06-10 — informe enviado al cliente |
 | Fase 19 | Ajustes confirmados cliente 11/06 (duplicación, capacidad sede, historial empresa, archivar, búsqueda) | ✅ COMPLETADA Y DEPLOYADA 2026-06-13 — informe listo para cliente |
+| Fase 20 | Hotfix enlace cuestionario — UX 404, logging, vigencia token | 🔄 EN CURSO (2026-06-16) |
 
 ---
 
@@ -1453,4 +1454,37 @@ docker compose exec -T app php artisan test
 
 **Pendiente operativo (heredado):** Cron iPage para `formulario:auto-transiciones` 24h/30d; fallback on-access si no hay cron.
 
-**Próximo desarrollo:** feedback del cliente tras revisión Fase 19 en producción.
+**Próximo desarrollo:** Fase 20 hotfix enlace cuestionario (reporte cliente 404) → deploy cuando tests pasen.
+
+---
+
+## FASE 20 — Hotfix enlace cuestionario (2026-06-16)
+
+**Origen:** Cliente reportó 404 al abrir enlace de formulario en pruebas recientes. Análisis: el 404 genérico ocultaba token inválido/expirado; posible `dias_vigencia_token = 0` en BD.
+
+### Objetivo
+Mejorar diagnóstico y UX del acceso público `/cuestionario/{token}` sin cambiar el flujo principal.
+
+### Alcance (paquete mínimo)
+
+| # | Item | Estado |
+|---|------|--------|
+| 1 | Vista dedicada `cuestionario/enlace-invalido` (token no encontrado vs expirado) | ✅ |
+| 2 | Logging en acceso rechazado (`motivo`, prefijo token, evaluado_id) | ✅ |
+| 3 | `Config::diasVigenciaTokenEnlace()` con mínimo 1 día (0 → 30) | ✅ |
+| 4 | `EvaluadoOrden::calcularExpiracionToken()` centralizado en OrdenesController | ✅ |
+| 5 | Fix `getUrlCuestionario()` → ruta `cuestionario.mostrar` | ✅ |
+| 6 | Tests `CuestionarioEnlaceInvalidoTest` | ✅ (5 tests OK 2026-06-16) |
+
+### Pendiente Fase 20 (post-hotfix)
+- Validar expiración en `terminos()` / `estadoCandidato()` (consistencia)
+- Diagnosticar caso concreto del cliente en producción (URL + BD)
+- **Deploy a iPage** (commit + manifiesto) — código listo, pendiente subida
+
+### Archivos tocados
+- `app/Http/Controllers/CuestionarioController.php`
+- `app/Http/Controllers/Admin/OrdenesController.php`
+- `app/Models/Config.php`, `app/Models/EvaluadoOrden.php`
+- `resources/views/cuestionario/enlace-invalido.blade.php`
+- `tests/Feature/CuestionarioEnlaceInvalidoTest.php`
+- `tests/Feature/CuestionarioModuloCompletoTest.php`

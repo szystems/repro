@@ -1,0 +1,8 @@
+# Fase 20 — Hotfix enlace cuestionario (404 UX + logging + vigencia token)
+# Sin migraciones · 5 archivos de aplicación + script caché temporal
+
+app/Http/Controllers/CuestionarioController.php
+app/Http/Controllers/Admin/OrdenesController.php
+app/Models/Config.php
+app/Models/EvaluadoOrden.php
+resources/views/cuestionario/enlace-invalido.blade.php

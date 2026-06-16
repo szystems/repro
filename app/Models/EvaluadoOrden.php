@@ -337,6 +337,14 @@ class EvaluadoOrden extends Model
     }
 
     /**
+     * Fecha de expiración para un token nuevo o regenerado.
+     */
+    public static function calcularExpiracionToken(): \Illuminate\Support\Carbon
+    {
+        return now()->addDays(Config::diasVigenciaTokenEnlace());
+    }
+
+    /**
      * Verificar si el token es válido
      * 
      * @return bool
@@ -389,7 +397,7 @@ class EvaluadoOrden extends Model
      */
     public function getUrlCuestionario(): string
     {
-        return route('cuestionario.show', ['token' => $this->token_unico]);
+        return route('cuestionario.mostrar', ['token' => $this->token_unico]);
     }
 
     /**

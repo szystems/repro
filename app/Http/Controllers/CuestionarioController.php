@@ -14,6 +14,7 @@ use App\Models\FormularioCampo;
 use App\Models\User;
 use App\Notifications\CuestionarioCompletadoNotification;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -32,11 +33,12 @@ class CuestionarioController extends Controller
     public function mostrar(string $token)
     {
         try {
-            // Buscar evaluado por token
-            $evaluado = EvaluadoOrden::where('token_unico', $token)
-                ->where('token_expira_at', '>', now())
-                ->with(['orden.empresa'])
-                ->firstOrFail();
+            $resultado = $this->evaluadoConTokenVigente($token);
+            if ($resultado instanceof Response) {
+                return $resultado;
+            }
+
+            $evaluado = $resultado->loadMissing(['orden.empresa']);
 
             // Verificar si ya completó el cuestionario — mostrar estado del proceso
             if ($evaluado->cuestionario_completado) {
@@ -48,26 +50,17 @@ class CuestionarioController extends Controller
 
             // Verificar si ya existe un cuestionario iniciado
             $cuestionario = $evaluado->cuestionario;
-            
-            // Comentado temporalmente para debug
-            // if (!$cuestionario) {
-            //     // Crear nuevo cuestionario
-            //     $cuestionario = $this->crearCuestionario($evaluado);
-            // }
 
             // Redirigir a verificación de identidad
             return view('cuestionario.verificar-identidad', compact('evaluado', 'token'));
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Token no encontrado o expirado
-            abort(404, 'El enlace al cuestionario no es válido o ha expirado.');
         } catch (\Exception $e) {
             Log::error('Error en cuestionario.mostrar', [
-                'token' => $token,
+                'token_prefijo' => substr($token, 0, 8),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             abort(500, 'Ha ocurrido un error al cargar el cuestionario.');
         }
     }
@@ -757,5 +750,53 @@ class CuestionarioController extends Controller
         ]);
 
         return back()->with('success', 'Documento subido correctamente.');
+    }
+
+    /**
+     * Resuelve evaluado por token exigiendo vigencia, o responde con vista de enlace inválido.
+     */
+    private function evaluadoConTokenVigente(string $token): EvaluadoOrden|Response
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)->first();
+
+        if (!$evaluado) {
+            return $this->respuestaEnlaceInvalido($token, 'no_encontrado');
+        }
+
+        if (!$evaluado->token_expira_at || $evaluado->token_expira_at->lte(now())) {
+            return $this->respuestaEnlaceInvalido($token, 'expirado', $evaluado);
+        }
+
+        return $evaluado;
+    }
+
+    /**
+     * Vista y log cuando el enlace del cuestionario no puede usarse.
+     */
+    private function respuestaEnlaceInvalido(string $token, string $motivo, ?EvaluadoOrden $evaluado = null): Response
+    {
+        Log::warning('Acceso a cuestionario rechazado', [
+            'motivo' => $motivo,
+            'token_prefijo' => substr($token, 0, 8),
+            'token_longitud' => strlen($token),
+            'evaluado_id' => $evaluado?->id,
+            'token_expira_at' => $evaluado?->token_expira_at?->toIso8601String(),
+            'estado_formulario' => $evaluado?->estado_formulario,
+        ]);
+
+        [$titulo, $mensaje, $detalle] = match ($motivo) {
+            'expirado' => [
+                'Enlace expirado',
+                'El enlace para completar su formulario ya no está vigente.',
+                'Solicite a la empresa o a REPRO que le reenvíen un enlace nuevo. Si recibió el enlace por correo hace varios días, es posible que se haya generado uno más reciente.',
+            ],
+            default => [
+                'Enlace no válido',
+                'No pudimos encontrar un formulario asociado a este enlace.',
+                'Verifique que copió la dirección completa (debe comenzar con reproappv2.szystems.com/cuestionario/…). Si el enlace vino por correo o WhatsApp, pida uno nuevo desde la orden de evaluación.',
+            ],
+        };
+
+        return response()->view('cuestionario.enlace-invalido', compact('titulo', 'mensaje', 'detalle', 'motivo'), 404);
     }
 }

@@ -43,4 +43,14 @@ class Config extends Model
 
         return $config ? (bool) $config->historial_visible_empresa : true;
     }
+
+    /**
+     * Días de vigencia del enlace público del cuestionario (mínimo 1).
+     */
+    public static function diasVigenciaTokenEnlace(): int
+    {
+        $dias = (int) (static::value('dias_vigencia_token') ?? 30);
+
+        return max(1, $dias > 0 ? $dias : 30);
+    }
 }

@@ -1,9 +1,9 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 13 de junio de 2026  
-**Estado:** ✅ FASE 19 DESPLEGADA EN PRODUCCIÓN  
-**Versión:** 2.3.0 Producción  
+**Fecha de Contexto:** 16 de junio de 2026  
+**Estado:** 🔄 FASE 20 EN CURSO (hotfix enlace cuestionario) · Fase 19 desplegada  
+**Versión:** 2.3.1 Desarrollo  
 **Plataforma:** https://reproappv2.szystems.com  
 **Repo:** https://github.com/szystems/repro · branch `master` · commit `14a95f47`
 
@@ -16,9 +16,10 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 
 ### ⚡ ESTADO ACTUAL (Junio 2026)
 - ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 desplegadas en iPage (`reproappv2.szystems.com`)
+- 🔄 **FASE 20 (en curso):** Hotfix enlace cuestionario — vista dedicada 404, logging, vigencia token mínima
 - ✅ **4 ESTADOS INDEPENDIENTES:** Formulario / Programación / Evaluación / Orden (Fase 18)
 - ✅ **FASE 19:** Fix duplicación órdenes, capacidad por sede, historial empresa, archivar órdenes, búsqueda DPI/nombre
-- ✅ **TESTS:** 653 tests pasando (PHPUnit 11, PHP 8.3, Docker `repro-app`)
+- ✅ **TESTS:** 653+ tests (PHPUnit 11, PHP 8.3, Docker `repro-app`)
 - ✅ **SEGURIDAD:** Permisos granulares + middleware `role` / `permission`
 - ✅ **NOTIFICACIONES:** In-app ampliadas (creador, empresa, colaboradores — Fase 18)
 - ⏳ **PENDIENTE OPS:** Cron iPage para auto-transiciones formulario 24h/30d (o fallback on-access)
@@ -31,6 +32,7 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 | `docs/Informe_Cliente_2026-06-12_Fase19.md` | Informe para el cliente |
 | `docs/deployment/Fase19_deploy_manifest.txt` | 58 archivos del último deploy |
 | `docs/status/CONTEXTO_AGENTES.md` | Este archivo |
+| `PROGRESS.md` → sección Fase 20 | Hotfix enlace cuestionario 404 |
 
 ---
 
@@ -107,7 +109,10 @@ Orden.estado         → 4 valores automáticos: orden_recibida, en_proceso, ent
 - **NUEVO:** Reenvío manual de correos
 
 ### 6. CUESTIONARIOS (PÚBLICO) ✅
-- Acceso por token sin autenticación
+- Ruta: `GET /cuestionario/{token}` (`cuestionario.mostrar`) — **no** `/cuestionarios/` (admin)
+- Acceso por token sin autenticación; exige `token_expira_at > now()`
+- **Fase 20:** vista `enlace-invalido` distingue token inexistente vs expirado; log `Acceso a cuestionario rechazado`
+- Vigencia: `Config::diasVigenciaTokenEnlace()` (mín. 1 día; 0 en BD → 30)
 - Verificación de identidad por DPI
 - Navegación por secciones
 - Guardado automático
