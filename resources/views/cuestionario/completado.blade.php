@@ -144,9 +144,17 @@
                             <i class="fas fa-print"></i> Imprimir Confirmación
                         </button>
                         
-                        <button type="button" class="btn btn-secondary" onclick="window.close()">
+                        <button type="button" class="btn btn-secondary" id="btnCerrarVentana">
                             <i class="fas fa-times"></i> Cerrar Ventana
                         </button>
+                    </div>
+                    <div id="cerrarVentanaAyuda" class="alert alert-info mt-3 text-start" role="status">
+                        <strong><i class="fas fa-info-circle"></i> Para salir</strong>
+                        <p class="mb-0 small mt-1">
+                            Cuando termine, cierre esta pestaña del navegador manualmente
+                            (<kbd>Ctrl</kbd>+<kbd>W</kbd> en Windows/Linux, <kbd>⌘</kbd>+<kbd>W</kbd> en Mac)
+                            o use el botón <strong>Cerrar Ventana</strong> para ver estas instrucciones en pantalla.
+                        </p>
                     </div>
                 </div>
                 
@@ -395,6 +403,46 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var btnCerrar = document.getElementById('btnCerrarVentana');
+    var ayudaCerrar = document.getElementById('cerrarVentanaAyuda');
+
+    function mostrarInstruccionesCierre() {
+        if (ayudaCerrar) {
+            ayudaCerrar.classList.remove('d-none');
+            ayudaCerrar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'info',
+                title: 'Puede cerrar esta pestaña',
+                html: 'Los navegadores no permiten cerrar pestañas abiertas desde un enlace.<br><br>' +
+                    'Cierre esta ventana manualmente con <strong>Ctrl+W</strong> (Windows/Linux) ' +
+                    'o <strong>⌘+W</strong> (Mac).',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#6c757d',
+            });
+            return;
+        }
+
+        window.alert('Puede cerrar esta pestaña del navegador manualmente (Ctrl+W o ⌘+W).');
+    }
+
+    if (btnCerrar) {
+        btnCerrar.addEventListener('click', function() {
+            try {
+                window.close();
+            } catch (e) {
+                // Ignorar: la mayoría de navegadores bloquean window.close().
+            }
+
+            mostrarInstruccionesCierre();
+
+            btnCerrar.disabled = true;
+            btnCerrar.innerHTML = '<i class="fas fa-check"></i> Instrucciones mostradas';
+        });
+    }
+
     // Mostrar mensaje de éxito con confetti effect (si está disponible)
     if (typeof confetti !== 'undefined') {
         confetti({
@@ -403,18 +451,19 @@ document.addEventListener('DOMContentLoaded', function() {
             origin: { y: 0.6 }
         });
     }
-    
+
     // Mostrar firma en modal si se hace clic
     @if(isset($evaluado->cuestionario) && $evaluado->cuestionario->firma_digital)
         const showFirmaBtn = document.createElement('button');
+        showFirmaBtn.type = 'button';
         showFirmaBtn.className = 'btn btn-outline-info btn-sm mt-2';
         showFirmaBtn.innerHTML = '<i class="fas fa-signature"></i> Ver Firma Registrada';
         showFirmaBtn.setAttribute('data-bs-toggle', 'modal');
         showFirmaBtn.setAttribute('data-bs-target', '#firmaModal');
-        
-        const footer = document.querySelector('.footer-info');
-        if (footer) {
-            footer.parentNode.insertBefore(showFirmaBtn, footer);
+
+        const firmaAnchor = document.getElementById('btnCerrarVentana');
+        if (firmaAnchor && firmaAnchor.parentNode) {
+            firmaAnchor.parentNode.parentNode.appendChild(showFirmaBtn);
         }
     @endif
 });

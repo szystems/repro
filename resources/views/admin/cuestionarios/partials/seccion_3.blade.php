@@ -159,50 +159,45 @@
             </div>
         </div>
         
-        @if(isset($respuestas['historial_empleos']) && is_array($respuestas['historial_empleos']))
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0">Historial de Empleos</h6>
-                </div>
+        @php $tablas = $tablas ?? []; @endphp
+
+        @if(!empty($tablas['formacion_academica']))
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="mb-0">Formación académica</h6></div>
                 <div class="card-body">
-                    @foreach($respuestas['historial_empleos'] as $index => $empleo)
-                        <div class="row mb-4 {{ $index > 0 ? 'border-top pt-4' : '' }}">
-                            <div class="col-md-8">
-                                <h6 class="text-primary">
-                                    {{ $empleo['puesto'] ?? 'Puesto no especificado' }}
-                                    @if($empleo['es_actual'] ?? false)
-                                        <span class="badge bg-success ms-2">Actual</span>
-                                    @endif
-                                </h6>
-                                <p class="mb-1">
-                                    <i class="bi bi-building"></i> 
-                                    <strong>{{ $empleo['empresa'] ?? 'Empresa no especificada' }}</strong>
-                                </p>
-                                <p class="mb-1">
-                                    <i class="bi bi-calendar3"></i> 
-                                    {{ $empleo['fecha_inicio'] ?? 'N/A' }} - 
-                                    {{ ($empleo['es_actual'] ?? false) ? 'Presente' : ($empleo['fecha_fin'] ?? 'N/A') }}
-                                </p>
-                            </div>
-                        </div>
-                    @endforeach
+                    @include('admin.cuestionarios.partials.tabla-dinamica-resumen', [
+                        'filas' => $tablas['formacion_academica'],
+                        'columnas' => \App\Support\TablaDinamica::columnasFormacionAcademica(),
+                    ])
                 </div>
             </div>
-        @else
+        @endif
+
+        @if(!empty($tablas['empleos']))
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="mb-0">Historial de empleos</h6></div>
+                <div class="card-body">
+                    @include('admin.cuestionarios.partials.tabla-dinamica-resumen', [
+                        'filas' => $tablas['empleos'],
+                        'columnas' => \App\Support\TablaDinamica::columnasEmpleos(),
+                    ])
+                </div>
+            </div>
+        @endif
+
+        @if(count($respuestas) > 0 && empty($tablas['formacion_academica']) && empty($tablas['empleos']))
             <div class="card">
                 <div class="card-body">
-                    @if(count($respuestas) > 0)
-                        <table class="table table-borderless">
-                            @foreach($respuestas as $campo => $valor)
+                    <table class="table table-borderless mb-0">
+                        @foreach($respuestas as $campo => $valor)
+                            @if(!str_starts_with($campo, 'integridad_'))
                             <tr>
                                 <td class="fw-bold" style="width: 30%;">{{ ucfirst(str_replace('_', ' ', $campo)) }}:</td>
                                 <td>{{ is_array($valor) ? json_encode($valor) : $valor }}</td>
                             </tr>
-                            @endforeach
-                        </table>
-                    @else
-                        <p class="text-muted mb-0">No hay información registrada en esta sección.</p>
-                    @endif
+                            @endif
+                        @endforeach
+                    </table>
                 </div>
             </div>
         @endif

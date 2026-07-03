@@ -1343,16 +1343,19 @@ class OrdenesController extends Controller
 
             if ($cuestionario) {
                 $cuestionario->update([
-                    'completado'          => false,
-                    'bloqueado'           => false,
-                    'progreso_porcentaje' => 0,
-                    'completado_at'       => null,
-                    'ip_completado'       => null,
-                    'firma_digital'       => null,
-                    'acepta_terminos'     => false,
-                    'acepta_terminos_at'  => null,
-                    'firma_autorizacion'  => null,
-                    'ip_terminos'         => null,
+                    'completado'              => false,
+                    'bloqueado'               => false,
+                    'progreso_porcentaje'     => 0,
+                    'completado_at'           => null,
+                    'ip_completado'           => null,
+                    'firma_digital'           => null,
+                    'instrucciones_leidas_at' => null,
+                    'ip_instrucciones'        => null,
+                    'datos_precarga_json'     => null,
+                    'acepta_terminos'         => false,
+                    'acepta_terminos_at'      => null,
+                    'firma_autorizacion'      => null,
+                    'ip_terminos'             => null,
                 ]);
             }
 

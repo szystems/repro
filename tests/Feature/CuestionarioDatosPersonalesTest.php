@@ -7,11 +7,21 @@ use App\Models\Orden;
 use App\Models\Empresa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\CompletaFlujoCuestionario;
+use Tests\Support\FakeImage;
 use Tests\TestCase;
 
 class CuestionarioDatosPersonalesTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, CompletaFlujoCuestionario;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('local');
+    }
 
     private function crearEvaluadoValido()
     {
@@ -27,32 +37,24 @@ class CuestionarioDatosPersonalesTest extends TestCase
         ]);
     }
 
+    private function fotoValida(): UploadedFile
+    {
+        return FakeImage::jpeg('candidato.jpg');
+    }
+
+    private function datosCompletos(array $extra = []): array
+    {
+        return $this->datosSeccion1Preempleo($extra);
+    }
+
     public function test_puede_enviar_formulario_con_datos_validos(): void
     {
         $evaluado = $this->crearEvaluadoValido();
 
-        // Primero verificar identidad
-        $this->post("/cuestionario/{$evaluado->token_unico}/verificar", [
-            'dpi_ingresado' => '1234567890101'
-        ]);
+        // Primero verificar identidad y flujo previo
+        $this->verificarIdentidadYFlujoPreSeccion($evaluado->token_unico, '1234567890101');
 
-        $datosFormulario = [
-            'nombres_completos' => 'Juan Carlos',
-            'apellidos_completos' => 'Pérez García',
-            'dpi' => '1234567890101',
-            'fecha_nacimiento' => '1990-05-15',
-            'lugar_nacimiento' => 'Guatemala',
-            'estado_civil' => 'soltero',
-            'genero' => 'masculino',
-            'nacionalidad' => 'guatemalteca',
-            'profesion_oficio' => 'Ingeniero',
-            'nivel_educativo' => 'universidad_completa',
-            'direccion_residencia' => 'Ciudad de Guatemala',
-            'departamento' => 'Guatemala',
-            'municipio' => 'Guatemala',
-            'telefono_personal' => '12345678',
-            'email_personal' => 'juan@example.com'
-        ];
+        $datosFormulario = $this->datosCompletos();
 
         $response = $this->post("/cuestionario/{$evaluado->token_unico}/seccion/1", $datosFormulario);
 
@@ -63,6 +65,7 @@ class CuestionarioDatosPersonalesTest extends TestCase
     public function test_falla_validacion_con_campos_faltantes(): void
     {
         $evaluado = $this->crearEvaluadoValido();
+        $this->verificarIdentidadYFlujoPreSeccion($evaluado->token_unico, '1234567890101');
 
         $datosIncompletos = [
             'nombres_completos' => 'Juan Carlos',
@@ -78,24 +81,9 @@ class CuestionarioDatosPersonalesTest extends TestCase
     public function test_valida_dpi_coincida_con_evaluado(): void
     {
         $evaluado = $this->crearEvaluadoValido();
-        
-        $datosFormulario = [
-            'nombres_completos' => 'Juan Carlos',
-            'apellidos_completos' => 'Pérez García',
-            'dpi' => '9999999999999', // DPI diferente al del evaluado
-            'fecha_nacimiento' => '1990-05-15',
-            'lugar_nacimiento' => 'Guatemala',
-            'estado_civil' => 'soltero',
-            'genero' => 'masculino',
-            'nacionalidad' => 'guatemalteca',
-            'profesion_oficio' => 'Ingeniero',
-            'nivel_educativo' => 'universidad_completa',
-            'direccion_residencia' => 'Ciudad de Guatemala',
-            'departamento' => 'Guatemala',
-            'municipio' => 'Guatemala',
-            'telefono_personal' => '12345678',
-            'email_personal' => 'juan@example.com'
-        ];
+        $this->verificarIdentidadYFlujoPreSeccion($evaluado->token_unico, '1234567890101');
+
+        $datosFormulario = $this->datosCompletos(['dpi' => '9999999999999']);
 
         $response = $this->post("/cuestionario/{$evaluado->token_unico}/seccion/1", $datosFormulario);
 
@@ -107,28 +95,10 @@ class CuestionarioDatosPersonalesTest extends TestCase
     {
         $evaluado = $this->crearEvaluadoValido();
         
-        // Primero verificar el DPI para establecer sesión
-        $this->post("/cuestionario/{$evaluado->token_unico}/verificar", [
-            'dpi_ingresado' => $evaluado->dpi
-        ]);
-        
-        $datosFormulario = [
-            'nombres_completos' => 'Juan Carlos',
-            'apellidos_completos' => 'Pérez García',
-            'dpi' => $evaluado->dpi, // DPI correcto del evaluado
-            'fecha_nacimiento' => '1990-05-15',
-            'lugar_nacimiento' => 'Guatemala',
-            'estado_civil' => 'soltero',
-            'genero' => 'masculino',
-            'nacionalidad' => 'guatemalteca',
-            'profesion_oficio' => 'Ingeniero',
-            'nivel_educativo' => 'universidad_completa',
-            'direccion_residencia' => 'Ciudad de Guatemala',
-            'departamento' => 'Guatemala',
-            'municipio' => 'Guatemala',
-            'telefono_personal' => '12345678',
-            'email_personal' => 'juan@example.com'
-        ];
+        // Primero verificar el DPI y completar flujo previo
+        $this->verificarIdentidadYFlujoPreSeccion($evaluado->token_unico, $evaluado->dpi);
+
+        $datosFormulario = $this->datosCompletos(['dpi' => $evaluado->dpi]);
 
         $response = $this->post("/cuestionario/{$evaluado->token_unico}/seccion/1", $datosFormulario);
 

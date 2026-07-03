@@ -1,12 +1,57 @@
 {{-- Sección 2: Información Familiar --}}
 
+@php
+    use App\Support\InformacionFamiliarPadres;
+    $resp = $respuestasExistentes ?? [];
+    $conviveSeleccionados = InformacionFamiliarPadres::normalizarConviveCon(old('convive_con', $resp['convive_con'] ?? null));
+@endphp
+
 <div class="alert alert-info">
     <i class="fas fa-info-circle"></i>
     <strong>Información sobre su núcleo familiar y estado socioeconómico</strong>
 </div>
 
-<div class="row">
-    <div class="col-lg-6">
+<h6 class="text-primary mb-3"><i class="fas fa-user-friends"></i> Padres</h6>
+
+<div class="form-group mb-4">
+    <label class="form-label d-block">¿Con quién vive actualmente?</label>
+    <div class="row">
+        @foreach(InformacionFamiliarPadres::CONVIVE_OPCIONES as $clave => $etiqueta)
+            <div class="col-md-4 col-lg-2">
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="convive_con[]"
+                           id="convive_{{ $clave }}"
+                           value="{{ $clave }}"
+                           {{ in_array($clave, $conviveSeleccionados, true) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="convive_{{ $clave }}">{{ $etiqueta }}</label>
+                </div>
+            </div>
+        @endforeach
+    </div>
+    @error('convive_con')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+</div>
+
+@include('cuestionario.secciones.partials.datos-progenitor', [
+    'prefijo' => 'padre',
+    'titulo' => 'Padre',
+    'respuestas' => $resp,
+])
+
+@include('cuestionario.secciones.partials.datos-progenitor', [
+    'prefijo' => 'madre',
+    'titulo' => 'Madre',
+    'respuestas' => $resp,
+])
+
+<hr class="my-4">
+
+<hr class="my-4">
+
+<h6 class="text-primary mb-3"><i class="fas fa-child"></i> Hijos</h6>
+
+<div class="row">    <div class="col-lg-6">
         <div class="form-group">
             <label for="estado_civil_detalle" class="form-label">
                 Estado Civil <span class="required">*</span>
@@ -48,7 +93,7 @@
     </div>
 </div>
 
-<div id="seccion_hijos" class="d-none">
+<x-campo-condicional trigger="tiene_hijos" show-when="si" id="seccion_hijos">
     <div class="row">
         <div class="col-lg-4">
             <div class="form-group">
@@ -61,7 +106,9 @@
                        name="numero_hijos" 
                        value="{{ old('numero_hijos', $respuestasExistentes['numero_hijos'] ?? '') }}"
                        min="0" 
-                       max="20">
+                       max="20"
+                       data-condicional-required-trigger="tiene_hijos"
+                       data-condicional-required-when="si">
                 @error('numero_hijos')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -104,46 +151,55 @@
             </div>
         </div>
     </div>
-</div>
+
+    <x-tabla-dinamica
+        name="hijos"
+        titulo="Detalle de hijos"
+        :columnas="\App\Support\TablaDinamica::columnasHijos()"
+        :filas="$tablasExistentes['hijos'] ?? []"
+        :minFilas="1"
+        textoAgregar="Agregar hijo"
+        textoEliminar="Quitar hijo"
+    />
+
+    <p class="text-muted small mb-0">
+        Si indicó que tiene hijos, complete al menos una fila con nombre, edad y si vive con usted.
+    </p>
+</x-campo-condicional>
+
+<hr class="my-4">
+<h6 class="text-primary mb-3"><i class="fas fa-users"></i> Hermanos</h6>
 
 <div class="row">
     <div class="col-lg-6">
         <div class="form-group">
-            <label for="vive_con_pareja" class="form-label">
-                ¿Vive con pareja? <span class="required">*</span>
-            </label>
-            <select class="form-control @error('vive_con_pareja') is-invalid @enderror" 
-                    id="vive_con_pareja" 
-                    name="vive_con_pareja" 
-                    required>
+            <label for="tiene_hermanos" class="form-label">¿Tiene hermanos? <span class="required">*</span></label>
+            <select class="form-control @error('tiene_hermanos') is-invalid @enderror"
+                    id="tiene_hermanos" name="tiene_hermanos" required>
                 <option value="">Seleccione...</option>
-                <option value="si" {{ old('vive_con_pareja', $respuestasExistentes['vive_con_pareja'] ?? '') == 'si' ? 'selected' : '' }}>Sí</option>
-                <option value="no" {{ old('vive_con_pareja', $respuestasExistentes['vive_con_pareja'] ?? '') == 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('tiene_hermanos', $respuestasExistentes['tiene_hermanos'] ?? '') == 'si' ? 'selected' : '' }}>Sí</option>
+                <option value="no" {{ old('tiene_hermanos', $respuestasExistentes['tiene_hermanos'] ?? '') == 'no' ? 'selected' : '' }}>No</option>
             </select>
-            @error('vive_con_pareja')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
-    </div>
-    
-    <div class="col-lg-6" id="seccion_pareja" class="d-none">
-        <div class="form-group">
-            <label for="pareja_trabaja" class="form-label">
-                ¿Su pareja trabaja?
-            </label>
-            <select class="form-control @error('pareja_trabaja') is-invalid @enderror" 
-                    id="pareja_trabaja" 
-                    name="pareja_trabaja">
-                <option value="">Seleccione...</option>
-                <option value="si" {{ old('pareja_trabaja', $respuestasExistentes['pareja_trabaja'] ?? '') == 'si' ? 'selected' : '' }}>Sí</option>
-                <option value="no" {{ old('pareja_trabaja', $respuestasExistentes['pareja_trabaja'] ?? '') == 'no' ? 'selected' : '' }}>No</option>
-            </select>
-            @error('pareja_trabaja')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            @error('tiene_hermanos')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
     </div>
 </div>
+
+<x-campo-condicional trigger="tiene_hermanos" show-when="si" id="seccion_hermanos">
+    <x-tabla-dinamica
+        name="hermanos"
+        titulo="Detalle de hermanos"
+        :columnas="\App\Support\TablaDinamica::columnasHermanos()"
+        :filas="$tablasExistentes['hermanos'] ?? []"
+        :minFilas="1"
+        textoAgregar="Agregar hermano"
+        textoEliminar="Quitar hermano"
+    />
+</x-campo-condicional>
+
+@include('cuestionario.secciones.partials.datos-pareja-actual', ['respuestas' => $resp])
+
+@include('cuestionario.secciones.partials.datos-expareja', ['respuestas' => $resp])
 
 <div class="row">
     <div class="col-lg-6">
@@ -208,7 +264,7 @@
     @enderror
 </div>
 
-<div id="seccion_vivienda_pagando" class="d-none">
+<x-campo-condicional trigger="tipo_vivienda" show-when="propia_pagando" id="seccion_vivienda_pagando">
     <div class="row">
         <div class="col-lg-6">
             <div class="form-group">
@@ -246,9 +302,9 @@
             </div>
         </div>
     </div>
-</div>
+</x-campo-condicional>
 
-<div id="seccion_alquiler" class="d-none">
+<x-campo-condicional trigger="tipo_vivienda" show-when="alquilada" id="seccion_alquiler">
     <div class="form-group">
         <label for="monto_alquiler" class="form-label">
             Monto mensual de alquiler (Q.)
@@ -264,7 +320,7 @@
             <div class="invalid-feedback">{{ $message }}</div>
         @enderror
     </div>
-</div>
+</x-campo-condicional>
 
 <div class="form-group">
     <label for="personas_contribuyen_gastos" class="form-label">
@@ -301,115 +357,64 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tieneHijos = document.getElementById('tiene_hijos');
     const seccionHijos = document.getElementById('seccion_hijos');
-    const viveConPareja = document.getElementById('vive_con_pareja');
-    const seccionPareja = document.getElementById('seccion_pareja');
-    const tipoVivienda = document.getElementById('tipo_vivienda');
-    const seccionHipoteca = document.getElementById('seccion_vivienda_pagando');
-    const seccionAlquiler = document.getElementById('seccion_alquiler');
-    
-    // Mostrar/ocultar sección de hijos
-    function toggleSeccionHijos() {
-        if (tieneHijos.value === 'si') {
-            seccionHijos.classList.remove('d-none');
-            // Hacer campos requeridos
-            document.getElementById('numero_hijos').required = true;
-        } else {
-            seccionHijos.classList.add('d-none');
-            // Remover requerimientos y limpiar valores
-            document.getElementById('numero_hijos').required = false;
-            document.getElementById('numero_hijos').value = '';
-            document.getElementById('hijos_menores').value = '';
-            document.getElementById('hijos_dependientes').value = '';
-        }
-    }
-    
-    // Mostrar/ocultar sección de pareja
-    function toggleSeccionPareja() {
-        if (viveConPareja.value === 'si') {
-            seccionPareja.classList.remove('d-none');
-        } else {
-            seccionPareja.classList.add('d-none');
-            document.getElementById('pareja_trabaja').value = '';
-        }
-    }
-    
-    // Mostrar/ocultar secciones de vivienda
-    function toggleSeccionesVivienda() {
-        // Ocultar todas las secciones
-        seccionHipoteca.classList.add('d-none');
-        seccionAlquiler.classList.add('d-none');
-        
-        // Limpiar campos
-        document.getElementById('monto_hipoteca').value = '';
-        document.getElementById('anos_restantes_hipoteca').value = '';
-        document.getElementById('monto_alquiler').value = '';
-        
-        // Mostrar sección correspondiente
-        if (tipoVivienda.value === 'propia_pagando') {
-            seccionHipoteca.classList.remove('d-none');
-        } else if (tipoVivienda.value === 'alquilada') {
-            seccionAlquiler.classList.remove('d-none');
-        }
-    }
-    
-    // Event listeners
-    tieneHijos.addEventListener('change', toggleSeccionHijos);
-    viveConPareja.addEventListener('change', toggleSeccionPareja);
-    tipoVivienda.addEventListener('change', toggleSeccionesVivienda);
-    
-    // Validaciones numéricas
     const numeroHijos = document.getElementById('numero_hijos');
     const hijosMenores = document.getElementById('hijos_menores');
     const hijosDependientes = document.getElementById('hijos_dependientes');
     const personasHogar = document.getElementById('personas_hogar');
     const dependientesEconomicos = document.getElementById('dependientes_economicos');
-    
-    // Validar que hijos menores no sea mayor que número total
+
+    function asegurarFilaHijosInicial() {
+        const tablaWrapper = seccionHijos?.querySelector('[data-tabla-dinamica]');
+        if (!tablaWrapper) return;
+
+        const filas = tablaWrapper.querySelectorAll('.tabla-dinamica-body .tabla-dinamica-row');
+        if (filas.length === 0) {
+            tablaWrapper.querySelector('.tabla-dinamica-add')?.click();
+        }
+    }
+
+    seccionHijos?.addEventListener('condicional:shown', asegurarFilaHijosInicial);
+
     function validarHijosMenores() {
-        const total = parseInt(numeroHijos.value) || 0;
-        const menores = parseInt(hijosMenores.value) || 0;
-        
+        const total = parseInt(numeroHijos.value, 10) || 0;
+        const menores = parseInt(hijosMenores.value, 10) || 0;
+
         if (menores > total) {
             hijosMenores.value = total;
         }
     }
-    
-    // Validar que hijos dependientes no sea mayor que número total
+
     function validarHijosDependientes() {
-        const total = parseInt(numeroHijos.value) || 0;
-        const dependientes = parseInt(hijosDependientes.value) || 0;
-        
+        const total = parseInt(numeroHijos.value, 10) || 0;
+        const dependientes = parseInt(hijosDependientes.value, 10) || 0;
+
         if (dependientes > total) {
             hijosDependientes.value = total;
         }
     }
-    
-    // Validar que dependientes económicos no sea mayor que personas en hogar
+
     function validarDependientesEconomicos() {
-        const totalPersonas = parseInt(personasHogar.value) || 0;
-        const dependientes = parseInt(dependientesEconomicos.value) || 0;
-        
+        const totalPersonas = parseInt(personasHogar.value, 10) || 0;
+        const dependientes = parseInt(dependientesEconomicos.value, 10) || 0;
+
         if (dependientes >= totalPersonas) {
             dependientesEconomicos.value = Math.max(0, totalPersonas - 1);
         }
     }
-    
-    numeroHijos.addEventListener('change', function() {
+
+    numeroHijos?.addEventListener('change', function() {
         validarHijosMenores();
         validarHijosDependientes();
     });
-    
-    hijosMenores.addEventListener('change', validarHijosMenores);
-    hijosDependientes.addEventListener('change', validarHijosDependientes);
-    personasHogar.addEventListener('change', validarDependientesEconomicos);
-    dependientesEconomicos.addEventListener('change', validarDependientesEconomicos);
-    
-    // Inicializar estado al cargar
-    toggleSeccionHijos();
-    toggleSeccionPareja();
-    toggleSeccionesVivienda();
+    hijosMenores?.addEventListener('change', validarHijosMenores);
+    hijosDependientes?.addEventListener('change', validarHijosDependientes);
+    personasHogar?.addEventListener('change', validarDependientesEconomicos);
+    dependientesEconomicos?.addEventListener('change', validarDependientesEconomicos);
+
+    if (seccionHijos && !seccionHijos.classList.contains('d-none')) {
+        asegurarFilaHijosInicial();
+    }
 });
 </script>
 @endpush

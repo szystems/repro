@@ -321,6 +321,10 @@ Route::prefix('cuestionario')->name('cuestionario.')->middleware('throttle:60,1'
     // Verificación de identidad
     Route::post('/{token}/verificar', [CuestionarioController::class, 'verificarIdentidad'])->name('verificar');
 
+    // Instrucciones obligatorias (E1.6)
+    Route::get('/{token}/instrucciones', [CuestionarioController::class, 'instrucciones'])->name('instrucciones');
+    Route::post('/{token}/aceptar-instrucciones', [CuestionarioController::class, 'aceptarInstrucciones'])->name('aceptar-instrucciones');
+
     // Términos y condiciones (autorización)
     Route::get('/{token}/terminos', [CuestionarioController::class, 'terminos'])->name('terminos');
     Route::post('/{token}/aceptar-terminos', [CuestionarioController::class, 'aceptarTerminos'])->name('aceptar-terminos');
@@ -333,6 +337,13 @@ Route::prefix('cuestionario')->name('cuestionario.')->middleware('throttle:60,1'
     Route::post('/{token}/seccion/{numero}', [CuestionarioController::class, 'guardarSeccion'])
         ->name('guardar-seccion')
         ->where('numero', '[0-9]+');
+
+    Route::post('/{token}/seccion/{numero}/autosave', [CuestionarioController::class, 'autosaveSeccion'])
+        ->name('autosave-seccion')
+        ->where('numero', '[0-9]+');
+
+    Route::get('/{token}/foto-candidato', [CuestionarioController::class, 'fotoCandidato'])
+        ->name('foto-candidato');
 
     // Finalización y firma
     Route::get('/{token}/finalizar', [CuestionarioController::class, 'finalizar'])->name('finalizar');

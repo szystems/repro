@@ -2,69 +2,59 @@
 
 namespace App\Http\Requests\Cuestionario;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\Cuestionario\Concerns\EtiquetasValidacionCuestionario;
+use App\Support\DatosPersonalesCampos;
 use Carbon\Carbon;
+use Illuminate\Foundation\Http\FormRequest;
 
 class DatosPersonalesRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     * Para cuestionarios públicos, siempre es true (autorización por token)
-     */
+    use EtiquetasValidacionCuestionario;
     public function authorize(): bool
     {
         return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
+        $tipos = implode(',', array_keys(DatosPersonalesCampos::TIPOS_IDENTIFICACION));
+        $licencias = implode(',', array_keys(DatosPersonalesCampos::LICENCIA_CONDUCIR));
+
         return [
-            // Datos básicos
             'nombres_completos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/',
             'apellidos_completos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/',
-            'dpi' => 'required|string|size:13|regex:/^[0-9]{13}$/',
+            'tipo_identificacion' => 'required|in:'.$tipos,
+            'dpi' => 'required|string|max:30',
             'fecha_nacimiento' => [
                 'required',
                 'date',
                 'before:today',
-                'after:' . Carbon::now()->subYears(80)->format('Y-m-d'),
-                'before:' . Carbon::now()->subYears(16)->format('Y-m-d')
+                'after:'.Carbon::now()->subYears(80)->format('Y-m-d'),
+                'before:'.Carbon::now()->subYears(18)->format('Y-m-d'),
             ],
-            
-            // Estado civil y datos personales
+            'edad' => 'nullable|integer|min:18|max:120',
             'estado_civil' => 'required|in:soltero,casado,divorciado,viudo,union_libre',
-            'genero' => 'required|in:masculino,femenino',
             'nacionalidad' => 'required|string|max:100',
-            'lugar_nacimiento' => 'required|string|max:255',
-            
-            // Contacto
+            'telefono_personal' => 'required|string|max:15|regex:/^[0-9\-\+\(\)\s]+$/',
+            'telefono_alternativo' => 'nullable|string|max:15|regex:/^[0-9\-\+\(\)\s]+$/',
+            'email_personal' => 'required|email|max:100',
+            'departamento_nacimiento' => 'required|string|max:100',
+            'municipio_nacimiento' => 'required|string|max:100',
             'direccion_residencia' => 'required|string|max:500',
             'departamento' => 'required|string|max:100',
             'municipio' => 'required|string|max:100',
-            'telefono_alternativo' => 'nullable|string|max:15|regex:/^[0-9\-\+\(\)\s]+$/',
-            'telefono_personal' => 'required|string|max:15|regex:/^[0-9\-\+\(\)\s]+$/',
-            'email_personal' => 'required|email|max:100',
-            
-            // Información profesional
-            'profesion_oficio' => 'required|string|max:100',
-            'nivel_educativo' => 'required|in:primaria_incompleta,primaria_completa,basicos_incompletos,basicos_completos,diversificado_incompleto,diversificado_completo,universidad_incompleta,universidad_completa,posgrado',
-            'titulo_obtenido' => 'nullable|string|max:255',
-            'institucion_educativa' => 'nullable|string|max:255',
-            
-            // Otros campos del formulario actual
-            'lugar_nacimiento' => 'required|string|max:100',
-            'nacionalidad' => 'required|string|max:50',
+            'igss' => 'nullable|string|max:30',
+            'nit' => 'nullable|string|max:20',
+            'licencia_conducir' => 'required|in:'.$licencias,
+            'foto_candidato' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'foto_candidato_existente' => 'nullable|in:1',
         ];
     }
 
     /**
-     * Get custom messages for validator errors.
-     *
      * @return array<string, string>
      */
     public function messages(): array
@@ -74,29 +64,27 @@ class DatosPersonalesRequest extends FormRequest
             'nombres_completos.regex' => 'Los nombres solo pueden contener letras y espacios.',
             'apellidos_completos.required' => 'Los apellidos son obligatorios.',
             'apellidos_completos.regex' => 'Los apellidos solo pueden contener letras y espacios.',
-            'dpi.required' => 'El DPI es obligatorio.',
-            'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
-            'dpi.regex' => 'El DPI solo puede contener números.',
+            'tipo_identificacion.required' => 'Seleccione el tipo de identificación.',
+            'dpi.required' => 'El número de identificación es obligatorio.',
             'fecha_nacimiento.required' => 'La fecha de nacimiento es obligatoria.',
-            'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
-            'fecha_nacimiento.after' => 'Debe ser mayor de 16 años.',
+            'fecha_nacimiento.before' => 'Debe ser mayor de 18 años.',
+            'fecha_nacimiento.after' => 'Ingrese una fecha de nacimiento válida.',
             'estado_civil.required' => 'El estado civil es obligatorio.',
-            'estado_civil.in' => 'Seleccione un estado civil válido.',
             'direccion_residencia.required' => 'La dirección de residencia es obligatoria.',
+            'departamento_nacimiento.required' => 'Seleccione el departamento de nacimiento.',
+            'municipio_nacimiento.required' => 'Seleccione el municipio de nacimiento.',
+            'departamento.required' => 'Seleccione el departamento de residencia.',
+            'municipio.required' => 'Seleccione el municipio de residencia.',
             'telefono_personal.required' => 'El teléfono personal es obligatorio.',
-            'telefono_personal.regex' => 'Formato de teléfono no válido.',
             'email_personal.required' => 'El correo electrónico personal es obligatorio.',
-            'email_personal.email' => 'Ingrese un correo electrónico válido.',
-            'profesion_oficio.required' => 'La profesión u oficio es obligatoria.',
-            'nivel_educativo.required' => 'El nivel educativo es obligatorio.',
-            'lugar_nacimiento.required' => 'El lugar de nacimiento es obligatorio.',
-            'nacionalidad.required' => 'La nacionalidad es obligatoria.',
+            'licencia_conducir.required' => 'Indique si posee licencia de conducir.',
+            'foto_candidato.image' => 'La fotografía debe ser una imagen válida.',
+            'foto_candidato.mimes' => 'Formatos permitidos: JPG, PNG o WEBP.',
+            'foto_candidato.max' => 'La fotografía no puede superar 5 MB.',
         ];
     }
 
     /**
-     * Get custom attributes for validator errors.
-     *
      * @return array<string, string>
      */
     public function attributes(): array
@@ -104,61 +92,78 @@ class DatosPersonalesRequest extends FormRequest
         return [
             'nombres_completos' => 'nombres completos',
             'apellidos_completos' => 'apellidos completos',
+            'tipo_identificacion' => 'tipo de identificación',
+            'dpi' => 'número de identificación',
             'fecha_nacimiento' => 'fecha de nacimiento',
             'estado_civil' => 'estado civil',
             'direccion_residencia' => 'dirección de residencia',
+            'departamento_nacimiento' => 'departamento de nacimiento',
+            'municipio_nacimiento' => 'municipio de nacimiento',
+            'departamento' => 'departamento de residencia',
+            'municipio' => 'municipio de residencia',
             'telefono_personal' => 'teléfono personal',
-            'telefono_alternativo' => 'teléfono alternativo',
+            'telefono_alternativo' => 'teléfono de emergencia',
             'email_personal' => 'correo electrónico personal',
-            'nivel_educativo' => 'nivel educativo',
-            'profesion_oficio' => 'profesión u oficio',
-            'lugar_nacimiento' => 'lugar de nacimiento',
+            'igss' => 'IGSS',
+            'nit' => 'NIT',
+            'licencia_conducir' => 'licencia de conducir',
             'nacionalidad' => 'nacionalidad',
         ];
     }
 
-    /**
-     * Configure the validator instance.
-     *
-     * @param  \Illuminate\Validation\Validator  $validator
-     * @return void
-     */
-    public function withValidator($validator)
+    public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            // El DPI debe coincidir con el del evaluado (validación de identidad)
-            // No validamos formato guatemalteco aquí porque ya está en la base de datos
-            // y solo queremos verificar identidad
-            if ($this->dpi && $this->route('token')) {
-                $evaluado = \App\Models\EvaluadoOrden::where('token_unico', $this->route('token'))->first();
-                if ($evaluado && $this->dpi !== $evaluado->dpi) {
-                    $validator->errors()->add('dpi', 'El DPI ingresado no coincide con el registrado.');
+            $tipo = (string) $this->input('tipo_identificacion', 'dpi');
+            $numero = (string) $this->input('dpi', '');
+
+            if ($tipo === 'dpi') {
+                if (! preg_match('/^\d{13}$/', $numero)) {
+                    $validator->errors()->add('dpi', 'El DPI debe tener exactamente 13 dígitos numéricos.');
+                } elseif ($this->route('token')) {
+                    $evaluado = \App\Models\EvaluadoOrden::where('token_unico', $this->route('token'))->first();
+                    if ($evaluado && $numero !== (string) $evaluado->dpi) {
+                        $validator->errors()->add('dpi', 'El DPI ingresado no coincide con el registrado.');
+                    }
                 }
+            } elseif ($numero === '') {
+                $validator->errors()->add('dpi', 'El número de identificación es obligatorio.');
+            }
+
+            if (! $this->hasFile('foto_candidato') && ! $this->tieneFotoCandidatoExistente()) {
+                $validator->errors()->add('foto_candidato', 'Debe tomar o subir su fotografía para continuar.');
             }
         });
     }
 
-    /**
-     * Validar DPI guatemalteco usando algoritmo oficial
-     */
-    private function validarDpiGuatemalteco(string $dpi): bool
+    private function tieneFotoCandidatoExistente(): bool
     {
-        if (strlen($dpi) !== 13) {
+        if ($this->input('foto_candidato_existente') === '1') {
+            return true;
+        }
+
+        $token = $this->route('token');
+        if (! $token) {
             return false;
         }
 
-        $total = 0;
-        $multiplicador = 2;
-
-        // Calcular suma ponderada de los primeros 12 dígitos
-        for ($i = 11; $i >= 0; $i--) {
-            $total += intval($dpi[$i]) * $multiplicador;
-            $multiplicador++;
+        $evaluado = \App\Models\EvaluadoOrden::where('token_unico', $token)->with('cuestionario')->first();
+        if (! $evaluado?->cuestionario) {
+            return false;
         }
 
-        $modulo = $total % 11;
-        $digitoVerificador = ($modulo == 0) ? 0 : 11 - $modulo;
+        return (bool) \App\Support\CuestionarioFotoCandidato::obtenerRuta(
+            $evaluado->cuestionario->id,
+            $this->slugSeccionDatosPersonales($evaluado->cuestionario->tipo_formulario)
+        );
+    }
 
-        return $digitoVerificador == intval($dpi[12]);
+    private function slugSeccionDatosPersonales(string $tipoFormulario): string
+    {
+        return match ($tipoFormulario) {
+            'periodica' => 'actualizacion_datos',
+            'especifica' => 'datos_basicos',
+            default => 'datos_personales',
+        };
     }
 }

@@ -193,6 +193,19 @@
             </div>
         </div>
         @endif
+
+        @php $tablas = $tablas ?? []; @endphp
+        @if(!empty($tablas['deudas']))
+            <div class="card mt-3">
+                <div class="card-header"><h6 class="mb-0">Detalle de deudas</h6></div>
+                <div class="card-body">
+                    @include('admin.cuestionarios.partials.tabla-dinamica-resumen', [
+                        'filas' => $tablas['deudas'],
+                        'columnas' => \App\Support\TablaDinamica::columnasDeudas(),
+                    ])
+                </div>
+            </div>
+        @endif
     @else
         <div class="alert alert-info">
             <i class="bi bi-info-circle"></i> No hay información económica registrada en esta sección.

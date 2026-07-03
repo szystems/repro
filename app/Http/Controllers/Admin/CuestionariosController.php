@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cuestionario;
+use App\Support\CuestionarioPrecarga;
+use App\Support\CuestionarioSecciones;
+use App\Support\EvaluadorNotasSupport;
 use App\Models\CuestionarioRespuesta;
 use App\Models\EvaluadoOrden;
 use Illuminate\Http\Request;
@@ -176,12 +179,18 @@ class CuestionariosController extends Controller
             $historialDPI = EvaluadoOrden::historialPorDpi($cuestionario->evaluadoOrden->dpi);
         }
 
+        $cambiosPrecarga = CuestionarioPrecarga::cambiosRegistrados($cuestionario);
+        $etiquetasPrecarga = CuestionarioPrecarga::etiquetasCampos();
+        $contextoNotas = $this->contextoNotasEvaluador($cuestionario);
+
         return view('admin.cuestionarios.show', compact(
             'cuestionario', 
             'respuestasPorSeccion',
             'secciones',
-            'historialDPI'
-        ));
+            'historialDPI',
+            'cambiosPrecarga',
+            'etiquetasPrecarga'
+        ) + $contextoNotas);
     }
 
     /**
@@ -202,12 +211,13 @@ class CuestionariosController extends Controller
 
         // Obtener configuración de secciones
         $secciones = $cuestionario->getSeccionesConfig();
+        $contextoNotas = $this->contextoNotasEvaluador($cuestionario);
 
         return view('admin.cuestionarios.edit', compact(
             'cuestionario', 
             'respuestasPorSeccion',
             'secciones'
-        ));
+        ) + $contextoNotas);
     }
 
     /**
@@ -221,7 +231,13 @@ class CuestionariosController extends Controller
         $request->validate([
             'observaciones_repro' => 'nullable|string|max:2000',
             'respuestas' => 'nullable|array',
+            'evaluador_notas' => 'nullable|array',
+            'evaluador_notas.*' => 'nullable|string|max:10000',
         ]);
+
+        if ($request->has('evaluador_notas') && ! EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
+            abort(403, 'No autorizado para editar notas internas del evaluador.');
+        }
 
         DB::beginTransaction();
         try {
@@ -229,6 +245,14 @@ class CuestionariosController extends Controller
             $cuestionario->update([
                 'observaciones_repro' => $request->observaciones_repro
             ]);
+
+            if ($request->has('evaluador_notas') && EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
+                EvaluadorNotasSupport::guardarDesdeRequest(
+                    $cuestionario->evaluado_orden_id,
+                    $request->input('evaluador_notas', []),
+                    Auth::id()
+                );
+            }
 
             // Si hay respuestas para actualizar
             if ($request->has('respuestas') && is_array($request->respuestas)) {
@@ -278,9 +302,15 @@ class CuestionariosController extends Controller
 
             DB::commit();
 
-            $mensaje = $request->has('respuestas') 
+            if ($request->has('guardar_borrador') && $request->expectsJson()) {
+                return response()->json(['success' => true]);
+            }
+
+            $mensaje = $request->has('respuestas')
                 ? 'Cuestionario actualizado correctamente.'
-                : 'Observaciones guardadas correctamente.';
+                : ($request->has('evaluador_notas')
+                    ? 'Notas del evaluador guardadas correctamente.'
+                    : 'Observaciones guardadas correctamente.');
 
             return redirect()
                 ->route('admin.cuestionarios.show', $cuestionario->id)
@@ -491,5 +521,21 @@ class CuestionariosController extends Controller
         ];
 
         return view('admin.cuestionarios.estadisticas', compact('stats'));
+    }
+
+    /**
+     * @return array{bloquesNotasEvaluador: list<array{numero: int, slug: string, titulo: string}>, notasEvaluador: array<string, string>, puedeGestionarNotasEvaluador: bool}
+     */
+    private function contextoNotasEvaluador(Cuestionario $cuestionario): array
+    {
+        $puedeGestionar = EvaluadorNotasSupport::puedeGestionar(Auth::user());
+
+        return [
+            'bloquesNotasEvaluador' => CuestionarioSecciones::bloquesNotasEvaluador($cuestionario->tipo_formulario),
+            'notasEvaluador' => $puedeGestionar
+                ? EvaluadorNotasSupport::mapaPorSeccion($cuestionario->evaluado_orden_id)
+                : [],
+            'puedeGestionarNotasEvaluador' => $puedeGestionar,
+        ];
     }
 }

@@ -508,67 +508,80 @@
             }
         };
         
+        // Validación unificada al enviar (foto, campos requeridos, spinner)
+        window.cuestionarioValidarEnvio = function (form) {
+            if (window.CamposCondicionales && typeof window.CamposCondicionales.syncAll === 'function') {
+                window.CamposCondicionales.syncAll();
+            }
+
+            let valid = true;
+            let firstError = null;
+
+            form.querySelectorAll('[required]').forEach(function (field) {
+                if (field.disabled) {
+                    return;
+                }
+                if (field.type === 'file') {
+                    return;
+                }
+                if (!String(field.value || '').trim()) {
+                    field.classList.add('is-invalid');
+                    valid = false;
+                    if (!firstError) {
+                        firstError = field;
+                    }
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            const fotoInput = form.querySelector('[data-foto-input]');
+            const fotoGroup = form.querySelector('[data-foto-candidato]');
+            if (fotoInput && fotoGroup) {
+                const hasFile = fotoInput.files && fotoInput.files.length > 0;
+                const hasExistente = form.querySelector('[name="foto_candidato_existente"]');
+                if (!hasFile && !hasExistente) {
+                    fotoGroup.classList.add('is-invalid');
+                    valid = false;
+                    if (!firstError) {
+                        firstError = fotoGroup;
+                    }
+                } else {
+                    fotoGroup.classList.remove('is-invalid');
+                }
+            }
+
+            return { valid: valid, firstError: firstError };
+        };
+
         // Inicialización básica
         document.addEventListener('DOMContentLoaded', function() {
-            // Solo funcionalidad básica de validación
+            cuestionarioHelpers.hideLoading();
+
             const form = document.querySelector('#cuestionarioForm');
             if (form) {
-                // Validación básica en envío
                 form.addEventListener('submit', function(e) {
-                    const requiredFields = form.querySelectorAll('[required]');
-                    let valid = true;
-                    
-                    requiredFields.forEach(field => {
-                        if (!field.value.trim()) {
-                            field.classList.add('is-invalid');
-                            valid = false;
-                        } else {
-                            field.classList.remove('is-invalid');
-                        }
-                    });
-                    
-                    if (!valid) {
+                    const result = window.cuestionarioValidarEnvio(form);
+
+                    if (!result.valid) {
                         e.preventDefault();
-                        cuestionarioHelpers.showAlert('Por favor, complete todos los campos requeridos', 'danger');
+                        cuestionarioHelpers.hideLoading();
+                        cuestionarioHelpers.showAlert('Por favor, complete todos los campos requeridos (incluya fotografía y licencia de conducir).', 'danger');
+                        if (result.firstError && result.firstError.scrollIntoView) {
+                            result.firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            if (result.firstError.focus) {
+                                result.firstError.focus();
+                            }
+                        }
                     } else {
                         cuestionarioHelpers.showLoading();
                     }
                 });
             }
-            
-            // Botón de guardar borrador
-            const guardarBorrador = document.getElementById('guardar-borrador');
-            if (guardarBorrador) {
-                guardarBorrador.addEventListener('click', function() {
-                    if (form) {
-                        const formData = new FormData(form);
-                        formData.append('action', 'guardar');
-                        
-                        cuestionarioHelpers.showLoading();
-                        
-                        fetch(form.action, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': window.cuestionarioConfig.csrfToken
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            cuestionarioHelpers.hideLoading();
-                            if (data.success) {
-                                cuestionarioHelpers.showAlert('Datos guardados correctamente', 'success');
-                            } else {
-                                cuestionarioHelpers.showAlert('Error al guardar los datos', 'danger');
-                            }
-                        })
-                        .catch(error => {
-                            cuestionarioHelpers.hideLoading();
-                            cuestionarioHelpers.showAlert('Error de conexión', 'danger');
-                        });
-                    }
-                });
-            }
+
+            window.addEventListener('pageshow', function() {
+                cuestionarioHelpers.hideLoading();
+            });
         });
     </script>
     

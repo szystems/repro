@@ -270,6 +270,316 @@
     @enderror
 </div>
 
+@php
+    use App\Support\AntecedentesJudiciales;
+    use App\Support\InformacionComplementaria;
+    use App\Support\SaludHabitosCampos;
+    $respAnt = $respuestasExistentes ?? [];
+    $sustanciasSel = old('sustancias_usadas', SaludHabitosCampos::sustanciasDesdeAlmacenamiento($respAnt['sustancias_usadas'] ?? null));
+    if (is_string($sustanciasSel)) {
+        $sustanciasSel = SaludHabitosCampos::sustanciasDesdeAlmacenamiento($sustanciasSel);
+    }
+@endphp
+
+<hr class="my-4">
+<h5 class="mb-3">Salud y hábitos</h5>
+<p class="text-muted small"><span class="badge bg-secondary">Confidencial</span> Debe responder usted. Uso interno de REPRO — no se incluye automáticamente en el informe a la empresa.</p>
+<div class="form-group">
+    <label for="salud_preocupaciones" class="form-label">Preocupaciones de salud <span class="required">*</span></label>
+    <textarea class="form-control" id="salud_preocupaciones" name="salud_preocupaciones" rows="2" required>{{ old('salud_preocupaciones', $respAnt['salud_preocupaciones'] ?? '') }}</textarea>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="salud_estado_general" class="form-label">Estado general <span class="required">*</span></label>
+            <select class="form-control" id="salud_estado_general" name="salud_estado_general" required>
+                @foreach(['excelente','bueno','regular','malo'] as $op)
+                    <option value="{{ $op }}" {{ old('salud_estado_general', $respAnt['salud_estado_general'] ?? '') === $op ? 'selected' : '' }}>{{ ucfirst($op) }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="salud_tipo_sangre" class="form-label">Tipo de sangre <span class="required">*</span></label>
+            <input type="text" class="form-control @error('salud_tipo_sangre') is-invalid @enderror" id="salud_tipo_sangre" name="salud_tipo_sangre" value="{{ old('salud_tipo_sangre', $respAnt['salud_tipo_sangre'] ?? '') }}" required placeholder="Ej: O+">
+            @error('salud_tipo_sangre')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="form-group">
+            <label for="salud_peso" class="form-label">Peso (kg) <span class="required">*</span></label>
+            <input type="number" class="form-control" id="salud_peso" name="salud_peso" value="{{ old('salud_peso', $respAnt['salud_peso'] ?? '') }}" required>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="form-group">
+            <label for="salud_estatura" class="form-label">Estatura (m) <span class="required">*</span></label>
+            <input type="number" step="0.01" class="form-control" id="salud_estatura" name="salud_estatura" value="{{ old('salud_estatura', $respAnt['salud_estatura'] ?? '') }}" required>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="salud_atencion_psicologica" class="form-label">¿Atención psicológica? <span class="required">*</span></label>
+            <select class="form-control" id="salud_atencion_psicologica" name="salud_atencion_psicologica" required>
+                <option value="no" {{ old('salud_atencion_psicologica', $respAnt['salud_atencion_psicologica'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('salud_atencion_psicologica', $respAnt['salud_atencion_psicologica'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="salud_situacion_emocional" class="form-label">Situación emocional <span class="required">*</span></label>
+            <input type="text" class="form-control" id="salud_situacion_emocional" name="salud_situacion_emocional"
+                   value="{{ old('salud_situacion_emocional', $respAnt['salud_situacion_emocional'] ?? '') }}" required>
+        </div>
+    </div>
+</div>
+<x-campo-condicional trigger="salud_atencion_psicologica" show-when="si">
+    <div class="form-group">
+        <label for="salud_detalle_psicologica" class="form-label">Detalle de atención psicológica <span class="required">*</span></label>
+        <textarea class="form-control @error('salud_detalle_psicologica') is-invalid @enderror"
+                  id="salud_detalle_psicologica"
+                  name="salud_detalle_psicologica"
+                  rows="3"
+                  required
+                  placeholder="Motivo, duración, institución o profesional que lo atendió...">{{ old('salud_detalle_psicologica', $respAnt['salud_detalle_psicologica'] ?? '') }}</textarea>
+        @error('salud_detalle_psicologica')<div class="invalid-feedback">{{ $message }}</div>@enderror
+    </div>
+</x-campo-condicional>
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="salud_ideacion_dano" class="form-label">¿Ha tenido pensamientos de hacerse daño o dañar a otros? <span class="required">*</span></label>
+            <select class="form-control @error('salud_ideacion_dano') is-invalid @enderror" id="salud_ideacion_dano" name="salud_ideacion_dano" required>
+                <option value="no" {{ old('salud_ideacion_dano', $respAnt['salud_ideacion_dano'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('salud_ideacion_dano', $respAnt['salud_ideacion_dano'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('salud_ideacion_dano')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="salud_ideacion_dano" show-when="si">
+            <div class="form-group">
+                <label for="salud_detalle_ideacion" class="form-label">Detalle <span class="required">*</span></label>
+                <textarea class="form-control @error('salud_detalle_ideacion') is-invalid @enderror"
+                          id="salud_detalle_ideacion"
+                          name="salud_detalle_ideacion"
+                          rows="3"
+                          required
+                          placeholder="Cuándo ocurrió, si recibió ayuda, situación actual...">{{ old('salud_detalle_ideacion', $respAnt['salud_detalle_ideacion'] ?? '') }}</textarea>
+                @error('salud_detalle_ideacion')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="salud_practica_deporte" class="form-label">¿Practica algún deporte? <span class="required">*</span></label>
+            <select class="form-control @error('salud_practica_deporte') is-invalid @enderror" id="salud_practica_deporte" name="salud_practica_deporte" required>
+                <option value="no" {{ old('salud_practica_deporte', $respAnt['salud_practica_deporte'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('salud_practica_deporte', $respAnt['salud_practica_deporte'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('salud_practica_deporte')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="salud_practica_deporte" show-when="si">
+            <div class="form-group">
+                <label for="salud_detalle_deporte" class="form-label">¿Qué deporte practica?</label>
+                <textarea class="form-control @error('salud_detalle_deporte') is-invalid @enderror"
+                          id="salud_detalle_deporte"
+                          name="salud_detalle_deporte"
+                          rows="2"
+                          placeholder="Deporte, frecuencia, club o equipo...">{{ old('salud_detalle_deporte', $respAnt['salud_detalle_deporte'] ?? '') }}</textarea>
+                @error('salud_detalle_deporte')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="salud_tratamiento_medico" class="form-label">¿Recibe tratamiento médico? <span class="required">*</span></label>
+            <select class="form-control @error('salud_tratamiento_medico') is-invalid @enderror" id="salud_tratamiento_medico" name="salud_tratamiento_medico" required>
+                <option value="no" {{ old('salud_tratamiento_medico', $respAnt['salud_tratamiento_medico'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('salud_tratamiento_medico', $respAnt['salud_tratamiento_medico'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('salud_tratamiento_medico')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="salud_tratamiento_medico" show-when="si">
+            <div class="form-group">
+                <label for="salud_detalle_tratamiento" class="form-label">Detalle del tratamiento <span class="required">*</span></label>
+                <textarea class="form-control @error('salud_detalle_tratamiento') is-invalid @enderror"
+                          id="salud_detalle_tratamiento"
+                          name="salud_detalle_tratamiento"
+                          rows="3"
+                          required
+                          placeholder="Diagnóstico, medicamentos, médico tratante...">{{ old('salud_detalle_tratamiento', $respAnt['salud_detalle_tratamiento'] ?? '') }}</textarea>
+                @error('salud_detalle_tratamiento')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="salud_hospitalizaciones" class="form-label">¿Ha tenido hospitalizaciones? <span class="required">*</span></label>
+            <select class="form-control @error('salud_hospitalizaciones') is-invalid @enderror" id="salud_hospitalizaciones" name="salud_hospitalizaciones" required>
+                <option value="no" {{ old('salud_hospitalizaciones', $respAnt['salud_hospitalizaciones'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('salud_hospitalizaciones', $respAnt['salud_hospitalizaciones'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('salud_hospitalizaciones')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="salud_hospitalizaciones" show-when="si">
+            <div class="form-group">
+                <label for="salud_detalle_hospitalizaciones" class="form-label">Detalle de hospitalizaciones <span class="required">*</span></label>
+                <textarea class="form-control @error('salud_detalle_hospitalizaciones') is-invalid @enderror"
+                          id="salud_detalle_hospitalizaciones"
+                          name="salud_detalle_hospitalizaciones"
+                          rows="3"
+                          required
+                          placeholder="Motivo, fecha aproximada, hospital...">{{ old('salud_detalle_hospitalizaciones', $respAnt['salud_detalle_hospitalizaciones'] ?? '') }}</textarea>
+                @error('salud_detalle_hospitalizaciones')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="salud_ausencias_enfermedad" class="form-label">¿Ausencias por enfermedad? <span class="required">*</span></label>
+            <select class="form-control @error('salud_ausencias_enfermedad') is-invalid @enderror" id="salud_ausencias_enfermedad" name="salud_ausencias_enfermedad" required>
+                <option value="no" {{ old('salud_ausencias_enfermedad', $respAnt['salud_ausencias_enfermedad'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('salud_ausencias_enfermedad', $respAnt['salud_ausencias_enfermedad'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('salud_ausencias_enfermedad')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="salud_ausencias_enfermedad" show-when="si">
+            <div class="form-group">
+                <label for="salud_detalle_ausencias" class="form-label">Detalle de ausencias <span class="required">*</span></label>
+                <textarea class="form-control @error('salud_detalle_ausencias') is-invalid @enderror"
+                          id="salud_detalle_ausencias"
+                          name="salud_detalle_ausencias"
+                          rows="3"
+                          required
+                          placeholder="Motivo, duración, año aproximado...">{{ old('salud_detalle_ausencias', $respAnt['salud_detalle_ausencias'] ?? '') }}</textarea>
+                @error('salud_detalle_ausencias')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="habito_tiempo_libre" class="form-label">Actividades en tiempo libre <span class="required">*</span></label>
+            <input type="text" class="form-control" id="habito_tiempo_libre" name="habito_tiempo_libre"
+                   value="{{ old('habito_tiempo_libre', $respAnt['habito_tiempo_libre'] ?? '') }}" required>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="habito_alcohol_frecuencia" class="form-label">Frecuencia de consumo de alcohol <span class="required">*</span></label>
+            <select class="form-control @error('habito_alcohol_frecuencia') is-invalid @enderror" id="habito_alcohol_frecuencia" name="habito_alcohol_frecuencia" required>
+                @foreach(['nunca' => 'Nunca', 'ocasional' => 'Ocasional', 'regular' => 'Regular', 'frecuente' => 'Frecuente'] as $op => $et)
+                    <option value="{{ $op }}" {{ old('habito_alcohol_frecuencia', $respAnt['habito_alcohol_frecuencia'] ?? '') === $op ? 'selected' : '' }}>{{ $et }}</option>
+                @endforeach
+            </select>
+            @error('habito_alcohol_frecuencia')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="habito_alcohol_excesos" class="form-label">¿Excesos de alcohol? <span class="required">*</span></label>
+            <select class="form-control" id="habito_alcohol_excesos" name="habito_alcohol_excesos" required>
+                <option value="no" {{ old('habito_alcohol_excesos', $respAnt['habito_alcohol_excesos'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('habito_alcohol_excesos', $respAnt['habito_alcohol_excesos'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="habito_alcohol_laboral" class="form-label">¿Alcohol en horario laboral? <span class="required">*</span></label>
+            <select class="form-control" id="habito_alcohol_laboral" name="habito_alcohol_laboral" required>
+                <option value="no" {{ old('habito_alcohol_laboral', $respAnt['habito_alcohol_laboral'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('habito_alcohol_laboral', $respAnt['habito_alcohol_laboral'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="form-group">
+            <label for="habito_tabaco" class="form-label">¿Tabaco? <span class="required">*</span></label>
+            <select class="form-control" id="habito_tabaco" name="habito_tabaco" required>
+                <option value="no" {{ old('habito_tabaco', $respAnt['habito_tabaco'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('habito_tabaco', $respAnt['habito_tabaco'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="form-group">
+            <label for="habito_juegos_azar" class="form-label">¿Juegos de azar? <span class="required">*</span></label>
+            <select class="form-control" id="habito_juegos_azar" name="habito_juegos_azar" required>
+                <option value="no" {{ old('habito_juegos_azar', $respAnt['habito_juegos_azar'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('habito_juegos_azar', $respAnt['habito_juegos_azar'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="tiene_tatuajes" class="form-label">¿Tiene tatuajes? <span class="required">*</span></label>
+            <select class="form-control" id="tiene_tatuajes" name="tiene_tatuajes" required>
+                <option value="no" {{ old('tiene_tatuajes', $respAnt['tiene_tatuajes'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('tiene_tatuajes', $respAnt['tiene_tatuajes'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="tiene_perforaciones" class="form-label">¿Tiene perforaciones? <span class="required">*</span></label>
+            <select class="form-control" id="tiene_perforaciones" name="tiene_perforaciones" required>
+                <option value="no" {{ old('tiene_perforaciones', $respAnt['tiene_perforaciones'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('tiene_perforaciones', $respAnt['tiene_perforaciones'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+        </div>
+    </div>
+</div>
+<x-campo-condicional trigger="tiene_tatuajes" show-when="si">
+    <x-tabla-dinamica name="tatuajes" titulo="Tatuajes" :columnas="\App\Support\TablaDinamica::columnasTatuajes()" :filas="$tablasExistentes['tatuajes'] ?? []" :minFilas="1" textoAgregar="Agregar tatuaje" textoEliminar="Quitar" />
+</x-campo-condicional>
+<x-campo-condicional trigger="tiene_perforaciones" show-when="si">
+    <x-tabla-dinamica name="perforaciones" titulo="Perforaciones" :columnas="\App\Support\TablaDinamica::columnasPerforaciones()" :filas="$tablasExistentes['perforaciones'] ?? []" :minFilas="1" textoAgregar="Agregar" textoEliminar="Quitar" />
+</x-campo-condicional>
+<div class="form-group">
+    <label class="form-label d-block">Sustancias de uso recreativo</label>
+    @foreach(SaludHabitosCampos::SUSTANCIAS as $k => $et)
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" name="sustancias_usadas[]" id="sust_{{ $k }}" value="{{ $k }}"
+                   {{ in_array($k, $sustanciasSel, true) ? 'checked' : '' }}>
+            <label class="form-check-label" for="sust_{{ $k }}">{{ $et }}</label>
+        </div>
+    @endforeach
+</div>
+
+@include('cuestionario.secciones.partials.preguntas-textarea', [
+    'titulo' => 'Aspecto judicial',
+    'badge' => 'Confidencial',
+    'preguntas' => AntecedentesJudiciales::PREGUNTAS,
+    'respuestas' => $respAnt,
+])
+
+@include('cuestionario.secciones.partials.preguntas-textarea', [
+    'titulo' => 'Información complementaria (informe)',
+    'preguntas' => InformacionComplementaria::PREGUNTAS,
+    'respuestas' => $respAnt,
+])
+
+<div class="alert alert-warning mt-4">
+    <h6><i class="fas fa-info-circle"></i> Información importante</h6>
+    <p class="mb-0 small">Toda la información es confidencial. Puede completar documentación pendiente (DPI, antecedentes, constancias) en la pantalla final dentro de los 30 días del enlace.</p>
+</div>
+
+<div class="form-group">
+    <label for="informacion_adicional_final" class="form-label">Si desea agregar alguna información adicional, escríbala aquí</label>
+    <textarea class="form-control" id="informacion_adicional_final" name="informacion_adicional_final" rows="4">{{ old('informacion_adicional_final', $respAnt['informacion_adicional_final'] ?? '') }}</textarea>
+</div>
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {

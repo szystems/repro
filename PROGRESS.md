@@ -2,7 +2,9 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-06-16 — **Fase 20 DESPLEGADA en producción**
+**Ultima actualizacion:** 2026-07-02 — **Fase F E2 Pre-empleo ✅ cerrada (QA manual OK)** · **740 tests OK** · **Siguiente: E3**
+
+> **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
 **Informe cliente:** `docs/Informe_Cliente_2026-06-12_Fase19.md` · Fase 18: `docs/Informe_Cliente_2026-06-10.md`
 **Alcance Fase 19:** `docs/Fase19_Alcance_Definitivo_2026-06-12.md` · Manifiesto deploy: `docs/deployment/Fase19_deploy_manifest.txt`
@@ -10,7 +12,77 @@
 
 ---
 
-## Estado por Fase
+## 🔴 FASE EN DESARROLLO AHORA
+
+| Qué | Detalle |
+|-----|---------|
+| **Fase** | **F — Formularios (cierre del proyecto)** |
+| **Etapa activa** | **E3 — Campos evaluador + generación de tablas al informe** |
+| **Etapa anterior** | **E2 — Pre-empleo ✅** (2.1–2.21 + QA manual 2-jul) |
+| **Plan detallado (checklists)** | `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` ← **documento principal para avanzar punto por punto** |
+| **Análisis / spec / decisiones comerciales** | `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` |
+| **Contexto para agentes IA** | `docs/status/CONTEXTO_AGENTES.md` |
+| **Cotización extras (Word, 1B, WhatsApp)** | `docs/business/COTIZACION_EXTRAS_JUNIO_2026_CLIENTE.md` |
+
+### Progreso E1 (motor base)
+
+| Punto | Estado |
+|-------|--------|
+| Decisiones técnicas (valor_json, evaluador_notas, catálogo GT, foto obligatoria) | ✅ |
+| Migraciones `valor_json` + `evaluador_notas` (batch 11, Docker local) | ✅ |
+| Modelos `CuestionarioRespuesta` + `EvaluadorNota` | ✅ |
+| Tests regresión | ✅ 740/740 |
+| **E1 Motor base** | ✅ **CERRADO** (1.1–1.9) |
+| **1.9** Tests del motor + migraciones E1 | ✅ **completado** (`CuestionarioMotorE1Test`, `CuestionarioSeccionesTest`) |
+
+### Progreso E2 (Pre-empleo)
+
+| Punto | Estado |
+|-------|--------|
+| Tests regresión | ✅ 740/740 |
+| **2.1** Sección 1 — datos generales | ✅ |
+| **2.2** Padres (condicional ¿vive?) | ✅ |
+| **2.3** Pareja actual (condicional) | ✅ |
+| **2.4** Tabla dinámica Hijos | ✅ |
+| **2.5** Tabla dinámica Hermanos | ✅ |
+| **2.6** Exparejas (condicional) | ✅ |
+| **2.7** Resumen familiar (informe) | ✅ |
+| **2.8** Formación académica autogenerada | ✅ |
+| **2.9** Tabla empleos + observaciones | ✅ |
+| **2.10** 19 preguntas integridad (internas) | ✅ |
+| **2.11** Tabla deudas | ✅ |
+| **2.12** Situación económica ampliada (internas) | ✅ |
+| **2.13–2.16** Salud, tatuajes, hábitos, sustancias | ✅ |
+| **2.17** Aspecto judicial (interno) | ✅ |
+| **2.18** Información complementaria (informe) | ✅ |
+| **2.19** Documentos adjuntos (pantalla final) | ✅ |
+| **2.20–2.21** Mensajes finales | ✅ |
+| **Cierre E2** | ✅ **completado** — tests automatizados + **QA manual Pre-empleo OK (2-jul)** |
+
+**Correcciones post-QA manual E2 (2-jul):**
+- Formación académica (2.8): filas autogeneradas al elegir último nivel; tabla fija por nivel; validación y persistencia coherente (`HistorialAcademico`, `formacion-academica.js`).
+- Situación económica (2.12): campos condicionales de detalle (vehículos, propiedades, SAT, bancarios, demandas, fiador).
+- Salud y hábitos (2.13): campos condicionales de detalle (psicológica, ideación, tratamiento, hospitalizaciones, ausencias, deporte).
+- Mensajes de validación legibles (`CuestionarioValidacionLabels`, `SaludHabitosCampos::mensajesValidacion`, `SituacionEconomicaCampos::mensajesValidacion`).
+- Pantalla completado: botón «Cerrar ventana» con instrucciones visibles (SweetAlert + atajos teclado).
+- Fixes previos sesión: spinner/foto/licencia, badge «Confidencial» en preguntas internas.
+
+**Siguiente paso:** **E3.1** — UI espacios internos del evaluador por sección (solo REPRO).
+
+**Paralelo (aún no iniciado):** Fase A legal · Fase Word (.docx)
+
+### Progreso E3 (evaluador + informe) — EN CURSO
+
+| Punto | Estado |
+|-------|--------|
+| **3.1** UI espacios internos evaluador (solo REPRO) | ⬜ |
+| **3.2** Mapeo respuestas → tablas informe | ⬜ |
+| **3.3** Reglas exclusión campos internos del informe | ⬜ |
+| **3.4** Tests permisos (empresa no ve internas) | ⬜ |
+
+**Migraciones E1 (batch 11–14):** `valor_json` · `evaluador_notas` · `departamentos` · `municipios` · `instrucciones_*` · `datos_precarga_json`
+
+---
 
 | Fase | Descripcion | Estado |
 |------|-------------|--------|
@@ -34,6 +106,22 @@
 | Fase 18 | Rediseño a 4 estados independientes (Formulario/Programación/Evaluación/Orden) | ✅ COMPLETADA Y DEPLOYADA 2026-06-10 — informe enviado al cliente |
 | Fase 19 | Ajustes confirmados cliente 11/06 (duplicación, capacidad sede, historial empresa, archivar, búsqueda) | ✅ COMPLETADA Y DEPLOYADA 2026-06-13 — informe listo para cliente |
 | Fase 20 | Hotfix enlace cuestionario — UX 404, logging, vigencia token | ✅ DEPLOYADA 2026-06-16 |
+| Fase A (legal) | 7 autorizaciones + Infornet + corrección Específica + campo motivo/hecho + ajuste manual Socio | 📋 PLANIFICADA — dentro de saldo Q 10,000 |
+| Fase Word | Informe empresa en .docx editable (Q 1,600 aprobado) | 📋 PLANIFICADA — versión base independiente; "rica" depende del motor de formularios |
+| **Fase F (formularios)** | **Completar motor + 4 formularios (Pre-empleo matriz 5 secc. + Socio + Periódica + Específica)** | 🔄 **EN DESARROLLO — E2 Pre-empleo** · E1 ✅ cerrado · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` |
+| Fase C (1B) | Agregar servicio con reutilización de datos (Q 5,200) | 🕐 DIFERIDA 2–3 meses (decisión cliente) |
+| WhatsApp API | Notificaciones automáticas (Q 3,800) | 🕐 POSPUESTA (decisión cliente) |
+
+---
+
+## 🆕 FORMULARIOS = CIERRE DEL PROYECTO (decisión 22-jun-2026)
+
+La cliente entregó la especificación funcional completa (`CREACIÓN FORMULARIOS DE SISTEMA.pdf`, 46 pág.) + informe de ejemplo para el Word. Al revisar los **formularios originales (ago-2025)** se confirmó que **el contenido ya estaba especificado desde el inicio del proyecto**; el sistema implementó solo una fracción. **Por tanto, completar los formularios NO se cobra aparte: es el cierre del proyecto y desbloquea el saldo Q 10,000.**
+
+- **Análisis:** `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md`
+- **Plan de trabajo ordenado (punto por punto):** `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
+- **Cobrable aparte:** solo Word Q 1,600 (aprobado), 1B Q 5,200 (diferido), WhatsApp Q 3,800 (pospuesto).
+- **Anulado:** referencias previas a "Fase F cobrable / Q 14,500-16,000".
 
 ---
 

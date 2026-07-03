@@ -17,7 +17,16 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use App\Support\CuestionarioAutosave;
+use App\Support\CuestionarioFotoCandidato;
+use App\Support\CuestionarioPrecarga;
+use App\Support\DatosPersonalesCampos;
+use App\Support\CamposInternosPreempleo;
+use App\Support\SaludHabitosCampos;
+use App\Support\TablaDinamica;
+use App\Support\GuatemalaCatalogo;
+use App\Support\HistorialAcademico;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Controlador público para cuestionarios de evaluados
@@ -110,14 +119,64 @@ class CuestionarioController extends Controller
                 'bloqueado' => false
             ]);
         }
+
+        CuestionarioPrecarga::asegurarSnapshot($cuestionario, $evaluado);
         
-        // Si ya aceptó términos, ir a la sección; si no, ir a términos
-        if ($cuestionario->acepta_terminos) {
-            return redirect()->route('cuestionario.seccion', [
-                'token' => $token,
-                'numero' => $cuestionario->seccion_actual
-            ]);
+        return $this->redirigirTrasVerificar($cuestionario, $token);
+    }
+
+    /**
+     * Pantalla de instrucciones obligatoria (E1.6).
+     */
+    public function instrucciones(string $token)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->with(['orden.empresa'])
+            ->firstOrFail();
+
+        if ($evaluado->cuestionario_completado) {
+            return view('cuestionario.completado', compact('evaluado'));
         }
+
+        $cuestionario = $evaluado->cuestionario;
+
+        if (!$cuestionario) {
+            return redirect()->route('cuestionario.mostrar', ['token' => $token]);
+        }
+
+        if ($cuestionario->instrucciones_leidas_at) {
+            return $this->redirigirTrasVerificar($cuestionario, $token);
+        }
+
+        return view('cuestionario.instrucciones', compact('evaluado', 'cuestionario', 'token'));
+    }
+
+    /**
+     * Registrar aceptación de instrucciones.
+     */
+    public function aceptarInstrucciones(Request $request, string $token)
+    {
+        $request->validate([
+            'acepta_instrucciones' => 'required|accepted',
+        ], [
+            'acepta_instrucciones.required' => 'Debe confirmar que ha leído las instrucciones.',
+            'acepta_instrucciones.accepted' => 'Debe confirmar que ha leído las instrucciones.',
+        ]);
+
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->where('token_expira_at', '>', now())
+            ->firstOrFail();
+
+        $cuestionario = $evaluado->cuestionario;
+
+        if (!$cuestionario) {
+            return back()->with('error', 'Cuestionario no encontrado.');
+        }
+
+        $cuestionario->update([
+            'instrucciones_leidas_at' => now(),
+            'ip_instrucciones'        => $request->ip(),
+        ]);
 
         return redirect()->route('cuestionario.terminos', ['token' => $token]);
     }
@@ -136,6 +195,10 @@ class CuestionarioController extends Controller
         }
 
         $cuestionario = $evaluado->cuestionario;
+
+        if ($cuestionario && !$cuestionario->instrucciones_leidas_at) {
+            return redirect()->route('cuestionario.instrucciones', ['token' => $token]);
+        }
 
         // Si ya aceptó, redirigir a secciones
         if ($cuestionario && $cuestionario->acepta_terminos) {
@@ -174,6 +237,10 @@ class CuestionarioController extends Controller
             return back()->with('error', 'Cuestionario no encontrado.');
         }
 
+        if (!$cuestionario->instrucciones_leidas_at) {
+            return redirect()->route('cuestionario.instrucciones', ['token' => $token]);
+        }
+
         $cuestionario->update([
             'acepta_terminos'    => true,
             'acepta_terminos_at' => now(),
@@ -193,10 +260,8 @@ class CuestionarioController extends Controller
     public function seccion(string $token, int $numero)
     {
         $evaluado = EvaluadoOrden::where('token_unico', $token)
-            ->with(['orden.empresa'])
+            ->with(['orden.empresa', 'orden.sede', 'sede'])
             ->firstOrFail();
-        
-        // Verificar si el token está expirado
         if ($evaluado->token_expira_at <= now()) {
             return response()->json(['error' => 'Token expirado'], 403);
         }
@@ -227,6 +292,12 @@ class CuestionarioController extends Controller
             ]);
         }
 
+        $precarga = CuestionarioPrecarga::asegurarSnapshot($cuestionario, $evaluado);
+
+        if ($redirect = $this->redirigirSiFlujoIncompleto($cuestionario, $token, 'seccion')) {
+            return $redirect;
+        }
+
         // Verificar que puede acceder a esta sección
         if (!$cuestionario->puedeAvanzarASeccion($numero)) {
             return redirect()->route('cuestionario.seccion', [
@@ -242,6 +313,7 @@ class CuestionarioController extends Controller
         // Obtener respuestas existentes para esta sección
         $seccionSlug = $this->getSlugSeccion($numero, $cuestionario->tipo_formulario);
         $respuestasExistentes = $cuestionario->getRespuestasPorSeccion($seccionSlug);
+        $tablasExistentes = $cuestionario->getTablasPorSeccion($seccionSlug);
 
         // Datos adicionales para la vista
         $numeroSeccion = $numero;
@@ -253,6 +325,14 @@ class CuestionarioController extends Controller
         // Variables adicionales para el layout
         $currentSection = $numero;
         $totalSections = count($secciones);
+        $catalogoGt = GuatemalaCatalogo::paraSelectCliente();
+        $fotoCandidatoUrl = null;
+        if ($numero === 1) {
+            $fotoPath = CuestionarioFotoCandidato::obtenerRuta($cuestionario->id, $seccionSlug);
+            if ($fotoPath && Storage::disk('local')->exists($fotoPath)) {
+                $fotoCandidatoUrl = route('cuestionario.foto-candidato', ['token' => $token]);
+            }
+        }
 
         return view('cuestionario.seccion', compact(
             'evaluado', 
@@ -268,7 +348,11 @@ class CuestionarioController extends Controller
             'secciones',
             'nombresSecciones',
             'respuestasExistentes',
-            'iconoSeccion'
+            'iconoSeccion',
+            'catalogoGt',
+            'fotoCandidatoUrl',
+            'precarga',
+            'tablasExistentes'
         ));
     }
 
@@ -282,28 +366,55 @@ class CuestionarioController extends Controller
             ->firstOrFail();
         $cuestionario = $evaluado->cuestionario;
 
-        // Validar según la sección
-        $datosValidados = $this->validarSeccion($request, $numero);
+        if (! $cuestionario) {
+            $tipoFormulario = $evaluado->tipo_formulario ?? 'preempleo';
+            $totalSeccionesPorTipo = [
+                'preempleo' => 5,
+                'periodica' => 5,
+                'especifica' => 4,
+                'socioeconomico' => 7,
+            ];
+            $cuestionario = $evaluado->cuestionario()->create([
+                'tipo_formulario' => $tipoFormulario,
+                'seccion_actual' => 1,
+                'total_secciones' => $totalSeccionesPorTipo[$tipoFormulario] ?? 5,
+                'progreso_porcentaje' => 0,
+                'completado' => false,
+                'bloqueado' => false,
+            ]);
+        }
+
+        if ($redirect = $this->redirigirSiFlujoIncompleto($cuestionario, $token, 'seccion')) {
+            return $redirect;
+        }
+
+        $evaluado->loadMissing(['orden.empresa', 'orden.sede', 'sede']);
+        $precargaSnapshot = CuestionarioPrecarga::asegurarSnapshot($cuestionario, $evaluado);
+
+        $accion = $request->input('action', 'siguiente');
+        $esParcial = $accion === 'borrador';
+
+        $datosValidados = $esParcial
+            ? CuestionarioAutosave::validarParcial($request, $numero, $cuestionario->tipo_formulario)
+            : $this->validarSeccion($request, $numero);
 
         DB::beginTransaction();
         try {
-            // Obtener slug de la sección
-            $seccionSlug = $this->getSlugSeccion($numero, $cuestionario->tipo_formulario);
+            $this->persistirDatosSeccion($request, $cuestionario, $evaluado, $numero, $datosValidados, $precargaSnapshot);
 
-            // Guardar respuestas
-            CuestionarioRespuesta::guardarRespuestas(
-                $cuestionario->id, 
-                $seccionSlug, 
-                $datosValidados
-            );
-
-            // Actualizar progreso si es necesario
-            if ($numero >= $cuestionario->seccion_actual) {
+            if (! $esParcial && $numero >= $cuestionario->seccion_actual) {
                 $cuestionario->seccion_actual = min($numero + 1, $cuestionario->total_secciones);
                 $cuestionario->actualizarProgreso();
             }
 
             DB::commit();
+
+            if ($accion === 'borrador') {
+                return redirect()->route('cuestionario.seccion', [
+                    'token' => $token,
+                    'numero' => $numero,
+                ])->with('success', 'Borrador guardado correctamente.');
+            }
 
             // Verificar si es la última sección
             $esUltimaSeccion = $numero >= $cuestionario->total_secciones;
@@ -323,6 +434,210 @@ class CuestionarioController extends Controller
             return back()
                 ->withErrors(['error' => 'Error al guardar la información. Intente nuevamente.'])
                 ->withInput();
+        }
+    }
+
+    /**
+     * Autosave silencioso de la sección actual (sin validación completa ni avance).
+     */
+    public function autosaveSeccion(Request $request, string $token, int $numero)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->where('token_expira_at', '>', now())
+            ->firstOrFail();
+        $cuestionario = $evaluado->cuestionario;
+
+        if (! $cuestionario) {
+            $tipoFormulario = $evaluado->tipo_formulario ?? 'preempleo';
+            $totalSeccionesPorTipo = [
+                'preempleo' => 5,
+                'periodica' => 5,
+                'especifica' => 4,
+                'socioeconomico' => 7,
+            ];
+            $cuestionario = $evaluado->cuestionario()->create([
+                'tipo_formulario' => $tipoFormulario,
+                'seccion_actual' => 1,
+                'total_secciones' => $totalSeccionesPorTipo[$tipoFormulario] ?? 5,
+                'progreso_porcentaje' => 0,
+                'completado' => false,
+                'bloqueado' => false,
+            ]);
+        }
+
+        if ($redirect = $this->redirigirSiFlujoIncompleto($cuestionario, $token, 'seccion')) {
+            return response()->json(['error' => 'Flujo incompleto'], 403);
+        }
+
+        if ($cuestionario->completado || $cuestionario->bloqueado) {
+            return response()->json(['error' => 'Cuestionario no editable'], 403);
+        }
+
+        $evaluado->loadMissing(['orden.empresa', 'orden.sede', 'sede']);
+        $precargaSnapshot = CuestionarioPrecarga::asegurarSnapshot($cuestionario, $evaluado);
+
+        try {
+            $datosValidados = CuestionarioAutosave::validarParcial(
+                $request,
+                $numero,
+                $cuestionario->tipo_formulario
+            );
+
+            DB::beginTransaction();
+            $this->persistirDatosSeccion(
+                $request,
+                $cuestionario,
+                $evaluado,
+                $numero,
+                self::filtrarVaciosAutosave($datosValidados),
+                $precargaSnapshot
+            );
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'saved_at' => now()->toIso8601String(),
+                'seccion' => $numero,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Algunos campos tienen un formato inválido.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::warning('Autosave cuestionario falló', [
+                'token' => $token,
+                'numero' => $numero,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo guardar automáticamente.',
+            ], 500);
+        }
+    }
+
+    /**
+     * No sobrescribir respuestas con valores vacíos en autosave (borrador parcial).
+     *
+     * @param  array<string, mixed>  $datos
+     * @return array<string, mixed>
+     */
+    private static function filtrarVaciosAutosave(array $datos): array
+    {
+        return array_filter(
+            $datos,
+            fn ($valor) => ! ($valor === null || $valor === '' || $valor === [])
+        );
+    }
+
+    /**
+     * Persiste respuestas y tablas de una sección (compartido por guardar y autosave).
+     *
+     * @param  array<string, mixed>  $datosValidados
+     */
+    private function persistirDatosSeccion(
+        Request $request,
+        Cuestionario $cuestionario,
+        EvaluadoOrden $evaluado,
+        int $numero,
+        array $datosValidados,
+        ?array $precargaSnapshot
+    ): void {
+        $seccionSlug = $this->getSlugSeccion($numero, $cuestionario->tipo_formulario);
+
+        if ($numero === 1) {
+            unset($datosValidados['foto_candidato'], $datosValidados['foto_candidato_existente']);
+
+            if ($request->hasFile('foto_candidato')) {
+                CuestionarioFotoCandidato::guardar(
+                    $request->file('foto_candidato'),
+                    $cuestionario->id,
+                    $seccionSlug
+                );
+            }
+
+            $fotoPath = CuestionarioFotoCandidato::obtenerRuta($cuestionario->id, $seccionSlug);
+            if ($fotoPath) {
+                $datosValidados['foto_candidato'] = $fotoPath;
+            }
+
+            $edad = DatosPersonalesCampos::calcularEdad($datosValidados['fecha_nacimiento'] ?? null);
+            if ($edad !== null) {
+                $datosValidados['edad'] = (string) $edad;
+            }
+        }
+
+        $tablas = TablaDinamica::extraerTablas($datosValidados, $numero, $cuestionario->tipo_formulario);
+
+        if ($numero === 2) {
+            if (($datosValidados['tiene_hijos'] ?? '') === 'no') {
+                $tablas['hijos'] = [];
+            }
+            if (($datosValidados['tiene_hermanos'] ?? '') === 'no') {
+                $tablas['hermanos'] = [];
+            }
+        }
+
+        if ($numero === 3) {
+            if (($datosValidados['experiencia_previa'] ?? '') === 'no') {
+                $tablas['empleos'] = [];
+            }
+            if (($datosValidados['ultimo_nivel_academico'] ?? '') === 'ninguno') {
+                $tablas['formacion_academica'] = [];
+            } elseif (isset($tablas['formacion_academica'])) {
+                $tablas['formacion_academica'] = HistorialAcademico::filasParaAlmacenamiento(
+                    $datosValidados['ultimo_nivel_academico'] ?? null,
+                    $tablas['formacion_academica']
+                );
+            }
+        }
+
+        if ($numero === 4 && ($datosValidados['tiene_deudas'] ?? '') === 'no') {
+            $tablas['deudas'] = [];
+        }
+
+        if ($numero === 5) {
+            if (($datosValidados['tiene_tatuajes'] ?? '') === 'no') {
+                $tablas['tatuajes'] = [];
+            }
+            if (($datosValidados['tiene_perforaciones'] ?? '') === 'no') {
+                $tablas['perforaciones'] = [];
+            }
+
+            if (isset($datosValidados['sustancias_usadas']) && is_array($datosValidados['sustancias_usadas'])) {
+                $datosValidados['sustancias_usadas'] = SaludHabitosCampos::sustanciasParaAlmacenar($datosValidados['sustancias_usadas']);
+            }
+        }
+
+        foreach ($tablas as $campoTabla => $filas) {
+            CuestionarioRespuesta::guardarTabla(
+                $cuestionario->id,
+                $seccionSlug,
+                $campoTabla,
+                $filas
+            );
+        }
+
+        CuestionarioRespuesta::guardarRespuestas(
+            $cuestionario->id,
+            $seccionSlug,
+            $datosValidados,
+            $precargaSnapshot
+        );
+
+        foreach ($datosValidados as $campo => $valor) {
+            if (! CamposInternosPreempleo::esInterno($campo)) {
+                continue;
+            }
+
+            CuestionarioRespuesta::where('cuestionario_id', $cuestionario->id)
+                ->where('seccion', $seccionSlug)
+                ->where('campo', $campo)
+                ->update(['metadata' => ['tipo_logico' => 'interno', 'informe' => false]]);
         }
     }
 
@@ -640,27 +955,26 @@ class CuestionarioController extends Controller
      */
     private function validarSeccion(Request $request, int $numero): array
     {
-        switch ($numero) {
-            case 1:
-                $formRequest = app(DatosPersonalesRequest::class);
-                break;
-            case 2:
-                $formRequest = app(InformacionFamiliarRequest::class);
-                break;
-            case 3:
-                $formRequest = app(HistorialLaboralRequest::class);
-                break;
-            case 4:
-                $formRequest = app(SituacionEconomicaRequest::class);
-                break;
-            case 5:
-                $formRequest = app(AntecedentesRequest::class);
-                break;
-            default:
-                return $request->all();
+        $formRequestClass = match ($numero) {
+            1 => DatosPersonalesRequest::class,
+            2 => InformacionFamiliarRequest::class,
+            3 => HistorialLaboralRequest::class,
+            4 => SituacionEconomicaRequest::class,
+            5 => AntecedentesRequest::class,
+            default => null,
+        };
+
+        if ($formRequestClass === null) {
+            return $request->all();
         }
 
-        return $request->validate($formRequest->rules(), $formRequest->messages());
+        /** @var \Illuminate\Foundation\Http\FormRequest $formRequest */
+        $formRequest = $formRequestClass::createFrom($request);
+        $formRequest->setContainer(app());
+        $formRequest->setRedirector(app('redirect'));
+        $formRequest->validateResolved();
+
+        return $formRequest->validated();
     }
 
     /**
@@ -753,6 +1067,30 @@ class CuestionarioController extends Controller
     }
 
     /**
+     * Servir foto del candidato (acceso por token vigente).
+     */
+    public function fotoCandidato(string $token)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->where('token_expira_at', '>', now())
+            ->firstOrFail();
+
+        $cuestionario = $evaluado->cuestionario;
+        if (! $cuestionario) {
+            abort(404);
+        }
+
+        $seccionSlug = $this->getSlugSeccion(1, $cuestionario->tipo_formulario);
+        $path = CuestionarioFotoCandidato::obtenerRuta($cuestionario->id, $seccionSlug);
+
+        if (! $path || ! Storage::disk('local')->exists($path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->response($path);
+    }
+
+    /**
      * Resuelve evaluado por token exigiendo vigencia, o responde con vista de enlace inválido.
      */
     private function evaluadoConTokenVigente(string $token): EvaluadoOrden|Response
@@ -798,5 +1136,47 @@ class CuestionarioController extends Controller
         };
 
         return response()->view('cuestionario.enlace-invalido', compact('titulo', 'mensaje', 'detalle', 'motivo'), 404);
+    }
+
+    /**
+     * Tras verificar DPI: instrucciones → términos → sección actual.
+     */
+    private function redirigirTrasVerificar(Cuestionario $cuestionario, string $token)
+    {
+        if (!$cuestionario->instrucciones_leidas_at) {
+            return redirect()->route('cuestionario.instrucciones', ['token' => $token]);
+        }
+
+        if (!$cuestionario->acepta_terminos) {
+            return redirect()->route('cuestionario.terminos', ['token' => $token]);
+        }
+
+        return redirect()->route('cuestionario.seccion', [
+            'token' => $token,
+            'numero' => $cuestionario->seccion_actual,
+        ]);
+    }
+
+    /**
+     * Bloquea acceso a términos o secciones si faltan pasos previos del flujo.
+     */
+    private function redirigirSiFlujoIncompleto(Cuestionario $cuestionario, string $token, string $pasoRequerido)
+    {
+        $pasos = ['instrucciones', 'terminos', 'seccion'];
+        $indiceRequerido = array_search($pasoRequerido, $pasos, true);
+
+        if ($indiceRequerido === false) {
+            return null;
+        }
+
+        if ($indiceRequerido >= 1 && !$cuestionario->instrucciones_leidas_at) {
+            return redirect()->route('cuestionario.instrucciones', ['token' => $token]);
+        }
+
+        if ($indiceRequerido >= 2 && !$cuestionario->acepta_terminos) {
+            return redirect()->route('cuestionario.terminos', ['token' => $token]);
+        }
+
+        return null;
     }
 }

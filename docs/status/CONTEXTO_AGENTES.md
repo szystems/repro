@@ -1,8 +1,8 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 16 de junio de 2026  
-**Estado:** ✅ FASE 20 DESPLEGADA · Fase 19 en producción  
+**Fecha de Contexto:** 2 de julio de 2026  
+**Estado:** ✅ FASE 20 DESPLEGADA · 🔄 Fase F **E3** (evaluador/informe) — **E2 ✅ cerrado + QA manual OK**  
 **Versión:** 2.3.1 Producción  
 **Plataforma:** https://reproappv2.szystems.com  
 **Repo:** https://github.com/szystems/repro · branch `master` · commit `14a95f47`
@@ -14,25 +14,126 @@
 ### 🎯 PROPÓSITO DEL SISTEMA
 REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA y socioeconómicas para empresas. Los usuarios empresariales crean órdenes con múltiples evaluados, los evaluados completan cuestionarios digitales, y REPRO realiza las evaluaciones y entrega resultados.
 
-### ⚡ ESTADO ACTUAL (Junio 2026)
-- ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 desplegadas en iPage (`reproappv2.szystems.com`)
-- 🔄 **FASE 20 (desplegada 2026-06-16):** Hotfix enlace cuestionario — vista dedicada 404, logging, vigencia token mínima
+### ⚡ ESTADO ACTUAL (Julio 2026)
+- ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 + Fase 20 desplegadas en iPage (`reproappv2.szystems.com`)
+- 🔄 **EN DESARROLLO:** **Fase F — Etapa E3 (evaluador + informe)** — E1 ✅ · E2 ✅ (QA manual 2-jul). Plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
 - ✅ **4 ESTADOS INDEPENDIENTES:** Formulario / Programación / Evaluación / Orden (Fase 18)
 - ✅ **FASE 19:** Fix duplicación órdenes, capacidad por sede, historial empresa, archivar órdenes, búsqueda DPI/nombre
-- ✅ **TESTS:** 653+ tests (PHPUnit 11, PHP 8.3, Docker `repro-app`)
+- ✅ **TESTS:** 740 tests — E2 Pre-empleo cerrado 2-jul
 - ✅ **SEGURIDAD:** Permisos granulares + middleware `role` / `permission`
 - ✅ **NOTIFICACIONES:** In-app ampliadas (creador, empresa, colaboradores — Fase 18)
 - ⏳ **PENDIENTE OPS:** Cron iPage para auto-transiciones formulario 24h/30d (o fallback on-access)
 
-### 📚 Documentación clave
+### 📚 Mapa de contexto (mantener sincronizado)
+
+| Documento | Cuándo actualizar |
+|-----------|-------------------|
+| `PROGRESS.md` | **Siempre** — sección 🔴 al inicio (fase activa, progreso E1, siguiente paso) |
+| `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` | Al cerrar cada punto E1–E7 (marcar `[x]`, estado global al final) |
+| `docs/status/CONTEXTO_AGENTES.md` | **Este archivo** — al cerrar sesión o punto relevante (estado, tests, Docker, E1) |
+| `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` | Solo si cambian decisiones comerciales o spec |
+| `docs/business/COTIZACION_EXTRAS_JUNIO_2026_CLIENTE.md` | Solo si cambia pricing o extras aprobados |
+
+**Regla (Otto):** no dejar código/documentación desincronizados — contexto actualizado en la misma sesión del cambio.
+
 | Documento | Uso |
 |-----------|-----|
 | `PROGRESS.md` | Seguimiento activo por fase |
+| `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` | **Plan principal** — checklists E1–E7 punto por punto |
+| `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` | Spec formularios + informe Word + decisiones comerciales |
+| `docs/business/COTIZACION_EXTRAS_JUNIO_2026_CLIENTE.md` | Word Q 1,600 · 1B · WhatsApp |
+| `docs/status/CONTEXTO_AGENTES.md` | Contexto técnico para agentes IA |
 | `docs/Fase19_Alcance_Definitivo_2026-06-12.md` | Alcance Fase 19 aprobado |
-| `docs/Informe_Cliente_2026-06-12_Fase19.md` | Informe para el cliente |
-| `docs/deployment/Fase19_deploy_manifest.txt` | 58 archivos del último deploy |
-| `docs/status/CONTEXTO_AGENTES.md` | Este archivo |
-| `PROGRESS.md` → sección Fase 20 | Hotfix enlace cuestionario 404 |
+| `docs/deployment/Fase19_deploy_manifest.txt` | Manifiesto último deploy mayor |
+
+### ✅ Fase F E1 — CERRADA (23-jun-2026)
+
+Motor base 1.1–1.9: tabla dinámica, condicionales, autosave, catálogo GT, foto, instrucciones, precarga, notas evaluador (`evaluador_notas`), tests motor.
+
+### ✅ Fase F E2 — CERRADA (2-jul-2026)
+
+| Completado | Siguiente |
+|------------|-----------|
+| Pre-empleo 2.1–2.21 (5 secciones matriz) | **E3.1** UI espacios internos evaluador |
+| 740 tests OK · **QA manual flujo completo OK** | E3.2–3.4 mapeo informe + permisos |
+
+**Correcciones post-QA manual (2-jul):**
+- **2.8** `HistorialAcademico` + `formacion-academica.js` — filas por nivel al seleccionar último grado.
+- **2.12** Detalle condicional económico (vehículos, propiedades, SAT, etc.) en `situacion-economica.blade.php`.
+- **2.13** Detalle condicional salud en `antecedentes.blade.php`.
+- Validación legible: `CuestionarioValidacionLabels`, mensajes en `SaludHabitosCampos` / `SituacionEconomicaCampos`.
+- Pantalla `completado.blade.php`: cierre con SweetAlert (pestaña manual).
+- Sesión previa: foto/licencia/spinner, badge «Confidencial», autosave.
+
+**Demo manual Pre-empleo:** `DemoPruebaManualE1Seeder` → `http://localhost:8000/cuestionario/e1demo2026pruebamanualtokenrepr0` · DPI `2405617300105`
+
+**Tests E2:** `CuestionarioPreempleoSeccion2ExtendidaTest` · `CuestionarioPreempleoSecciones345Test` · `HistorialAcademicoTest`
+
+### 🔄 Fase F E3 — SIGUIENTE
+
+- **3.1** UI notas/análisis evaluador por sección (REPRO/ADMIN; base: `EvaluadorNotasSupport`, partial admin existente).
+- **3.2** Mapeo respuestas → tablas informe (familia, académico, laboral, deudas, complementaria).
+- **3.3** Reglas de exclusión al informe (integridad, económica interna, salud, judicial…).
+- **3.4** Tests permisos (empresa NO ve internas).
+
+**Tests motor (E1.9):** `CuestionarioMotorE1Test` · `CuestionarioSeccionesTest` · más suites por pieza.
+
+**E2.1 datos generales:** `App\Support\DatosPersonalesCampos` · sección 1 Pre-empleo alineada a spec (tipo ID, nacimiento/residencia GT, IGSS, NIT, licencia; removidos género/profesión/nivel educativo) · tests `CuestionarioPreempleoDatosGeneralesTest`.
+
+**Autosave (E1.3):** `App\Support\CuestionarioAutosave` (validación permisiva) · `POST /cuestionario/{token}/seccion/{n}/autosave` · JS `cuestionario-autosave.js` (debounce + indicador + sendBeacon) · **Guardar Borrador** también guarda parcial sin validación completa.
+
+**Campos condicionales (E1.2):** componente `<x-campo-condicional trigger="..." show-when="...">` · JS `public/js/campos-condicionales.js` · deshabilita/limpia campos ocultos · integrado con `TablaDinamica.syncAll()` · evento `condicional:shown` para hooks locales.
+
+**Tabla dinámica (E1.1):** `App\Support\TablaDinamica` · componente `<x-tabla-dinamica>` · JS `public/js/tabla-dinamica.js` · una sola tabla responsive (CSS tarjetas en móvil) · guardado vía `CuestionarioRespuesta::guardarTabla()` en `valor_json`.
+
+**Precarga (E1.7):** al verificar DPI se congela snapshot de la orden en `datos_precarga_json`. Campos editables trazan cambios en `metadata.precarga` de cada respuesta. REPRO ve diferencias en detalle del cuestionario.
+
+**Flujo cuestionario:** verificar DPI → **instrucciones** (`config/cuestionario_instrucciones.php`) → términos + firma → secciones.
+
+**Foto candidato:** `App\Support\CuestionarioFotoCandidato` · storage `local` en `cuestionarios/fotos/{id}/` · componente `<x-foto-candidato>` · preview vía `GET /cuestionario/{token}/foto-candidato`.
+
+### 🐳 Desarrollo local (Docker)
+
+```bash
+cd /home/szott/proyectos/repro && docker compose up -d          # levantar stack
+docker compose up -d nginx   # si localhost:8000 no responde (nginx caído)
+docker compose exec app php artisan migrate --force
+docker compose exec app php -d memory_limit=512M vendor/bin/phpunit
+```
+
+- App: http://localhost:8000 · phpMyAdmin: http://localhost:8080
+- **Demo manual Pre-empleo:** `docker compose exec app php artisan db:seed --class=DemoPruebaManualE1Seeder --force` → token `e1demo2026pruebamanualtokenrepr0` · DPI `2405617300105`
+- Contenedores: `repro-app`, `repro-db`, `repro-nginx`, `repro-phpmyadmin`
+- Formulario actual (depto/municipio residencia): `resources/views/cuestionario/secciones/datos-personales.blade.php` + `<x-depto-municipio-select>`
+
+---
+
+## 🆕 ALCANCE NUEVO RECIBIDO (21-jun-2026) — LEER ANTES DE TOCAR FORMULARIOS
+
+La cliente entregó la **especificación funcional completa de formularios** (`CREACIÓN FORMULARIOS DE SISTEMA.pdf`, 46 pág.) + un **informe de ejemplo** para el ítem Word. Análisis detallado en `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md`.
+
+**Es una REINGENIERÍA del motor de cuestionarios, no "campos nuevos".** Hoy el sistema guarda respuestas como clave→valor en `cuestionario_respuestas` con Blade hardcodeado por sección. La especificación exige:
+- Tablas dinámicas ilimitadas (hijos, hermanos, empleos, deudas, tatuajes, referencias, bienes…).
+- Campos condicionales extensivos; tabla académica autogenerada.
+- **Campos internos del evaluador** separados de las respuestas del candidato.
+- Generación automática de tablas hacia el informe final (editables por evaluador).
+- Foto del candidato + anexos con imágenes; catálogos Deptos/Municipios GT dependientes.
+- 4 formularios diferenciados: **Pre-empleo (matriz, 5 secciones)**, **Socioeconómico (5 + 1 exclusiva)**, **Periódica**, **Específica**.
+
+**⚠️ DECISIÓN CLAVE (22-jun): los formularios NO se cobran aparte.** Se verificó que los formularios originales entregados por la cliente al inicio del proyecto (ago-2025: `POLIGRAFO PRESENCIAL.pdf`, `SOCIOECONOMICO...pdf`, `PERIODICO ESPECIFICO.pdf`) **ya contenían todo el contenido** (preguntas, tablas familia/empleos/deudas, drogas, foto). El sistema en producción implementó solo ~70–90 campos (una fracción). Por tanto, **completar los formularios = CIERRE DEL PROYECTO** (alcance original) y desbloquea el **saldo Q 10,000**. Las menciones previas a "Fase F cobrable / Q 14,500-16,000" quedan **anuladas**.
+
+**Decisiones comerciales vigentes (cliente):**
+- ✅ **Completar formularios (4 tipos) + motor** → **sin cobro aparte**, es cierre del proyecto (saldo Q 10,000).
+- ✅ **Word editable (.docx)** aprobado — **Q 1,600** (50% anticipo). Versión base ahora; "rica" depende del motor completo.
+- 🕐 **1B Agregar servicio** — **Q 5,200**, programado a **2–3 meses**.
+- 🕐 **WhatsApp API** — **Q 3,800**, pospuesto.
+- ✅ Fase A legal (7 autorizaciones + Infornet + corrección Específica) → dentro del **saldo Q 10,000**.
+- ✅ **Ajuste temporal Socioeconómico:** permitir marcar "Formulario Completado" manual **solo** para servicio Socioeconómico (usan Jotform mientras tanto).
+- Estructura: **5 secciones** matriz + 1 exclusiva Socio.
+- Campos internos del evaluador: **solo REPRO** los edita; empresa solo sube info general.
+
+**Plan de trabajo ordenado:** `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
+**Pendientes del cliente:** plantilla .docx oficial de REPRO; auditoría de campos internos (se piden por etapa). Foto obligatoria: **decidido sí** (cámara o subir).
 
 ---
 
@@ -418,7 +519,7 @@ php artisan view:clear
 
 | Área | Tests | Estado |
 |------|-------|--------|
-| Suite completa | 653 | ✅ Pasando (2026-06-13) |
+| Suite completa | 685 | ✅ Pasando (2026-06-23, E1.1 tabla dinámica) |
 | Fase 19 | `Fase19Sprint3Test` | ✅ Historial, archivar, búsqueda |
 | Sinergia | `Fase18SinergiaReglasSemana3Test` | ✅ S4, S5, S2 eliminado |
 | Calendario | `CalendarioTest` | ✅ Capacidad sede |
@@ -497,5 +598,7 @@ app/, database/, resources/, routes/  (+ vendor/ en deploy completo)
 
 ---
 
-**Última actualización:** 13 de junio de 2026  
-**Estado:** ✅ Fase 19 desplegada — contexto alineado con `PROGRESS.md`
+**Última actualización:** 2 de julio de 2026  
+**Estado:** ✅ **Fase F E2 Pre-empleo cerrado (2.1–2.21)** · **731 tests OK** · siguiente: **E3 campos evaluador/informe** · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
+
+**E2 cierre:** tablas dinámicas (hijos, hermanos, formación, empleos, deudas, tatuajes, perforaciones) · exparejas · resumen familiar · integridad/judicial/salud internos · complementaria al informe · admin/PDF · tests `CuestionarioPreempleoSeccion2ExtendidaTest`, `CuestionarioPreempleoSecciones345Test`, `CuestionarioModuloCompletoTest`.

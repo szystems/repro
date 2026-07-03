@@ -191,6 +191,14 @@ class EvaluadoOrden extends Model
     }
 
     /**
+     * Notas internas del evaluador REPRO (E1.8) — separadas de respuestas del candidato.
+     */
+    public function evaluadorNotas()
+    {
+        return $this->hasMany(EvaluadorNota::class, 'evaluado_orden_id');
+    }
+
+    /**
      * Documentos adjuntos del evaluado.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

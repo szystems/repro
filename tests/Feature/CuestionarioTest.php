@@ -7,11 +7,12 @@ use App\Models\Orden;
 use App\Models\Empresa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Tests\Concerns\CompletaFlujoCuestionario;
 use Tests\TestCase;
 
 class CuestionarioTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, CompletaFlujoCuestionario;
 
     public function test_puede_acceder_a_cuestionario_con_token_valido(): void
     {
@@ -24,8 +25,11 @@ class CuestionarioTest extends TestCase
             'orden_id' => $orden->id,
             'token_unico' => 'test-token-123',
             'token_expira_at' => now()->addDays(30),
-            'cuestionario_completado' => false
+            'cuestionario_completado' => false,
+            'dpi' => '1234567890101',
         ]);
+
+        $this->verificarIdentidadYFlujoPreSeccion($evaluado->token_unico, '1234567890101');
 
         $response = $this->get("/cuestionario/{$evaluado->token_unico}/seccion/1");
 
@@ -62,10 +66,13 @@ class CuestionarioTest extends TestCase
             'orden_id' => $orden->id,
             'token_unico' => 'test-token-nav',
             'token_expira_at' => now()->addDays(30),
-            'cuestionario_completado' => false
+            'cuestionario_completado' => false,
+            'dpi' => '1234567890101',
         ]);
 
-        // Probar sección 1 
+        $this->verificarIdentidadYFlujoPreSeccion($evaluado->token_unico, '1234567890101');
+
+        // Probar sección 1
         $response = $this->get("/cuestionario/{$evaluado->token_unico}/seccion/1");
         $response->assertStatus(200);
         $response->assertSee('REPRO'); // Verificar que la página del cuestionario carga correctamente
@@ -108,14 +115,16 @@ class CuestionarioTest extends TestCase
             'estado_evaluacion' => 'en_proceso',
             'cuestionario_completado' => false,
         ]);
-        \App\Models\Cuestionario::create([
+        \App\Models\Cuestionario::create(array_merge([
             'evaluado_orden_id'   => $evaluado->id,
             'tipo_formulario'     => 'preempleo',
-            'acepta_terminos'     => true,
             'progreso_porcentaje' => 100,
             'seccion_actual'      => 1,
             'total_secciones'     => 1,
-        ]);
+        ], [
+            'instrucciones_leidas_at' => now(),
+            'acepta_terminos'     => true,
+        ]));
 
         $this->post(route('cuestionario.completar', $evaluado->token_unico), [
             'confirmacion_final' => '1',

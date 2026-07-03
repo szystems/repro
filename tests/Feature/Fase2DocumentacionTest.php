@@ -227,6 +227,7 @@ class Fase2DocumentacionTest extends TestCase
             'total_secciones' => 5,
             'completado' => false,
             'bloqueado' => false,
+            'instrucciones_leidas_at' => now(),
             'acepta_terminos' => false,
         ]);
 
@@ -246,6 +247,7 @@ class Fase2DocumentacionTest extends TestCase
             'total_secciones' => 5,
             'completado' => false,
             'bloqueado' => false,
+            'instrucciones_leidas_at' => now(),
             'acepta_terminos' => false,
         ]);
 
@@ -271,6 +273,7 @@ class Fase2DocumentacionTest extends TestCase
             'total_secciones' => 5,
             'completado' => false,
             'bloqueado' => false,
+            'instrucciones_leidas_at' => now(),
         ]);
 
         $response = $this->post(route('cuestionario.aceptar-terminos', $this->evaluado->token_unico), [
@@ -289,6 +292,7 @@ class Fase2DocumentacionTest extends TestCase
             'total_secciones' => 5,
             'completado' => false,
             'bloqueado' => false,
+            'instrucciones_leidas_at' => now(),
             'acepta_terminos' => true,
             'acepta_terminos_at' => now(),
         ]);
@@ -475,6 +479,8 @@ class Fase2DocumentacionTest extends TestCase
         $this->assertNull($cuestionario->completado_at);
         $this->assertNull($cuestionario->firma_digital);
         $this->assertFalse($cuestionario->acepta_terminos);
+        $this->assertNull($cuestionario->instrucciones_leidas_at);
+        $this->assertNull($cuestionario->datos_precarga_json);
     }
 
     public function test_empresa_no_puede_rehabilitar_cuestionario(): void
@@ -597,6 +603,12 @@ class Fase2DocumentacionTest extends TestCase
         );
         $this->assertTrue(
             \Illuminate\Support\Facades\Schema::hasColumn('cuestionarios', 'ip_terminos')
+        );
+        $this->assertTrue(
+            \Illuminate\Support\Facades\Schema::hasColumn('cuestionarios', 'instrucciones_leidas_at')
+        );
+        $this->assertTrue(
+            \Illuminate\Support\Facades\Schema::hasColumn('cuestionarios', 'ip_instrucciones')
         );
     }
 

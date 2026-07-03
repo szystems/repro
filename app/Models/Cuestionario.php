@@ -19,6 +19,9 @@ class Cuestionario extends Model
         'progreso_porcentaje',
         'completado',
         'bloqueado',
+        'instrucciones_leidas_at',
+        'ip_instrucciones',
+        'datos_precarga_json',
         'acepta_terminos',
         'acepta_terminos_at',
         'firma_autorizacion',
@@ -34,6 +37,8 @@ class Cuestionario extends Model
         'bloqueado' => 'boolean',
         'acepta_terminos' => 'boolean',
         'acepta_terminos_at' => 'datetime',
+        'instrucciones_leidas_at' => 'datetime',
+        'datos_precarga_json' => 'array',
         'progreso_porcentaje' => 'decimal:2',
         'completado_at' => 'datetime'
     ];
@@ -126,8 +131,34 @@ class Cuestionario extends Model
     {
         return $this->respuestas()
             ->where('seccion', $seccion)
+            ->whereNotNull('valor')
             ->pluck('valor', 'campo')
             ->toArray();
+    }
+
+    /**
+     * Tablas dinámicas (valor_json) de una sección, indexadas por nombre de campo.
+     *
+     * @return array<string, list<array<string, mixed>>>
+     */
+    public function getTablasPorSeccion(string $seccion): array
+    {
+        return $this->respuestas()
+            ->where('seccion', $seccion)
+            ->whereNotNull('valor_json')
+            ->get()
+            ->mapWithKeys(fn (CuestionarioRespuesta $r) => [$r->campo => $r->getTabla()])
+            ->all();
+    }
+
+    /**
+     * Tablas dinámicas de una sección por número (1-based).
+     *
+     * @return array<string, list<array<string, mixed>>>
+     */
+    public function getTablasPorNumeroSeccion(int $numeroSeccion): array
+    {
+        return $this->getTablasPorSeccion($this->getSlugSeccion($numeroSeccion));
     }
     
     /**
@@ -154,7 +185,7 @@ class Cuestionario extends Model
                 2 => 'informacion_familiar',
                 3 => 'historial_laboral',
                 4 => 'situacion_economica',
-                5 => 'antecedentes_referencias',
+                5 => 'antecedentes',
                 6 => 'firma_digital'
             ],
             'periodica' => [

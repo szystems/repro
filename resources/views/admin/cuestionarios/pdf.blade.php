@@ -323,28 +323,54 @@
             'nombre' => 'Nombre',
             'apellidos' => 'Apellidos',
             'apellidos_completos' => 'Apellidos completos',
-            'dpi' => 'DPI',
+            'dpi' => 'Número de identificación',
+            'tipo_identificacion' => 'Tipo de identificación',
             'fecha_nacimiento' => 'Fecha de nacimiento',
-            'lugar_nacimiento' => 'Lugar de nacimiento',
+            'edad' => 'Edad',
+            'departamento_nacimiento' => 'Departamento de nacimiento',
+            'municipio_nacimiento' => 'Municipio de nacimiento',
             'nacionalidad' => 'Nacionalidad',
-            'genero' => 'Género',
             'estado_civil' => 'Estado civil',
             'email' => 'Correo electrónico',
             'email_personal' => 'Correo electrónico',
             'telefono' => 'Teléfono',
             'telefono_personal' => 'Teléfono personal',
-            'telefono_alternativo' => 'Teléfono alternativo',
+            'telefono_alternativo' => 'Teléfono de emergencia',
             'direccion' => 'Dirección',
             'direccion_residencia' => 'Dirección de residencia',
-            'departamento' => 'Departamento',
-            'municipio' => 'Municipio',
-
-            'nivel_educativo' => 'Nivel educativo',
-            'profesion_oficio' => 'Profesión u oficio',
+            'departamento' => 'Departamento de residencia',
+            'municipio' => 'Municipio de residencia',
+            'igss' => 'IGSS',
+            'nit' => 'NIT',
+            'licencia_conducir' => 'Licencia de conducir',
             
             // Información familiar / Cambios familiares
+            'convive_con' => '¿Con quién vive?',
+            'padre_nombre' => 'Nombre del padre',
+            'padre_vive' => '¿Padre vive?',
+            'padre_edad' => 'Edad del padre',
+            'padre_direccion' => 'Dirección del padre',
+            'padre_ocupacion' => 'Ocupación del padre',
+            'padre_lugar_trabajo' => 'Lugar de trabajo del padre',
+            'padre_telefono' => 'Teléfono del padre',
+            'madre_nombre' => 'Nombre de la madre',
+            'madre_vive' => '¿Madre vive?',
+            'madre_edad' => 'Edad de la madre',
+            'madre_direccion' => 'Dirección de la madre',
+            'madre_ocupacion' => 'Ocupación de la madre',
+            'madre_lugar_trabajo' => 'Lugar de trabajo de la madre',
+            'madre_telefono' => 'Teléfono de la madre',
             'estado_civil_detalle' => 'Estado civil actual',
-            'vive_con_pareja' => '¿Vive con su pareja?',
+            'vive_con_pareja' => '¿Tiene pareja actual?',
+            'pareja_tipo_relacion' => 'Tipo de relación (pareja)',
+            'pareja_nombre' => 'Nombre de la pareja',
+            'pareja_edad' => 'Edad de la pareja',
+            'pareja_telefono' => 'Teléfono de la pareja',
+            'pareja_direccion' => 'Dirección de la pareja',
+            'pareja_ocupacion' => 'Ocupación de la pareja',
+            'pareja_lugar_trabajo' => 'Lugar de trabajo de la pareja',
+            'pareja_tiempo_relacion' => 'Tiempo de relación',
+            'pareja_calidad_relacion' => 'Calidad de la relación',
             'pareja_trabaja' => '¿Su pareja trabaja?',
             'tiene_hijos' => '¿Tiene hijos?',
             'numero_hijos' => 'Número de hijos',
@@ -421,9 +447,11 @@
 
             @php
                 $respuestasSeccion = $cuestionario->obtenerRespuestasSeccion($numeroSeccion);
+                $tablasSeccion = $cuestionario->getTablasPorNumeroSeccion($numeroSeccion);
             @endphp
 
-            @if(count($respuestasSeccion) > 0)
+            @if(count($respuestasSeccion) > 0 || count($tablasSeccion) > 0)
+                @if(count($respuestasSeccion) > 0)
                 <table class="datos-table">
                     @foreach($respuestasSeccion as $campo => $valor)
                         @php
@@ -453,6 +481,37 @@
                         </tr>
                     @endforeach
                 </table>
+                @endif
+
+                @if(!empty($tablasSeccion['hijos']))
+                    <p style="font-weight: bold; margin: 16px 0 8px;">Detalle de hijos</p>
+                    @include('admin.cuestionarios.partials.tabla-dinamica-resumen', [
+                        'filas' => $tablasSeccion['hijos'],
+                        'columnas' => \App\Support\TablaDinamica::columnasHijos(),
+                        'tableClass' => 'datos-table',
+                    ])
+                @endif
+
+                @php
+                    $tablasPdf = [
+                        'hermanos' => [\App\Support\TablaDinamica::class, 'columnasHermanos', 'Hermanos'],
+                        'formacion_academica' => [\App\Support\TablaDinamica::class, 'columnasFormacionAcademica', 'Formación académica'],
+                        'empleos' => [\App\Support\TablaDinamica::class, 'columnasEmpleos', 'Historial de empleos'],
+                        'deudas' => [\App\Support\TablaDinamica::class, 'columnasDeudas', 'Deudas'],
+                        'tatuajes' => [\App\Support\TablaDinamica::class, 'columnasTatuajes', 'Tatuajes'],
+                        'perforaciones' => [\App\Support\TablaDinamica::class, 'columnasPerforaciones', 'Perforaciones'],
+                    ];
+                @endphp
+                @foreach($tablasPdf as $campoTabla => [$clase, $metodo, $titulo])
+                    @if(!empty($tablasSeccion[$campoTabla]))
+                        <p style="font-weight: bold; margin: 16px 0 8px;">{{ $titulo }}</p>
+                        @include('admin.cuestionarios.partials.tabla-dinamica-resumen', [
+                            'filas' => $tablasSeccion[$campoTabla],
+                            'columnas' => $clase::$metodo(),
+                            'tableClass' => 'datos-table',
+                        ])
+                    @endif
+                @endforeach
             @else
                 <table class="datos-table">
                     <tr>

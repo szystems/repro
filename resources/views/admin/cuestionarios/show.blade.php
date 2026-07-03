@@ -32,6 +32,36 @@
                 </div>
             </div>
             
+            @if(!empty($cambiosPrecarga))
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning bg-opacity-10">
+                    <h6 class="mb-0"><i class="bi bi-pencil-square"></i> Cambios respecto a la orden (precarga)</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Campo</th>
+                                    <th>Valor en orden</th>
+                                    <th>Valor en formulario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($cambiosPrecarga as $cambio)
+                                <tr>
+                                    <td>{{ $etiquetasPrecarga[$cambio['campo']] ?? $cambio['campo'] }}</td>
+                                    <td class="text-muted">{{ $cambio['valor_orden'] ?: '—' }}</td>
+                                    <td><strong>{{ $cambio['valor_actual'] }}</strong></td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @endif
+            
             {{-- Información general --}}
             <div class="row mb-4">
                 <div class="col-md-3">
@@ -248,7 +278,9 @@
                                          role="tabpanel">
                                         @if(View::exists('admin.cuestionarios.partials.seccion_' . $i))
                                             @include('admin.cuestionarios.partials.seccion_' . $i, [
+                                                'cuestionario' => $cuestionario,
                                                 'respuestas' => $cuestionario->obtenerRespuestasSeccion($i),
+                                                'tablas' => $cuestionario->getTablasPorNumeroSeccion($i),
                                                 'completada' => $cuestionario->progreso_secciones[$i] ?? false,
                                                 'nombreSeccion' => $secciones[$i] ?? 'Sección ' . $i
                                             ])
@@ -335,6 +367,8 @@
                                         Estas observaciones son solo para uso interno de REPRO
                                     </small>
                                 </div>
+                                
+                                @include('admin.cuestionarios.partials.notas-evaluador')
                                 
                                 <div class="d-flex justify-content-end">
                                     <button type="submit" class="btn btn-primary">

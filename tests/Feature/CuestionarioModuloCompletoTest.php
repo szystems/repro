@@ -10,6 +10,8 @@ use App\Models\Cuestionario;
 use App\Models\CuestionarioRespuesta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\CompletaFlujoCuestionario;
 use Tests\TestCase;
 
 /**
@@ -26,7 +28,7 @@ use Tests\TestCase;
  */
 class CuestionarioModuloCompletoTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase, WithFaker, CompletaFlujoCuestionario;
 
     protected EvaluadoOrden $evaluado;
     protected Orden $orden;
@@ -39,6 +41,7 @@ class CuestionarioModuloCompletoTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Storage::fake('local');
         
         // Crear usuario para la orden
         $this->usuario = User::factory()->create([
@@ -155,8 +158,8 @@ class CuestionarioModuloCompletoTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHasNoErrors();
         
-        // Debería redirigir a términos (primer paso después de verificar DPI)
-        $this->assertStringContainsString('terminos', $response->headers->get('Location'));
+        // Debería redirigir a instrucciones (primer paso después de verificar DPI)
+        $this->assertStringContainsString('instrucciones', $response->headers->get('Location'));
     }
 
     /**
@@ -204,10 +207,8 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     public function test_puede_acceder_a_seccion_1(): void
     {
-        // Primero verificar identidad
-        $this->post("/cuestionario/{$this->evaluado->token_unico}/verificar", [
-            'dpi_ingresado' => '1234567890101'
-        ]);
+        // Primero verificar identidad y completar flujo previo
+        $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
 
         $response = $this->get("/cuestionario/{$this->evaluado->token_unico}/seccion/1");
 
@@ -221,7 +222,7 @@ class CuestionarioModuloCompletoTest extends TestCase
     public function test_no_puede_saltar_secciones(): void
     {
         // Crear cuestionario sin avanzar
-        Cuestionario::create([
+        Cuestionario::create(array_merge([
             'evaluado_orden_id' => $this->evaluado->id,
             'tipo_formulario' => 'preempleo',
             'seccion_actual' => 1,
@@ -229,7 +230,7 @@ class CuestionarioModuloCompletoTest extends TestCase
             'progreso_porcentaje' => 0,
             'completado' => false,
             'bloqueado' => false
-        ]);
+        ], $this->atributosCuestionarioListoParaSecciones()));
 
         $response = $this->get("/cuestionario/{$this->evaluado->token_unico}/seccion/3");
 
@@ -246,28 +247,10 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     public function test_puede_enviar_seccion_1_datos_validos(): void
     {
-        // Primero verificar identidad para crear cuestionario
-        $this->post("/cuestionario/{$this->evaluado->token_unico}/verificar", [
-            'dpi_ingresado' => '1234567890101'
-        ]);
+        // Primero verificar identidad y flujo previo para crear cuestionario
+        $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
 
-        $datosSeccion1 = [
-            'nombres_completos' => 'Juan Carlos',
-            'apellidos_completos' => 'Pérez García',
-            'dpi' => '1234567890101',
-            'fecha_nacimiento' => '1990-05-15',
-            'lugar_nacimiento' => 'Ciudad de Guatemala',
-            'estado_civil' => 'soltero',
-            'genero' => 'masculino',
-            'nacionalidad' => 'Guatemalteca',
-            'profesion_oficio' => 'Ingeniero en Sistemas',
-            'nivel_educativo' => 'universidad_completa',
-            'direccion_residencia' => 'Zona 10, Ciudad de Guatemala',
-            'departamento' => 'Guatemala',
-            'municipio' => 'Guatemala',
-            'telefono_personal' => '12345678',
-            'email_personal' => 'juan.perez@example.com'
-        ];
+        $datosSeccion1 = $this->getDatosSeccion1Validos();
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/1", $datosSeccion1);
 
@@ -283,10 +266,7 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     public function test_falla_validacion_seccion_1_datos_incompletos(): void
     {
-        // Verificar identidad primero
-        $this->post("/cuestionario/{$this->evaluado->token_unico}/verificar", [
-            'dpi_ingresado' => '1234567890101'
-        ]);
+        $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
 
         $datosIncompletos = [
             'nombres_completos' => 'Juan Carlos',
@@ -303,9 +283,7 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     public function test_valida_formato_email_seccion_1(): void
     {
-        $this->post("/cuestionario/{$this->evaluado->token_unico}/verificar", [
-            'dpi_ingresado' => '1234567890101'
-        ]);
+        $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
 
         $datosEmailInvalido = $this->getDatosSeccion1Validos();
         $datosEmailInvalido['email_personal'] = 'email-invalido';
@@ -320,9 +298,7 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     public function test_valida_edad_minima_seccion_1(): void
     {
-        $this->post("/cuestionario/{$this->evaluado->token_unico}/verificar", [
-            'dpi_ingresado' => '1234567890101'
-        ]);
+        $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
 
         $datosMenorEdad = $this->getDatosSeccion1Validos();
         $datosMenorEdad['fecha_nacimiento'] = now()->subYears(10)->format('Y-m-d'); // 10 años
@@ -343,15 +319,7 @@ class CuestionarioModuloCompletoTest extends TestCase
     {
         $this->completarSeccion1();
 
-        $datosSeccion2 = [
-            'estado_civil_detalle' => 'soltero',
-            'vive_con_pareja' => 'no',
-            'tiene_hijos' => 'no',
-            'personas_hogar' => 4,
-            'dependientes_economicos' => 2,
-            'tipo_vivienda' => 'familiar',
-            'personas_contribuyen_gastos' => 2
-        ];
+        $datosSeccion2 = $this->datosSeccion2Preempleo();
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/2", $datosSeccion2);
 
@@ -371,14 +339,7 @@ class CuestionarioModuloCompletoTest extends TestCase
         $this->completarSeccion1();
         $this->completarSeccion2();
 
-        $datosSeccion3 = [
-            'situacion_laboral_actual' => 'empleado',
-            'anos_experiencia_laboral' => 5,
-            'empresa_actual' => 'Empresa Ejemplo S.A.',
-            'puesto_actual' => 'Analista de Sistemas',
-            'salario_actual' => 8000.00,
-            'empleos_anteriores' => 'Empresa Anterior - Asistente - 2019-2021'
-        ];
+        $datosSeccion3 = $this->datosSeccion3Preempleo();
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/3", $datosSeccion3);
 
@@ -399,15 +360,7 @@ class CuestionarioModuloCompletoTest extends TestCase
         $this->completarSeccion2();
         $this->completarSeccion3();
 
-        $datosSeccion4 = [
-            'ingresos_principales' => 8000.00,
-            'ingresos_adicionales' => 1000.00,
-            'gastos_vivienda' => 2500.00,
-            'gastos_alimentacion' => 3000.00,
-            'gastos_transporte' => 800.00,
-            'tiene_deudas' => 'no',
-            'tiene_ahorros' => 'si'
-        ];
+        $datosSeccion4 = $this->datosSeccion4Preempleo();
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/4", $datosSeccion4);
 
@@ -429,19 +382,7 @@ class CuestionarioModuloCompletoTest extends TestCase
         $this->completarSeccion3();
         $this->completarSeccion4();
 
-        $datosSeccion5 = [
-            'referencia1_nombre' => 'María García',
-            'referencia1_telefono' => '55551111',
-            'referencia1_relacion' => 'Amiga',
-            'referencia2_nombre' => 'Pedro López',
-            'referencia2_telefono' => '55552222',
-            'referencia2_relacion' => 'Vecino',
-            'antecedentes_penales' => 'no',
-            'despedido_trabajo' => 'no',
-            'consume_alcohol' => 'ocasionalmente',
-            'consume_drogas' => 'nunca',
-            'problemas_salud_mental' => 'no'
-        ];
+        $datosSeccion5 = $this->datosSeccion5Preempleo();
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/5", $datosSeccion5);
 
@@ -613,23 +554,10 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     protected function getDatosSeccion1Validos(): array
     {
-        return [
-            'nombres_completos' => 'Juan Carlos',
-            'apellidos_completos' => 'Pérez García',
-            'dpi' => '1234567890101',
-            'fecha_nacimiento' => '1990-05-15',
-            'lugar_nacimiento' => 'Ciudad de Guatemala',
-            'estado_civil' => 'soltero',
-            'genero' => 'masculino',
-            'nacionalidad' => 'Guatemalteca',
-            'profesion_oficio' => 'Ingeniero en Sistemas',
-            'nivel_educativo' => 'universidad_completa',
+        return $this->datosSeccion1Preempleo([
             'direccion_residencia' => 'Zona 10, Ciudad de Guatemala',
-            'departamento' => 'Guatemala',
-            'municipio' => 'Guatemala',
-            'telefono_personal' => '12345678',
-            'email_personal' => 'juan.perez@example.com'
-        ];
+            'email_personal' => 'juan.perez@example.com',
+        ]);
     }
 
     /**
@@ -637,14 +565,7 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     protected function completarSeccion1(): void
     {
-        $this->post("/cuestionario/{$this->evaluado->token_unico}/verificar", [
-            'dpi_ingresado' => '1234567890101'
-        ]);
-
-        // Aceptar términos y condiciones
-        $this->post(route('cuestionario.aceptar-terminos', $this->evaluado->token_unico), [
-            'acepta_terminos' => '1',
-        ]);
+        $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
 
         $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/1", $this->getDatosSeccion1Validos());
     }
@@ -654,15 +575,7 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     protected function completarSeccion2(): void
     {
-        $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/2", [
-            'estado_civil_detalle' => 'soltero',
-            'vive_con_pareja' => 'no',
-            'tiene_hijos' => 'no',
-            'personas_hogar' => 4,
-            'dependientes_economicos' => 2,
-            'tipo_vivienda' => 'familiar',
-            'personas_contribuyen_gastos' => 2
-        ]);
+        $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/2", $this->datosSeccion2Preempleo());
     }
 
     /**
@@ -670,14 +583,7 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     protected function completarSeccion3(): void
     {
-        $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/3", [
-            'situacion_laboral_actual' => 'empleado',
-            'anos_experiencia_laboral' => 5,
-            'empresa_actual' => 'Empresa Ejemplo S.A.',
-            'puesto_actual' => 'Analista de Sistemas',
-            'salario_actual' => 8000.00,
-            'empleos_anteriores' => 'Empresa Anterior - Asistente - 2019-2021'
-        ]);
+        $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/3", $this->datosSeccion3Preempleo());
     }
 
     /**
@@ -685,15 +591,7 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     protected function completarSeccion4(): void
     {
-        $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/4", [
-            'ingresos_principales' => 8000.00,
-            'ingresos_adicionales' => 1000.00,
-            'gastos_vivienda' => 2500.00,
-            'gastos_alimentacion' => 3000.00,
-            'gastos_transporte' => 800.00,
-            'tiene_deudas' => 'no',
-            'tiene_ahorros' => 'si'
-        ]);
+        $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/4", $this->datosSeccion4Preempleo());
     }
 
     /**
@@ -701,19 +599,7 @@ class CuestionarioModuloCompletoTest extends TestCase
      */
     protected function completarSeccion5(): void
     {
-        $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/5", [
-            'referencia1_nombre' => 'María García',
-            'referencia1_telefono' => '55551111',
-            'referencia1_relacion' => 'Amiga',
-            'referencia2_nombre' => 'Pedro López',
-            'referencia2_telefono' => '55552222',
-            'referencia2_relacion' => 'Vecino',
-            'antecedentes_penales' => 'no',
-            'despedido_trabajo' => 'no',
-            'consume_alcohol' => 'ocasionalmente',
-            'consume_drogas' => 'nunca',
-            'problemas_salud_mental' => 'no'
-        ]);
+        $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/5", $this->datosSeccion5Preempleo());
     }
 
     /**

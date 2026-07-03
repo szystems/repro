@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             UsersTableSeeder::class,    // Luego los usuarios que se vinculan a empresas
             RoleSeeder::class,          // Finalmente asignar roles a usuarios específicos
             CuestionarioSeeder::class,  // Datos de ejemplo para cuestionarios
+            DepartamentosMunicipiosSeeder::class,
         ]);
     }
 }

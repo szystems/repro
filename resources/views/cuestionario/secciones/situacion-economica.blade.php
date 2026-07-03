@@ -258,18 +258,22 @@
 </div>
 
 <div id="seccion_deudas" class="d-none">
-    <div class="form-group">
-        <label for="detalle_deudas" class="form-label">
-            Detalle de Deudas
-        </label>
-        <textarea class="form-control @error('detalle_deudas') is-invalid @enderror" 
-                  id="detalle_deudas" 
-                  name="detalle_deudas" 
-                  rows="4"
-                  placeholder="Indique: Tipo de deuda, institución, monto pendiente, pago mensual...">{{ old('detalle_deudas', $respuestasExistentes['detalle_deudas'] ?? '') }}</textarea>
-        @error('detalle_deudas')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
+    <x-tabla-dinamica
+        name="deudas"
+        titulo="Detalle de deudas"
+        :columnas="\App\Support\TablaDinamica::columnasDeudas()"
+        :filas="$tablasExistentes['deudas'] ?? []"
+        :minFilas="1"
+        textoAgregar="Agregar deuda"
+        textoEliminar="Quitar deuda"
+    />
+    <div class="form-group mt-3">
+        <label for="detalle_deudas" class="form-label">Observaciones sobre deudas</label>
+        <textarea class="form-control @error('detalle_deudas') is-invalid @enderror"
+                  id="detalle_deudas"
+                  name="detalle_deudas"
+                  rows="3">{{ old('detalle_deudas', $respuestasExistentes['detalle_deudas'] ?? '') }}</textarea>
+        @error('detalle_deudas')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 </div>
 
@@ -302,6 +306,156 @@
     @error('observaciones_economicas')
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
+</div>
+
+@php $respEco = $respuestasExistentes ?? []; @endphp
+<hr class="my-4">
+<h5 class="mb-3">Situación económica general</h5>
+<p class="text-muted small"><span class="badge bg-secondary">Confidencial</span> Debe responder usted. Esta información es para análisis interno de REPRO y no se incluye automáticamente en el informe a la empresa.</p>
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="econ_posee_propiedades" class="form-label">¿Posee propiedades? <span class="required">*</span></label>
+            <select class="form-control @error('econ_posee_propiedades') is-invalid @enderror" id="econ_posee_propiedades" name="econ_posee_propiedades" required>
+                <option value="no" {{ old('econ_posee_propiedades', $respEco['econ_posee_propiedades'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('econ_posee_propiedades', $respEco['econ_posee_propiedades'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('econ_posee_propiedades')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="econ_posee_propiedades" show-when="si">
+            <div class="form-group">
+                <label for="econ_detalle_propiedades" class="form-label">Detalle de propiedades <span class="required">*</span></label>
+                <textarea class="form-control @error('econ_detalle_propiedades') is-invalid @enderror"
+                          id="econ_detalle_propiedades"
+                          name="econ_detalle_propiedades"
+                          rows="3"
+                          required
+                          placeholder="Tipo de propiedad, ubicación, valor aproximado, etc.">{{ old('econ_detalle_propiedades', $respEco['econ_detalle_propiedades'] ?? '') }}</textarea>
+                @error('econ_detalle_propiedades')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="econ_posee_vehiculos" class="form-label">¿Posee vehículos? <span class="required">*</span></label>
+            <select class="form-control @error('econ_posee_vehiculos') is-invalid @enderror" id="econ_posee_vehiculos" name="econ_posee_vehiculos" required>
+                <option value="no" {{ old('econ_posee_vehiculos', $respEco['econ_posee_vehiculos'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('econ_posee_vehiculos', $respEco['econ_posee_vehiculos'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('econ_posee_vehiculos')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="econ_posee_vehiculos" show-when="si">
+            <div class="form-group">
+                <label for="econ_detalle_vehiculos" class="form-label">Detalle de vehículos <span class="required">*</span></label>
+                <textarea class="form-control @error('econ_detalle_vehiculos') is-invalid @enderror"
+                          id="econ_detalle_vehiculos"
+                          name="econ_detalle_vehiculos"
+                          rows="3"
+                          required
+                          placeholder="Marca, modelo, año, placa, si está financiado, etc.">{{ old('econ_detalle_vehiculos', $respEco['econ_detalle_vehiculos'] ?? '') }}</textarea>
+                @error('econ_detalle_vehiculos')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="econ_pretension_salarial" class="form-label">Pretensión salarial (Q.)</label>
+            <input type="number" class="form-control @error('econ_pretension_salarial') is-invalid @enderror" id="econ_pretension_salarial" name="econ_pretension_salarial"
+                   value="{{ old('econ_pretension_salarial', $respEco['econ_pretension_salarial'] ?? '') }}" min="0" step="0.01">
+            @error('econ_pretension_salarial')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="econ_problemas_bancarios" class="form-label">¿Problemas bancarios? <span class="required">*</span></label>
+            <select class="form-control @error('econ_problemas_bancarios') is-invalid @enderror" id="econ_problemas_bancarios" name="econ_problemas_bancarios" required>
+                <option value="no" {{ old('econ_problemas_bancarios', $respEco['econ_problemas_bancarios'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('econ_problemas_bancarios', $respEco['econ_problemas_bancarios'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('econ_problemas_bancarios')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="econ_problemas_bancarios" show-when="si">
+            <div class="form-group">
+                <label for="econ_detalle_problemas_bancarios" class="form-label">Detalle de problemas bancarios <span class="required">*</span></label>
+                <textarea class="form-control @error('econ_detalle_problemas_bancarios') is-invalid @enderror"
+                          id="econ_detalle_problemas_bancarios"
+                          name="econ_detalle_problemas_bancarios"
+                          rows="3"
+                          required
+                          placeholder="Describa el problema (cuentas embargadas, historial crediticio, etc.)">{{ old('econ_detalle_problemas_bancarios', $respEco['econ_detalle_problemas_bancarios'] ?? '') }}</textarea>
+                @error('econ_detalle_problemas_bancarios')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="econ_problemas_sat" class="form-label">¿Problemas con SAT? <span class="required">*</span></label>
+            <select class="form-control @error('econ_problemas_sat') is-invalid @enderror" id="econ_problemas_sat" name="econ_problemas_sat" required>
+                <option value="no" {{ old('econ_problemas_sat', $respEco['econ_problemas_sat'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('econ_problemas_sat', $respEco['econ_problemas_sat'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('econ_problemas_sat')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="econ_problemas_sat" show-when="si">
+            <div class="form-group">
+                <label for="econ_detalle_sat" class="form-label">Detalle de problemas con SAT <span class="required">*</span></label>
+                <textarea class="form-control @error('econ_detalle_sat') is-invalid @enderror"
+                          id="econ_detalle_sat"
+                          name="econ_detalle_sat"
+                          rows="3"
+                          required
+                          placeholder="Describa la situación con SAT">{{ old('econ_detalle_sat', $respEco['econ_detalle_sat'] ?? '') }}</textarea>
+                @error('econ_detalle_sat')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="econ_demandas_deudas" class="form-label">¿Demandas por deudas? <span class="required">*</span></label>
+            <select class="form-control @error('econ_demandas_deudas') is-invalid @enderror" id="econ_demandas_deudas" name="econ_demandas_deudas" required>
+                <option value="no" {{ old('econ_demandas_deudas', $respEco['econ_demandas_deudas'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('econ_demandas_deudas', $respEco['econ_demandas_deudas'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('econ_demandas_deudas')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="econ_demandas_deudas" show-when="si">
+            <div class="form-group">
+                <label for="econ_detalle_demandas" class="form-label">Detalle de demandas por deudas <span class="required">*</span></label>
+                <textarea class="form-control @error('econ_detalle_demandas') is-invalid @enderror"
+                          id="econ_detalle_demandas"
+                          name="econ_detalle_demandas"
+                          rows="3"
+                          required
+                          placeholder="Describa las demandas o procesos judiciales por deudas">{{ old('econ_detalle_demandas', $respEco['econ_detalle_demandas'] ?? '') }}</textarea>
+                @error('econ_detalle_demandas')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="econ_tiene_fiador" class="form-label">¿Tiene fiador? <span class="required">*</span></label>
+            <select class="form-control @error('econ_tiene_fiador') is-invalid @enderror" id="econ_tiene_fiador" name="econ_tiene_fiador" required>
+                <option value="no" {{ old('econ_tiene_fiador', $respEco['econ_tiene_fiador'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="si" {{ old('econ_tiene_fiador', $respEco['econ_tiene_fiador'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
+            </select>
+            @error('econ_tiene_fiador')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <x-campo-condicional trigger="econ_tiene_fiador" show-when="si">
+            <div class="form-group">
+                <label for="econ_detalle_fiador" class="form-label">Detalle del fiador</label>
+                <textarea class="form-control @error('econ_detalle_fiador') is-invalid @enderror"
+                          id="econ_detalle_fiador"
+                          name="econ_detalle_fiador"
+                          rows="3"
+                          placeholder="Nombre, relación y datos de contacto del fiador">{{ old('econ_detalle_fiador', $respEco['econ_detalle_fiador'] ?? '') }}</textarea>
+                @error('econ_detalle_fiador')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+        </x-campo-condicional>
+    </div>
 </div>
 
 @push('scripts')

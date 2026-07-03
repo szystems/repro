@@ -67,13 +67,18 @@
                 
                 <form action="{{ route('cuestionario.guardar-seccion', ['token' => $token, 'numero' => $numeroSeccion]) }}" 
                       method="POST" 
-                      id="cuestionarioForm">
+                      id="cuestionarioForm"
+                      data-autosave-url="{{ route('cuestionario.autosave-seccion', ['token' => $token, 'numero' => $numeroSeccion]) }}"
+                      @if($numeroSeccion === 1) enctype="multipart/form-data" @endif>
                     @csrf
+                    <input type="hidden" name="action" id="formAction"
+                           value="{{ $numeroSeccion < $totalSecciones ? 'siguiente' : 'finalizar' }}">
                     
                     <div class="section-title">
                         <i class="fas fa-{{ $iconoSeccion }}"></i>
                         <span>{{ $tituloSeccion }}</span>
                     </div>
+                    <div id="autosaveStatus" class="autosave-status small text-muted mb-3" aria-live="polite"></div>
                     
                     {{-- Aquí se incluirá el contenido específico de cada sección --}}
                     @php
@@ -97,18 +102,18 @@
                                 </a>
                             @endif
                             
-                            <button type="button" class="btn btn-secondary" id="guardar-borrador">
+                            <button type="submit" class="btn btn-secondary" data-set-action="borrador">
                                 <i class="fas fa-save"></i> Guardar Borrador
                             </button>
                         </div>
                         
                         <div class="d-flex gap-2">
                             @if($numeroSeccion < $totalSecciones)
-                                <button type="submit" class="btn btn-primary" name="action" value="siguiente">
+                                <button type="submit" class="btn btn-primary" data-set-action="siguiente">
                                     Guardar y Continuar <i class="fas fa-arrow-right"></i>
                                 </button>
                             @else
-                                <button type="submit" class="btn btn-primary" name="action" value="finalizar">
+                                <button type="submit" class="btn btn-primary" data-set-action="finalizar">
                                     <i class="fas fa-check"></i> Finalizar Cuestionario
                                 </button>
                             @endif
@@ -125,58 +130,28 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('cuestionarioForm');
+    const formAction = document.getElementById('formAction');
+
+    if (form && formAction) {
+        form.querySelectorAll('[data-set-action]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                formAction.value = this.dataset.setAction;
+            });
+        });
+    }
     
-    // Manejar envío del formulario
-    form.addEventListener('submit', function(e) {
-        cuestionarioHelpers.showLoading();
-        
-        // Validar campos requeridos
-        const requiredFields = form.querySelectorAll('[required]');
-        let allValid = true;
-        
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                field.classList.add('is-invalid');
-                allValid = false;
-            } else {
-                field.classList.remove('is-invalid');
-            }
+    // Botones de acción (borrador / siguiente)
+    if (form && formAction) {
+        form.querySelectorAll('[data-set-action]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                formAction.value = this.dataset.setAction;
+            });
         });
-        
-        if (!allValid) {
-            e.preventDefault();
-            cuestionarioHelpers.hideLoading();
-            cuestionarioHelpers.showAlert('Por favor, complete todos los campos requeridos', 'warning');
-            
-            // Scroll al primer campo con error
-            const firstError = form.querySelector('.is-invalid');
-            if (firstError) {
-                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                firstError.focus();
-            }
-        }
-    });
-    
-    // Validación en tiempo real
-    const inputs = form.querySelectorAll('input, select, textarea');
-    inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            if (this.hasAttribute('required') && !this.value.trim()) {
-                this.classList.add('is-invalid');
-            } else {
-                this.classList.remove('is-invalid');
-            }
-        });
-        
-        input.addEventListener('input', function() {
-            if (this.classList.contains('is-invalid') && this.value.trim()) {
-                this.classList.remove('is-invalid');
-            }
-        });
-    });
+    }
     
     // Prevenir salida accidental
     let formChanged = false;
+    const inputs = form ? form.querySelectorAll('input, select, textarea') : [];
     
     inputs.forEach(input => {
         input.addEventListener('change', function() {
@@ -191,10 +166,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Reset flag al enviar formulario
-    form.addEventListener('submit', function() {
-        formChanged = false;
-    });
+    if (form) {
+        form.addEventListener('submit', function() {
+            formChanged = false;
+        });
+    }
 });
 </script>
+<script src="{{ asset('js/cuestionario-autosave.js') }}?v={{ filemtime(public_path('js/cuestionario-autosave.js')) }}"></script>
 @endpush

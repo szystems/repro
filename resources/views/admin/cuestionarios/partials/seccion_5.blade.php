@@ -178,6 +178,54 @@
             </div>
         </div>
         
+        @php
+            $tablas = $tablas ?? [];
+            $compKeys = array_column(\App\Support\InformacionComplementaria::PREGUNTAS, 'key');
+            $tieneComplementaria = collect($compKeys)->contains(fn ($k) => !empty($respuestas[$k] ?? null));
+        @endphp
+
+        @if(!empty($tablas['tatuajes']))
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="mb-0">Tatuajes</h6></div>
+                <div class="card-body">
+                    @include('admin.cuestionarios.partials.tabla-dinamica-resumen', [
+                        'filas' => $tablas['tatuajes'],
+                        'columnas' => \App\Support\TablaDinamica::columnasTatuajes(),
+                    ])
+                </div>
+            </div>
+        @endif
+
+        @if(!empty($tablas['perforaciones']))
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="mb-0">Perforaciones</h6></div>
+                <div class="card-body">
+                    @include('admin.cuestionarios.partials.tabla-dinamica-resumen', [
+                        'filas' => $tablas['perforaciones'],
+                        'columnas' => \App\Support\TablaDinamica::columnasPerforaciones(),
+                    ])
+                </div>
+            </div>
+        @endif
+
+        @if($tieneComplementaria)
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="mb-0">Información complementaria (informe)</h6></div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless mb-0">
+                        @foreach(\App\Support\InformacionComplementaria::PREGUNTAS as $p)
+                            @if(!empty($respuestas[$p['key']] ?? null))
+                            <tr>
+                                <td class="fw-bold" style="width: 35%;">{{ $p['label'] }}</td>
+                                <td>{!! nl2br(e($respuestas[$p['key']])) !!}</td>
+                            </tr>
+                            @endif
+                        @endforeach
+                    </table>
+                </div>
+            </div>
+        @endif
+
         {{-- Observaciones adicionales --}}
         @if(isset($respuestas['observaciones_adicionales']) && $respuestas['observaciones_adicionales'])
         <div class="card mb-3">
