@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Cuestionario;
 
 use App\Http\Requests\Cuestionario\Concerns\EtiquetasValidacionCuestionario;
+use App\Http\Requests\Cuestionario\Concerns\PreparaTablasDinamicasParaValidacion;
 use App\Support\AntecedentesJudiciales;
 use App\Support\InformacionComplementaria;
 use App\Support\SaludHabitosCampos;
@@ -12,6 +13,13 @@ use Illuminate\Foundation\Http\FormRequest;
 class AntecedentesRequest extends FormRequest
 {
     use EtiquetasValidacionCuestionario;
+    use PreparaTablasDinamicasParaValidacion;
+
+    protected function numeroSeccionTablasDinamicas(): int
+    {
+        return 5;
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -22,6 +30,8 @@ class AntecedentesRequest extends FormRequest
         if ($this->has('sustancias_usadas') && is_string($this->input('sustancias_usadas'))) {
             $this->merge(['sustancias_usadas' => [$this->input('sustancias_usadas')]]);
         }
+
+        $this->prepararTablasDinamicas();
     }
 
     public function rules(): array

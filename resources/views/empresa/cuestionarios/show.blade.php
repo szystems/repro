@@ -180,19 +180,11 @@
                             <div class="tab-content mt-3" id="seccionesTabContent">
                                 @foreach($secciones as $i => $nombreSeccion)
                                     <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="seccion{{ $i }}" role="tabpanel">
-                                        @php $respuestasSeccion = $cuestionario->obtenerRespuestasSeccion($i); @endphp
-                                        @if(count($respuestasSeccion) > 0)
-                                            <table class="table table-sm table-striped mt-2">
-                                                @foreach($respuestasSeccion as $campo => $valor)
-                                                    <tr>
-                                                        <td class="fw-bold" style="width: 30%;">{{ ucfirst(str_replace('_', ' ', $campo)) }}:</td>
-                                                        <td>{{ is_array($valor) ? json_encode($valor) : $valor }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </table>
-                                        @else
-                                            <p class="text-muted mb-0">No hay datos registrados en esta sección.</p>
-                                        @endif
+                                        @include('shared.cuestionario.seccion-lectura', [
+                                            'cuestionario' => $cuestionario,
+                                            'numeroSeccion' => $i,
+                                            'nombreSeccion' => $nombreSeccion,
+                                        ])
                                     </div>
                                 @endforeach
                             </div>

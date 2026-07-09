@@ -38,6 +38,38 @@ class CamposInternosPreempleo
             || str_starts_with($campo, 'judicial_')
             || str_starts_with($campo, 'salud_')
             || str_starts_with($campo, 'habito_')
-            || str_starts_with($campo, 'econ_');
+            || str_starts_with($campo, 'econ_')
+            || str_starts_with($campo, 'sustancias_');
+    }
+
+    /**
+     * E3.3 — Respuestas visibles para empresa / informe externo (Pre-empleo).
+     *
+     * @param  array<string, mixed>  $respuestas
+     * @return array<string, mixed>
+     */
+    public static function filtrarRespuestasParaEmpresa(array $respuestas, string $tipoFormulario): array
+    {
+        if ($tipoFormulario !== 'preempleo' && $tipoFormulario !== 'socioeconomico') {
+            return $respuestas;
+        }
+
+        return array_filter(
+            $respuestas,
+            function ($valor, string $campo) use ($tipoFormulario) {
+                if (self::esInterno($campo)) {
+                    return false;
+                }
+                if ($tipoFormulario === 'socioeconomico' && (
+                    str_starts_with($campo, 'viv_')
+                    || $campo === 'referencias_vecinales'
+                )) {
+                    return false;
+                }
+
+                return true;
+            },
+            ARRAY_FILTER_USE_BOTH
+        );
     }
 }

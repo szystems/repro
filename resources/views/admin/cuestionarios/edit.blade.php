@@ -215,6 +215,8 @@
                 </div>
                 
                 @include('admin.cuestionarios.partials.notas-evaluador')
+
+                @include('admin.cuestionarios.partials.tablas-informe-preempleo', ['soloLectura' => false])
                 
                 {{-- Botones de acción --}}
                 <div class="card mt-4">

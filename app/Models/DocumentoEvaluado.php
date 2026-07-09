@@ -60,6 +60,8 @@ class DocumentoEvaluado extends Model
             'dpi_archivo'            => 'DPI (Documento)',
             'pasaporte'              => 'Pasaporte',
             'carta_laboral'          => 'Carta Laboral',
+            'constancia_laboral'     => 'Constancia Laboral',
+            'recibo_luz'             => 'Recibo de Luz',
             'foto_tatuaje'           => 'Fotografía de Tatuaje',
             'autorizacion_firmada'   => 'Autorización Firmada',
             'seguimiento'            => 'Seguimiento REPRO',
@@ -99,6 +101,28 @@ class DocumentoEvaluado extends Model
     }
 
     // ─── Accessors ───
+
+    /**
+     * Tipos sugeridos según servicio (E4.7 socio: constancias + recibo luz).
+     *
+     * @return array<string, string>
+     */
+    public static function tiposDocumentoParaServicio(?string $tipoServicio): array
+    {
+        $tipos = static::tiposDocumento();
+
+        if ($tipoServicio === 'socioeconomico') {
+            return array_merge(
+                array_intersect_key($tipos, array_flip([
+                    'dpi_archivo', 'constancia_laboral', 'carta_laboral', 'recibo_luz',
+                    'constancia_estudios', 'cv', 'otro',
+                ])),
+                ['otro' => $tipos['otro']]
+            );
+        }
+
+        return $tipos;
+    }
 
     /**
      * Etiqueta legible del tipo de documento.

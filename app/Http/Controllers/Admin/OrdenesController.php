@@ -767,7 +767,7 @@ class OrdenesController extends Controller
                 'token_expira_at' => EvaluadoOrden::calcularExpiracionToken(),
                 // Nuevos campos granulares
                 'tipo_servicio' => $evaluadoData['tipo_servicio'],
-                // Regla de negocio: socioeconómico siempre usa formulario preempleo
+                // En evaluado se guarda preempleo (enum BD); el cuestionario usa tipoFormularioCuestionario()
                 'tipo_formulario' => $evaluadoData['tipo_servicio'] === 'socioeconomico'
                     ? 'preempleo'
                     : $evaluadoData['tipo_formulario'],

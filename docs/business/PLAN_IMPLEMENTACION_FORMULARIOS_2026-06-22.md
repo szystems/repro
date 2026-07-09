@@ -88,12 +88,14 @@
 
 ## ETAPA 3 — Campos internos del evaluador + generación de tablas al informe
 
-- [ ] **3.1** UI de **espacios internos del evaluador** por sección (solo REPRO), separados de respuestas candidato.
-- [ ] **3.2** Mapeo: qué respuestas del candidato se convierten en **tablas del informe** (familia, académico, laboral, deudas, complementaria) — editables por evaluador.
-- [ ] **3.3** Reglas de qué NO va al informe (preguntas internas: integridad laboral, económica detallada, salud, drogas, judicial).
-- [ ] **3.4** Tests de visibilidad/permiso (empresa NO ve ni edita internas).
+- [x] **3.1** UI de **espacios internos del evaluador** por sección (solo REPRO), separados de respuestas candidato. → *`EvaluadorNotasSupport`, accordion admin; tablas informe editables en show/edit.*
+- [x] **3.2** Mapeo: qué respuestas del candidato se convierten en **tablas del informe** (familia, académico, laboral, deudas, complementaria) — editables por evaluador. → *`InformePreempleo`, partial `tablas-informe-preempleo`, overrides en `evaluador_notas`.*
+- [x] **3.3** Reglas de qué NO va al informe (preguntas internas: integridad laboral, económica detallada, salud, drogas, judicial). → *`CamposInternosPreempleo`; filtro en portal empresa y PDF.*
+- [x] **3.4** Tests de visibilidad/permiso (empresa NO ve ni edita internas). → *`InformePreempleoTest`, `InformePreempleoVisibilidadTest`.*
 
-**Cierre E3:** evaluador puede redactar análisis y armar el informe desde las respuestas; commit.
+**Extra E3 (8-jul):** portal empresa con vista estilizada (`seccion-lectura`) y PDF agrupado (`pdf-secciones-empresa`).
+
+**Cierre E3:** evaluador puede redactar análisis y armar el informe desde las respuestas; commit pendiente deploy.
 
 ---
 
@@ -177,8 +179,8 @@ Paralelo: Track legal (A) + E7 (Word base ahora, rico tras E3)
 | Decisiones técnicas | Almacenamiento, catálogos, foto | ✅ Resueltas (22-jun) |
 | E1 | Motor base | ✅ Cerrado (1.1–1.9) · 740 tests OK |
 | E2 | Pre-empleo (5 secciones) | ✅ Completado (2.1–2.21) · QA manual OK 2-jul |
-| E3 | Campos evaluador + informe | 🔄 **Siguiente** (3.1–3.4) |
-| E4 | Socioeconómico | ⬜ Pendiente |
+| E3 | Campos evaluador + informe | ✅ Cerrado (3.1–3.4) · portal empresa estilizado 8-jul |
+| E4 | Socioeconómico | 🔄 **Siguiente** (4.1–4.7) |
 | E5 | Periódica + Específica | ⬜ Pendiente |
 | E6 | Integración + ajustes | ⬜ Pendiente |
 | E7 | Word (.docx) | ⬜ Pendiente |
@@ -186,4 +188,4 @@ Paralelo: Track legal (A) + E7 (Word base ahora, rico tras E3)
 
 ---
 
-*Plan vivo — se actualiza marcando cada punto al cerrarlo. Szystems · 22-jun-2026 · contexto sincronizado 2-jul-2026 (E2 cerrado, E3 siguiente)*
+*Plan vivo — se actualiza marcando cada punto al cerrarlo. Szystems · 22-jun-2026 · contexto sincronizado 8-jul-2026 (E3 cerrado, E4 siguiente)*

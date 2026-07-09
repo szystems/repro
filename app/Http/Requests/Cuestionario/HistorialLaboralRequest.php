@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Cuestionario;
 
 use App\Http\Requests\Cuestionario\Concerns\EtiquetasValidacionCuestionario;
+use App\Http\Requests\Cuestionario\Concerns\PreparaTablasDinamicasParaValidacion;
 use App\Support\HistorialAcademico;
 use App\Support\HistorialLaboralIntegridad;
 use App\Support\TablaDinamica;
@@ -11,6 +12,13 @@ use Illuminate\Foundation\Http\FormRequest;
 class HistorialLaboralRequest extends FormRequest
 {
     use EtiquetasValidacionCuestionario;
+    use PreparaTablasDinamicasParaValidacion;
+
+    protected function numeroSeccionTablasDinamicas(): int
+    {
+        return 3;
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -18,14 +26,13 @@ class HistorialLaboralRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $this->prepararTablasDinamicas();
+
         if (! $this->has('formacion_academica') || ! is_array($this->input('formacion_academica'))) {
             return;
         }
 
-        $filas = TablaDinamica::normalizarFilas(
-            $this->input('formacion_academica'),
-            TablaDinamica::columnasFormacionAcademica()
-        );
+        $filas = $this->input('formacion_academica');
 
         $this->merge([
             'formacion_academica' => HistorialAcademico::filasParaValidacion(

@@ -1,5 +1,6 @@
 {{-- Sección 5: Antecedentes y Referencias --}}
 <div class="section-content">
+    @if(!($ocultarEstadoSeccion ?? false))
     @if($completada)
         <div class="alert alert-success mb-3">
             <i class="bi bi-check-circle-fill"></i> Sección completada
@@ -9,12 +10,14 @@
             <i class="bi bi-exclamation-triangle"></i> Sección pendiente o incompleta
         </div>
     @endif
+    @endif
     
     <h5 class="section-title mb-4">
         <i class="bi bi-file-earmark-text"></i> {{ $nombreSeccion ?? 'Antecedentes y Referencias' }}
     </h5>
     
-    @if(count($respuestas) > 0)
+    @if(count($respuestas) > 0 || !empty($tablas))
+        @if(!($soloEmpresa ?? false))
         <div class="row">
             {{-- Antecedentes Legales y Laborales --}}
             <div class="col-md-6">
@@ -177,6 +180,7 @@
                 </div>
             </div>
         </div>
+        @endif
         
         @php
             $tablas = $tablas ?? [];
@@ -226,6 +230,17 @@
             </div>
         @endif
 
+        @if(!empty($respuestas['informacion_adicional_final']))
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-chat-left-dots"></i> Información adicional del candidato</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{!! nl2br(e($respuestas['informacion_adicional_final'])) !!}</p>
+            </div>
+        </div>
+        @endif
+
         {{-- Observaciones adicionales --}}
         @if(isset($respuestas['observaciones_adicionales']) && $respuestas['observaciones_adicionales'])
         <div class="card mb-3">
@@ -239,7 +254,7 @@
         @endif
     @else
         <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> No hay información de antecedentes o referencias registrada en esta sección.
+            <i class="bi bi-info-circle"></i> No hay información visible registrada en esta sección.
         </div>
     @endif
 </div>

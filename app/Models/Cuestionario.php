@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CuestionarioSecciones;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -88,10 +89,9 @@ class Cuestionario extends Model
                 1 => 'Datos Personales',
                 2 => 'Información Familiar',
                 3 => 'Historial Laboral',
-                4 => 'Situación Económica Detallada',
-                5 => 'Situación Habitacional',
-                6 => 'Referencias Comunitarias',
-                7 => 'Verificación de Documentos',
+                4 => 'Situación Económica',
+                5 => 'Aspectos Complementarios',
+                6 => 'Información Socioeconómica Complementaria',
             ]
         ];
         
@@ -179,44 +179,14 @@ class Cuestionario extends Model
      */
     protected function getSlugSeccion(int $numero): string
     {
-        $slugsPorTipo = [
-            'preempleo' => [
-                1 => 'datos_personales',
-                2 => 'informacion_familiar',
-                3 => 'historial_laboral',
-                4 => 'situacion_economica',
-                5 => 'antecedentes',
-                6 => 'firma_digital'
-            ],
-            'periodica' => [
-                1 => 'actualizacion_datos',
-                2 => 'cambios_familiares',
-                3 => 'situacion_laboral',
-                4 => 'antecedentes_recientes',  // Contiene datos económicos (así se guardó)
-                5 => 'firma_digital'             // Contiene antecedentes (así se guardó)
-            ],
-            'especifica' => [
-                1 => 'datos_basicos',
-                2 => 'situacion_especifica',
-                3 => 'situacion_economica',
-                4 => 'antecedentes_relevantes',
-                5 => 'firma_digital'
-            ],
-            'socioeconomico' => [
-                1 => 'datos_personales',
-                2 => 'informacion_familiar',
-                3 => 'historial_laboral',
-                4 => 'situacion_economica_detallada',
-                5 => 'situacion_habitacional',
-                6 => 'referencias_comunitarias',
-                7 => 'verificacion_documentos',
-                8 => 'firma_digital'
-            ]
-        ];
-        
-        $slugs = $slugsPorTipo[$this->tipo_formulario] ?? $slugsPorTipo['preempleo'];
-        
-        return $slugs[$numero] ?? 'seccion_' . $numero;
+        return CuestionarioSecciones::slug($numero, $this->tipo_formulario ?? 'preempleo');
+    }
+
+    public static function totalSeccionesParaTipo(string $tipoFormulario): int
+    {
+        $cuestionario = new self(['tipo_formulario' => $tipoFormulario]);
+
+        return count($cuestionario->getSeccionesConfig());
     }
     
     /**

@@ -39,6 +39,12 @@
         </div>
     @endif
 
+    @if(count($columnas) >= 6)
+        <p class="text-muted small tabla-dinamica-scroll-hint mb-2 d-none d-sm-block">
+            <i class="fas fa-arrows-alt-h"></i> Deslice horizontalmente para ver todas las columnas.
+        </p>
+    @endif
+
     @error($name)
         <div class="alert alert-danger py-2">{{ $message }}</div>
     @enderror
@@ -88,8 +94,36 @@
 @once
     @push('styles')
         <style>
+            .tabla-dinamica-wrapper .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                max-width: 100%;
+            }
+
+            .tabla-dinamica-table {
+                width: max-content;
+                min-width: 100%;
+            }
+
+            .tabla-dinamica-table th {
+                white-space: nowrap;
+            }
+
+            .tabla-dinamica-table .form-control-sm {
+                min-width: 5.5rem;
+            }
+
+            .tabla-dinamica-remove:disabled {
+                opacity: 0.45;
+                cursor: not-allowed;
+            }
+
             /* Móvil: misma fila/campos del DOM, presentación tipo tarjeta (un solo guardado) */
             @media (max-width: 767.98px) {
+                .tabla-dinamica-scroll-hint {
+                    display: none !important;
+                }
+
                 .tabla-dinamica-wrapper .table-responsive {
                     overflow-x: visible;
                 }
@@ -136,6 +170,11 @@
 
                 .tabla-dinamica-row .tabla-dinamica-remove {
                     width: 100%;
+                }
+
+                .tabla-dinamica-row .tabla-dinamica-remove:disabled {
+                    opacity: 0.45;
+                    cursor: not-allowed;
                 }
 
                 .tabla-dinamica-table .form-control-sm {

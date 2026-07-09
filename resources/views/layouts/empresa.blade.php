@@ -133,6 +133,29 @@
             top: 0;
             z-index: 1040;
         }
+
+        /* Cuestionario: lectura estilizada (portal empresa) */
+        .section-content .section-title {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-content .section-title i {
+            opacity: 0.85;
+        }
+        .section-content .card-header {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .section-content .table-borderless td:first-child {
+            width: 35%;
+        }
     </style>
 </head>
 

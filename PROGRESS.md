@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-07-02 — **Fase F E2 Pre-empleo ✅ cerrada (QA manual OK)** · **740 tests OK** · **Siguiente: E3**
+**Ultima actualizacion:** 2026-07-08 — **Fase F E4 Socioeconómico en curso** · **756 tests OK**
 
 > **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
@@ -17,8 +17,8 @@
 | Qué | Detalle |
 |-----|---------|
 | **Fase** | **F — Formularios (cierre del proyecto)** |
-| **Etapa activa** | **E3 — Campos evaluador + generación de tablas al informe** |
-| **Etapa anterior** | **E2 — Pre-empleo ✅** (2.1–2.21 + QA manual 2-jul) |
+| **Etapa activa** | **E4 — Formulario Socioeconómico** (4.1–4.7) |
+| **Etapa anterior** | **E3 — Evaluador + informe ✅** |
 | **Plan detallado (checklists)** | `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` ← **documento principal para avanzar punto por punto** |
 | **Análisis / spec / decisiones comerciales** | `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` |
 | **Contexto para agentes IA** | `docs/status/CONTEXTO_AGENTES.md` |
@@ -31,7 +31,7 @@
 | Decisiones técnicas (valor_json, evaluador_notas, catálogo GT, foto obligatoria) | ✅ |
 | Migraciones `valor_json` + `evaluador_notas` (batch 11, Docker local) | ✅ |
 | Modelos `CuestionarioRespuesta` + `EvaluadorNota` | ✅ |
-| Tests regresión | ✅ 740/740 |
+| Tests regresión | ✅ 756/756 |
 | **E1 Motor base** | ✅ **CERRADO** (1.1–1.9) |
 | **1.9** Tests del motor + migraciones E1 | ✅ **completado** (`CuestionarioMotorE1Test`, `CuestionarioSeccionesTest`) |
 
@@ -39,7 +39,7 @@
 
 | Punto | Estado |
 |-------|--------|
-| Tests regresión | ✅ 740/740 |
+| Tests regresión | ✅ 756/756 |
 | **2.1** Sección 1 — datos generales | ✅ |
 | **2.2** Padres (condicional ¿vive?) | ✅ |
 | **2.3** Pareja actual (condicional) | ✅ |
@@ -67,18 +67,52 @@
 - Pantalla completado: botón «Cerrar ventana» con instrucciones visibles (SweetAlert + atajos teclado).
 - Fixes previos sesión: spinner/foto/licencia, badge «Confidencial» en preguntas internas.
 
-**Siguiente paso:** **E3.1** — UI espacios internos del evaluador por sección (solo REPRO).
+**Siguiente paso:** **E4.1** — Reutilizar las 5 secciones matriz en formulario Socioeconómico.
 
 **Paralelo (aún no iniciado):** Fase A legal · Fase Word (.docx)
 
-### Progreso E3 (evaluador + informe) — EN CURSO
+### Progreso E3 (evaluador + informe) — ✅ CERRADO (8-jul-2026)
 
 | Punto | Estado |
 |-------|--------|
-| **3.1** UI espacios internos evaluador (solo REPRO) | ⬜ |
-| **3.2** Mapeo respuestas → tablas informe | ⬜ |
-| **3.3** Reglas exclusión campos internos del informe | ⬜ |
-| **3.4** Tests permisos (empresa no ve internas) | ⬜ |
+| **3.1** UI espacios internos evaluador (solo REPRO) | ✅ `EvaluadorNotasSupport` + accordion admin show/edit |
+| **3.2** Mapeo respuestas → tablas informe | ✅ `InformePreempleo` (familia, académico, laboral, deudas, complementaria) + overrides en `evaluador_notas` |
+| **3.3** Reglas exclusión campos internos del informe | ✅ `CamposInternosPreempleo::filtrarRespuestasParaEmpresa()` — portal empresa + PDF |
+| **3.4** Tests permisos (empresa no ve internas) | ✅ `InformePreempleoTest` + `InformePreempleoVisibilidadTest` |
+
+**Mejoras post-E3 (portal empresa + PDF, 8-jul):**
+- Vista empresa: pestañas reutilizan partials admin en solo lectura (`shared/cuestionario/seccion-lectura`) — cards, tablas dinámicas, badges (sin inputs).
+- PDF empresa: agrupación por sección/subsección (`shared/cuestionario/pdf-secciones-empresa`) en lugar de listado plano.
+- Sección 5 empresa: ocultos antecedentes/salud/referencias legacy; visibles tatuajes, perforaciones, complementaria, info adicional candidato.
+- Helper `CuestionarioPresentacionEmpresa` centraliza filtrado + tablas por sección.
+
+**Fixes QA formulario candidato (post-E2, 8-jul):**
+- Scroll horizontal en tablas dinámicas (`tabla-dinamica.blade.php` + sync condicionales).
+- Deudas: campos condicionales con `<x-campo-condicional>` (evita disabled por autosave).
+- Tests: `CuestionarioTablaDinamicaTest` (8/8).
+
+**Demo manual E4 (Socio):** `DemoPruebaManualE4Seeder` · token `e4demo2026pruebamanualtokenrepr0` · DPI `2405617300205` (13 dígitos)
+- Empresa demo: `demo-empresa-e4@repro.local` / `empresa1234` (requiere orden `entregado` + `resultados_visibles_empresa=true`)
+
+**Siguiente paso E4:** QA manual flujo socio completo (6 secciones) · admin partial sección 6 · PDF empresa sección 6.
+
+### Progreso E4 (Socioeconómico) — EN CURSO (8-jul)
+
+| Punto | Estado |
+|-------|--------|
+| **4.1** Reutilizar 5 secciones matriz + activar `tipo_formulario=socioeconomico` en cuestionario | ✅ |
+| **4.2** Referencias fam/pers/vec/laborales (tablas dinámicas, import empleos) | ✅ |
+| **4.3** Bienes y pertenencias + total autocalculado | ✅ |
+| **4.4** Presupuesto personal + total autocalculado | ✅ |
+| **4.5** Información de vivienda (campos condicionales) | ✅ |
+| **4.6** Reglas informe (refs fam/pers sí; vecinales/vivienda ocultos empresa) | ✅ parcial |
+| **4.7** Documentos socio (constancia laboral, recibo luz) | ✅ |
+
+**Archivos clave E4:** `SocioeconomicoComplementariaCampos.php` · `socioeconomico-complementaria.blade.php` · `seccion_6.blade.php` (admin/empresa) · `EvaluadoOrden::tipoFormularioCuestionario()`.
+
+**Tests E4:** `CuestionarioSocioeconomicoTest` (4 tests).
+
+**Siguiente paso E4:** QA manual flujo socio completo (6 secciones) · admin partial sección 6 · PDF empresa sección 6.
 
 **Migraciones E1 (batch 11–14):** `valor_json` · `evaluador_notas` · `departamentos` · `municipios` · `instrucciones_*` · `datos_precarga_json`
 
@@ -108,7 +142,7 @@
 | Fase 20 | Hotfix enlace cuestionario — UX 404, logging, vigencia token | ✅ DEPLOYADA 2026-06-16 |
 | Fase A (legal) | 7 autorizaciones + Infornet + corrección Específica + campo motivo/hecho + ajuste manual Socio | 📋 PLANIFICADA — dentro de saldo Q 10,000 |
 | Fase Word | Informe empresa en .docx editable (Q 1,600 aprobado) | 📋 PLANIFICADA — versión base independiente; "rica" depende del motor de formularios |
-| **Fase F (formularios)** | **Completar motor + 4 formularios (Pre-empleo matriz 5 secc. + Socio + Periódica + Específica)** | 🔄 **EN DESARROLLO — E2 Pre-empleo** · E1 ✅ cerrado · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` |
+| **Fase F (formularios)** | **Completar motor + 4 formularios (Pre-empleo matriz 5 secc. + Socio + Periódica + Específica)** | 🔄 **EN DESARROLLO — E4 Socioeconómico** · E1–E3 ✅ · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` |
 | Fase C (1B) | Agregar servicio con reutilización de datos (Q 5,200) | 🕐 DIFERIDA 2–3 meses (decisión cliente) |
 | WhatsApp API | Notificaciones automáticas (Q 3,800) | 🕐 POSPUESTA (decisión cliente) |
 

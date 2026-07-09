@@ -39,9 +39,8 @@ class CuestionarioSecciones
                 2 => 'informacion_familiar',
                 3 => 'historial_laboral',
                 4 => 'situacion_economica',
-                5 => 'situacion_habitacional',
-                6 => 'referencias_comunitarias',
-                7 => 'verificacion_documentos',
+                5 => 'antecedentes',
+                6 => 'informacion_socioeconomica_complementaria',
             ],
         ];
     }

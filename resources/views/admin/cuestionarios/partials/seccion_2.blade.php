@@ -12,6 +12,7 @@
     $tieneHijos = ($respuestas['tiene_hijos'] ?? '') === 'si' || $filasHijos !== [];
 @endphp
 <div class="section-content">
+    @if(!($ocultarEstadoSeccion ?? false))
     @if($completada)
         <div class="alert alert-success mb-3">
             <i class="bi bi-check-circle-fill"></i> Sección completada
@@ -20,6 +21,7 @@
         <div class="alert alert-warning mb-3">
             <i class="bi bi-exclamation-triangle"></i> Sección pendiente o incompleta
         </div>
+    @endif
     @endif
     
     <h5 class="section-title mb-4">

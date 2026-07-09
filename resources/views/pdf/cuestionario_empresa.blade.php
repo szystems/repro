@@ -50,6 +50,15 @@
         .footer strong { color: #000555; }
         .page-break { page-break-before: always; }
         .seccion { page-break-inside: auto; }
+        .subseccion-titulo {
+            background-color: #f0f4ff;
+            border-left: 4px solid #ffb000;
+            color: #000555;
+            font-weight: bold;
+            font-size: 10px;
+            margin: 10px 0 6px 0;
+            padding: 6px 10px;
+        }
     </style>
 </head>
 <body>
@@ -111,59 +120,7 @@
     </div>
 
     @if($cuestionario && method_exists($cuestionario, 'getSeccionesConfig'))
-        @php
-            $seccionesConfig = $cuestionario->getSeccionesConfig();
-            $etiquetasCampos = [
-                // ... (puedes copiar el mapeo de etiquetas del PDF de REPRO aquí) ...
-            ];
-        @endphp
-        @foreach($seccionesConfig as $numeroSeccion => $nombreSeccion)
-            <div class="seccion">
-                <div class="seccion-titulo">
-                    Sección {{ $numeroSeccion }}: {{ $nombreSeccion }}
-                </div>
-                @php
-                    $respuestasSeccion = $cuestionario->obtenerRespuestasSeccion($numeroSeccion);
-                @endphp
-                @if(count($respuestasSeccion) > 0)
-                    <table class="datos-table">
-                        @foreach($respuestasSeccion as $campo => $valor)
-                            @php
-                                $etiqueta = $etiquetasCampos[$campo] ?? ucfirst(str_replace('_', ' ', $campo));
-                                $valorFormateado = $valor;
-                                if (empty($valor)) {
-                                    $valorFormateado = null;
-                                } elseif (in_array(strtolower($valor), ['si', 'sí', '1', 'true'])) {
-                                    $valorFormateado = 'Sí';
-                                } elseif (in_array(strtolower($valor), ['no', '0', 'false'])) {
-                                    $valorFormateado = 'No';
-                                } elseif ((str_contains($campo, 'ingreso') || str_contains($campo, 'gasto') ||
-                                    str_contains($campo, 'salario') || str_contains($campo, 'monto') ||
-                                    str_contains($campo, 'balance') || str_contains($campo, 'total')) && is_numeric($valor)) {
-                                    $valorFormateado = 'Q' . number_format((float)$valor, 2);
-                                } else {
-                                    $valorFormateado = ucfirst(str_replace('_', ' ', $valor));
-                                }
-                            @endphp
-                            <tr>
-                                <th>{{ $etiqueta }}:</th>
-                                <td class="{{ empty($valorFormateado) ? 'vacio' : '' }}">
-                                    {!! $valorFormateado ? nl2br(e($valorFormateado)) : 'No proporcionado' !!}
-                                </td>
-                            </tr>
-                        @endforeach
-                    </table>
-                @else
-                    <table class="datos-table">
-                        <tr>
-                            <td class="vacio" style="text-align: center;" colspan="2">
-                                Esta sección no tiene respuestas registradas.
-                            </td>
-                        </tr>
-                    </table>
-                @endif
-            </div>
-        @endforeach
+        @include('shared.cuestionario.pdf-secciones-empresa', ['evaluado' => $evaluado])
     @endif
 
     {{-- Documentos Verificados --}}

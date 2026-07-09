@@ -82,7 +82,7 @@
             background: white;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            overflow: hidden;
+            overflow: visible;
             margin-bottom: 2rem;
             border: 1px solid #e9ecef;
         }
@@ -508,25 +508,69 @@
             }
         };
         
-        // Validación unificada al enviar (foto, campos requeridos, spinner)
+        // Validación unificada al enviar (campos requeridos visibles, tablas, foto sección 1)
         window.cuestionarioValidarEnvio = function (form) {
             if (window.CamposCondicionales && typeof window.CamposCondicionales.syncAll === 'function') {
                 window.CamposCondicionales.syncAll();
             }
+            if (window.TablaDinamica && typeof window.TablaDinamica.removeEmptyRowsAll === 'function') {
+                window.TablaDinamica.removeEmptyRowsAll();
+            } else if (window.TablaDinamica && typeof window.TablaDinamica.syncAll === 'function') {
+                window.TablaDinamica.syncAll();
+            }
+
+            function fieldIsHidden(field) {
+                if (field.disabled) {
+                    return true;
+                }
+
+                let node = field;
+                while (node && node !== document.body) {
+                    if (node.classList && node.classList.contains('d-none')) {
+                        return true;
+                    }
+                    node = node.parentElement;
+                }
+
+                return false;
+            }
+
+            function fieldLabel(field) {
+                const td = field.closest('td[data-label]');
+                if (td && td.dataset.label) {
+                    return td.dataset.label.replace(/\s*\*$/, '');
+                }
+
+                if (field.id) {
+                    const label = form.querySelector('label[for="' + field.id + '"]');
+                    if (label) {
+                        return label.textContent.replace(/\*/g, '').trim();
+                    }
+                }
+
+                return field.name || 'Campo';
+            }
 
             let valid = true;
             let firstError = null;
+            const missingLabels = [];
 
             form.querySelectorAll('[required]').forEach(function (field) {
-                if (field.disabled) {
+                if (fieldIsHidden(field) || field.type === 'file') {
+                    field.classList.remove('is-invalid');
                     return;
                 }
-                if (field.type === 'file') {
-                    return;
-                }
-                if (!String(field.value || '').trim()) {
+
+                const value = String(field.value || '').trim();
+                const patternOk = !field.pattern || field.validity.valid || value === '';
+
+                if (!value || !patternOk) {
                     field.classList.add('is-invalid');
                     valid = false;
+                    const label = fieldLabel(field);
+                    if (missingLabels.indexOf(label) === -1) {
+                        missingLabels.push(label);
+                    }
                     if (!firstError) {
                         firstError = field;
                     }
@@ -543,6 +587,9 @@
                 if (!hasFile && !hasExistente) {
                     fotoGroup.classList.add('is-invalid');
                     valid = false;
+                    if (missingLabels.indexOf('Fotografía del candidato') === -1) {
+                        missingLabels.push('Fotografía del candidato');
+                    }
                     if (!firstError) {
                         firstError = fotoGroup;
                     }
@@ -551,7 +598,14 @@
                 }
             }
 
-            return { valid: valid, firstError: firstError };
+            let message = 'Revise los campos marcados en rojo.';
+            if (missingLabels.length > 0) {
+                const preview = missingLabels.slice(0, 5).join(', ');
+                const extra = missingLabels.length > 5 ? '…' : '';
+                message = 'Faltan o tienen formato inválido: ' + preview + extra + '.';
+            }
+
+            return { valid: valid, firstError: firstError, message: message };
         };
 
         // Inicialización básica
@@ -566,7 +620,7 @@
                     if (!result.valid) {
                         e.preventDefault();
                         cuestionarioHelpers.hideLoading();
-                        cuestionarioHelpers.showAlert('Por favor, complete todos los campos requeridos (incluya fotografía y licencia de conducir).', 'danger');
+                        cuestionarioHelpers.showAlert(result.message || 'Revise los campos marcados en rojo.', 'danger');
                         if (result.firstError && result.firstError.scrollIntoView) {
                             result.firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             if (result.firstError.focus) {

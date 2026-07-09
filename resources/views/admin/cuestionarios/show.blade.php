@@ -369,6 +369,8 @@
                                 </div>
                                 
                                 @include('admin.cuestionarios.partials.notas-evaluador')
+
+                @include('admin.cuestionarios.partials.tablas-informe-preempleo', ['soloLectura' => true])
                                 
                                 <div class="d-flex justify-content-end">
                                     <button type="submit" class="btn btn-primary">

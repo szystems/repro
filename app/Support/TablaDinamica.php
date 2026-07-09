@@ -21,6 +21,7 @@ class TablaDinamica
             3 => self::tablasSeccion3($tipoFormulario),
             4 => self::tablasSeccion4($tipoFormulario),
             5 => self::tablasSeccion5($tipoFormulario),
+            6 => self::tablasSeccion6($tipoFormulario),
             default => [],
         };
     }
@@ -81,7 +82,7 @@ class TablaDinamica
             ['key' => 'edad', 'label' => 'Edad', 'type' => 'number', 'required' => true, 'min' => 0, 'max' => 120],
             ['key' => 'vive_con_candidato', 'label' => '¿Vive con usted?', 'type' => 'select', 'required' => true, 'options' => ['si' => 'Sí', 'no' => 'No']],
             ['key' => 'ocupacion', 'label' => 'Ocupación / lugar de trabajo', 'type' => 'text', 'required' => false, 'max' => 150],
-            ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'tel', 'required' => false, 'max' => 15],
+            ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => false, 'max' => 15],
         ];
     }
 
@@ -93,7 +94,7 @@ class TablaDinamica
             ['key' => 'edad', 'label' => 'Edad', 'type' => 'number', 'required' => true, 'min' => 0, 'max' => 120],
             ['key' => 'direccion', 'label' => 'Dirección', 'type' => 'text', 'required' => true, 'max' => 500],
             ['key' => 'ocupacion', 'label' => 'Ocupación / lugar de trabajo', 'type' => 'text', 'required' => false, 'max' => 150],
-            ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'tel', 'required' => false, 'max' => 15],
+            ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => false, 'max' => 15],
         ];
     }
 
@@ -121,7 +122,7 @@ class TablaDinamica
             ['key' => 'ultimo_salario', 'label' => 'Último salario (Q.)', 'type' => 'number', 'required' => false, 'min' => 0],
             ['key' => 'motivo_retiro', 'label' => 'Motivo retiro', 'type' => 'text', 'required' => true, 'max' => 200],
             ['key' => 'jefe_inmediato', 'label' => 'Jefe inmediato', 'type' => 'text', 'required' => false, 'max' => 100],
-            ['key' => 'contacto_rrhh', 'label' => 'Contacto RRHH', 'type' => 'tel', 'required' => false, 'max' => 15],
+            ['key' => 'contacto_rrhh', 'label' => 'Contacto RRHH', 'type' => 'digits', 'required' => false, 'max' => 15],
             ['key' => 'tiene_constancia', 'label' => '¿Constancia?', 'type' => 'select', 'required' => true, 'options' => ['si' => 'Sí', 'no' => 'No']],
         ];
     }
@@ -138,6 +139,85 @@ class TablaDinamica
             ['key' => 'antiguedad', 'label' => 'Antigüedad', 'type' => 'text', 'required' => false, 'max' => 50],
             ['key' => 'estatus', 'label' => 'Estatus', 'type' => 'select', 'required' => true, 'options' => ['al_dia' => 'Al día', 'atrasado' => 'Atrasado', 'pagado' => 'Pagado']],
             ['key' => 'meses_atraso', 'label' => 'Meses de atraso', 'type' => 'number', 'required' => false, 'min' => 0, 'max' => 120],
+        ];
+    }
+
+    /** @return array<string, list<array<string, mixed>>> */
+    private static function tablasSeccion6(string $tipoFormulario): array
+    {
+        if ($tipoFormulario !== 'socioeconomico') {
+            return [];
+        }
+
+        return [
+            'referencias_familiares' => self::columnasReferenciasFamiliares(),
+            'referencias_personales' => self::columnasReferenciasPersonales(),
+            'referencias_vecinales' => self::columnasReferenciasVecinales(),
+            'referencias_laborales' => self::columnasReferenciasLaborales(),
+            'bienes' => self::columnasBienes(),
+            'presupuesto' => self::columnasPresupuesto(),
+        ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public static function columnasReferenciasFamiliares(): array
+    {
+        return [
+            ['key' => 'nombre', 'label' => 'Nombre completo', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'parentesco', 'label' => 'Parentesco', 'type' => 'text', 'required' => true, 'max' => 50],
+            ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => true, 'max' => 15],
+            ['key' => 'direccion', 'label' => 'Dirección', 'type' => 'text', 'required' => true, 'max' => 300],
+        ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public static function columnasReferenciasPersonales(): array
+    {
+        return [
+            ['key' => 'nombre', 'label' => 'Nombre completo', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'relacion', 'label' => 'Relación', 'type' => 'text', 'required' => true, 'max' => 50],
+            ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => true, 'max' => 15],
+            ['key' => 'anos_conocerlo', 'label' => 'Años de conocerlo', 'type' => 'number', 'required' => true, 'min' => 0, 'max' => 80],
+        ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public static function columnasReferenciasVecinales(): array
+    {
+        return [
+            ['key' => 'nombre', 'label' => 'Nombre completo', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => true, 'max' => 15],
+            ['key' => 'direccion', 'label' => 'Dirección / referencia', 'type' => 'text', 'required' => true, 'max' => 300],
+            ['key' => 'tiempo_conocerlo', 'label' => 'Tiempo de conocerlo', 'type' => 'text', 'required' => false, 'max' => 50],
+        ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public static function columnasReferenciasLaborales(): array
+    {
+        return [
+            ['key' => 'empresa', 'label' => 'Empresa', 'type' => 'text', 'required' => true, 'max' => 150],
+            ['key' => 'contacto', 'label' => 'Nombre contacto', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => true, 'max' => 15],
+            ['key' => 'puesto', 'label' => 'Puesto / cargo', 'type' => 'text', 'required' => false, 'max' => 100],
+        ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public static function columnasBienes(): array
+    {
+        return [
+            ['key' => 'descripcion', 'label' => 'Descripción del bien', 'type' => 'text', 'required' => true, 'max' => 200],
+            ['key' => 'valor', 'label' => 'Valor estimado (Q.)', 'type' => 'number', 'required' => true, 'min' => 0],
+        ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public static function columnasPresupuesto(): array
+    {
+        return [
+            ['key' => 'concepto', 'label' => 'Concepto de gasto', 'type' => 'text', 'required' => true, 'max' => 150],
+            ['key' => 'monto', 'label' => 'Monto mensual (Q.)', 'type' => 'number', 'required' => true, 'min' => 0],
         ];
     }
 
@@ -223,6 +303,25 @@ class TablaDinamica
         return array_values($filas);
     }
 
+    /**
+     * Elimina filas vacías de tablas dinámicas antes de validar (evita fallos por filas añadidas sin completar).
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public static function mergeTablasNormalizadas(array $input, int $numero, string $tipoFormulario): array
+    {
+        foreach (self::camposPorSeccion($numero, $tipoFormulario) as $campo => $columnas) {
+            if (! array_key_exists($campo, $input)) {
+                continue;
+            }
+
+            $input[$campo] = self::normalizarFilas($input[$campo], $columnas);
+        }
+
+        return $input;
+    }
+
     /** @return array<string, mixed> */
     public static function reglasValidacion(int $numero, string $tipoFormulario): array
     {
@@ -248,6 +347,7 @@ class TablaDinamica
                     'number' => 'numeric',
                     'date' => 'date',
                     'select' => 'string',
+                    'digits' => 'regex:/^[0-9]+$/',
                     default => 'string',
                 };
 
@@ -265,7 +365,7 @@ class TablaDinamica
                     $fieldRules[] = 'in:'.implode(',', array_keys($col['options']));
                 }
 
-                if ($col['key'] === 'nombre') {
+                if ($col['key'] === 'nombre' && in_array($campo, ['hijos', 'hermanos'], true)) {
                     $fieldRules[] = 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\\s]+$/';
                 }
 
@@ -312,6 +412,13 @@ class TablaDinamica
             'deudas.required' => 'Debe agregar al menos una deuda en la tabla.',
             'tatuajes.required' => 'Debe agregar al menos un tatuaje en la tabla.',
             'perforaciones.required' => 'Debe agregar al menos una perforación en la tabla.',
+            'hijos.*.telefono.regex' => 'El teléfono solo debe contener números.',
+            'hermanos.*.telefono.regex' => 'El teléfono solo debe contener números.',
+            'empleos.*.contacto_rrhh.regex' => 'El teléfono de contacto RRHH solo debe contener números.',
+            'referencias_familiares.*.telefono.regex' => 'El teléfono solo debe contener números.',
+            'referencias_personales.*.telefono.regex' => 'El teléfono solo debe contener números.',
+            'referencias_vecinales.*.telefono.regex' => 'El teléfono solo debe contener números.',
+            'referencias_laborales.*.telefono.regex' => 'El teléfono solo debe contener números.',
         ];
     }
 }

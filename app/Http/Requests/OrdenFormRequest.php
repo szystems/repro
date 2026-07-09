@@ -117,10 +117,11 @@ class OrdenFormRequest extends FormRequest
                 // Validar combinación servicio-formulario para cada evaluado
                 foreach ($this->evaluados as $index => $evaluado) {
                     if (isset($evaluado['tipo_servicio']) && isset($evaluado['tipo_formulario'])) {
-                        if ($evaluado['tipo_servicio'] === 'socioeconomico' && $evaluado['tipo_formulario'] !== 'preempleo') {
+                        if ($evaluado['tipo_servicio'] === 'socioeconomico'
+                            && $evaluado['tipo_formulario'] !== 'preempleo') {
                             Log::info("Error: Combinación inválida en evaluado {$index}");
-                            $validator->errors()->add("evaluados.{$index}.tipo_formulario", 
-                                'El estudio socioeconómico solo puede usar formulario de pre-empleo.');
+                            $validator->errors()->add("evaluados.{$index}.tipo_formulario",
+                                'El estudio socioeconómico se registra con formulario pre-empleo en la orden.');
                         }
                     }
                 }

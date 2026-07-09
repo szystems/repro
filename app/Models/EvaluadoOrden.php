@@ -190,6 +190,16 @@ class EvaluadoOrden extends Model
         return $this->hasOne(Cuestionario::class, 'evaluado_orden_id');
     }
 
+    /** Tipo de formulario del cuestionario digital (puede diferir del selector en orden para socio). */
+    public function tipoFormularioCuestionario(): string
+    {
+        if ($this->tipo_servicio === 'socioeconomico') {
+            return 'socioeconomico';
+        }
+
+        return $this->tipo_formulario ?? 'preempleo';
+    }
+
     /**
      * Notas internas del evaluador REPRO (E1.8) — separadas de respuestas del candidato.
      */

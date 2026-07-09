@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Cuestionario;
 
 use App\Http\Requests\Cuestionario\Concerns\EtiquetasValidacionCuestionario;
+use App\Http\Requests\Cuestionario\Concerns\PreparaTablasDinamicasParaValidacion;
 use App\Support\InformacionFamiliarExparejas;
 use App\Support\InformacionFamiliarPadres;
 use App\Support\InformacionFamiliarPareja;
@@ -12,6 +13,13 @@ use Illuminate\Foundation\Http\FormRequest;
 class InformacionFamiliarRequest extends FormRequest
 {
     use EtiquetasValidacionCuestionario;
+    use PreparaTablasDinamicasParaValidacion;
+
+    protected function numeroSeccionTablasDinamicas(): int
+    {
+        return 2;
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -24,6 +32,8 @@ class InformacionFamiliarRequest extends FormRequest
                 'convive_con' => InformacionFamiliarPadres::conviveConParaAlmacenar($this->input('convive_con')),
             ]);
         }
+
+        $this->prepararTablasDinamicas();
     }
 
     public function rules(): array

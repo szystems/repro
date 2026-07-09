@@ -68,6 +68,7 @@
                 <form action="{{ route('cuestionario.guardar-seccion', ['token' => $token, 'numero' => $numeroSeccion]) }}" 
                       method="POST" 
                       id="cuestionarioForm"
+                      novalidate
                       data-autosave-url="{{ route('cuestionario.autosave-seccion', ['token' => $token, 'numero' => $numeroSeccion]) }}"
                       @if($numeroSeccion === 1) enctype="multipart/form-data" @endif>
                     @csrf
@@ -82,14 +83,14 @@
                     
                     {{-- Aquí se incluirá el contenido específico de cada sección --}}
                     @php
-                        $vistasSeccion = [
+                        $vistaSeccion = $vistaSeccion ?? match ($numeroSeccion) {
                             1 => 'cuestionario.secciones.datos-personales',
                             2 => 'cuestionario.secciones.informacion-familiar',
                             3 => 'cuestionario.secciones.historial-laboral',
                             4 => 'cuestionario.secciones.situacion-economica',
                             5 => 'cuestionario.secciones.antecedentes',
-                        ];
-                        $vistaSeccion = $vistasSeccion[$numeroSeccion] ?? 'cuestionario.secciones.generica';
+                            default => 'cuestionario.secciones.generica',
+                        };
                     @endphp
                     @include($vistaSeccion)
                     
@@ -140,15 +141,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Botones de acción (borrador / siguiente)
-    if (form && formAction) {
-        form.querySelectorAll('[data-set-action]').forEach(function(button) {
-            button.addEventListener('click', function() {
-                formAction.value = this.dataset.setAction;
-            });
-        });
-    }
-    
     // Prevenir salida accidental
     let formChanged = false;
     const inputs = form ? form.querySelectorAll('input, select, textarea') : [];
@@ -174,4 +166,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script src="{{ asset('js/cuestionario-autosave.js') }}?v={{ filemtime(public_path('js/cuestionario-autosave.js')) }}"></script>
+@include('cuestionario.partials.resaltar-errores-validacion')
 @endpush

@@ -181,6 +181,69 @@ class CuestionarioTablaDinamicaTest extends TestCase
         $this->assertEquals(3, $cuestionario->seccion_actual);
     }
 
+    public function test_seccion_4_deudas_usa_campo_condicional(): void
+    {
+        $this->avanzarHastaSeccionEconomica();
+
+        $response = $this->get(route('cuestionario.seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 4,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('data-condicional-trigger="tiene_deudas"', false);
+        $response->assertSee('name="deudas[0][entidad]"', false);
+    }
+
+    public function test_tablas_anchas_incluyen_indicador_scroll_horizontal(): void
+    {
+        $this->avanzarHastaSeccionLaboral();
+
+        $response = $this->get(route('cuestionario.seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 3,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Deslice horizontalmente para ver todas las columnas');
+        $response->assertSee('overflow-x: auto', false);
+    }
+
+    private function avanzarHastaSeccionEconomica(): void
+    {
+        $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 1,
+        ]), $this->datosSeccion1Preempleo());
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 2,
+        ]), $this->datosSeccion2Preempleo());
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 3,
+        ]), array_merge($this->datosSeccion3Preempleo(), $this->datosFormacionAcademicaPreempleo(), $this->datosEmpleosPreempleo()));
+    }
+
+    private function avanzarHastaSeccionLaboral(): void
+    {
+        $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 1,
+        ]), $this->datosSeccion1Preempleo());
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 2,
+        ]), $this->datosSeccion2Preempleo());
+    }
+
     /** @return array<string, mixed> */
     private function datosSeccion2ConHijos(): array
     {

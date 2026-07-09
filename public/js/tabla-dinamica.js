@@ -31,6 +31,8 @@
                 html += '<option value="' + escapeHtml(optVal) + '"' + selected + '>' + escapeHtml(col.options[optVal]) + '</option>';
             });
             html += '</select>';
+        } else if (col.type === 'digits') {
+            html += '<input type="text" inputmode="numeric" pattern="[0-9]*" class="form-control form-control-sm tabla-dinamica-input-digits" name="' + fieldName + '" value="' + escapeHtml(value || '') + '"' + maxAttr + required + '>';
         } else {
             const type = col.type || 'text';
             let extra = maxAttr;
@@ -106,6 +108,83 @@
         document.querySelectorAll('[data-tabla-dinamica]').forEach(syncWrapperFields);
     }
 
+    function notifyChanged(wrapper) {
+        wrapper.dispatchEvent(new CustomEvent('tabla-dinamica:changed', { bubbles: true }));
+    }
+
+    function confirmRemove(callback) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: '¿Eliminar fila?',
+                text: 'Los datos de esta fila se perderán.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545',
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    callback();
+                }
+            });
+            return;
+        }
+
+        if (window.confirm('¿Eliminar esta fila?')) {
+            callback();
+        }
+    }
+
+    function syncRemoveButtons(wrapper) {
+        if (wrapper.dataset.permitirEliminar === '0') {
+            return;
+        }
+
+        const minFilas = parseInt(wrapper.dataset.minFilas || '0', 10);
+        const tbody = wrapper.querySelector('.tabla-dinamica-body');
+        const rows = tbody ? tbody.querySelectorAll('.tabla-dinamica-row') : [];
+        const canRemove = rows.length > minFilas;
+        const textoEliminar = wrapper.dataset.textoEliminar || 'Eliminar';
+        const tituloBloqueado = 'Mínimo ' + minFilas + ' fila(s) requerida(s)';
+
+        rows.forEach(function (row) {
+            const btn = row.querySelector('.tabla-dinamica-remove');
+            if (!btn) {
+                return;
+            }
+
+            btn.disabled = !canRemove;
+            btn.title = canRemove ? textoEliminar : tituloBloqueado;
+            btn.setAttribute('aria-disabled', canRemove ? 'false' : 'true');
+        });
+    }
+
+    function removeEmptyRows(wrapper) {
+        const columnas = JSON.parse(wrapper.dataset.columnas || '[]');
+        const tbody = wrapper.querySelector('.tabla-dinamica-body');
+        if (!tbody || columnas.length === 0) {
+            return;
+        }
+
+        tbody.querySelectorAll('.tabla-dinamica-row').forEach(function (row) {
+            const vacia = columnas.every(function (col) {
+                const input = row.querySelector('[name$="[' + col.key + ']"]');
+                return !input || !String(input.value || '').trim();
+            });
+
+            if (vacia) {
+                row.remove();
+            }
+        });
+
+        reindexWrapper(wrapper);
+        syncWrapperFields(wrapper);
+    }
+
+    function removeEmptyRowsAll() {
+        document.querySelectorAll('[data-tabla-dinamica]').forEach(removeEmptyRows);
+    }
+
     function reindexWrapper(wrapper) {
         const name = wrapper.dataset.name;
         const columnas = JSON.parse(wrapper.dataset.columnas || '[]');
@@ -126,6 +205,8 @@
         if (emptyMsg) {
             emptyMsg.classList.toggle('d-none', tableRows.length > 0);
         }
+
+        syncRemoveButtons(wrapper);
     }
 
     function addRow(wrapper) {
@@ -146,6 +227,7 @@
 
         reindexWrapper(wrapper);
         syncWrapperFields(wrapper);
+        notifyChanged(wrapper);
     }
 
     function removeRow(wrapper, rowIndex) {
@@ -170,6 +252,14 @@
 
         reindexWrapper(wrapper);
         syncWrapperFields(wrapper);
+        notifyChanged(wrapper);
+    }
+
+    function sanitizeDigitsInput(input) {
+        const cleaned = String(input.value || '').replace(/\D/g, '');
+        if (cleaned !== input.value) {
+            input.value = cleaned;
+        }
     }
 
     function initWrapper(wrapper) {
@@ -189,16 +279,37 @@
             if (!btn || !wrapper.contains(btn)) {
                 return;
             }
+            if (btn.disabled) {
+                return;
+            }
+
             const row = btn.closest('.tabla-dinamica-row');
             if (!row) {
                 return;
             }
-            removeRow(wrapper, row.dataset.index);
+
+            confirmRemove(function () {
+                removeRow(wrapper, row.dataset.index);
+            });
         });
 
         reindexWrapper(wrapper);
         syncWrapperFields(wrapper);
     }
+
+    document.addEventListener('input', function (event) {
+        if (event.target.classList && event.target.classList.contains('tabla-dinamica-input-digits')) {
+            sanitizeDigitsInput(event.target);
+        }
+    });
+
+    document.addEventListener('paste', function (event) {
+        if (event.target.classList && event.target.classList.contains('tabla-dinamica-input-digits')) {
+            window.requestAnimationFrame(function () {
+                sanitizeDigitsInput(event.target);
+            });
+        }
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('[data-tabla-dinamica]').forEach(initWrapper);
@@ -218,6 +329,21 @@
         }, true);
 
         document.addEventListener('cuestionario:sync-fields', syncAllWrappers);
+
+        document.addEventListener('condicional:shown', function (event) {
+            if (!event.target) {
+                return;
+            }
+
+            event.target.querySelectorAll('[data-tabla-dinamica]').forEach(syncWrapperFields);
+        });
+
+        const cuestionarioForm = document.getElementById('cuestionarioForm');
+        if (cuestionarioForm) {
+            cuestionarioForm.addEventListener('change', function () {
+                window.requestAnimationFrame(syncAllWrappers);
+            });
+        }
     });
 
     window.TablaDinamica = {
@@ -225,5 +351,6 @@
         sync: syncWrapperFields,
         reindex: reindexWrapper,
         buildRow: buildTableRow,
+        removeEmptyRowsAll: removeEmptyRowsAll,
     };
 })();

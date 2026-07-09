@@ -36,6 +36,19 @@ class TablaDinamicaTest extends TestCase
         $this->assertSame('si', $datos['tiene_hijos']);
     }
 
+    public function test_merge_tablas_normalizadas_elimina_filas_vacias_seccion_2(): void
+    {
+        $normalizado = TablaDinamica::mergeTablasNormalizadas([
+            'hijos' => [
+                ['nombre' => 'Ana', 'edad' => '10', 'vive_con_candidato' => 'si', 'ocupacion' => '', 'telefono' => ''],
+                ['nombre' => '', 'edad' => '', 'vive_con_candidato' => '', 'ocupacion' => '', 'telefono' => ''],
+            ],
+        ], 2, 'preempleo');
+
+        $this->assertCount(1, $normalizado['hijos']);
+        $this->assertSame('Ana', $normalizado['hijos'][0]['nombre']);
+    }
+
     public function test_reglas_validacion_incluyen_hijos_cuando_aplica(): void
     {
         $reglas = TablaDinamica::reglasValidacion(2, 'preempleo');

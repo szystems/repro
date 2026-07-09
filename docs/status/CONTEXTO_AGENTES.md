@@ -1,8 +1,8 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 2 de julio de 2026  
-**Estado:** ✅ FASE 20 DESPLEGADA · 🔄 Fase F **E3** (evaluador/informe) — **E2 ✅ cerrado + QA manual OK**  
+**Fecha de Contexto:** 8 de julio de 2026  
+**Estado:** ✅ FASE 20 DESPLEGADA · 🔄 Fase F **E4** (Socioeconómico) — **E1–E3 ✅ cerrados**  
 **Versión:** 2.3.1 Producción  
 **Plataforma:** https://reproappv2.szystems.com  
 **Repo:** https://github.com/szystems/repro · branch `master` · commit `14a95f47`
@@ -16,10 +16,10 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 
 ### ⚡ ESTADO ACTUAL (Julio 2026)
 - ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 + Fase 20 desplegadas en iPage (`reproappv2.szystems.com`)
-- 🔄 **EN DESARROLLO:** **Fase F — Etapa E3 (evaluador + informe)** — E1 ✅ · E2 ✅ (QA manual 2-jul). Plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
+- 🔄 **EN DESARROLLO:** **Fase F — Etapa E4 (Socioeconómico)** — E1 ✅ · E2 ✅ · E3 ✅. Plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
 - ✅ **4 ESTADOS INDEPENDIENTES:** Formulario / Programación / Evaluación / Orden (Fase 18)
 - ✅ **FASE 19:** Fix duplicación órdenes, capacidad por sede, historial empresa, archivar órdenes, búsqueda DPI/nombre
-- ✅ **TESTS:** 740 tests — E2 Pre-empleo cerrado 2-jul
+- ✅ **TESTS:** 752 tests — E3 cerrado 8-jul
 - ✅ **SEGURIDAD:** Permisos granulares + middleware `role` / `permission`
 - ✅ **NOTIFICACIONES:** In-app ampliadas (creador, empresa, colaboradores — Fase 18)
 - ⏳ **PENDIENTE OPS:** Cron iPage para auto-transiciones formulario 24h/30d (o fallback on-access)
@@ -69,28 +69,33 @@ Motor base 1.1–1.9: tabla dinámica, condicionales, autosave, catálogo GT, fo
 
 **Tests E2:** `CuestionarioPreempleoSeccion2ExtendidaTest` · `CuestionarioPreempleoSecciones345Test` · `HistorialAcademicoTest`
 
-### 🔄 Fase F E3 — SIGUIENTE
+### ✅ Fase F E3 — CERRADA (8-jul-2026)
 
-- **3.1** UI notas/análisis evaluador por sección (REPRO/ADMIN; base: `EvaluadorNotasSupport`, partial admin existente).
-- **3.2** Mapeo respuestas → tablas informe (familia, académico, laboral, deudas, complementaria).
-- **3.3** Reglas de exclusión al informe (integridad, económica interna, salud, judicial…).
-- **3.4** Tests permisos (empresa NO ve internas).
+| Completado | Detalle |
+|------------|---------|
+| **3.1–3.4** | Tablas informe (`InformePreempleo`), notas evaluador, filtro empresa (`CamposInternosPreempleo`), tests visibilidad |
+| Portal empresa | Vista estilizada reutilizando partials admin (`shared/cuestionario/seccion-lectura`) — solo lectura |
+| PDF empresa | Agrupación por sección/subsección (`pdf-secciones-empresa`) |
+| QA post-E2 | Scroll tablas dinámicas, fix condicionales deudas |
 
-**Tests motor (E1.9):** `CuestionarioMotorE1Test` · `CuestionarioSeccionesTest` · más suites por pieza.
+**Archivos clave E3:**
+- `app/Support/InformePreempleo.php` · `CamposInternosPreempleo.php` · `CuestionarioPresentacionEmpresa.php`
+- `resources/views/admin/cuestionarios/partials/tablas-informe-preempleo.blade.php`
+- `resources/views/shared/cuestionario/seccion-lectura.blade.php` · `pdf-secciones-empresa.blade.php`
+- `resources/views/empresa/cuestionarios/show.blade.php` (pestañas estilizadas)
 
-**E2.1 datos generales:** `App\Support\DatosPersonalesCampos` · sección 1 Pre-empleo alineada a spec (tipo ID, nacimiento/residencia GT, IGSS, NIT, licencia; removidos género/profesión/nivel educativo) · tests `CuestionarioPreempleoDatosGeneralesTest`.
+**Tests E3:** `InformePreempleoTest` · `InformePreempleoVisibilidadTest` · `CuestionarioTablaDinamicaTest`
 
-**Autosave (E1.3):** `App\Support\CuestionarioAutosave` (validación permisiva) · `POST /cuestionario/{token}/seccion/{n}/autosave` · JS `cuestionario-autosave.js` (debounce + indicador + sendBeacon) · **Guardar Borrador** también guarda parcial sin validación completa.
+### 🔄 Fase F E4 — SIGUIENTE (Socioeconómico)
 
-**Campos condicionales (E1.2):** componente `<x-campo-condicional trigger="..." show-when="...">` · JS `public/js/campos-condicionales.js` · deshabilita/limpia campos ocultos · integrado con `TablaDinamica.syncAll()` · evento `condicional:shown` para hooks locales.
+- **4.1** Reutilizar 5 secciones matriz
+- **4.2** Sección exclusiva Referencias (familiares, personales, vecinales, laborales)
+- **4.3–4.5** Bienes, presupuesto personal, información de vivienda
+- **4.6–4.7** Reglas informe + documentos adjuntos socio
 
-**Tabla dinámica (E1.1):** `App\Support\TablaDinamica` · componente `<x-tabla-dinamica>` · JS `public/js/tabla-dinamica.js` · una sola tabla responsive (CSS tarjetas en móvil) · guardado vía `CuestionarioRespuesta::guardarTabla()` en `valor_json`.
-
-**Precarga (E1.7):** al verificar DPI se congela snapshot de la orden en `datos_precarga_json`. Campos editables trazan cambios en `metadata.precarga` de cada respuesta. REPRO ve diferencias en detalle del cuestionario.
-
-**Flujo cuestionario:** verificar DPI → **instrucciones** (`config/cuestionario_instrucciones.php`) → términos + firma → secciones.
-
-**Foto candidato:** `App\Support\CuestionarioFotoCandidato` · storage `local` en `cuestionarios/fotos/{id}/` · componente `<x-foto-candidato>` · preview vía `GET /cuestionario/{token}/foto-candidato`.
+**Demo manual Pre-empleo:** `DemoPruebaManualE1Seeder` → token `e1demo2026pruebamanualtokenrepr0` · DPI `2405617300105`
+- Admin: `admin@repro.com` / `admin1234`
+- Empresa demo: `demo-empresa-e1@repro.local` / `empresa1234` (liberar resultados en orden desde admin)
 
 ### 🐳 Desarrollo local (Docker)
 
@@ -244,8 +249,9 @@ GET /reportes/evaluaciones/excel - Exportar Excel
 - Dashboard con búsqueda de candidatos (Fase 19)
 - Navegación: órdenes, evaluados, cuestionarios
 - **Fase 19:** Historial de estados visible (config `historial_visible_empresa`, default ON)
-- Visualización de resultados cuando `resultados_visibles_empresa` activo
-- No ve órdenes archivadas
+- Visualización de resultados cuando `resultados_visibles_empresa` activo + orden `entregado`
+- **E3 (8-jul):** Cuestionario en portal con pestañas estilizadas (cards/tablas, solo lectura) y PDF agrupado
+- No ve órdenes archivadas · no ve campos internos del evaluador
 
 **Controlador:** `EmpresaController.php` · `AdminController.php` (dashboard empresa)
 
@@ -367,7 +373,11 @@ resources/views/admin/
 
 resources/views/empresa/
 ├── ordenes/       # index, show (portal empresa)
-└── cuestionarios/ # show (portal empresa)
+└── cuestionarios/ # show (portal empresa — pestañas estilizadas E3)
+
+resources/views/shared/cuestionario/
+├── seccion-lectura.blade.php      # Lectura empresa (reutiliza partials admin)
+└── pdf-secciones-empresa.blade.php # PDF agrupado empresa
 
 resources/views/cuestionario/
 ├── verificar-identidad.blade.php
@@ -519,7 +529,7 @@ php artisan view:clear
 
 | Área | Tests | Estado |
 |------|-------|--------|
-| Suite completa | 685 | ✅ Pasando (2026-06-23, E1.1 tabla dinámica) |
+| Suite completa | 752 | ✅ Pasando (2026-07-08, E3 cerrado) |
 | Fase 19 | `Fase19Sprint3Test` | ✅ Historial, archivar, búsqueda |
 | Sinergia | `Fase18SinergiaReglasSemana3Test` | ✅ S4, S5, S2 eliminado |
 | Calendario | `CalendarioTest` | ✅ Capacidad sede |
@@ -598,7 +608,7 @@ app/, database/, resources/, routes/  (+ vendor/ en deploy completo)
 
 ---
 
-**Última actualización:** 2 de julio de 2026  
-**Estado:** ✅ **Fase F E2 Pre-empleo cerrado (2.1–2.21)** · **731 tests OK** · siguiente: **E3 campos evaluador/informe** · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
+**Última actualización:** 8 de julio de 2026  
+**Estado:** ✅ **Fase F E3 cerrada (3.1–3.4 + portal empresa)** · **752 tests OK** · siguiente: **E4 Socioeconómico** · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
 
-**E2 cierre:** tablas dinámicas (hijos, hermanos, formación, empleos, deudas, tatuajes, perforaciones) · exparejas · resumen familiar · integridad/judicial/salud internos · complementaria al informe · admin/PDF · tests `CuestionarioPreempleoSeccion2ExtendidaTest`, `CuestionarioPreempleoSecciones345Test`, `CuestionarioModuloCompletoTest`.
+**E3 cierre:** tablas informe editables · filtro campos internos empresa/PDF · vista portal estilizada · PDF agrupado · tests `InformePreempleoTest`, `InformePreempleoVisibilidadTest`.

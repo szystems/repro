@@ -257,7 +257,8 @@
     @enderror
 </div>
 
-<div id="seccion_deudas" class="d-none">
+<div id="seccion_deudas">
+    <x-campo-condicional trigger="tiene_deudas" show-when="si">
     <x-tabla-dinamica
         name="deudas"
         titulo="Detalle de deudas"
@@ -275,6 +276,7 @@
                   rows="3">{{ old('detalle_deudas', $respuestasExistentes['detalle_deudas'] ?? '') }}</textarea>
         @error('detalle_deudas')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
+    </x-campo-condicional>
 </div>
 
 <div class="form-group">
@@ -461,9 +463,6 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tieneDeudas = document.getElementById('tiene_deudas');
-    const seccionDeudas = document.getElementById('seccion_deudas');
-    
     // Campos de ingresos
     const ingresosPrincipales = document.getElementById('ingresos_principales');
     const ingresosAdicionales = document.getElementById('ingresos_adicionales');
@@ -480,16 +479,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalGastos = document.getElementById('total_gastos');
     
     const balanceMensual = document.getElementById('balance_mensual');
-    
-    // Mostrar/ocultar sección de deudas
-    function toggleSeccionDeudas() {
-        if (tieneDeudas.value === 'si') {
-            seccionDeudas.classList.remove('d-none');
-        } else {
-            seccionDeudas.classList.add('d-none');
-            document.getElementById('detalle_deudas').value = '';
-        }
-    }
     
     // Calcular totales
     function calcularTotales() {
@@ -525,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Event listeners
-    tieneDeudas.addEventListener('change', toggleSeccionDeudas);
+    // Campos condicionales (deudas) los gestiona campos-condicionales.js + TablaDinamica.sync
     
     // Event listeners para cálculos automáticos
     const camposIngresos = [ingresosPrincipales, ingresosAdicionales, ingresosFamiliares];
@@ -535,8 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
         campo.addEventListener('input', calcularTotales);
     });
     
-    // Inicializar estado al cargar
-    toggleSeccionDeudas();
+    // Inicializar totales al cargar
     calcularTotales();
 });
 </script>

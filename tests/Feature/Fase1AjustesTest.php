@@ -246,12 +246,12 @@ class Fase1AjustesTest extends TestCase
 
     // ─── 6. Regla socioeconómico → preempleo ───
 
-    public function test_socioeconomico_fuerza_tipo_formulario_preempleo(): void
+    public function test_socioeconomico_evaluado_preempleo_cuestionario_socio(): void
     {
         $user = $this->crearUsuarioRepro();
         $empresa = Empresa::factory()->create();
 
-        $response = $this->actingAs($user)->post(route('ordenes.store'), [
+        $this->actingAs($user)->post(route('ordenes.store'), [
             'empresa_id' => $empresa->id,
             'evaluados' => [
                 [
@@ -260,15 +260,15 @@ class Fase1AjustesTest extends TestCase
                     'dpi' => '1234567890123',
                     'email' => 'juan@test.com',
                     'tipo_servicio' => 'socioeconomico',
-                    'tipo_formulario' => 'periodica', // intenta poner periodica
+                    'tipo_formulario' => 'periodica',
                 ],
             ],
         ]);
 
-        // Verificar que se creó con preempleo, no periodica
         $evaluado = EvaluadoOrden::where('dpi', '1234567890123')->first();
         $this->assertNotNull($evaluado);
         $this->assertEquals('preempleo', $evaluado->tipo_formulario);
+        $this->assertEquals('socioeconomico', $evaluado->tipoFormularioCuestionario());
     }
 
     // ─── 7. Store auto-calcula tipo_creador ───

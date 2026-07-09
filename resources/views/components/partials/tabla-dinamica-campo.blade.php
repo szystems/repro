@@ -23,6 +23,16 @@
             <option value="{{ $optVal }}" {{ (string) $valor === (string) $optVal ? 'selected' : '' }}>{{ $optLabel }}</option>
         @endforeach
     </select>
+@elseif(($col['type'] ?? 'text') === 'digits')
+    <input type="text"
+           inputmode="numeric"
+           pattern="[0-9]*"
+           class="form-control form-control-sm tabla-dinamica-input-digits @error($errorKey) is-invalid @enderror"
+           id="{{ $inputId }}"
+           name="{{ $inputName }}"
+           value="{{ $valor }}"
+           @if(isset($col['max'])) maxlength="{{ $col['max'] }}" @endif
+           {{ $required }}>
 @else
     <input type="{{ $col['type'] ?? 'text' }}"
            class="form-control form-control-sm @error($errorKey) is-invalid @enderror"

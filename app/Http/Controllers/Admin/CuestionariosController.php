@@ -7,6 +7,7 @@ use App\Models\Cuestionario;
 use App\Support\CuestionarioPrecarga;
 use App\Support\CuestionarioSecciones;
 use App\Support\EvaluadorNotasSupport;
+use App\Support\InformePreempleo;
 use App\Models\CuestionarioRespuesta;
 use App\Models\EvaluadoOrden;
 use Illuminate\Http\Request;
@@ -190,7 +191,7 @@ class CuestionariosController extends Controller
             'historialDPI',
             'cambiosPrecarga',
             'etiquetasPrecarga'
-        ) + $contextoNotas);
+        ) + $contextoNotas + $this->contextoInformePreempleo($cuestionario));
     }
 
     /**
@@ -217,7 +218,7 @@ class CuestionariosController extends Controller
             'cuestionario', 
             'respuestasPorSeccion',
             'secciones'
-        ) + $contextoNotas);
+        ) + $contextoNotas + $this->contextoInformePreempleo($cuestionario));
     }
 
     /**
@@ -233,9 +234,12 @@ class CuestionariosController extends Controller
             'respuestas' => 'nullable|array',
             'evaluador_notas' => 'nullable|array',
             'evaluador_notas.*' => 'nullable|string|max:10000',
+            'informe_tablas' => 'nullable|array',
+            'informe_tablas_restaurar' => 'nullable|array',
         ]);
 
-        if ($request->has('evaluador_notas') && ! EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
+        if (($request->has('evaluador_notas') || $request->has('informe_tablas') || $request->has('informe_tablas_restaurar'))
+            && ! EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
             abort(403, 'No autorizado para editar notas internas del evaluador.');
         }
 
@@ -250,6 +254,17 @@ class CuestionariosController extends Controller
                 EvaluadorNotasSupport::guardarDesdeRequest(
                     $cuestionario->evaluado_orden_id,
                     $request->input('evaluador_notas', []),
+                    Auth::id()
+                );
+            }
+
+            if (InformePreempleo::aplicaATipo($cuestionario->tipo_formulario)
+                && EvaluadorNotasSupport::puedeGestionar(Auth::user())
+                && ($request->has('informe_tablas') || $request->has('informe_tablas_restaurar'))) {
+                InformePreempleo::guardarDesdeRequest(
+                    $cuestionario->evaluado_orden_id,
+                    $request->input('informe_tablas', []),
+                    $request->input('informe_tablas_restaurar', []),
                     Auth::id()
                 );
             }
@@ -536,6 +551,34 @@ class CuestionariosController extends Controller
                 ? EvaluadorNotasSupport::mapaPorSeccion($cuestionario->evaluado_orden_id)
                 : [],
             'puedeGestionarNotasEvaluador' => $puedeGestionar,
+        ];
+    }
+
+    /**
+     * @return array{informePreempleoActivo: bool, tablasInforme: array<string, mixed>, overridesInforme: list<string>, puedeGestionarInformePreempleo: bool}
+     */
+    private function contextoInformePreempleo(Cuestionario $cuestionario): array
+    {
+        if (! InformePreempleo::aplicaATipo($cuestionario->tipo_formulario)) {
+            return [
+                'informePreempleoActivo' => false,
+                'tablasInforme' => [],
+                'overridesInforme' => [],
+                'puedeGestionarInformePreempleo' => false,
+            ];
+        }
+
+        $puedeGestionar = EvaluadorNotasSupport::puedeGestionar(Auth::user());
+
+        return [
+            'informePreempleoActivo' => true,
+            'tablasInforme' => $puedeGestionar
+                ? InformePreempleo::tablasParaAdmin($cuestionario)
+                : [],
+            'overridesInforme' => $puedeGestionar
+                ? InformePreempleo::clavesConOverride($cuestionario->evaluado_orden_id)
+                : [],
+            'puedeGestionarInformePreempleo' => $puedeGestionar,
         ];
     }
 }

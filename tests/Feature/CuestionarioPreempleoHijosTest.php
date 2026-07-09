@@ -98,7 +98,7 @@ class CuestionarioPreempleoHijosTest extends TestCase
 
         $datos = array_merge($this->datosSeccion2Preempleo(), $this->datosHijosPreempleo([
             'hijos' => [
-                ['nombre' => '', 'edad' => '', 'vive_con_candidato' => '', 'ocupacion' => '', 'telefono' => ''],
+                ['nombre' => 'Pedro', 'edad' => '', 'vive_con_candidato' => '', 'ocupacion' => '', 'telefono' => ''],
             ],
         ]));
 
@@ -107,7 +107,7 @@ class CuestionarioPreempleoHijosTest extends TestCase
             'numero' => 2,
         ]), $datos);
 
-        $response->assertSessionHasErrors(['hijos.0.nombre', 'hijos.0.edad', 'hijos.0.vive_con_candidato']);
+        $response->assertSessionHasErrors(['hijos.0.edad', 'hijos.0.vive_con_candidato']);
     }
 
     public function test_guarda_tabla_hijos_en_valor_json(): void

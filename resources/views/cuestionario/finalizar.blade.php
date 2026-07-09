@@ -34,7 +34,7 @@
                 
                 <div class="alert alert-success">
                     <h6><i class="fas fa-check-circle"></i> ¡Felicidades!</h6>
-                    <p class="mb-0">Ha completado todas las secciones del cuestionario socioeconómico. Por favor, revise la información antes de finalizar.</p>
+                    <p class="mb-0">Ha completado todas las secciones del cuestionario {{ $etiquetaFormulario ?? 'de evaluación' }}. Por favor, revise la información antes de finalizar.</p>
                 </div>
                 
                 <div class="section-title">
@@ -131,7 +131,11 @@
 
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle"></i>
-                        <strong>Documentos opcionales:</strong> Si tiene documentos relevantes (DPI, constancias, etc.) puede subirlos aquí.
+                        @if(($evaluado->tipo_servicio ?? '') === 'socioeconomico')
+                            <strong>Documentos sugeridos:</strong> DPI, constancias laborales y recibo de luz (máx. 10 MB c/u).
+                        @else
+                            <strong>Documentos opcionales:</strong> Si tiene documentos relevantes (DPI, constancias, etc.) puede subirlos aquí.
+                        @endif
                         Los documentos serán verificados por REPRO.
                     </div>
 
@@ -164,7 +168,7 @@
                                 <label class="form-label">Tipo de Documento</label>
                                 <select name="tipo_documento" class="form-select form-select-sm" required>
                                     <option value="">Seleccione...</option>
-                                    @foreach(\App\Models\DocumentoEvaluado::tiposDocumento() as $key => $label)
+                                    @foreach($tiposDocumento ?? \App\Models\DocumentoEvaluado::tiposDocumento() as $key => $label)
                                         <option value="{{ $key }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
@@ -189,7 +193,7 @@
                         <i class="fas fa-paper-plane"></i> Enviar Cuestionario
                     </div>
                     
-                    <form action="{{ route('cuestionario.completar', $token) }}" method="POST" id="finalizarForm">
+                    <form action="{{ route('cuestionario.completar', $token) }}" method="POST" id="finalizarForm" novalidate>
                         @csrf
                         
                         <div class="form-group">
@@ -212,9 +216,9 @@
                         
                         <div class="navigation-buttons">
                             <div>
-                                <a href="{{ route('cuestionario.seccion', ['token' => $token, 'numero' => 5]) }}" 
+                                <a href="{{ route('cuestionario.seccion', ['token' => $token, 'numero' => $cuestionario->total_secciones ?? 5]) }}" 
                                    class="btn btn-secondary">
-                                    <i class="fas fa-arrow-left"></i> Regresar a Sección 5
+                                    <i class="fas fa-arrow-left"></i> Regresar a la última sección
                                 </a>
                             </div>
                             
@@ -258,4 +262,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+@include('cuestionario.partials.resaltar-errores-validacion')
 @endpush
