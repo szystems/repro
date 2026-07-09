@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-07-08 — **Fase F E4 Socioeconómico en curso** · **756 tests OK**
+**Ultima actualizacion:** 2026-07-08 — **Fase F E4 Socioeconómico — cierre técnico** · **762+ tests OK**
 
 > **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
@@ -105,14 +105,15 @@
 | **4.3** Bienes y pertenencias + total autocalculado | ✅ |
 | **4.4** Presupuesto personal + total autocalculado | ✅ |
 | **4.5** Información de vivienda (campos condicionales) | ✅ |
-| **4.6** Reglas informe (refs fam/pers sí; vecinales/vivienda ocultos empresa) | ✅ parcial |
+| **4.6** Reglas informe (refs fam/pers sí; vecinales/vivienda ocultos empresa) | ✅ |
+| **4.8** PDF empresa sección 6 + tablas informe refs editables + mensajes socio | ✅ |
 | **4.7** Documentos socio (constancia laboral, recibo luz) | ✅ |
 
 **Archivos clave E4:** `SocioeconomicoComplementariaCampos.php` · `socioeconomico-complementaria.blade.php` · `seccion_6.blade.php` (admin/empresa) · `EvaluadoOrden::tipoFormularioCuestionario()`.
 
-**Tests E4:** `CuestionarioSocioeconomicoTest` (4 tests).
+**Tests E4:** `CuestionarioSocioeconomicoTest` (5) · `InformePreempleoVisibilidadTest` (PDF sec. 6).
 
-**Siguiente paso E4:** QA manual flujo socio completo (6 secciones) · admin partial sección 6 · PDF empresa sección 6.
+**Siguiente paso E4:** QA manual flujo socio completo (6 secciones + finalizar) con demo E4 · marcar E4 cerrado tras QA OK.
 
 **Migraciones E1 (batch 11–14):** `valor_json` · `evaluador_notas` · `departamentos` · `municipios` · `instrucciones_*` · `datos_precarga_json`
 

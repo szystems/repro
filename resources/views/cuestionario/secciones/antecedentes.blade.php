@@ -572,7 +572,11 @@
 
 <div class="alert alert-warning mt-4">
     <h6><i class="fas fa-info-circle"></i> Información importante</h6>
-    <p class="mb-0 small">Toda la información es confidencial. Puede completar documentación pendiente (DPI, antecedentes, constancias) en la pantalla final dentro de los 30 días del enlace.</p>
+    @if(($cuestionario->tipo_formulario ?? '') === 'socioeconomico')
+        <p class="mb-0 small">Toda la información es confidencial y será utilizada únicamente para fines de evaluación. Si tiene documentos sugeridos (constancia laboral, recibo de luz), podrá subirlos en la pantalla final.</p>
+    @else
+        <p class="mb-0 small">Toda la información es confidencial. Puede completar documentación pendiente (DPI, antecedentes, constancias) en la pantalla final dentro de los 30 días del enlace.</p>
+    @endif
 </div>
 
 <div class="form-group">

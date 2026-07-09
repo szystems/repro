@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Cuestionario;
+use App\Models\EvaluadoOrden;
 use App\Models\EvaluadorNota;
 
 /** E3.2 — Compila y persiste tablas del informe Pre-empleo (editables por evaluador). */
@@ -18,6 +19,34 @@ class InformePreempleo
         'deudas' => 'Deudas',
         'complementaria' => 'Información complementaria',
     ];
+
+    /** @var array<string, string> */
+    private const CLAVES_TABLAS_SOCIO = [
+        'referencias_familiares' => 'Referencias familiares',
+        'referencias_personales' => 'Referencias personales',
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    public static function clavesTablas(?string $tipoFormulario = null): array
+    {
+        $claves = self::CLAVES_TABLAS;
+
+        if ($tipoFormulario === 'socioeconomico') {
+            $claves = array_merge($claves, self::CLAVES_TABLAS_SOCIO);
+        }
+
+        return $claves;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function camposInformeGuardables(?string $tipoFormulario = null): array
+    {
+        return array_keys(self::clavesTablas($tipoFormulario));
+    }
 
     public static function aplicaATipo(?string $tipoFormulario): bool
     {
@@ -79,7 +108,9 @@ class InformePreempleo
         $registros = EvaluadorNota::query()
             ->where('evaluado_orden_id', $evaluadoOrdenId)
             ->where('seccion', self::SECCION_NOTAS)
-            ->whereIn('campo', array_keys(self::CLAVES_TABLAS))
+            ->whereIn('campo', self::camposInformeGuardables(
+                EvaluadoOrden::query()->find($evaluadoOrdenId)?->tipoFormularioCuestionario()
+            ))
             ->get();
 
         $overrides = [];
@@ -115,7 +146,7 @@ class InformePreempleo
         $overrides = self::overrides($cuestionario->evaluado_orden_id);
 
         foreach ($overrides as $clave => $datos) {
-            if (array_key_exists($clave, $tablas)) {
+            if (array_key_exists($clave, $tablas) || in_array($clave, self::camposInformeGuardables($cuestionario->tipo_formulario), true)) {
                 $tablas[$clave] = $datos;
             }
         }
@@ -129,7 +160,9 @@ class InformePreempleo
      */
     public static function guardarDesdeRequest(int $evaluadoOrdenId, array $input, array $restaurar, ?int $userId): void
     {
-        foreach (self::CLAVES_TABLAS as $clave => $titulo) {
+        $tipo = EvaluadoOrden::query()->find($evaluadoOrdenId)?->tipoFormularioCuestionario() ?? 'preempleo';
+
+        foreach (self::clavesTablas($tipo) as $clave => $titulo) {
             if (! empty($restaurar[$clave])) {
                 EvaluadorNota::query()
                     ->where('evaluado_orden_id', $evaluadoOrdenId)

@@ -180,4 +180,56 @@ class InformePreempleoTest extends TestCase
 
         $this->assertSame($resumen['padre']['nombre'] ?? null, $compilado['padre']['nombre'] ?? null);
     }
+
+    public function test_socio_incluye_referencias_en_claves_y_compilacion(): void
+    {
+        $ordenId = EvaluadoOrden::query()->find($this->cuestionario->evaluado_orden_id)?->orden_id;
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $ordenId,
+            'tipo_servicio' => 'socioeconomico',
+            'tipo_formulario' => 'preempleo',
+        ]);
+
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'socioeconomico',
+            'seccion_actual' => 6,
+            'total_secciones' => 6,
+            'progreso_porcentaje' => 100,
+            'estado' => 'completado',
+            'completado' => true,
+        ]);
+
+        CuestionarioRespuesta::guardarTabla($cuestionario->id, 'informacion_socioeconomica_complementaria', 'referencias_familiares', [
+            ['nombre' => 'Ana Pérez', 'parentesco' => 'Madre', 'telefono' => '50211111111', 'direccion' => 'Zona 1'],
+        ]);
+        CuestionarioRespuesta::guardarTabla($cuestionario->id, 'informacion_socioeconomica_complementaria', 'referencias_personales', [
+            ['nombre' => 'Carlos Ruiz', 'relacion' => 'Amigo', 'telefono' => '50222222222', 'anos_conocerlo' => '5'],
+        ]);
+
+        $claves = InformePreempleo::clavesTablas('socioeconomico');
+        $this->assertArrayHasKey('referencias_familiares', $claves);
+        $this->assertArrayHasKey('referencias_personales', $claves);
+
+        $tablas = InformePreempleo::compilarTablas($cuestionario);
+        $this->assertSame('Ana Pérez', $tablas['referencias_familiares'][0]['nombre'] ?? null);
+        $this->assertSame('Carlos Ruiz', $tablas['referencias_personales'][0]['nombre'] ?? null);
+
+        InformePreempleo::guardarDesdeRequest(
+            $evaluado->id,
+            [
+                'referencias_familiares' => [[
+                    'nombre' => 'Ana Editada',
+                    'parentesco' => 'Madre',
+                    'telefono' => '50211111111',
+                    'direccion' => 'Zona 1',
+                ]],
+            ],
+            [],
+            null
+        );
+
+        $this->assertContains('referencias_familiares', InformePreempleo::clavesConOverride($evaluado->id));
+        $this->assertSame('Ana Editada', InformePreempleo::tablasParaAdmin($cuestionario)['referencias_familiares'][0]['nombre'] ?? null);
+    }
 }

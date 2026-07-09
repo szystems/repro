@@ -17,7 +17,7 @@
     </div>
     <div class="card-body">
         <div class="accordion" id="accordionTablasInforme">
-            @foreach(\App\Support\InformePreempleo::CLAVES_TABLAS as $clave => $titulo)
+            @foreach(\App\Support\InformePreempleo::clavesTablas($cuestionario->tipo_formulario ?? 'preempleo') as $clave => $titulo)
                 @php
                     $datos = $tablasInforme[$clave] ?? [];
                     $editado = in_array($clave, $overridesInforme, true);
@@ -67,6 +67,8 @@
                                         'academico' => \App\Support\TablaDinamica::columnasFormacionAcademica(),
                                         'laboral' => \App\Support\TablaDinamica::columnasEmpleos(),
                                         'deudas' => \App\Support\TablaDinamica::columnasDeudas(),
+                                        'referencias_familiares' => \App\Support\TablaDinamica::columnasReferenciasFamiliares(),
+                                        'referencias_personales' => \App\Support\TablaDinamica::columnasReferenciasPersonales(),
                                     ];
                                     $columnas = $columnasMap[$clave] ?? [];
                                     $filas = is_array($datos) ? $datos : [];

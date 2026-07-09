@@ -168,6 +168,47 @@ class InformePreempleoVisibilidadTest extends TestCase
         $this->assertStringContainsString('subseccion-titulo', $html);
     }
 
+    public function test_pdf_empresa_socio_incluye_seccion_6_referencias(): void
+    {
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->evaluado->orden_id,
+            'tipo_servicio' => 'socioeconomico',
+            'tipo_formulario' => 'preempleo',
+            'cuestionario_completado' => true,
+        ]);
+
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'socioeconomico',
+            'seccion_actual' => 6,
+            'total_secciones' => 6,
+            'progreso_porcentaje' => 100,
+            'estado' => 'completado',
+            'completado' => true,
+        ]);
+
+        CuestionarioRespuesta::guardarTabla($cuestionario->id, 'informacion_socioeconomica_complementaria', 'referencias_familiares', [
+            ['nombre' => 'Fam PDF', 'parentesco' => 'Tía', 'telefono' => '50233333333', 'direccion' => 'Zona 10'],
+        ]);
+        CuestionarioRespuesta::guardarTabla($cuestionario->id, 'informacion_socioeconomica_complementaria', 'referencias_vecinales', [
+            ['nombre' => 'Vecino Oculto', 'telefono' => '50244444444', 'direccion' => 'Colonia X', 'tiempo_conocerlo' => '1 año'],
+        ]);
+        CuestionarioRespuesta::guardarRespuestas($cuestionario->id, 'informacion_socioeconomica_complementaria', [
+            'viv_tiempo_residencia' => '2 años',
+            'bienes_total' => '15000',
+        ]);
+
+        $html = view('pdf.cuestionario_empresa', [
+            'evaluado' => $evaluado->load(['cuestionario', 'documentos', 'responsable', 'orden.empresa']),
+        ])->render();
+
+        $this->assertStringContainsString('Sección 6:', $html);
+        $this->assertStringContainsString('Referencias familiares', $html);
+        $this->assertStringContainsString('Fam PDF', $html);
+        $this->assertStringNotContainsString('Vecino Oculto', $html);
+        $this->assertStringNotContainsString('viv_tiempo_residencia', $html);
+    }
+
     public function test_empresa_no_puede_guardar_tablas_informe(): void
     {
         $empresaUser = User::factory()->create(['role_as' => 1, 'estado' => 1]);

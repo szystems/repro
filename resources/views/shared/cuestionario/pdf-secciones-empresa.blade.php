@@ -33,11 +33,37 @@
                     <div class="subseccion-titulo">Resumen económico</div>
                 @elseif($numeroSeccion === 5)
                     <div class="subseccion-titulo">Información complementaria visible</div>
+                @elseif($numeroSeccion === 6)
+                    <div class="subseccion-titulo">Información socioeconómica complementaria</div>
                 @endif
 
                 @php
-                    $camposEnTabla = ['hijos', 'hermanos', 'formacion_academica', 'empleos', 'deudas', 'tatuajes', 'perforaciones'];
-                    $compKeys = array_column(InformacionComplementaria::PREGUNTAS, 'key');
+                    if ($numeroSeccion === 6) {
+                        $camposEnTabla = [
+                            'referencias_familiares', 'referencias_personales', 'referencias_vecinales',
+                            'referencias_laborales', 'bienes', 'presupuesto',
+                        ];
+                        $compKeys = [];
+                        $tablasPdf = [
+                            'referencias_familiares' => [TablaDinamica::class, 'columnasReferenciasFamiliares', 'Referencias familiares'],
+                            'referencias_personales' => [TablaDinamica::class, 'columnasReferenciasPersonales', 'Referencias personales'],
+                            'referencias_laborales' => [TablaDinamica::class, 'columnasReferenciasLaborales', 'Referencias laborales'],
+                            'bienes' => [TablaDinamica::class, 'columnasBienes', 'Bienes y pertenencias'],
+                            'presupuesto' => [TablaDinamica::class, 'columnasPresupuesto', 'Presupuesto personal'],
+                        ];
+                    } else {
+                        $camposEnTabla = ['hijos', 'hermanos', 'formacion_academica', 'empleos', 'deudas', 'tatuajes', 'perforaciones'];
+                        $compKeys = array_column(InformacionComplementaria::PREGUNTAS, 'key');
+                        $tablasPdf = [
+                            'hijos' => [TablaDinamica::class, 'columnasHijos', 'Detalle de hijos'],
+                            'hermanos' => [TablaDinamica::class, 'columnasHermanos', 'Hermanos'],
+                            'formacion_academica' => [TablaDinamica::class, 'columnasFormacionAcademica', 'Formación académica'],
+                            'empleos' => [TablaDinamica::class, 'columnasEmpleos', 'Historial de empleos'],
+                            'deudas' => [TablaDinamica::class, 'columnasDeudas', 'Detalle de deudas'],
+                            'tatuajes' => [TablaDinamica::class, 'columnasTatuajes', 'Tatuajes'],
+                            'perforaciones' => [TablaDinamica::class, 'columnasPerforaciones', 'Perforaciones'],
+                        ];
+                    }
                     $camposExcluidos = array_merge($camposEnTabla, $compKeys);
                 @endphp
 
@@ -77,17 +103,6 @@
                     </table>
                 @endif
 
-                @php
-                    $tablasPdf = [
-                        'hijos' => [TablaDinamica::class, 'columnasHijos', 'Detalle de hijos'],
-                        'hermanos' => [TablaDinamica::class, 'columnasHermanos', 'Hermanos'],
-                        'formacion_academica' => [TablaDinamica::class, 'columnasFormacionAcademica', 'Formación académica'],
-                        'empleos' => [TablaDinamica::class, 'columnasEmpleos', 'Historial de empleos'],
-                        'deudas' => [TablaDinamica::class, 'columnasDeudas', 'Detalle de deudas'],
-                        'tatuajes' => [TablaDinamica::class, 'columnasTatuajes', 'Tatuajes'],
-                        'perforaciones' => [TablaDinamica::class, 'columnasPerforaciones', 'Perforaciones'],
-                    ];
-                @endphp
                 @foreach($tablasPdf as $campoTabla => [$clase, $metodo, $titulo])
                     @if(!empty($tablasSeccion[$campoTabla]))
                         <div class="subseccion-titulo">{{ $titulo }}</div>
@@ -102,7 +117,7 @@
                 @php
                     $tieneComplementaria = collect($compKeys)->contains(fn ($k) => !empty($respuestasSeccion[$k] ?? null));
                 @endphp
-                @if($tieneComplementaria)
+                @if($tieneComplementaria && $numeroSeccion === 5)
                     <div class="subseccion-titulo">Información complementaria</div>
                     <table class="datos-table">
                         @foreach(InformacionComplementaria::PREGUNTAS as $p)
