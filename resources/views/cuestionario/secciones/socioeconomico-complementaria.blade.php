@@ -176,10 +176,9 @@
               placeholder="Indique domicilios previos y tiempo aproximado en cada uno">{{ old('viv_direcciones_anteriores', $respuestas['viv_direcciones_anteriores'] ?? '') }}</textarea>
 </div>
 
-<div class="alert alert-warning mt-4">
-    <h6><i class="fas fa-info-circle"></i> Información importante</h6>
-    <p class="mb-0 small">Revise que las referencias y totales sean correctos antes de finalizar. La información es confidencial. En la pantalla final podrá adjuntar constancia laboral y recibo de luz si los tiene disponibles.</p>
-</div>
+@include('cuestionario.partials.informacion-importante', [
+    'tipoFormulario' => 'socioeconomico',
+])
 
 @push('scripts')
 <script src="{{ asset('js/socioeconomico-complementaria.js') }}"></script>

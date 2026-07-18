@@ -588,8 +588,15 @@
                                                 ? (\App\Models\EvaluadoOrden::transicionesEvaluacion()[$evaluado->estado_evaluacion] ?? [])
                                                 : [];
                                             $transicionesForm = Auth::user()->role_as >= 2
-                                                ? (\App\Models\EvaluadoOrden::transicionesFormulario()[$evaluado->estado_formulario] ?? [])
+                                                ? $evaluado->transicionesFormularioDisponibles()
                                                 : [];
+                                            $esSaltoSocioJotform = Auth::user()->role_as >= 2
+                                                && $evaluado->puedeMarcarFormularioCompletadoManualSocio()
+                                                && ! in_array(
+                                                    'formulario_completado_y_recibido',
+                                                    \App\Models\EvaluadoOrden::transicionesFormulario()[$evaluado->estado_formulario] ?? [],
+                                                    true
+                                                );
                                             $transicionesProg = Auth::user()->role_as >= 2
                                                 ? (\App\Models\EvaluadoOrden::transicionesProgramacion()[$evaluado->estado_programacion] ?? [])
                                                 : [];
@@ -641,13 +648,21 @@
                                                         <select name="nuevo_estado" class="form-select form-select-sm" style="max-width: 180px;" required>
                                                             <option value="">Cambiar a...</option>
                                                             @foreach($transicionesForm as $estado)
-                                                                <option value="{{ $estado }}">{{ $nombresForm[$estado] ?? ucfirst($estado) }}</option>
+                                                                <option value="{{ $estado }}">
+                                                                    {{ $nombresForm[$estado] ?? ucfirst($estado) }}
+                                                                    @if($estado === 'formulario_completado_y_recibido' && $esSaltoSocioJotform)
+                                                                        (manual / Jotform)
+                                                                    @endif
+                                                                </option>
                                                             @endforeach
                                                         </select>
                                                         <button type="submit" class="btn btn-outline-primary btn-sm" title="Cambiar estado formulario">
                                                             <i class="bi bi-arrow-right-circle"></i>
                                                         </button>
                                                     </div>
+                                                    @if($esSaltoSocioJotform)
+                                                        <small class="text-muted d-block mt-1">Socioeconómico: puede marcar Completado sin llenar el formulario REPRO (workaround Jotform).</small>
+                                                    @endif
                                                     <details class="mt-1">
                                                         <summary class="text-muted" style="font-size:0.75rem;cursor:pointer;">+ Motivo / observación (opcional)</summary>
                                                         <textarea name="observacion" class="form-control form-control-sm mt-1" rows="2" maxlength="1000" placeholder="Ej: Candidato confirmó recepción del formulario..."></textarea>

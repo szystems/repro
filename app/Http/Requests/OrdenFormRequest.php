@@ -114,14 +114,18 @@ class OrdenFormRequest extends FormRequest
                     $validator->errors()->add('evaluados', 'No se puede repetir el mismo email en la misma orden (cada evaluado recibe un token único).');
                 }
 
-                // Validar combinación servicio-formulario para cada evaluado
+                // E6.1 — Validar combinación servicio-formulario (matriz)
                 foreach ($this->evaluados as $index => $evaluado) {
                     if (isset($evaluado['tipo_servicio']) && isset($evaluado['tipo_formulario'])) {
-                        if ($evaluado['tipo_servicio'] === 'socioeconomico'
-                            && $evaluado['tipo_formulario'] !== 'preempleo') {
+                        if (! \App\Support\MatrizFormularioServicio::combinacionValida(
+                            $evaluado['tipo_servicio'],
+                            $evaluado['tipo_formulario']
+                        )) {
                             Log::info("Error: Combinación inválida en evaluado {$index}");
-                            $validator->errors()->add("evaluados.{$index}.tipo_formulario",
-                                'El estudio socioeconómico se registra con formulario pre-empleo en la orden.');
+                            $validator->errors()->add(
+                                "evaluados.{$index}.tipo_formulario",
+                                'Combinación servicio/formulario no permitida. Socioeconómico solo admite Pre-empleo.'
+                            );
                         }
                     }
                 }

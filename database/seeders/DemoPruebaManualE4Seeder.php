@@ -81,12 +81,13 @@ class DemoPruebaManualE4Seeder extends Seeder
             $empresaUser->roles()->syncWithoutDetaching([$empresaRole->id]);
         }
 
-        $orden = Orden::firstOrCreate(
-            [
+        // observaciones_internas está cifrada: no usar firstOrCreate por ese campo.
+        $evaluadoExistente = EvaluadoOrden::query()->where('token_unico', self::TOKEN)->first();
+        $orden = $evaluadoExistente?->orden;
+
+        if (! $orden) {
+            $orden = Orden::create([
                 'empresa_id' => $empresa->id,
-                'observaciones_internas' => '[DEMO E4] Orden socioeconómica — prueba manual 6 secciones',
-            ],
-            [
                 'creado_por' => $admin->id,
                 'estado' => 'en_proceso',
                 'fecha_solicitud' => now(),
@@ -94,8 +95,15 @@ class DemoPruebaManualE4Seeder extends Seeder
                 'prioridad' => 'normal',
                 'tipo_creador' => 'repro',
                 'resultados_visibles_empresa' => false,
-            ]
-        );
+                'observaciones_internas' => '[DEMO E4] Orden socioeconómica — prueba manual 6 secciones',
+            ]);
+        } else {
+            $orden->update([
+                'empresa_id' => $empresa->id,
+                'estado' => 'en_proceso',
+                'observaciones_internas' => '[DEMO E4] Orden socioeconómica — prueba manual 6 secciones',
+            ]);
+        }
 
         $evaluado = EvaluadoOrden::updateOrCreate(
             ['token_unico' => self::TOKEN],

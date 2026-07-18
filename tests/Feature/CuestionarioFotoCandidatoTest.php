@@ -26,6 +26,8 @@ class CuestionarioFotoCandidatoTest extends TestCase
 
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
             'token_unico' => 'test-foto-token',
             'token_expira_at' => now()->addDays(30),
             'cuestionario_completado' => false,

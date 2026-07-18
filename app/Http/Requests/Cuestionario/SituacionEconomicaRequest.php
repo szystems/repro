@@ -47,7 +47,7 @@ class SituacionEconomicaRequest extends FormRequest
             'detalle_deudas' => 'nullable|string|max:2000',
             'tiene_ahorros' => 'required|in:si,no',
             'observaciones_economicas' => 'nullable|string|max:2000',
-        ], TablaDinamica::reglasValidacion(4, 'preempleo'), SituacionEconomicaCampos::reglasValidacion());
+        ], TablaDinamica::reglasValidacion(4, $this->resolverTipoFormularioCuestionario()), SituacionEconomicaCampos::reglasValidacion());
     }
 
     public function messages(): array

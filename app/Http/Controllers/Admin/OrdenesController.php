@@ -767,10 +767,11 @@ class OrdenesController extends Controller
                 'token_expira_at' => EvaluadoOrden::calcularExpiracionToken(),
                 // Nuevos campos granulares
                 'tipo_servicio' => $evaluadoData['tipo_servicio'],
-                // En evaluado se guarda preempleo (enum BD); el cuestionario usa tipoFormularioCuestionario()
-                'tipo_formulario' => $evaluadoData['tipo_servicio'] === 'socioeconomico'
-                    ? 'preempleo'
-                    : $evaluadoData['tipo_formulario'],
+                // E6.1 — Matriz: socio siempre preempleo en BD; cuestionario vía tipoFormularioCuestionario()
+                'tipo_formulario' => \App\Support\MatrizFormularioServicio::tipoFormularioParaOrden(
+                    $evaluadoData['tipo_servicio'],
+                    $evaluadoData['tipo_formulario'] ?? null
+                ),
                 'puesto_evaluar' => $evaluadoData['puesto_evaluar'] ?? null,
                 'sede_id' => $evaluadoData['sede_id'] ?? null,
                 'sede_region_empresa' => $evaluadoData['sede_region_empresa'] ?? null,
@@ -873,6 +874,8 @@ class OrdenesController extends Controller
             'token_expira_at'            => $evaluado->token_expira_at,
         ]);
         $evaluado->update($datosActualizacion);
+
+        $evaluado->fresh()->sincronizarCuestionarioConServicio();
 
         $nuevaModalidad = $datosActualizacion['modalidad'] ?? $evaluado->modalidad;
         if ($modalidadAnterior !== $nuevaModalidad) {

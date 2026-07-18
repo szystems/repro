@@ -2,12 +2,14 @@
 
 namespace App\Support;
 
-use App\Http\Requests\Cuestionario\SocioeconomicoComplementariaRequest;
+use App\Http\Requests\Cuestionario\SituacionLaboralPeriodicaRequest;
+use App\Http\Requests\Cuestionario\AntecedentesRecientesRequest;
 use App\Http\Requests\Cuestionario\AntecedentesRequest;
 use App\Http\Requests\Cuestionario\DatosPersonalesRequest;
 use App\Http\Requests\Cuestionario\HistorialLaboralRequest;
 use App\Http\Requests\Cuestionario\InformacionFamiliarRequest;
 use App\Http\Requests\Cuestionario\SituacionEconomicaRequest;
+use App\Http\Requests\Cuestionario\SocioeconomicoComplementariaRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -28,11 +30,13 @@ class CuestionarioAutosave
             ]);
         }
 
+        $request->attributes->set('tipo_formulario_cuestionario', $tipoFormulario);
+
         $request->merge(
             TablaDinamica::mergeTablasNormalizadas($request->all(), $numero, $tipoFormulario)
         );
 
-        $reglas = self::reglasPermisivas($numero, $tipoFormulario);
+        $reglas = self::reglasPermisivas($numero, $tipoFormulario, $request);
 
         if ($reglas === []) {
             return $request->except(['_token', 'action']);
@@ -50,16 +54,26 @@ class CuestionarioAutosave
     /**
      * @return array<string, mixed>
      */
-    public static function reglasPermisivas(int $numero, string $tipoFormulario): array
+    public static function reglasPermisivas(int $numero, string $tipoFormulario, ?Request $request = null): array
     {
-        $clase = match (true) {
-            $numero === 6 && $tipoFormulario === 'socioeconomico' => SocioeconomicoComplementariaRequest::class,
-            $numero === 1 => DatosPersonalesRequest::class,
-            $numero === 2 => InformacionFamiliarRequest::class,
-            $numero === 3 => HistorialLaboralRequest::class,
-            $numero === 4 => SituacionEconomicaRequest::class,
-            $numero === 5 => AntecedentesRequest::class,
-            default => null,
+        $clase = match ($tipoFormulario) {
+            'periodica', 'especifica' => match ($numero) {
+                1 => DatosPersonalesRequest::class,
+                2 => InformacionFamiliarRequest::class,
+                3 => SituacionLaboralPeriodicaRequest::class,
+                4 => SituacionEconomicaRequest::class,
+                5 => AntecedentesRecientesRequest::class,
+                default => null,
+            },
+            default => match (true) {
+                $numero === 6 && $tipoFormulario === 'socioeconomico' => SocioeconomicoComplementariaRequest::class,
+                $numero === 1 => DatosPersonalesRequest::class,
+                $numero === 2 => InformacionFamiliarRequest::class,
+                $numero === 3 => HistorialLaboralRequest::class,
+                $numero === 4 => SituacionEconomicaRequest::class,
+                $numero === 5 => AntecedentesRequest::class,
+                default => null,
+            },
         };
 
         if ($clase === null) {
@@ -67,7 +81,10 @@ class CuestionarioAutosave
         }
 
         /** @var \Illuminate\Foundation\Http\FormRequest $instancia */
-        $instancia = new $clase;
+        $instancia = $request
+            ? $clase::createFrom($request)
+            : new $clase;
+        $instancia->attributes->set('tipo_formulario_cuestionario', $tipoFormulario);
         $reglas = $instancia->rules();
 
         return self::suavizarReglas($reglas, $numero, $tipoFormulario);

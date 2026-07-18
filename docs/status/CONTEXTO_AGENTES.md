@@ -1,11 +1,11 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 8 de julio de 2026  
-**Estado:** ✅ FASE 20 DESPLEGADA · 🔄 Fase F **E4** (Socioeconómico) — **E1–E3 ✅ cerrados**  
+**Fecha de Contexto:** 18 de julio de 2026  
+**Estado:** ✅ FASE 20 DESPLEGADA · ✅ Fase F **E1–E6 CERRADOS** · deploy Fase F pendiente  
 **Versión:** 2.3.1 Producción  
 **Plataforma:** https://reproappv2.szystems.com  
-**Repo:** https://github.com/szystems/repro · branch `master` · commit `14a95f47`
+**Repo:** https://github.com/szystems/repro · branch `master` · commit `ef3c8105`
 
 ---
 
@@ -16,10 +16,10 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 
 ### ⚡ ESTADO ACTUAL (Julio 2026)
 - ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 + Fase 20 desplegadas en iPage (`reproappv2.szystems.com`)
-- 🔄 **EN DESARROLLO:** **Fase F — Etapa E4 (Socioeconómico)** — E1 ✅ · E2 ✅ · E3 ✅. Plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
+- ✅ **FASE F FORMULARIOS:** **E1–E6 cerrados** (18-jul-2026) · **786 tests OK** · deploy pendiente. Plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
 - ✅ **4 ESTADOS INDEPENDIENTES:** Formulario / Programación / Evaluación / Orden (Fase 18)
 - ✅ **FASE 19:** Fix duplicación órdenes, capacidad por sede, historial empresa, archivar órdenes, búsqueda DPI/nombre
-- ✅ **TESTS:** 752 tests — E3 cerrado 8-jul
+- ✅ **TESTS:** **786 tests OK** — E6 cerrado 18-jul
 - ✅ **SEGURIDAD:** Permisos granulares + middleware `role` / `permission`
 - ✅ **NOTIFICACIONES:** In-app ampliadas (creador, empresa, colaboradores — Fase 18)
 - ⏳ **PENDIENTE OPS:** Cron iPage para auto-transiciones formulario 24h/30d (o fallback on-access)
@@ -86,16 +86,45 @@ Motor base 1.1–1.9: tabla dinámica, condicionales, autosave, catálogo GT, fo
 
 **Tests E3:** `InformePreempleoTest` · `InformePreempleoVisibilidadTest` · `CuestionarioTablaDinamicaTest`
 
-### 🔄 Fase F E4 — SIGUIENTE (Socioeconómico)
+### ✅ Fase F E4 — CERRADA (14-jul-2026)
 
-- **4.1** Reutilizar 5 secciones matriz
-- **4.2** Sección exclusiva Referencias (familiares, personales, vecinales, laborales)
-- **4.3–4.5** Bienes, presupuesto personal, información de vivienda
-- **4.6–4.7** Reglas informe + documentos adjuntos socio
+| Completado | Detalle |
+|------------|---------|
+| **4.1–4.7** | 6 secciones socio (`tipo_formulario=socioeconomico`), refs/bienes/presupuesto/vivienda |
+| PDF empresa | Sec. 6 socio en `pdf-secciones-empresa` |
+| Informe admin | Refs fam/pers editables; vecinales/vivienda ocultos empresa |
+| Validación | Unificada tablas dinámicas + mensajes legibles (todas las secciones) |
 
-**Demo manual Pre-empleo:** `DemoPruebaManualE1Seeder` → token `e1demo2026pruebamanualtokenrepr0` · DPI `2405617300105`
-- Admin: `admin@repro.com` / `admin1234`
-- Empresa demo: `demo-empresa-e1@repro.local` / `empresa1234` (liberar resultados en orden desde admin)
+**Demo manual E4:** `DemoPruebaManualE4Seeder` → token `e4demo2026pruebamanualtokenrepr0` · DPI `2405617300205` (13 dígitos)  
+**Empresa demo:** `demo-empresa-e4@repro.local` / `empresa1234`
+
+**Tests E4:** `CuestionarioSocioeconomicoTest` (5) · `InformePreempleoVisibilidadTest` · `InformePreempleoTest`
+
+### ✅ Fase F E5 — CERRADA (18-jul-2026)
+
+| Completado | Detalle |
+|------------|---------|
+| **5.1–5.3** | Periódica 5 sec.: omisiones IGSS/NIT/hermanos/complementaria; laboral 26 preguntas PDF; solo DPI |
+| **5.4–5.6** | Específica = base periódica; académica solo último grado; pregunta 1 caso/hecho amplia (max 8000) |
+| PDF flujo | `shared/pdf/flujo-pagina` — sin saltos forzados con huecos |
+
+**Demo Periódica:** `DemoPruebaManualE5PeriodicaSeeder` → token `e5demo2026periodicatokenrepr0` · DPI `2405617300305`  
+**Demo Específica:** `DemoPruebaManualE5EspecificaSeeder` → token `e5demo2026especificatokenrepr0` · DPI `2405617300405`
+
+### ✅ Fase F E6 — CERRADA (Integración, 18-jul-2026)
+
+- ✅ **6.1** Matriz servicio→formulario (`MatrizFormularioServicio`, UI create/edit, `OrdenFormRequest`)
+- ✅ **6.2** Mensajes «Información Importante» por tipo (`MensajesInformacionImportante`, partial reutilizable)
+- ✅ **6.3** Jotform workaround — marcar completado manual solo socio (`EvaluadoOrden::puedeMarcarFormularioCompletadoManualSocio`)
+- ✅ **6.4** Papelería post-envío — subida con mismo token hasta `token_expira_at` (~30 días); partial `documentos-candidato` en `completado` + `finalizar`
+- ✅ **6.5** Regresión PHPUnit **786/786** · smoke móvil pantalla completado OK (390×844)
+- ✅ **QA manual** navegador 18-jul: matriz, mensajes, Jotform, hermanos, foto, documentos post-envío
+
+**Archivos clave E6:** `MatrizFormularioServicio.php` · `MensajesInformacionImportante.php` · `documentos-candidato.blade.php` · `EvaluadoOrden::enlaceCuestionarioVigente()` / `puedeSubirDocumentosConEnlace()` · migración tipos doc socio · `E6PapeleriaPostEnvioTest`
+
+**Demos E5:**
+- Periódica: `e5demo2026periodicatokenrepr0` · DPI `2405617300305`
+- Específica: `e5demo2026especificatokenrepr0` · DPI `2405617300405`
 
 ### 🐳 Desarrollo local (Docker)
 
@@ -529,7 +558,7 @@ php artisan view:clear
 
 | Área | Tests | Estado |
 |------|-------|--------|
-| Suite completa | 752 | ✅ Pasando (2026-07-08, E3 cerrado) |
+| Suite completa | 786 | ✅ Pasando (2026-07-18, E6 cerrado) |
 | Fase 19 | `Fase19Sprint3Test` | ✅ Historial, archivar, búsqueda |
 | Sinergia | `Fase18SinergiaReglasSemana3Test` | ✅ S4, S5, S2 eliminado |
 | Calendario | `CalendarioTest` | ✅ Capacidad sede |
@@ -608,7 +637,7 @@ app/, database/, resources/, routes/  (+ vendor/ en deploy completo)
 
 ---
 
-**Última actualización:** 8 de julio de 2026  
-**Estado:** ✅ **Fase F E3 cerrada (3.1–3.4 + portal empresa)** · **752 tests OK** · siguiente: **E4 Socioeconómico** · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
+**Última actualización:** 18 de julio de 2026  
+**Estado:** 🔄 **E6 Integración** (6.1–6.3 ✅ · 6.4/6.5 pendientes) · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
 
 **E3 cierre:** tablas informe editables · filtro campos internos empresa/PDF · vista portal estilizada · PDF agrupado · tests `InformePreempleoTest`, `InformePreempleoVisibilidadTest`.

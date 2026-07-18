@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-07-08 — **Fase F E4 Socioeconómico — cierre técnico** · **762+ tests OK**
+**Ultima actualizacion:** 2026-07-18 — **Fase F E6 ✅ CERRADA** · 6.1–6.5 · suite 786/786 · smoke móvil OK
 
 > **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
@@ -17,8 +17,8 @@
 | Qué | Detalle |
 |-----|---------|
 | **Fase** | **F — Formularios (cierre del proyecto)** |
-| **Etapa activa** | **E4 — Formulario Socioeconómico** (4.1–4.7) |
-| **Etapa anterior** | **E3 — Evaluador + informe ✅** |
+| **Etapa activa** | **E7 — Informe Word (.docx)** · track paralelo (Q 1,600) |
+| **Etapa anterior** | **E6 — Integración ✅ CERRADA (18-jul)** |
 | **Plan detallado (checklists)** | `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` ← **documento principal para avanzar punto por punto** |
 | **Análisis / spec / decisiones comerciales** | `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` |
 | **Contexto para agentes IA** | `docs/status/CONTEXTO_AGENTES.md` |
@@ -96,7 +96,7 @@
 
 **Siguiente paso E4:** QA manual flujo socio completo (6 secciones) · admin partial sección 6 · PDF empresa sección 6.
 
-### Progreso E4 (Socioeconómico) — EN CURSO (8-jul)
+### Progreso E4 (Socioeconómico) — ✅ CERRADO (14-jul-2026)
 
 | Punto | Estado |
 |-------|--------|
@@ -108,12 +108,40 @@
 | **4.6** Reglas informe (refs fam/pers sí; vecinales/vivienda ocultos empresa) | ✅ |
 | **4.8** PDF empresa sección 6 + tablas informe refs editables + mensajes socio | ✅ |
 | **4.7** Documentos socio (constancia laboral, recibo luz) | ✅ |
+| **Cierre E4** | ✅ **completado** — commit `2b175bce` |
 
-**Archivos clave E4:** `SocioeconomicoComplementariaCampos.php` · `socioeconomico-complementaria.blade.php` · `seccion_6.blade.php` (admin/empresa) · `EvaluadoOrden::tipoFormularioCuestionario()`.
+**Demo manual E4:** `DemoPruebaManualE4Seeder` · token `e4demo2026pruebamanualtokenrepr0` · DPI `2405617300205`
 
-**Tests E4:** `CuestionarioSocioeconomicoTest` (5) · `InformePreempleoVisibilidadTest` (PDF sec. 6).
+### Progreso E5 (Periódica + Específica) — ✅ CERRADO (18-jul-2026)
 
-**Siguiente paso E4:** QA manual flujo socio completo (6 secciones + finalizar) con demo E4 · marcar E4 cerrado tras QA OK.
+| Punto | Estado |
+|-------|--------|
+| **5.1** Base Pre-empleo; omitir IGSS, NIT, Hermanos, Aspectos Complementarios | ✅ |
+| **5.2** Sección laboral propia (tabla simplificada + 26 preguntas internas) | ✅ |
+| **5.3** Foto; documentos solo DPI; mensaje sin papelería | ✅ |
+| **5.4** Específica: base Periódica; académica = solo último grado | ✅ |
+| **5.5** Específica: pregunta 1 laboral = caso/hecho amplio | ✅ |
+| **5.6** Específica: documentos solo DPI | ✅ |
+| **Cierre E5** | ✅ |
+
+**Demo Periódica:** `DemoPruebaManualE5PeriodicaSeeder` · token `e5demo2026periodicatokenrepr0` · DPI `2405617300305`  
+**Demo Específica:** `DemoPruebaManualE5EspecificaSeeder` · token `e5demo2026especificatokenrepr0` · DPI `2405617300405`
+
+### Progreso E6 (Integración) — ✅ CERRADO (18-jul-2026)
+
+| Punto | Estado |
+|-------|--------|
+| **6.1** Selección automática formulario según servicio + tipo (matriz) | ✅ |
+| **6.2** Mensajes "Información Importante" por tipo | ✅ |
+| **6.3** Socio: marcar Formulario Completado manual (workaround Jotform) | ✅ |
+| **6.4** Papelería post-envío 30 días | ✅ mismo enlace vigente (`token_expira_at`) · UI en completado + finalizar |
+| **6.5** Regresión suite + móvil | ✅ suite **786/786** · smoke móvil completado (18-jul) |
+
+**QA manual navegador (18-jul):** E6.1 matriz create/edit ✅ · E6.2 mensajes secc. 5/6 + completado ✅ · E6.3 Jotform solo socio ✅ · hermanos socio vs periódica ✅ · foto resaltado rojo ✅ · panel documentos post-envío ✅ · demos reseedeados.
+
+**Fixes post-QA:** migración `constancia_laboral`/`recibo_luz` en `documento_evaluados`; tablas tatuajes/perforaciones también en socio secc. 5; tests estables (`tipo_servicio` + `tipo_formulario` fijos en pre-empleo/foto/E6.3 negativo).
+
+**Siguiente paso:** deploy Fase F a producción · E7 Word en paralelo (plantilla .docx pendiente cliente).
 
 **Migraciones E1 (batch 11–14):** `valor_json` · `evaluador_notas` · `departamentos` · `municipios` · `instrucciones_*` · `datos_precarga_json`
 
@@ -143,7 +171,7 @@
 | Fase 20 | Hotfix enlace cuestionario — UX 404, logging, vigencia token | ✅ DEPLOYADA 2026-06-16 |
 | Fase A (legal) | 7 autorizaciones + Infornet + corrección Específica + campo motivo/hecho + ajuste manual Socio | 📋 PLANIFICADA — dentro de saldo Q 10,000 |
 | Fase Word | Informe empresa en .docx editable (Q 1,600 aprobado) | 📋 PLANIFICADA — versión base independiente; "rica" depende del motor de formularios |
-| **Fase F (formularios)** | **Completar motor + 4 formularios (Pre-empleo matriz 5 secc. + Socio + Periódica + Específica)** | 🔄 **EN DESARROLLO — E4 Socioeconómico** · E1–E3 ✅ · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` |
+| **Fase F (formularios)** | **Completar motor + 4 formularios (Pre-empleo matriz 5 secc. + Socio + Periódica + Específica)** | ✅ **E1–E6 CERRADOS** · deploy pendiente · E7 Word paralelo · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` |
 | Fase C (1B) | Agregar servicio con reutilización de datos (Q 5,200) | 🕐 DIFERIDA 2–3 meses (decisión cliente) |
 | WhatsApp API | Notificaciones automáticas (Q 3,800) | 🕐 POSPUESTA (decisión cliente) |
 

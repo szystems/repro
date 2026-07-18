@@ -60,7 +60,7 @@
 
         .candidato-bloque {
             margin-bottom: 18px;
-            page-break-inside: avoid;
+            page-break-inside: auto;
             border: 1px solid #ddd;
             border-radius: 6px;
             overflow: hidden;
@@ -132,6 +132,7 @@
             font-size: 9px;
         }
     </style>
+    @include('shared.pdf.flujo-pagina')
 </head>
 <body>
     {{-- Cabecera --}}

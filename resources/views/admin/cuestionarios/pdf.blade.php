@@ -142,10 +142,10 @@
             color: white;
         }
 
-        /* Secciones */
+        /* Secciones — permiten flujo continuo (evitar huecos enormes en DomPDF) */
         .seccion {
             margin-bottom: 15px;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         .seccion-titulo {
@@ -245,12 +245,8 @@
         .page-break {
             page-break-before: always;
         }
-
-        /* Evitar saltos de página innecesarios */
-        .seccion {
-            page-break-inside: auto;
-        }
     </style>
+    @include('shared.pdf.flujo-pagina')
 </head>
 <body>
     {{-- Cabecera estilo REPRO con fondo azul --}}
@@ -446,7 +442,9 @@
             </div>
 
             @php
-                $respuestasSeccion = $cuestionario->obtenerRespuestasSeccion($numeroSeccion);
+                $respuestasSeccion = \App\Support\CamposInternosPreempleo::excluirCamposSistema(
+                    $cuestionario->obtenerRespuestasSeccion($numeroSeccion)
+                );
                 $tablasSeccion = $cuestionario->getTablasPorNumeroSeccion($numeroSeccion);
             @endphp
 
@@ -497,6 +495,7 @@
                         'hermanos' => [\App\Support\TablaDinamica::class, 'columnasHermanos', 'Hermanos'],
                         'formacion_academica' => [\App\Support\TablaDinamica::class, 'columnasFormacionAcademica', 'Formación académica'],
                         'empleos' => [\App\Support\TablaDinamica::class, 'columnasEmpleos', 'Historial de empleos'],
+                        'empleo_actual' => [\App\Support\TablaDinamica::class, 'columnasEmpleoActualPeriodico', 'Empleo actual'],
                         'deudas' => [\App\Support\TablaDinamica::class, 'columnasDeudas', 'Deudas'],
                         'tatuajes' => [\App\Support\TablaDinamica::class, 'columnasTatuajes', 'Tatuajes'],
                         'perforaciones' => [\App\Support\TablaDinamica::class, 'columnasPerforaciones', 'Perforaciones'],
@@ -561,7 +560,7 @@
 
     {{-- Autorización y Términos (8D.1) --}}
     @if($cuestionario->acepta_terminos)
-        <div class="seccion" style="page-break-before: always;">
+        <div class="seccion">
             <div class="seccion-titulo">
                 Autorización y Términos
             </div>

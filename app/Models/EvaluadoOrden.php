@@ -193,11 +193,61 @@ class EvaluadoOrden extends Model
     /** Tipo de formulario del cuestionario digital (puede diferir del selector en orden para socio). */
     public function tipoFormularioCuestionario(): string
     {
-        if ($this->tipo_servicio === 'socioeconomico') {
-            return 'socioeconomico';
+        return \App\Support\MatrizFormularioServicio::tipoFormularioCuestionario(
+            $this->tipo_servicio ?? 'poligrafo',
+            $this->tipo_formulario
+        );
+    }
+
+    /**
+     * Alinea el registro cuestionario con servicio/tipo actuales (p. ej. socio → 6 secciones + Hermanos).
+     * No modifica cuestionarios ya completados.
+     */
+    public function sincronizarCuestionarioConServicio(): void
+    {
+        $cuestionario = $this->cuestionario;
+
+        if (! $cuestionario || $cuestionario->completado || $this->cuestionario_completado) {
+            return;
         }
 
-        return $this->tipo_formulario ?? 'preempleo';
+        $tipoEsperado = $this->tipoFormularioCuestionario();
+
+        if ($cuestionario->tipo_formulario === $tipoEsperado) {
+            return;
+        }
+
+        $cuestionario->update([
+            'tipo_formulario' => $tipoEsperado,
+            'total_secciones' => Cuestionario::totalSeccionesParaTipo($tipoEsperado),
+        ]);
+    }
+
+    /**
+     * E6.3 — Socioeconómico (workaround Jotform): REPRO puede marcar Formulario Completado
+     * desde link_pendiente / link_enviado / pendiente_de_llenar sin llenar el formulario REPRO.
+     */
+    public function puedeMarcarFormularioCompletadoManualSocio(): bool
+    {
+        return ($this->tipo_servicio ?? '') === 'socioeconomico'
+            && in_array($this->estado_formulario, ['link_pendiente', 'link_enviado', 'pendiente_de_llenar'], true);
+    }
+
+    /**
+     * Transiciones de formulario visibles en UI (incluye salto E6.3 para socio).
+     *
+     * @return list<string>
+     */
+    public function transicionesFormularioDisponibles(): array
+    {
+        $base = self::transicionesFormulario()[$this->estado_formulario] ?? [];
+
+        if ($this->puedeMarcarFormularioCompletadoManualSocio()
+            && ! in_array('formulario_completado_y_recibido', $base, true)) {
+            $base[] = 'formulario_completado_y_recibido';
+        }
+
+        return $base;
     }
 
     /**
@@ -369,9 +419,26 @@ class EvaluadoOrden extends Model
      */
     public function tokenValido(): bool
     {
-        return !$this->cuestionario_completado 
-            && $this->token_expira_at > now()
-            && !is_null($this->token_unico);
+        return ! $this->cuestionario_completado
+            && $this->enlaceCuestionarioVigente();
+    }
+
+    /**
+     * E6.4 — El enlace sigue activo (p. ej. 30 días) aunque el formulario ya esté enviado.
+     */
+    public function enlaceCuestionarioVigente(): bool
+    {
+        return ! is_null($this->token_unico)
+            && $this->token_expira_at
+            && $this->token_expira_at->isFuture();
+    }
+
+    /**
+     * Candidato puede adjuntar papelería con el mismo token (antes o después de enviar).
+     */
+    public function puedeSubirDocumentosConEnlace(): bool
+    {
+        return $this->enlaceCuestionarioVigente();
     }
 
     /**
@@ -1003,7 +1070,13 @@ class EvaluadoOrden extends Model
             return false;
         }
 
-        return in_array($nuevoEstado, $transiciones[$this->estado_formulario]);
+        if (in_array($nuevoEstado, $transiciones[$this->estado_formulario], true)) {
+            return true;
+        }
+
+        // E6.3: salto a Completado solo para socioeconómico (Jotform)
+        return $nuevoEstado === 'formulario_completado_y_recibido'
+            && $this->puedeMarcarFormularioCompletadoManualSocio();
     }
 
     /**
@@ -1015,12 +1088,22 @@ class EvaluadoOrden extends Model
             return false;
         }
 
+        $esSaltoSocio = $nuevoEstado === 'formulario_completado_y_recibido'
+            && $this->puedeMarcarFormularioCompletadoManualSocio()
+            && ! in_array(
+                'formulario_completado_y_recibido',
+                self::transicionesFormulario()[$this->estado_formulario] ?? [],
+                true
+            );
+
         $estadoAnterior = $this->estado_formulario;
         $this->estado_formulario = $nuevoEstado;
 
         // Fase 18: Sincronizar cuestionario_completado con nuevo estado
         if ($nuevoEstado === 'formulario_completado_y_recibido') {
             $this->cuestionario_completado = true;
+            $this->cuestionario_completado_at = $this->cuestionario_completado_at ?? now();
+            $this->completado_at = $this->completado_at ?? now();
         } elseif (in_array($nuevoEstado, ['link_pendiente', 'link_enviado', 'pendiente_de_llenar', 'vencido'])) {
             $this->cuestionario_completado = false;
         }
@@ -1028,7 +1111,11 @@ class EvaluadoOrden extends Model
         $resultado = $this->save();
 
         if ($resultado) {
-            $this->registrarCambioEstado('estado_formulario', $estadoAnterior, $nuevoEstado, $observacion);
+            $obs = $observacion;
+            if ($esSaltoSocio && ($obs === null || $obs === '')) {
+                $obs = 'Marcado manual Formulario Completado (socioeconómico / Jotform — E6.3).';
+            }
+            $this->registrarCambioEstado('estado_formulario', $estadoAnterior, $nuevoEstado, $obs);
         }
 
         return $resultado;

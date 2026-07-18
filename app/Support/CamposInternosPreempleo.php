@@ -10,6 +10,7 @@ class CamposInternosPreempleo
     {
         return array_merge(
             HistorialLaboralIntegridad::claves(),
+            HistorialLaboralPeriodico::claves(),
             array_column(AntecedentesJudiciales::PREGUNTAS, 'key'),
             [
                 'salud_preocupaciones', 'salud_estado_general', 'salud_atencion_psicologica',
@@ -35,11 +36,32 @@ class CamposInternosPreempleo
     {
         return in_array($campo, self::claves(), true)
             || str_starts_with($campo, 'integridad_')
+            || str_starts_with($campo, 'periodico_')
             || str_starts_with($campo, 'judicial_')
             || str_starts_with($campo, 'salud_')
             || str_starts_with($campo, 'habito_')
             || str_starts_with($campo, 'econ_')
             || str_starts_with($campo, 'sustancias_');
+    }
+
+    /** Campos de formulario/sistema que no deben aparecer en PDF ni portal. */
+    public static function esCampoSistema(string $campo): bool
+    {
+        return in_array($campo, ['_token', 'action', 'token', 'observaciones_genericas'], true)
+            || str_starts_with($campo, '_');
+    }
+
+    /**
+     * @param  array<string, mixed>  $respuestas
+     * @return array<string, mixed>
+     */
+    public static function excluirCamposSistema(array $respuestas): array
+    {
+        return array_filter(
+            $respuestas,
+            fn ($valor, string $campo) => ! self::esCampoSistema($campo),
+            ARRAY_FILTER_USE_BOTH
+        );
     }
 
     /**
@@ -50,14 +72,14 @@ class CamposInternosPreempleo
      */
     public static function filtrarRespuestasParaEmpresa(array $respuestas, string $tipoFormulario): array
     {
-        if ($tipoFormulario !== 'preempleo' && $tipoFormulario !== 'socioeconomico') {
-            return $respuestas;
+        if (! in_array($tipoFormulario, ['preempleo', 'socioeconomico', 'periodica', 'especifica'], true)) {
+            return self::excluirCamposSistema($respuestas);
         }
 
         return array_filter(
             $respuestas,
             function ($valor, string $campo) use ($tipoFormulario) {
-                if (self::esInterno($campo)) {
+                if (self::esCampoSistema($campo) || self::esInterno($campo)) {
                     return false;
                 }
                 if ($tipoFormulario === 'socioeconomico' && (

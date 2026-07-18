@@ -235,6 +235,7 @@
             page-break-after: always;
         }
     </style>
+    @include('shared.pdf.flujo-pagina')
 </head>
 <body>
     {{-- Cabecera estilo REPRO --}}

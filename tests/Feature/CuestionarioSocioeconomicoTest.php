@@ -35,6 +35,40 @@ class CuestionarioSocioeconomicoTest extends TestCase
         $this->assertSame('socioeconomico', $evaluado->tipoFormularioCuestionario());
     }
 
+    public function test_socioeconomico_sincroniza_cuestionario_desalineado_y_muestra_hermanos(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_servicio' => 'socioeconomico',
+            'tipo_formulario' => 'preempleo',
+            'token_unico' => 'testsociosyncmishtoken12345678901',
+            'token_expira_at' => now()->addDays(7),
+            'cuestionario_completado' => false,
+            'dpi' => '2405617300205',
+        ]);
+
+        Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'periodica',
+            'seccion_actual' => 2,
+            'total_secciones' => 5,
+            'instrucciones_leidas_at' => now(),
+            'acepta_terminos' => true,
+        ]);
+
+        $this->get(route('cuestionario.seccion', [
+            'token' => $evaluado->token_unico,
+            'numero' => 2,
+        ]))
+            ->assertOk()
+            ->assertSee('¿Tiene hermanos?', false);
+
+        $evaluado->refresh();
+        $this->assertSame('socioeconomico', $evaluado->cuestionario->tipo_formulario);
+        $this->assertSame(6, $evaluado->cuestionario->total_secciones);
+    }
+
     public function test_guardar_seccion_6_persiste_tablas_y_totales(): void
     {
         $orden = Orden::factory()->create();

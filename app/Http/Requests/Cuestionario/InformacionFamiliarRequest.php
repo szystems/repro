@@ -38,12 +38,13 @@ class InformacionFamiliarRequest extends FormRequest
 
     public function rules(): array
     {
-        return array_merge([
+        $tipo = $this->resolverTipoFormularioCuestionario();
+
+        $reglas = [
             // Estado civil y pareja
             'estado_civil_detalle' => 'required|string|in:soltero,casado,union_libre,divorciado,viudo',
             'vive_con_pareja' => 'required|in:si,no',
             'tiene_hijos' => 'required|in:si,no',
-            'tiene_hermanos' => 'required|in:si,no',
             'numero_hijos' => 'nullable|required_if:tiene_hijos,si|integer|min:1|max:20',
             'hijos_menores' => 'nullable|integer|min:0|max:20',
             'hijos_dependientes' => 'nullable|integer|min:0|max:20',
@@ -63,7 +64,19 @@ class InformacionFamiliarRequest extends FormRequest
             
             // Observaciones
             'observaciones_familiares' => 'nullable|string|max:2000',
-        ], InformacionFamiliarPadres::reglasValidacion(), InformacionFamiliarPareja::reglasValidacion(), InformacionFamiliarExparejas::reglasValidacion(), TablaDinamica::reglasValidacion(2, 'preempleo'));
+        ];
+
+        if (! in_array($tipo, ['periodica', 'especifica'], true)) {
+            $reglas['tiene_hermanos'] = 'required|in:si,no';
+        }
+
+        return array_merge(
+            $reglas,
+            InformacionFamiliarPadres::reglasValidacion(),
+            InformacionFamiliarPareja::reglasValidacion(),
+            InformacionFamiliarExparejas::reglasValidacion(),
+            TablaDinamica::reglasValidacion(2, $tipo)
+        );
     }
 
     public function messages(): array

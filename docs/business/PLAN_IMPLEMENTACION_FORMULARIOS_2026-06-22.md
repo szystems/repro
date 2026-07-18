@@ -101,41 +101,43 @@
 
 ## ETAPA 4 — Formulario Socioeconómico
 
-- [ ] **4.1** Reutiliza las 5 secciones del matriz.
-- [ ] **4.2** Sección exclusiva: **Referencias** familiares (mín. 2), personales (mín. 2), vecinales (mín. 1), laborales (autocompletar del historial si es posible).
-- [ ] **4.3** **Bienes y pertenencias** (tabla + total autocalculado).
-- [ ] **4.4** **Presupuesto personal** (tabla de gastos + total autocalculado).
-- [ ] **4.5** **Información de vivienda**.
-- [ ] **4.6** Reglas de qué tablas van/no van al informe (familiares/personales sí; vecinales/vivienda no).
-- [ ] **4.7** Documentos adjuntos socio (+ constancias laborales, recibo de luz).
+- [x] **4.1** Reutiliza las 5 secciones del matriz.
+- [x] **4.2** Sección exclusiva: **Referencias** familiares (mín. 2), personales (mín. 2), vecinales (mín. 1), laborales (autocompletar del historial si es posible).
+- [x] **4.3** **Bienes y pertenencias** (tabla + total autocalculado).
+- [x] **4.4** **Presupuesto personal** (tabla de gastos + total autocalculado).
+- [x] **4.5** **Información de vivienda**.
+- [x] **4.6** Reglas de qué tablas van/no van al informe (familiares/personales sí; vecinales/vivienda no).
+- [x] **4.7** Documentos adjuntos socio (+ constancias laborales, recibo de luz).
 
-**Cierre E4:** flujo Socioeconómico completo; commit.
+**Cierre E4:** ✅ flujo Socioeconómico completo; commit `2b175bce`.
 
 ---
 
 ## ETAPA 5 — Formularios Periódica y Específica
 
 ### Periódica
-- [ ] **5.1** Base Pre-empleo; **omitir** IGSS, NIT (datos), Hermanos (familiar), Aspectos Complementarios.
-- [ ] **5.2** **Sección laboral propia** (tabla simplificada + **26 preguntas** específicas) — internas.
-- [ ] **5.3** Foto; documentos solo DPI; mensaje sin "papelería pendiente".
+- [x] **5.1** Base Pre-empleo; **omitir** IGSS, NIT (datos), Hermanos (familiar), Aspectos Complementarios.
+- [x] **5.2** **Sección laboral propia** (tabla simplificada + **26 preguntas** específicas) — internas.
+- [x] **5.3** Foto; documentos solo DPI; mensaje sin "papelería pendiente".
 
 ### Específica
-- [ ] **5.4** Base Periódica; académica = solo último grado.
-- [ ] **5.5** Pregunta 1 laboral = **espacio amplio del caso/hecho** (obligatorio).
-- [ ] **5.6** Documentos solo DPI.
+- [x] **5.4** Base Periódica; académica = solo último grado.
+- [x] **5.5** Pregunta 1 laboral = **espacio amplio del caso/hecho** (obligatorio).
+- [x] **5.6** Documentos solo DPI.
 
-**Cierre E5:** los 4 formularios operativos según servicio seleccionado en la orden; commit.
+**Cierre E5:** ✅ Periódica + Específica operativos (5 secciones c/u); selección automática por servicio queda en E6.
 
 ---
 
 ## ETAPA 6 — Integración con orden, mensajes y ajustes finales
 
-- [ ] **6.1** Selección automática del formulario según **servicio + tipo** en la orden (matriz §2.2 del análisis).
-- [ ] **6.2** Mensajes "Información Importante" por tipo (Pre-empleo con papelería; Periódica/Específica sin).
-- [ ] **6.3** **Ajuste temporal Socioeconómico:** permitir a REPRO marcar "Formulario Completado" manual **solo** para servicio Socioeconómico (workaround Jotform).
-- [ ] **6.4** Papelería post-envío (mismo enlace, 30 días) — si se confirma alcance.
-- [ ] **6.5** Regresión completa de la suite de tests; pruebas en móvil.
+- [x] **6.1** Selección automática del formulario según **servicio + tipo** en la orden (matriz §2.2 del análisis). → `MatrizFormularioServicio` + UI create/edit + validación `OrdenFormRequest`.
+- [x] **6.2** Mensajes "Información Importante" por tipo (Pre-empleo con papelería; Periódica/Específica sin). → `MensajesInformacionImportante` + partial en antecedentes / socio / completado.
+- [x] **6.3** **Ajuste temporal Socioeconómico:** permitir a REPRO marcar "Formulario Completado" manual **solo** para servicio Socioeconómico (workaround Jotform). → salto en máquina de estados + etiqueta en show orden.
+- [x] **6.4** Papelería post-envío — mismo enlace mientras `token_expira_at` vigente (~30 días).
+- [x] **6.5** Regresión suite PHPUnit — **786 tests OK** (18-jul). Smoke móvil pantalla completado OK.
+
+**QA manual (18-jul):** matriz servicio→formulario, mensajes Información Importante, Jotform solo socio, hermanos socio/periódica, validación foto — todo OK en navegador.
 
 **Cierre E6:** sistema completo y estable en local/staging → preparar deploy.
 
@@ -180,12 +182,12 @@ Paralelo: Track legal (A) + E7 (Word base ahora, rico tras E3)
 | E1 | Motor base | ✅ Cerrado (1.1–1.9) · 740 tests OK |
 | E2 | Pre-empleo (5 secciones) | ✅ Completado (2.1–2.21) · QA manual OK 2-jul |
 | E3 | Campos evaluador + informe | ✅ Cerrado (3.1–3.4) · portal empresa estilizado 8-jul |
-| E4 | Socioeconómico | 🔄 **Siguiente** (4.1–4.7) |
-| E5 | Periódica + Específica | ⬜ Pendiente |
-| E6 | Integración + ajustes | ⬜ Pendiente |
+| E4 | Socioeconómico | ✅ Cerrado (4.1–4.7) · commit `2b175bce` |
+| E5 | Periódica + Específica | ✅ Cerrado (5.1–5.6) · 18-jul-2026 |
+| E6 | Integración + ajustes | ✅ **Cerrado** (6.1–6.5 · deploy pendiente) |
 | E7 | Word (.docx) | ⬜ Pendiente |
 | A | Track legal | ⬜ Pendiente |
 
 ---
 
-*Plan vivo — se actualiza marcando cada punto al cerrarlo. Szystems · 22-jun-2026 · contexto sincronizado 8-jul-2026 (E3 cerrado, E4 siguiente)*
+*Plan vivo — se actualiza marcando cada punto al cerrarlo. Szystems · 22-jun-2026 · contexto sincronizado 18-jul-2026 (E6 ✅ cerrada 6.1–6.5 · 786 tests · deploy pendiente)*

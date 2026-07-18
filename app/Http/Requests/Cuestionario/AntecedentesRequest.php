@@ -53,7 +53,7 @@ class AntecedentesRequest extends FormRequest
             'detalle_salud_mental' => 'nullable|string|max:1000',
             'observaciones_adicionales' => 'nullable|string|max:2000',
             'informacion_adicional_final' => 'nullable|string|max:3000',
-        ], TablaDinamica::reglasValidacion(5, 'preempleo'), SaludHabitosCampos::reglasValidacion(), AntecedentesJudiciales::reglasValidacion(), InformacionComplementaria::reglasValidacion());
+        ], TablaDinamica::reglasValidacion(5, $this->resolverTipoFormularioCuestionario()), SaludHabitosCampos::reglasValidacion(), AntecedentesJudiciales::reglasValidacion(), InformacionComplementaria::reglasValidacion());
     }
 
     public function messages(): array

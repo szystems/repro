@@ -31,7 +31,7 @@ class TablaDinamica
     {
         $tablas = ['hijos' => self::columnasHijos()];
 
-        if ($tipoFormulario !== 'periodica') {
+        if (! in_array($tipoFormulario, ['periodica', 'especifica'], true)) {
             $tablas['hermanos'] = self::columnasHermanos();
         }
 
@@ -41,6 +41,18 @@ class TablaDinamica
     /** @return array<string, list<array<string, mixed>>> */
     private static function tablasSeccion3(string $tipoFormulario): array
     {
+        if ($tipoFormulario === 'periodica') {
+            return [
+                'formacion_academica' => self::columnasFormacionAcademica(),
+                'empleo_actual' => self::columnasEmpleoActualPeriodico(),
+            ];
+        }
+
+        if ($tipoFormulario === 'especifica') {
+            // Académica = solo último grado (sin tabla de historial completo)
+            return ['empleo_actual' => self::columnasEmpleoActualPeriodico()];
+        }
+
         if (! in_array($tipoFormulario, ['preempleo', 'socioeconomico'], true)) {
             return [];
         }
@@ -54,7 +66,7 @@ class TablaDinamica
     /** @return array<string, list<array<string, mixed>>> */
     private static function tablasSeccion4(string $tipoFormulario): array
     {
-        if (! in_array($tipoFormulario, ['preempleo', 'socioeconomico'], true)) {
+        if (! in_array($tipoFormulario, ['preempleo', 'socioeconomico', 'periodica', 'especifica'], true)) {
             return [];
         }
 
@@ -64,7 +76,7 @@ class TablaDinamica
     /** @return array<string, list<array<string, mixed>>> */
     private static function tablasSeccion5(string $tipoFormulario): array
     {
-        if ($tipoFormulario !== 'preempleo') {
+        if (! in_array($tipoFormulario, ['preempleo', 'socioeconomico'], true)) {
             return [];
         }
 
@@ -124,6 +136,17 @@ class TablaDinamica
             ['key' => 'jefe_inmediato', 'label' => 'Jefe inmediato', 'type' => 'text', 'required' => false, 'max' => 100],
             ['key' => 'contacto_rrhh', 'label' => 'Contacto RRHH', 'type' => 'digits', 'required' => false, 'max' => 15],
             ['key' => 'tiene_constancia', 'label' => '¿Constancia?', 'type' => 'select', 'required' => true, 'options' => ['si' => 'Sí', 'no' => 'No']],
+        ];
+    }
+
+    /** Tabla simplificada empleo actual (E5.2 Periódica — PDF jun-2026). */
+    public static function columnasEmpleoActualPeriodico(): array
+    {
+        return [
+            ['key' => 'empresa', 'label' => 'Empresa', 'type' => 'text', 'required' => true, 'max' => 150],
+            ['key' => 'puesto', 'label' => 'Puesto desempeñado', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'fecha_ingreso', 'label' => 'Fecha de ingreso', 'type' => 'date', 'required' => true],
+            ['key' => 'salario_actual', 'label' => 'Salario actual (Q.)', 'type' => 'number', 'required' => false, 'min' => 0],
         ];
     }
 
@@ -386,6 +409,7 @@ class TablaDinamica
             'hijos' => 'exclude_unless:tiene_hijos,si|required|array|min:1',
             'hermanos' => 'exclude_unless:tiene_hermanos,si|required|array|min:1',
             'empleos' => 'exclude_unless:experiencia_previa,si|required|array|min:1',
+            'empleo_actual' => 'exclude_unless:tiene_empleo_actual,si|required|array|min:1',
             'deudas' => 'exclude_unless:tiene_deudas,si|required|array|min:1',
             'tatuajes' => 'exclude_unless:tiene_tatuajes,si|required|array|min:1',
             'perforaciones' => 'exclude_unless:tiene_perforaciones,si|required|array|min:1',
@@ -409,6 +433,8 @@ class TablaDinamica
             'hermanos.*.direccion.required' => 'La dirección del hermano es obligatoria.',
             'formacion_academica.required' => 'Complete la tabla de formación académica.',
             'empleos.required' => 'Debe agregar al menos un empleo en la tabla.',
+            'empleo_actual.required' => 'Debe completar al menos una fila de empleo actual.',
+            'empleo_actual.min' => 'Debe completar al menos una fila de empleo actual.',
             'deudas.required' => 'Debe agregar al menos una deuda en la tabla.',
             'tatuajes.required' => 'Debe agregar al menos un tatuaje en la tabla.',
             'perforaciones.required' => 'Debe agregar al menos una perforación en la tabla.',

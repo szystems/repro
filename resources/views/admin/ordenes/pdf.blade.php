@@ -134,7 +134,7 @@
         /* Secciones */
         .seccion {
             margin-bottom: 15px;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         .seccion-titulo {
@@ -219,6 +219,7 @@
             padding-top: 10px;
         }
     </style>
+    @include('shared.pdf.flujo-pagina')
 </head>
 <body>
     {{-- Cabecera estilo REPRO --}}

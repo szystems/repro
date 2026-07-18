@@ -13,9 +13,17 @@
             </div>
             
             <div class="form-content text-center">
+                @php
+                    $tipoCuestionarioLabel = match ($evaluado->tipoFormularioCuestionario()) {
+                        'socioeconomico' => 'socioeconómico',
+                        'periodica' => 'periódico',
+                        'especifica' => 'específico',
+                        default => 'de evaluación',
+                    };
+                @endphp
                 <div class="alert alert-success">
                     <h5><i class="fas fa-trophy"></i> ¡Felicidades!</h5>
-                    <p class="mb-0">Ha completado satisfactoriamente el cuestionario socioeconómico para REPRO Guatemala.</p>
+                    <p class="mb-0">Ha completado satisfactoriamente el cuestionario {{ $tipoCuestionarioLabel }} para REPRO Guatemala.</p>
                 </div>
                 
                 <div class="row mt-4">
@@ -74,10 +82,9 @@
                     <div class="alert alert-info">
                         <h6><i class="fas fa-info-circle"></i> Información Importante</h6>
                         <ul class="text-start mb-0">
-                            <li><strong>Confidencialidad:</strong> Su información será tratada de manera confidencial</li>
-                            <li><strong>Proceso:</strong> REPRO revisará sus respuestas como parte de la evaluación</li>
-                            <li><strong>Contacto:</strong> Si hay alguna consulta, se comunicarán con usted</li>
-                            <li><strong>Resultado:</strong> Los resultados serán comunicados por la empresa solicitante</li>
+                            @foreach(\App\Support\MensajesInformacionImportante::viñetasCompletado($evaluado->tipoFormularioCuestionario()) as $viñeta)
+                                <li>{{ $viñeta }}</li>
+                            @endforeach
                         </ul>
                     </div>
                 </div>
@@ -111,14 +118,20 @@
                         </div>
                     </div>
                 </div>
+
+                @include('cuestionario.partials.documentos-candidato', [
+                    'puedeSubirDocumentos' => $puedeSubirDocumentos ?? false,
+                ])
                 
                 <div class="mt-4">
                     <div class="alert alert-warning">
                         <h6><i class="fas fa-exclamation-triangle"></i> Importante</h6>
                         <p class="mb-0">
-                            <strong>Este cuestionario ya no puede ser modificado.</strong><br>
-                            Si necesita hacer alguna corrección o tiene alguna consulta, 
-                            contacte directamente con REPRO o con la empresa solicitante.
+                            <strong>Las respuestas del cuestionario ya no pueden modificarse.</strong><br>
+                            Si necesita corregir datos del formulario o tiene alguna consulta, contacte a REPRO o a la empresa solicitante.
+                            @if($puedeSubirDocumentos ?? false)
+                                <br><small>Puede seguir adjuntando documentos en la sección anterior mientras su enlace esté vigente.</small>
+                            @endif
                         </p>
                     </div>
                 </div>

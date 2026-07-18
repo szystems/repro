@@ -34,7 +34,7 @@
         .badge-warning { background-color: #000555; color: #ffb000; }
         .badge-danger { background-color: #dc3545; color: white; }
         .badge-secondary { background-color: #6c757d; color: white; }
-        .seccion { margin-bottom: 15px; page-break-inside: avoid; }
+        .seccion { margin-bottom: 15px; page-break-inside: auto; }
         .seccion-titulo { background: linear-gradient(135deg, #000555 0%, #1a1a6b 100%); color: #ffb000; padding: 8px 12px; font-weight: bold; font-size: 11px; margin-bottom: 8px; border-radius: 4px 4px 0 0; letter-spacing: 0.5px; }
         .datos-table { width: 100%; border-collapse: collapse; }
         .datos-table th, .datos-table td { border: 1px solid #ddd; padding: 5px 8px; font-size: 9px; text-align: left; vertical-align: top; }
@@ -49,7 +49,6 @@
         .footer { margin-top: 20px; text-align: center; font-size: 8px; color: #000555; border-top: 2px solid #ffb000; padding-top: 10px; }
         .footer strong { color: #000555; }
         .page-break { page-break-before: always; }
-        .seccion { page-break-inside: auto; }
         .subseccion-titulo {
             background-color: #f0f4ff;
             border-left: 4px solid #ffb000;
@@ -60,6 +59,7 @@
             padding: 6px 10px;
         }
     </style>
+    @include('shared.pdf.flujo-pagina')
 </head>
 <body>
     <div class="repro-header">
@@ -156,7 +156,7 @@
 
     {{-- Autorización y Términos --}}
     @if($cuestionario && $cuestionario->acepta_terminos)
-        <div class="seccion" style="page-break-before: always;">
+        <div class="seccion">
             <div class="seccion-titulo">Autorización y Términos</div>
             <div style="padding: 10px; font-size: 9px; line-height: 1.6;">
                 <h3 style="text-align: center; font-size: 11px; color: #000555; margin-bottom: 10px;">AUTORIZACIÓN PARA EVALUACIÓN</h3>

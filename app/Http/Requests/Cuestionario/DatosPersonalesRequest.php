@@ -23,7 +23,7 @@ class DatosPersonalesRequest extends FormRequest
         $tipos = implode(',', array_keys(DatosPersonalesCampos::TIPOS_IDENTIFICACION));
         $licencias = implode(',', array_keys(DatosPersonalesCampos::LICENCIA_CONDUCIR));
 
-        return [
+        $reglas = [
             'nombres_completos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/',
             'apellidos_completos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/',
             'tipo_identificacion' => 'required|in:'.$tipos,
@@ -46,12 +46,17 @@ class DatosPersonalesRequest extends FormRequest
             'direccion_residencia' => 'required|string|max:500',
             'departamento' => 'required|string|max:100',
             'municipio' => 'required|string|max:100',
-            'igss' => 'nullable|string|max:30',
-            'nit' => 'nullable|string|max:20',
             'licencia_conducir' => 'required|in:'.$licencias,
             'foto_candidato' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'foto_candidato_existente' => 'nullable|in:1',
         ];
+
+        if (! in_array($this->tipoFormularioCuestionario(), ['periodica', 'especifica'], true)) {
+            $reglas['igss'] = 'nullable|string|max:30';
+            $reglas['nit'] = 'nullable|string|max:20';
+        }
+
+        return $reglas;
     }
 
     /**
@@ -165,5 +170,20 @@ class DatosPersonalesRequest extends FormRequest
             'especifica' => 'datos_basicos',
             default => 'datos_personales',
         };
+    }
+
+    private function tipoFormularioCuestionario(): string
+    {
+        $token = $this->route('token');
+
+        if (! is_string($token) || $token === '') {
+            return 'preempleo';
+        }
+
+        $evaluado = \App\Models\EvaluadoOrden::query()
+            ->where('token_unico', $token)
+            ->first();
+
+        return $evaluado?->tipoFormularioCuestionario() ?? 'preempleo';
     }
 }

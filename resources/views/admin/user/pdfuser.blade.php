@@ -156,7 +156,7 @@
             text-align: center;
             margin-top: 20px;
             margin-bottom: 10px;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         .user-photo {
@@ -179,6 +179,7 @@
             border-left: 3px solid #ffb000;
         }
     </style>
+    @include('shared.pdf.flujo-pagina')
 </head>
 <body>
     {{-- Cabecera estilo REPRO --}}

@@ -144,6 +144,7 @@
         .repro-title-cell h2 { font-size: 10px; font-weight: normal; opacity: 0.85; }
         .repro-info-cell { display: table-cell; vertical-align: middle; text-align: right; font-size: 9px; opacity: 0.9; width: 100px; }
     </style>
+    @include('shared.pdf.flujo-pagina')
 </head>
 <body>
     {{-- Cabecera estilo REPRO --}}

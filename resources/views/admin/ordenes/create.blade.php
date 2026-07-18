@@ -206,6 +206,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/matriz-formulario-servicio.js') }}"></script>
 <script>
 let contadorEvaluados = 0;
 const esUsuarioEmpresa = {{ Auth::user()->role_as == 1 ? 'true' : 'false' }};
@@ -319,6 +320,10 @@ function agregarEvaluado(datos = {}) {
     `;
 
     document.getElementById('evaluados-container').insertAdjacentHTML('beforeend', html);
+    const nuevo = document.getElementById(`evaluado-${contadorEvaluados}`);
+    if (nuevo && window.MatrizFormularioServicioUI) {
+        window.MatrizFormularioServicioUI.sincronizarFila(nuevo);
+    }
 }
 
 function removerEvaluado(id) {
@@ -345,6 +350,10 @@ function verificarDpiDuplicado(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    if (window.MatrizFormularioServicioUI) {
+        window.MatrizFormularioServicioUI.init(document);
+    }
+
     // Repoblar evaluados desde old() si hubo error de validación
     const oldKeys = Object.keys(evaluadosOld);
     if (oldKeys.length > 0) {

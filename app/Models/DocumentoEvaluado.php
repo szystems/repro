@@ -125,6 +125,22 @@ class DocumentoEvaluado extends Model
     }
 
     /**
+     * Tipos de documento según evaluado (E5.3: Periódica/Específica solo DPI).
+     *
+     * @return array<string, string>
+     */
+    public static function tiposDocumentoParaEvaluado(EvaluadoOrden $evaluado): array
+    {
+        $tipos = static::tiposDocumento();
+
+        if (in_array($evaluado->tipo_formulario, ['periodica', 'especifica'], true)) {
+            return array_intersect_key($tipos, array_flip(['dpi_archivo', 'otro']));
+        }
+
+        return static::tiposDocumentoParaServicio($evaluado->tipo_servicio);
+    }
+
+    /**
      * Etiqueta legible del tipo de documento.
      */
     public function getTipoDocumentoTextoAttribute(): string

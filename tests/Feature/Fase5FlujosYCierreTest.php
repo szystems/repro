@@ -288,6 +288,7 @@ class Fase5FlujosYCierreTest extends TestCase
     {
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $this->orden->id,
+            'tipo_servicio' => 'poligrafo',
             'estado_formulario' => 'link_pendiente',
         ]);
 

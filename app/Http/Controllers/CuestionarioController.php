@@ -7,6 +7,8 @@ use App\Http\Requests\Cuestionario\InformacionFamiliarRequest;
 use App\Http\Requests\Cuestionario\HistorialLaboralRequest;
 use App\Http\Requests\Cuestionario\SituacionEconomicaRequest;
 use App\Http\Requests\Cuestionario\AntecedentesRequest;
+use App\Http\Requests\Cuestionario\SituacionLaboralPeriodicaRequest;
+use App\Http\Requests\Cuestionario\AntecedentesRecientesRequest;
 use App\Http\Requests\Cuestionario\SocioeconomicoComplementariaRequest;
 use App\Models\EvaluadoOrden;
 use App\Models\Cuestionario;
@@ -45,7 +47,9 @@ class CuestionarioController extends Controller
         $cuestionario = $evaluado->cuestionario;
 
         if ($cuestionario) {
-            return $cuestionario;
+            $evaluado->sincronizarCuestionarioConServicio();
+
+            return $evaluado->cuestionario()->firstOrFail();
         }
 
         $tipoFormulario = $evaluado->tipoFormularioCuestionario();
@@ -368,6 +372,9 @@ class CuestionarioController extends Controller
         $accion = $request->input('action', 'siguiente');
         $esParcial = $accion === 'borrador';
 
+        // Alinear validación con el tipo del cuestionario (UI), no solo con la orden.
+        $request->attributes->set('tipo_formulario_cuestionario', $cuestionario->tipo_formulario);
+
         $datosValidados = $esParcial
             ? CuestionarioAutosave::validarParcial($request, $numero, $cuestionario->tipo_formulario)
             : $this->validarSeccion($request, $numero, $cuestionario->tipo_formulario);
@@ -542,6 +549,9 @@ class CuestionarioController extends Controller
             if (($datosValidados['experiencia_previa'] ?? '') === 'no') {
                 $tablas['empleos'] = [];
             }
+            if (($datosValidados['tiene_empleo_actual'] ?? '') === 'no') {
+                $tablas['empleo_actual'] = [];
+            }
             if (($datosValidados['ultimo_nivel_academico'] ?? '') === 'ninguno') {
                 $tablas['formacion_academica'] = [];
             } elseif (isset($tablas['formacion_academica'])) {
@@ -556,7 +566,7 @@ class CuestionarioController extends Controller
             $tablas['deudas'] = [];
         }
 
-        if ($numero === 5 && $cuestionario->tipo_formulario === 'preempleo') {
+        if ($numero === 5 && in_array($cuestionario->tipo_formulario, ['preempleo', 'socioeconomico'], true)) {
             if (($datosValidados['tiene_tatuajes'] ?? '') === 'no') {
                 $tablas['tatuajes'] = [];
             }
@@ -659,9 +669,11 @@ class CuestionarioController extends Controller
         // Alias para compatibilidad con la vista
         $evaluadoOrden = $evaluado;
         $evaluadoOrden->load('documentos');
-        $tiposDocumento = DocumentoEvaluado::tiposDocumentoParaServicio($evaluado->tipo_servicio);
+        $tiposDocumento = DocumentoEvaluado::tiposDocumentoParaEvaluado($evaluado);
         $etiquetaFormulario = match ($cuestionario->tipo_formulario) {
             'socioeconomico' => 'socioeconómico',
+            'periodica' => 'periódico',
+            'especifica' => 'específico',
             default => 'de evaluación',
         };
 
@@ -745,12 +757,21 @@ class CuestionarioController extends Controller
     public function completado(string $token)
     {
         $evaluado = EvaluadoOrden::where('token_unico', $token)->firstOrFail();
-        
-        if (!$evaluado->cuestionario_completado) {
+
+        if (! $evaluado->cuestionario_completado) {
             return redirect()->route('cuestionario.mostrar', ['token' => $token]);
         }
 
-        return view('cuestionario.completado', compact('evaluado'));
+        $evaluado->load(['documentos', 'orden.empresa', 'cuestionario']);
+        $tiposDocumento = DocumentoEvaluado::tiposDocumentoParaEvaluado($evaluado);
+        $puedeSubirDocumentos = $evaluado->puedeSubirDocumentosConEnlace();
+
+        return view('cuestionario.completado', compact(
+            'evaluado',
+            'token',
+            'tiposDocumento',
+            'puedeSubirDocumentos',
+        ));
     }
 
     /**
@@ -823,14 +844,15 @@ class CuestionarioController extends Controller
                 1 => 'Actualización de Datos',
                 2 => 'Cambios Familiares',
                 3 => 'Situación Laboral Actual',
-                4 => 'Antecedentes Recientes',
-                5 => 'Firma Digital'
+                4 => 'Situación Económica',
+                5 => 'Antecedentes y Referencias',
             ],
             'especifica' => [
                 1 => 'Datos Básicos',
-                2 => 'Situación Específica',
-                3 => 'Antecedentes Relevantes', 
-                4 => 'Firma Digital'
+                2 => 'Información Familiar',
+                3 => 'Situación Laboral y Caso',
+                4 => 'Situación Económica',
+                5 => 'Antecedentes Relevantes',
             ],
             'socioeconomico' => [
                 1 => 'Datos Personales',
@@ -862,6 +884,17 @@ class CuestionarioController extends Controller
             return 'cuestionario.secciones.socioeconomico-complementaria';
         }
 
+        if (in_array($tipoFormulario, ['periodica', 'especifica'], true)) {
+            return match ($numero) {
+                1 => 'cuestionario.secciones.datos-personales',
+                2 => 'cuestionario.secciones.informacion-familiar',
+                3 => 'cuestionario.secciones.situacion-laboral-periodica',
+                4 => 'cuestionario.secciones.situacion-economica',
+                5 => 'cuestionario.secciones.antecedentes-recientes',
+                default => 'cuestionario.secciones.generica',
+            };
+        }
+
         $vistas = [
             1 => 'cuestionario.secciones.datos-personales',
             2 => 'cuestionario.secciones.informacion-familiar',
@@ -882,6 +915,17 @@ class CuestionarioController extends Controller
             return 'chart-pie';
         }
 
+        if (in_array($tipoFormulario, ['periodica', 'especifica'], true)) {
+            return match ($numero) {
+                1 => 'user',
+                2 => 'users',
+                3 => 'briefcase',
+                4 => 'dollar-sign',
+                5 => 'shield-alt',
+                default => 'file-alt',
+            };
+        }
+
         $iconos = [
             1 => 'user',
             2 => 'users',
@@ -898,14 +942,24 @@ class CuestionarioController extends Controller
      */
     private function validarSeccion(Request $request, int $numero, string $tipoFormulario): array
     {
-        $formRequestClass = match (true) {
-            $numero === 6 && $tipoFormulario === 'socioeconomico' => SocioeconomicoComplementariaRequest::class,
-            $numero === 1 => DatosPersonalesRequest::class,
-            $numero === 2 => InformacionFamiliarRequest::class,
-            $numero === 3 => HistorialLaboralRequest::class,
-            $numero === 4 => SituacionEconomicaRequest::class,
-            $numero === 5 => AntecedentesRequest::class,
-            default => null,
+        $formRequestClass = match ($tipoFormulario) {
+            'periodica', 'especifica' => match ($numero) {
+                1 => DatosPersonalesRequest::class,
+                2 => InformacionFamiliarRequest::class,
+                3 => SituacionLaboralPeriodicaRequest::class,
+                4 => SituacionEconomicaRequest::class,
+                5 => AntecedentesRecientesRequest::class,
+                default => null,
+            },
+            default => match (true) {
+                $numero === 6 && $tipoFormulario === 'socioeconomico' => SocioeconomicoComplementariaRequest::class,
+                $numero === 1 => DatosPersonalesRequest::class,
+                $numero === 2 => InformacionFamiliarRequest::class,
+                $numero === 3 => HistorialLaboralRequest::class,
+                $numero === 4 => SituacionEconomicaRequest::class,
+                $numero === 5 => AntecedentesRequest::class,
+                default => null,
+            },
         };
 
         if ($formRequestClass === null) {
@@ -916,6 +970,14 @@ class CuestionarioController extends Controller
         $formRequest = $formRequestClass::createFrom($request);
         $formRequest->setContainer(app());
         $formRequest->setRedirector(app('redirect'));
+        if ($request->attributes->has('tipo_formulario_cuestionario')) {
+            $formRequest->attributes->set(
+                'tipo_formulario_cuestionario',
+                $request->attributes->get('tipo_formulario_cuestionario')
+            );
+        } else {
+            $formRequest->attributes->set('tipo_formulario_cuestionario', $tipoFormulario);
+        }
         $formRequest->validateResolved();
 
         return $formRequest->validated();
@@ -977,12 +1039,14 @@ class CuestionarioController extends Controller
             ->where('token_expira_at', '>', now())
             ->firstOrFail();
 
-        if ($evaluado->cuestionario_completado) {
-            return back()->with('error', 'El cuestionario ya fue completado. No se pueden subir más documentos.');
+        if (! $evaluado->puedeSubirDocumentosConEnlace()) {
+            return back()->with('error', 'El enlace ha expirado. Ya no es posible subir documentos.');
         }
 
+        $tiposPermitidos = array_keys(DocumentoEvaluado::tiposDocumentoParaEvaluado($evaluado));
+
         $request->validate([
-            'tipo_documento' => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Models\DocumentoEvaluado::tiposDocumento()))],
+            'tipo_documento' => ['required', \Illuminate\Validation\Rule::in($tiposPermitidos)],
             'archivo'        => [
                 'required',
                 'file',

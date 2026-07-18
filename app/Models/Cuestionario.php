@@ -81,9 +81,10 @@ class Cuestionario extends Model
             ],
             'especifica' => [
                 1 => 'Datos Básicos',
-                2 => 'Situación Específica',
-                3 => 'Situación Económica',
-                4 => 'Antecedentes Relevantes', 
+                2 => 'Información Familiar',
+                3 => 'Situación Laboral y Caso',
+                4 => 'Situación Económica',
+                5 => 'Antecedentes Relevantes',
             ],
             'socioeconomico' => [
                 1 => 'Datos Personales',

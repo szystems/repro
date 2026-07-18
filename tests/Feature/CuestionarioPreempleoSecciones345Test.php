@@ -33,6 +33,7 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
             'token_unico' => 'token-e28-e21',
             'token_expira_at' => now()->addDays(30),
             'dpi' => '1234567890105',
+            'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
         ]);
     }

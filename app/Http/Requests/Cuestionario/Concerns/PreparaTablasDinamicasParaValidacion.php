@@ -35,6 +35,12 @@ trait PreparaTablasDinamicasParaValidacion
 
     protected function resolverTipoFormularioCuestionario(): string
     {
+        // Preferir el tipo inyectado por el controlador / autosave (coincide con la UI).
+        $desdeAtributo = $this->attributes->get('tipo_formulario_cuestionario');
+        if (is_string($desdeAtributo) && $desdeAtributo !== '') {
+            return $desdeAtributo;
+        }
+
         $token = $this->route('token');
 
         if (! is_string($token) || $token === '') {
@@ -42,9 +48,13 @@ trait PreparaTablasDinamicasParaValidacion
         }
 
         $evaluado = EvaluadoOrden::query()
+            ->with('cuestionario')
             ->where('token_unico', $token)
             ->first();
 
-        return $evaluado?->tipoFormularioCuestionario() ?? 'preempleo';
+        // El tipo del cuestionario es el que ve el candidato (p. ej. omite Hermanos en periódica).
+        return $evaluado?->cuestionario?->tipo_formulario
+            ?? $evaluado?->tipoFormularioCuestionario()
+            ?? 'preempleo';
     }
 }

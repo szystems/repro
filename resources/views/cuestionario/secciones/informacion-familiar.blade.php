@@ -167,6 +167,8 @@
     </p>
 </x-campo-condicional>
 
+@php $tipoFormFam = $cuestionario->tipo_formulario ?? 'preempleo'; @endphp
+@if(! in_array($tipoFormFam, ['periodica', 'especifica'], true))
 <hr class="my-4">
 <h6 class="text-primary mb-3"><i class="fas fa-users"></i> Hermanos</h6>
 
@@ -196,6 +198,7 @@
         textoEliminar="Quitar hermano"
     />
 </x-campo-condicional>
+@endif
 
 @include('cuestionario.secciones.partials.datos-pareja-actual', ['respuestas' => $resp])
 

@@ -308,11 +308,29 @@
             });
         });
 
+        function setFotoErrorVisible(visible, message) {
+            const errorEl = group.querySelector('[data-foto-error]');
+            if (!errorEl) {
+                return;
+            }
+            if (visible) {
+                if (message) {
+                    errorEl.textContent = message;
+                }
+                errorEl.style.display = 'block';
+                errorEl.classList.add('d-block');
+            } else {
+                errorEl.style.display = 'none';
+                errorEl.classList.remove('d-block');
+            }
+        }
+
         input.addEventListener('change', function () {
             if (input.files && input.files.length > 0) {
                 showPreviewFromFile(input.files[0]);
                 clearExistenteFlag();
                 group.classList.remove('is-invalid');
+                setFotoErrorVisible(false);
             }
         });
 
@@ -326,6 +344,7 @@
             if (!hasFile && !hasExistente) {
                 e.preventDefault();
                 group.classList.add('is-invalid');
+                setFotoErrorVisible(true, 'Debe tomar o subir su fotografía para continuar.');
                 if (window.cuestionarioHelpers) {
                     cuestionarioHelpers.hideLoading();
                     cuestionarioHelpers.showAlert('Debe tomar o subir su fotografía para continuar.', 'warning');

@@ -231,6 +231,8 @@
 </div>
 
 <div class="row mt-3">
+@php $tipoForm = $cuestionario->tipo_formulario ?? 'preempleo'; @endphp
+@if(! in_array($tipoForm, ['periodica', 'especifica'], true))
     <div class="col-lg-4">
         <div class="form-group">
             <label for="igss" class="form-label">No. IGSS</label>
@@ -257,6 +259,7 @@
             @error('nit')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
     </div>
+@endif
     <div class="col-lg-4">
         <div class="form-group">
             <label for="licencia_conducir" class="form-label">Licencia de conducir <span class="required">*</span></label>

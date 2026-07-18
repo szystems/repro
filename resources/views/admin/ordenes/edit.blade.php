@@ -540,9 +540,14 @@
     </div>
 </div>
 
+<script src="{{ asset('js/matriz-formulario-servicio.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let evaluadoIndex = {{ $orden->evaluados->count() }};
+
+    if (window.MatrizFormularioServicioUI) {
+        window.MatrizFormularioServicioUI.init(document);
+    }
     
     // Función para actualizar números de evaluados
     function actualizarNumerosEvaluados() {
@@ -601,6 +606,9 @@ document.addEventListener('DOMContentLoaded', function() {
         evaluadoIndex++;
         
         actualizarNumerosEvaluados();
+        if (window.MatrizFormularioServicioUI) {
+            window.MatrizFormularioServicioUI.sincronizarFila(newEvaluado);
+        }
     });
     
     // Remover evaluado

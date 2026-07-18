@@ -584,17 +584,28 @@
             if (fotoInput && fotoGroup) {
                 const hasFile = fotoInput.files && fotoInput.files.length > 0;
                 const hasExistente = form.querySelector('[name="foto_candidato_existente"]');
+                const fotoError = fotoGroup.querySelector('[data-foto-error]');
                 if (!hasFile && !hasExistente) {
                     fotoGroup.classList.add('is-invalid');
+                    if (fotoError) {
+                        fotoError.textContent = 'Debe tomar o subir su fotografía para continuar.';
+                        fotoError.style.display = 'block';
+                        fotoError.classList.add('d-block');
+                    }
                     valid = false;
                     if (missingLabels.indexOf('Fotografía del candidato') === -1) {
                         missingLabels.push('Fotografía del candidato');
                     }
+                    // Priorizar la foto si es el único/principal faltante visual cerca del tope
                     if (!firstError) {
                         firstError = fotoGroup;
                     }
                 } else {
                     fotoGroup.classList.remove('is-invalid');
+                    if (fotoError && !fotoError.dataset.serverError) {
+                        fotoError.style.display = 'none';
+                        fotoError.classList.remove('d-block');
+                    }
                 }
             }
 
