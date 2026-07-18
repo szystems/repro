@@ -565,36 +565,13 @@
                 Autorización y Términos
             </div>
             <div style="padding: 10px; font-size: 9px; line-height: 1.6;">
-                <h3 style="text-align: center; font-size: 11px; color: #000555; margin-bottom: 10px;">AUTORIZACIÓN PARA EVALUACIÓN</h3>
-
-                <p>Yo, <strong>{{ $cuestionario->evaluadoOrden->nombre }} {{ $cuestionario->evaluadoOrden->apellidos }}</strong>, identificado(a) con DPI número <strong>{{ $cuestionario->evaluadoOrden->dpi }}</strong>, por medio de la presente autorizo libre y voluntariamente a <strong>REPRO Guatemala</strong> para que realice la siguiente evaluación:</p>
-
-                <p><strong>Tipo de evaluación:</strong>
-                    @if($cuestionario->evaluadoOrden->tipo_servicio === 'poligrafo')
-                        Evaluación Poligráfica
-                    @elseif($cuestionario->evaluadoOrden->tipo_servicio === 'vsa')
-                        Evaluación VSA (Voice Stress Analysis)
-                    @else
-                        Estudio Socioeconómico
-                    @endif
-                </p>
-
-                <p>Declaro que:</p>
-                <ol style="margin-left: 15px;">
-                    <li>Participo de manera <strong>voluntaria</strong> en este proceso de evaluación.</li>
-                    <li>He sido informado(a) sobre el procedimiento que se llevará a cabo.</li>
-                    <li>Autorizo la recopilación, almacenamiento y procesamiento de mis datos personales exclusivamente para los fines de esta evaluación.</li>
-                    <li>Entiendo que los resultados de esta evaluación serán compartidos con la empresa solicitante <strong>{{ $cuestionario->evaluadoOrden->orden->empresa->nombre ?? '' }}</strong>.</li>
-                    <li>Comprendo que puedo retirarme del proceso en cualquier momento antes de la finalización de la evaluación.</li>
-                    <li>La información que proporcionaré es verídica y correcta según mi mejor conocimiento.</li>
-                    <li>Autorizo el uso de medios digitales (firma electrónica) como constancia de mi aceptación.</li>
-                </ol>
-
-                @if(in_array($cuestionario->evaluadoOrden->tipo_servicio, ['poligrafo', 'vsa']))
-                    <div style="background: #fff3cd; border: 1px solid #ffb000; border-radius: 4px; padding: 8px; margin-top: 8px;">
-                        <strong>Consentimiento adicional para evaluación {{ $cuestionario->evaluadoOrden->tipo_servicio === 'poligrafo' ? 'poligráfica' : 'VSA' }}:</strong>
-                        <p style="margin: 4px 0 0 0;">Autorizo que se me realice una evaluación mediante {{ $cuestionario->evaluadoOrden->tipo_servicio === 'poligrafo' ? 'polígrafo (detector de verdad)' : 'análisis de estrés de voz (VSA)' }}. Declaro que me encuentro en pleno uso de mis facultades mentales y no me encuentro bajo efectos de sustancias que alteren mi estado de conciencia. Confirmo que no tengo impedimento médico alguno para realizar este examen.</p>
-                    </div>
+                @if($cuestionario->texto_autorizacion_html)
+                    {!! $cuestionario->texto_autorizacion_html !!}
+                @else
+                    @include('cuestionario.partials.autorizacion-legal', [
+                        'evaluado' => $cuestionario->evaluadoOrden,
+                        'contenidoAutorizacion' => \App\Support\AutorizacionesLegales::renderHtml($cuestionario->evaluadoOrden),
+                    ])
                 @endif
             </div>
 
@@ -629,6 +606,20 @@
                 </div>
             @endif
         </div>
+
+        @if($cuestionario->acepta_infornet && $cuestionario->texto_infornet_html)
+            <div class="seccion">
+                <div class="seccion-titulo">Autorización Infornet</div>
+                <div style="padding: 10px; font-size: 9px; line-height: 1.6;">
+                    {!! $cuestionario->texto_infornet_html !!}
+                </div>
+                @if($cuestionario->acepta_infornet_at)
+                    <p style="font-size: 8px; color: #666; padding: 0 10px;">
+                        Aceptada el {{ $cuestionario->acepta_infornet_at->format('d/m/Y H:i:s') }} (misma firma de autorización principal).
+                    </p>
+                @endif
+            </div>
+        @endif
     @else
         {{-- Si no aceptó términos, al menos mostrar la firma si existe --}}
         @if($cuestionario->firma_digital)

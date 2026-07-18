@@ -65,6 +65,7 @@ class EvaluadoOrden extends Model
         'observaciones',
         'notas',
         'puesto_evaluar',
+        'motivo_hecho_evaluacion',
         'sede_region_empresa',
         'archivo_resultado_preliminar',
         'texto_informe_preliminar',

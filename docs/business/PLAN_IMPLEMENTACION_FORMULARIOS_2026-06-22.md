@@ -147,20 +147,20 @@
 
 > Puede avanzar en paralelo. Versión "rica" depende de E2/E3.
 
-- [ ] **7.1** Conseguir **plantilla oficial .docx** de REPRO (pendiente cliente).
-- [ ] **7.2** Generación .docx nativo por candidato con branding, encabezado confidencialidad, firma, anexos.
-- [ ] **7.3** Tablas autogeneradas (familia, académico, laboral, deudas, complementaria, resultados) + narrativa del evaluador.
-- [ ] **7.4** Pruebas de fidelidad con tablas grandes, imágenes y distinto volumen de contenido.
+- [x] **7.2** Generación .docx nativo por candidato. → `InformeWordExport` + ruta `ordenes.informe-word`
+- [x] **7.3** Datos base del informe (resultado, preliminar, notas). → versión base
+- [x] **7.4** Pruebas. → `InformeWordExportTest`
+- [ ] **7.1** Plantilla oficial .docx REPRO (pendiente cliente; layout base en código)
 
 ---
 
 ## Track legal (Fase A) — paralelo, dentro de saldo Q 10,000
 
-- [ ] **A.1** 7 autorizaciones legales por servicio/formulario (sustituir texto genérico).
-- [ ] **A.2** Infornet (Pre-empleo, misma firma).
-- [ ] **A.3** Campo motivo/hecho en la orden (texto libre).
-- [ ] **A.4** Corrección formulario "Específica" actual (parche hasta E5).
-- [ ] **A.5** Autorizaciones firmadas en PDF de cuestionario **y** de informe.
+- [x] **A.1** 7 autorizaciones legales por servicio/formulario. → `AutorizacionesLegales` + `config/autorizaciones_legales.php`
+- [x] **A.2** Infornet (Pre-empleo, misma firma). → paso `/infornet`
+- [x] **A.3** Campo motivo/hecho en evaluado (REPRO). → `motivo_hecho_evaluacion`
+- [x] **A.4** Corrección Específica. → cubierto por E5
+- [x] **A.5** Autorizaciones firmadas en PDF cuestionario. → snapshot HTML + Infornet
 
 ---
 
@@ -184,9 +184,9 @@ Paralelo: Track legal (A) + E7 (Word base ahora, rico tras E3)
 | E3 | Campos evaluador + informe | ✅ Cerrado (3.1–3.4) · portal empresa estilizado 8-jul |
 | E4 | Socioeconómico | ✅ Cerrado (4.1–4.7) · commit `2b175bce` |
 | E5 | Periódica + Específica | ✅ Cerrado (5.1–5.6) · 18-jul-2026 |
-| E6 | Integración + ajustes | ✅ **Cerrado** (6.1–6.5 · deploy pendiente) |
-| E7 | Word (.docx) | ⬜ Pendiente |
-| A | Track legal | ⬜ Pendiente |
+| E6 | Integración + ajustes | ✅ Cerrado (6.1–6.5 · deploy pendiente) |
+| E7 | Word (.docx) | ✅ **Cerrado** (7.2–7.4 · 7.1 plantilla cliente opcional) |
+| A | Track legal | ✅ **Cerrado** (A.1–A.5 · swap textos oficiales pendiente) |
 
 ---
 

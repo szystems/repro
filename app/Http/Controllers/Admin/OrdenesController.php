@@ -191,6 +191,7 @@ class OrdenesController extends Controller
             'evaluados.*.tipo_servicio' => 'required|in:poligrafo,vsa,socioeconomico',
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
             'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
+            'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:2000',
             'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
             'evaluados.*.sede_region_empresa' => 'nullable|string|max:100',
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
@@ -399,6 +400,7 @@ class OrdenesController extends Controller
             'evaluados.*.tipo_servicio' => 'required|in:poligrafo,vsa,socioeconomico',
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
             'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
+            'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:2000',
             'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
             'evaluados.*.sede_region_empresa' => 'nullable|string|max:100',
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
@@ -773,6 +775,7 @@ class OrdenesController extends Controller
                     $evaluadoData['tipo_formulario'] ?? null
                 ),
                 'puesto_evaluar' => $evaluadoData['puesto_evaluar'] ?? null,
+                'motivo_hecho_evaluacion' => $evaluadoData['motivo_hecho_evaluacion'] ?? null,
                 'sede_id' => $evaluadoData['sede_id'] ?? null,
                 'sede_region_empresa' => $evaluadoData['sede_region_empresa'] ?? null,
                 'fecha_programada' => $evaluadoData['fecha_programada'] ?? null,
@@ -1108,6 +1111,53 @@ class OrdenesController extends Controller
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.ordenes.pdf-informe', compact('orden', 'mostrarInformePreliminar', 'config', 'estados'));
 
         return $pdf->stream('Informe_' . $orden->codigo_orden . '_' . ($orden->empresa->nombre ?? 'SinEmpresa') . '.pdf');
+    }
+
+    /**
+     * E7 — Informe editable en Word (.docx) por evaluado.
+     */
+    public function informeWord(Orden $orden, EvaluadoOrden $evaluado)
+    {
+        if ($evaluado->orden_id !== $orden->id) {
+            abort(404);
+        }
+
+        if (!$this->usuarioPuedeVerOrden($orden)) {
+            abort(403, 'No tienes permisos para ver esta orden.');
+        }
+
+        $evaluado->load(['poligrafista', 'responsable', 'sede', 'orden.empresa', 'orden.sede']);
+
+        $path = \App\Support\InformeWordExport::generar($orden, $evaluado);
+        $filename = 'Informe_' . $evaluado->dpi . '_' . ($orden->codigo_orden ?? 'orden') . '.docx';
+
+        return response()->download($path, $filename)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Fase A.3 — Motivo/hecho de evaluación (Periódica / Específica).
+     */
+    public function actualizarMotivoHecho(Request $request, EvaluadoOrden $evaluado)
+    {
+        if (!$this->usuarioPuedeVerOrden($evaluado->orden)) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        if (Auth::user()->role_as < 2) {
+            abort(403, 'Solo usuarios REPRO pueden editar este campo.');
+        }
+
+        $request->validate([
+            'motivo_hecho_evaluacion' => 'required|string|max:2000',
+        ], [
+            'motivo_hecho_evaluacion.required' => 'Indique el motivo o hecho de la evaluación.',
+        ]);
+
+        $evaluado->update([
+            'motivo_hecho_evaluacion' => $request->input('motivo_hecho_evaluacion'),
+        ]);
+
+        return back()->with('success', 'Motivo/hecho de evaluación actualizado.');
     }
 
     /**

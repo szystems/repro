@@ -54,6 +54,8 @@ class Fase2DocumentacionTest extends TestCase
 
         $this->evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $this->orden->id,
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
         ]);
     }
 
@@ -295,6 +297,8 @@ class Fase2DocumentacionTest extends TestCase
             'instrucciones_leidas_at' => now(),
             'acepta_terminos' => true,
             'acepta_terminos_at' => now(),
+            'acepta_infornet' => true,
+            'acepta_infornet_at' => now(),
         ]);
 
         $response = $this->get(route('cuestionario.terminos', $this->evaluado->token_unico));

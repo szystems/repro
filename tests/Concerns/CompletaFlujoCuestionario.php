@@ -17,6 +17,13 @@ trait CompletaFlujoCuestionario
             'acepta_terminos' => '1',
             'firma_digital' => $firma ?? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
         ]);
+
+        $evaluado = \App\Models\EvaluadoOrden::where('token_unico', $token)->first();
+        if ($evaluado && \App\Support\AutorizacionesLegales::requiereInfornet($evaluado)) {
+            $this->post(route('cuestionario.aceptar-infornet', $token), [
+                'acepta_infornet' => '1',
+            ]);
+        }
     }
 
     protected function verificarIdentidadYFlujoPreSeccion(string $token, string $dpi): void
@@ -33,6 +40,8 @@ trait CompletaFlujoCuestionario
             'instrucciones_leidas_at' => now(),
             'acepta_terminos' => true,
             'acepta_terminos_at' => now(),
+            'acepta_infornet' => true,
+            'acepta_infornet_at' => now(),
         ];
     }
 

@@ -161,6 +161,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         Route::get('ordenes/{orden}', [OrdenesController::class, 'show'])->name('ordenes.show');
         Route::get('ordenes/{orden}/pdf', [OrdenesController::class, 'pdf'])->name('ordenes.pdf');
         Route::get('ordenes/{orden}/pdf-informe', [OrdenesController::class, 'pdfInforme'])->name('ordenes.pdf-informe');
+        Route::get('ordenes/{orden}/evaluados/{evaluado}/informe-word', [OrdenesController::class, 'informeWord'])->name('ordenes.informe-word');
     });
     // Editar
     Route::middleware(['permission:ordenes.editar'])->group(function () {
@@ -172,6 +173,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         Route::patch('evaluados/{evaluado}/cambiar-estado', [OrdenesController::class, 'cambiarEstadoEvaluado'])->name('evaluados.cambiar-estado');
         Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');
         Route::post('evaluados/{evaluado}/deshabilitar-cuestionario', [OrdenesController::class, 'deshabilitarCuestionario'])->name('evaluados.deshabilitar-cuestionario');
+        Route::patch('evaluados/{evaluado}/motivo-hecho', [OrdenesController::class, 'actualizarMotivoHecho'])->name('evaluados.actualizar-motivo-hecho');
     });
     // Eliminar
     Route::middleware(['permission:ordenes.eliminar'])->group(function () {
@@ -328,6 +330,9 @@ Route::prefix('cuestionario')->name('cuestionario.')->middleware('throttle:60,1'
     // Términos y condiciones (autorización)
     Route::get('/{token}/terminos', [CuestionarioController::class, 'terminos'])->name('terminos');
     Route::post('/{token}/aceptar-terminos', [CuestionarioController::class, 'aceptarTerminos'])->name('aceptar-terminos');
+
+    Route::get('/{token}/infornet', [CuestionarioController::class, 'infornet'])->name('infornet');
+    Route::post('/{token}/aceptar-infornet', [CuestionarioController::class, 'aceptarInfornet'])->name('aceptar-infornet');
 
     // Navegación por secciones
     Route::get('/{token}/seccion/{numero}', [CuestionarioController::class, 'seccion'])

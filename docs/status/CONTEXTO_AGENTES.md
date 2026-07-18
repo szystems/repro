@@ -2,10 +2,8 @@
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
 **Fecha de Contexto:** 18 de julio de 2026  
-**Estado:** ✅ FASE 20 DESPLEGADA · ✅ Fase F **E1–E6 CERRADOS** · deploy Fase F pendiente  
-**Versión:** 2.3.1 Producción  
-**Plataforma:** https://reproappv2.szystems.com  
-**Repo:** https://github.com/szystems/repro · branch `master` · commit `413e22b5`
+**Estado:** ✅ FASE 20 DESPLEGADA · ✅ **Fase F E1–E6 + Fase A + E7 cerrados en código** · deploy pendiente  
+**Repo:** https://github.com/szystems/repro · branch `master` · commit pendiente push Fase A/E7
 
 ---
 
@@ -16,10 +14,10 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 
 ### ⚡ ESTADO ACTUAL (Julio 2026)
 - ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 + Fase 20 desplegadas en iPage (`reproappv2.szystems.com`)
-- ✅ **FASE F FORMULARIOS:** **E1–E6 cerrados** (18-jul-2026) · **786 tests OK** · deploy pendiente. Plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
+- ✅ **FASE F FORMULARIOS:** **E1–E6 cerrados** · **Fase A legal + E7 Word cerrados** (18-jul) · **796 tests OK** · deploy pendiente
 - ✅ **4 ESTADOS INDEPENDIENTES:** Formulario / Programación / Evaluación / Orden (Fase 18)
 - ✅ **FASE 19:** Fix duplicación órdenes, capacidad por sede, historial empresa, archivar órdenes, búsqueda DPI/nombre
-- ✅ **TESTS:** **786 tests OK** — E6 cerrado 18-jul
+- ✅ **TESTS:** **796 tests OK** — Fase A + E7 cerrados 18-jul
 - ✅ **SEGURIDAD:** Permisos granulares + middleware `role` / `permission`
 - ✅ **NOTIFICACIONES:** In-app ampliadas (creador, empresa, colaboradores — Fase 18)
 - ⏳ **PENDIENTE OPS:** Cron iPage para auto-transiciones formulario 24h/30d (o fallback on-access)
@@ -111,13 +109,26 @@ Motor base 1.1–1.9: tabla dinámica, condicionales, autosave, catálogo GT, fo
 **Demo Periódica:** `DemoPruebaManualE5PeriodicaSeeder` → token `e5demo2026periodicatokenrepr0` · DPI `2405617300305`  
 **Demo Específica:** `DemoPruebaManualE5EspecificaSeeder` → token `e5demo2026especificatokenrepr0` · DPI `2405617300405`
 
+### ✅ Fase A — Legal (18-jul-2026)
+
+- ✅ **A.1** 7 plantillas (`config/autorizaciones_legales.php` + `AutorizacionesLegales`)
+- ✅ **A.2** Infornet pre-empleo (`/infornet`, misma firma)
+- ✅ **A.3** `motivo_hecho_evaluacion` en evaluado + form admin
+- ✅ **A.5** PDF cuestionario con snapshot autorización + Infornet
+- ⏳ Sustituir textos por plantillas oficiales REPRO cuando las entreguen
+
+### ✅ E7 — Word .docx (18-jul-2026)
+
+- ✅ Botón «Descargar informe Word» por evaluado (`InformeWordExport`, PhpWord)
+- ⏳ Plantilla .docx oficial cliente (layout base en código)
+
 ### ✅ Fase F E6 — CERRADA (Integración, 18-jul-2026)
 
 - ✅ **6.1** Matriz servicio→formulario (`MatrizFormularioServicio`, UI create/edit, `OrdenFormRequest`)
 - ✅ **6.2** Mensajes «Información Importante» por tipo (`MensajesInformacionImportante`, partial reutilizable)
 - ✅ **6.3** Jotform workaround — marcar completado manual solo socio (`EvaluadoOrden::puedeMarcarFormularioCompletadoManualSocio`)
 - ✅ **6.4** Papelería post-envío — subida con mismo token hasta `token_expira_at` (~30 días); partial `documentos-candidato` en `completado` + `finalizar`
-- ✅ **6.5** Regresión PHPUnit **786/786** · smoke móvil pantalla completado OK (390×844)
+- ✅ **6.5** Regresión PHPUnit **796/796**
 - ✅ **QA manual** navegador 18-jul: matriz, mensajes, Jotform, hermanos, foto, documentos post-envío
 
 **Archivos clave E6:** `MatrizFormularioServicio.php` · `MensajesInformacionImportante.php` · `documentos-candidato.blade.php` · `EvaluadoOrden::enlaceCuestionarioVigente()` / `puedeSubirDocumentosConEnlace()` · migración tipos doc socio · `E6PapeleriaPostEnvioTest`
@@ -558,7 +569,7 @@ php artisan view:clear
 
 | Área | Tests | Estado |
 |------|-------|--------|
-| Suite completa | 786 | ✅ Pasando (2026-07-18, E6 cerrado) |
+| Suite completa | 796 | ✅ Pasando (2026-07-18, Fase A + E7) |
 | Fase 19 | `Fase19Sprint3Test` | ✅ Historial, archivar, búsqueda |
 | Sinergia | `Fase18SinergiaReglasSemana3Test` | ✅ S4, S5, S2 eliminado |
 | Calendario | `CalendarioTest` | ✅ Capacidad sede |

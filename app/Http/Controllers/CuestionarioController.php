@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Support\AutorizacionesLegales;
 use App\Support\CuestionarioAutosave;
 use App\Support\CuestionarioFotoCandidato;
 use App\Support\CuestionarioPrecarga;
@@ -209,12 +210,19 @@ class CuestionarioController extends Controller
             return redirect()->route('cuestionario.instrucciones', ['token' => $token]);
         }
 
-        // Si ya aceptó, redirigir a secciones
         if ($cuestionario && $cuestionario->acepta_terminos) {
+            if ($redirect = $this->redirigirSiInfornetPendiente($evaluado, $cuestionario, $token)) {
+                return $redirect;
+            }
+
             return redirect()->route('cuestionario.seccion', [
                 'token' => $token,
                 'numero' => $cuestionario->seccion_actual
             ]);
+        }
+
+        if (!AutorizacionesLegales::motivoHechoCompleto($evaluado)) {
+            return view('cuestionario.espera-motivo', compact('evaluado', 'token'));
         }
 
         $tipoServicio = $evaluado->tipo_servicio;
@@ -250,11 +258,97 @@ class CuestionarioController extends Controller
             return redirect()->route('cuestionario.instrucciones', ['token' => $token]);
         }
 
+        if (!AutorizacionesLegales::motivoHechoCompleto($evaluado)) {
+            return back()->with('error', 'REPRO debe registrar el motivo o hecho de la evaluación antes de continuar.');
+        }
+
+        $firma = $request->input('firma_digital');
+        $textoAutorizacion = AutorizacionesLegales::renderHtml($evaluado);
+
         $cuestionario->update([
-            'acepta_terminos'    => true,
-            'acepta_terminos_at' => now(),
-            'ip_terminos'        => $request->ip(),
-            'firma_digital'      => $request->input('firma_digital'),
+            'acepta_terminos'         => true,
+            'acepta_terminos_at'      => now(),
+            'ip_terminos'             => $request->ip(),
+            'firma_digital'           => $firma,
+            'firma_autorizacion'      => $firma,
+            'texto_autorizacion_html' => $textoAutorizacion,
+        ]);
+
+        if (AutorizacionesLegales::requiereInfornet($evaluado)) {
+            return redirect()->route('cuestionario.infornet', ['token' => $token]);
+        }
+
+        return redirect()->route('cuestionario.seccion', [
+            'token' => $token,
+            'numero' => $cuestionario->seccion_actual
+        ]);
+    }
+
+    /**
+     * Autorización Infornet (solo pre-empleo).
+     */
+    public function infornet(string $token)
+    {
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->with(['orden.empresa'])
+            ->firstOrFail();
+
+        if ($evaluado->cuestionario_completado) {
+            return view('cuestionario.completado', compact('evaluado'));
+        }
+
+        $cuestionario = $evaluado->cuestionario;
+
+        if (!$cuestionario || !$cuestionario->instrucciones_leidas_at) {
+            return redirect()->route('cuestionario.instrucciones', ['token' => $token]);
+        }
+
+        if (!$cuestionario->acepta_terminos) {
+            return redirect()->route('cuestionario.terminos', ['token' => $token]);
+        }
+
+        if (!AutorizacionesLegales::requiereInfornet($evaluado)) {
+            return redirect()->route('cuestionario.seccion', [
+                'token' => $token,
+                'numero' => $cuestionario->seccion_actual,
+            ]);
+        }
+
+        if ($cuestionario->acepta_infornet) {
+            return redirect()->route('cuestionario.seccion', [
+                'token' => $token,
+                'numero' => $cuestionario->seccion_actual,
+            ]);
+        }
+
+        $contenidoInfornet = AutorizacionesLegales::renderInfornetHtml($evaluado);
+
+        return view('cuestionario.infornet', compact('evaluado', 'cuestionario', 'token', 'contenidoInfornet'));
+    }
+
+    public function aceptarInfornet(Request $request, string $token)
+    {
+        $request->validate([
+            'acepta_infornet' => 'required|accepted',
+        ], [
+            'acepta_infornet.required' => 'Debe aceptar la autorización Infornet.',
+            'acepta_infornet.accepted' => 'Debe aceptar la autorización Infornet.',
+        ]);
+
+        $evaluado = EvaluadoOrden::where('token_unico', $token)
+            ->where('token_expira_at', '>', now())
+            ->firstOrFail();
+
+        $cuestionario = $evaluado->cuestionario;
+
+        if (!$cuestionario || !$cuestionario->acepta_terminos || !AutorizacionesLegales::requiereInfornet($evaluado)) {
+            return redirect()->route('cuestionario.terminos', ['token' => $token]);
+        }
+
+        $cuestionario->update([
+            'acepta_infornet'     => true,
+            'acepta_infornet_at'  => now(),
+            'texto_infornet_html' => AutorizacionesLegales::renderInfornetHtml($evaluado),
         ]);
 
         return redirect()->route('cuestionario.seccion', [
@@ -1159,6 +1253,12 @@ class CuestionarioController extends Controller
             return redirect()->route('cuestionario.terminos', ['token' => $token]);
         }
 
+        $evaluado = $cuestionario->evaluadoOrden ?? EvaluadoOrden::where('token_unico', $token)->firstOrFail();
+
+        if ($redirect = $this->redirigirSiInfornetPendiente($evaluado, $cuestionario, $token)) {
+            return $redirect;
+        }
+
         return redirect()->route('cuestionario.seccion', [
             'token' => $token,
             'numero' => $cuestionario->seccion_actual,
@@ -1183,6 +1283,22 @@ class CuestionarioController extends Controller
 
         if ($indiceRequerido >= 2 && !$cuestionario->acepta_terminos) {
             return redirect()->route('cuestionario.terminos', ['token' => $token]);
+        }
+
+        if ($indiceRequerido >= 2) {
+            $evaluado = $cuestionario->evaluadoOrden ?? EvaluadoOrden::where('token_unico', $token)->first();
+            if ($evaluado && ($redirect = $this->redirigirSiInfornetPendiente($evaluado, $cuestionario, $token))) {
+                return $redirect;
+            }
+        }
+
+        return null;
+    }
+
+    private function redirigirSiInfornetPendiente(EvaluadoOrden $evaluado, Cuestionario $cuestionario, string $token)
+    {
+        if (AutorizacionesLegales::requiereInfornet($evaluado) && !$cuestionario->acepta_infornet) {
+            return redirect()->route('cuestionario.infornet', ['token' => $token]);
         }
 
         return null;

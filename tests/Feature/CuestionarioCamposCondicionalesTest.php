@@ -43,6 +43,9 @@ class CuestionarioCamposCondicionalesTest extends TestCase
             'total_secciones' => 5,
             'instrucciones_leidas_at' => now(),
             'acepta_terminos' => true,
+            'acepta_terminos_at' => now(),
+            'acepta_infornet' => true,
+            'acepta_infornet_at' => now(),
         ]);
 
         $response = $this->get(route('cuestionario.seccion', [

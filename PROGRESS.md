@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-07-18 — **Fase F E6 ✅ CERRADA** · 6.1–6.5 · suite 786/786 · smoke móvil OK
+**Ultima actualizacion:** 2026-07-18 — **Fase A + E7 ✅** · suite **796/796** · deploy Fase F pendiente
 
 > **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
@@ -17,8 +17,8 @@
 | Qué | Detalle |
 |-----|---------|
 | **Fase** | **F — Formularios (cierre del proyecto)** |
-| **Etapa activa** | **E7 — Informe Word (.docx)** · track paralelo (Q 1,600) |
-| **Etapa anterior** | **E6 — Integración ✅ CERRADA (18-jul)** |
+| **Etapa activa** | **Deploy Fase F + Fase A/E7 a producción** |
+| **Etapa anterior** | **Fase A (legal) + E7 (Word) ✅ CERRADAS (18-jul)** |
 | **Plan detallado (checklists)** | `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` ← **documento principal para avanzar punto por punto** |
 | **Análisis / spec / decisiones comerciales** | `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` |
 | **Contexto para agentes IA** | `docs/status/CONTEXTO_AGENTES.md` |
@@ -141,7 +141,28 @@
 
 **Fixes post-QA:** migración `constancia_laboral`/`recibo_luz` en `documento_evaluados`; tablas tatuajes/perforaciones también en socio secc. 5; tests estables (`tipo_servicio` + `tipo_formulario` fijos en pre-empleo/foto/E6.3 negativo).
 
-**Siguiente paso:** deploy Fase F a producción · E7 Word en paralelo (plantilla .docx pendiente cliente).
+**Siguiente paso:** deploy completo a iPage (Fase F + A + E7) · QA producción.
+
+### Progreso Fase A (Legal) — ✅ CERRADO (18-jul-2026)
+
+| Punto | Estado |
+|-------|--------|
+| **A.1** 7 autorizaciones por servicio + formulario | ✅ `AutorizacionesLegales` + `config/autorizaciones_legales.php` |
+| **A.2** Infornet (pre-empleo, misma firma) | ✅ paso `/infornet` post-términos |
+| **A.3** Campo motivo/hecho (Periódica/Específica) | ✅ `motivo_hecho_evaluacion` + UI admin |
+| **A.4** Corrección Específica | ✅ cubierto por E5 |
+| **A.5** Autorizaciones en PDF cuestionario | ✅ snapshot HTML + Infornet en `pdf.blade.php` |
+
+**Nota:** textos legales en `config/autorizaciones_legales.php` — reemplazar con las 7 plantillas oficiales de REPRO cuando las entreguen (estructura lista).
+
+### Progreso E7 (Word) — ✅ CERRADO (18-jul-2026)
+
+| Punto | Estado |
+|-------|--------|
+| **7.2** Generación .docx por evaluado | ✅ `InformeWordExport` + botón en show orden |
+| **7.3** Datos del informe (resultado, preliminar, notas) | ✅ versión base operativa |
+| **7.4** Pruebas | ✅ `InformeWordExportTest` |
+| **7.1** Plantilla oficial .docx REPRO | ⏳ pendiente cliente (Word usa layout REPRO en código) |
 
 **Migraciones E1 (batch 11–14):** `valor_json` · `evaluador_notas` · `departamentos` · `municipios` · `instrucciones_*` · `datos_precarga_json`
 
@@ -169,9 +190,9 @@
 | Fase 18 | Rediseño a 4 estados independientes (Formulario/Programación/Evaluación/Orden) | ✅ COMPLETADA Y DEPLOYADA 2026-06-10 — informe enviado al cliente |
 | Fase 19 | Ajustes confirmados cliente 11/06 (duplicación, capacidad sede, historial empresa, archivar, búsqueda) | ✅ COMPLETADA Y DEPLOYADA 2026-06-13 — informe listo para cliente |
 | Fase 20 | Hotfix enlace cuestionario — UX 404, logging, vigencia token | ✅ DEPLOYADA 2026-06-16 |
-| Fase A (legal) | 7 autorizaciones + Infornet + corrección Específica + campo motivo/hecho + ajuste manual Socio | 📋 PLANIFICADA — dentro de saldo Q 10,000 |
-| Fase Word | Informe empresa en .docx editable (Q 1,600 aprobado) | 📋 PLANIFICADA — versión base independiente; "rica" depende del motor de formularios |
-| **Fase F (formularios)** | **Completar motor + 4 formularios (Pre-empleo matriz 5 secc. + Socio + Periódica + Específica)** | ✅ **E1–E6 CERRADOS** · deploy pendiente · E7 Word paralelo · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` |
+| Fase A (legal) | 7 autorizaciones + Infornet + motivo/hecho + PDF | ✅ **CERRADA** (18-jul) · textos oficiales pendientes swap |
+| Fase Word | Informe empresa .docx editable (Q 1,600) | ✅ **CERRADA** (18-jul) · plantilla .docx cliente opcional |
+| **Fase F (formularios)** | Motor + 4 formularios + integración | ✅ **E1–E6 CERRADOS** · **deploy pendiente** |
 | Fase C (1B) | Agregar servicio con reutilización de datos (Q 5,200) | 🕐 DIFERIDA 2–3 meses (decisión cliente) |
 | WhatsApp API | Notificaciones automáticas (Q 3,800) | 🕐 POSPUESTA (decisión cliente) |
 

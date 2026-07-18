@@ -81,6 +81,9 @@ class CuestionarioTablaDinamicaTest extends TestCase
         $cuestionario->update([
             'instrucciones_leidas_at' => now(),
             'acepta_terminos' => true,
+            'acepta_terminos_at' => now(),
+            'acepta_infornet' => true,
+            'acepta_infornet_at' => now(),
             'seccion_actual' => 2,
         ]);
 

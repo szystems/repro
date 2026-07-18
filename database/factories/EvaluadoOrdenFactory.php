@@ -41,7 +41,7 @@ class EvaluadoOrdenFactory extends Factory
             'observaciones' => $this->faker->optional()->paragraph(),
             // Nuevos campos granulares
             'tipo_servicio' => $this->faker->randomElement(['poligrafo', 'vsa', 'socioeconomico']),
-            'tipo_formulario' => $this->faker->randomElement(['preempleo', 'periodica', 'especifica']),
+            'tipo_formulario' => 'preempleo',
             'fecha_programada' => $this->faker->optional()->dateTimeBetween('+1 day', '+30 days'),
             'poligrafista_id' => null,
             'estado_evaluacion' => 'pendiente_de_evaluacion',

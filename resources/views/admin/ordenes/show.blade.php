@@ -465,6 +465,24 @@
                                                 <small class="text-muted d-block">Puesto a Evaluar</small>
                                                 <span>{{ $evaluado->puesto_evaluar ?: '—' }}</span>
                                             </div>
+                                            @if(in_array($evaluado->tipo_formulario, ['periodica', 'especifica'], true) && Auth::user()->role_as >= 2)
+                                            <div class="col-12 mt-2">
+                                                <small class="text-muted d-block">Motivo / hecho de la evaluación (REPRO)</small>
+                                                <form method="POST" action="{{ route('evaluados.actualizar-motivo-hecho', $evaluado) }}" class="mt-1">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <textarea name="motivo_hecho_evaluacion" class="form-control form-control-sm" rows="2" maxlength="2000" required placeholder="Ej: ascenso a supervisor / hecho a investigar…">{{ old('motivo_hecho_evaluacion', $evaluado->motivo_hecho_evaluacion) }}</textarea>
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary mt-1">
+                                                        <i class="bi bi-save"></i> Guardar motivo/hecho
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            @elseif($evaluado->motivo_hecho_evaluacion)
+                                            <div class="col-12 mt-2">
+                                                <small class="text-muted d-block">Motivo / hecho</small>
+                                                <span>{{ $evaluado->motivo_hecho_evaluacion }}</span>
+                                            </div>
+                                            @endif
                                             <div class="col-md-4">
                                                 <small class="text-muted d-block">Sede REPRO</small>
                                                 <span>{{ $evaluado->sede?->nombre ?: '—' }}</span>
@@ -840,6 +858,14 @@
                                         @include('admin.ordenes._documentos_evaluado', ['evaluado' => $evaluado])
 
                                         <hr>
+
+                                        @if(Auth::user()->role_as >= 2)
+                                        <div class="mb-3">
+                                            <a href="{{ route('ordenes.informe-word', [$orden, $evaluado]) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-file-earmark-word"></i> Descargar informe Word (.docx)
+                                            </a>
+                                        </div>
+                                        @endif
 
                                         {{-- Archivos de Resultado --}}
                                         <div class="mt-3">
