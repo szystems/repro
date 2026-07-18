@@ -5,7 +5,7 @@
 **Estado:** ✅ FASE 20 DESPLEGADA · ✅ Fase F **E1–E6 CERRADOS** · deploy Fase F pendiente  
 **Versión:** 2.3.1 Producción  
 **Plataforma:** https://reproappv2.szystems.com  
-**Repo:** https://github.com/szystems/repro · branch `master` · commit `ef3c8105`
+**Repo:** https://github.com/szystems/repro · branch `master` · commit `413e22b5`
 
 ---
 
