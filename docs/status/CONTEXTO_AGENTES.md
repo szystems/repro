@@ -1,9 +1,9 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 18 de julio de 2026  
-**Estado:** ✅ FASE 20 DESPLEGADA · ✅ **Fase F E1–E6 + Fase A + E7 cerrados en código** · deploy pendiente  
-**Repo:** https://github.com/szystems/repro · branch `master` · commit pendiente push Fase A/E7
+**Fecha de Contexto:** 20 de julio de 2026  
+**Estado:** ✅ FASE 20 DESPLEGADA · ✅ **Fase F E1–E6 + Fase A + F7 Word tabular cerrados** · deploy pendiente  
+**Repo:** https://github.com/szystems/repro · branch `master` · commit pendiente push Fase F + F7
 
 ---
 
@@ -14,10 +14,10 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 
 ### ⚡ ESTADO ACTUAL (Julio 2026)
 - ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 + Fase 20 desplegadas en iPage (`reproappv2.szystems.com`)
-- ✅ **FASE F FORMULARIOS:** **E1–E6 cerrados** · **Fase A legal + E7 Word cerrados** (18-jul) · **796 tests OK** · deploy pendiente
+- ✅ **FASE F FORMULARIOS:** **E1–E6 cerrados** · **Fase A legal + F7 Word tabular cerrados** (20-jul) · **808 tests OK** · deploy pendiente
 - ✅ **4 ESTADOS INDEPENDIENTES:** Formulario / Programación / Evaluación / Orden (Fase 18)
 - ✅ **FASE 19:** Fix duplicación órdenes, capacidad por sede, historial empresa, archivar órdenes, búsqueda DPI/nombre
-- ✅ **TESTS:** **796 tests OK** — Fase A + E7 cerrados 18-jul
+- ✅ **TESTS:** **808 tests OK** — F7 Word tabular cerrado 20-jul
 - ✅ **SEGURIDAD:** Permisos granulares + middleware `role` / `permission`
 - ✅ **NOTIFICACIONES:** In-app ampliadas (creador, empresa, colaboradores — Fase 18)
 - ⏳ **PENDIENTE OPS:** Cron iPage para auto-transiciones formulario 24h/30d (o fallback on-access)
@@ -115,12 +115,25 @@ Motor base 1.1–1.9: tabla dinámica, condicionales, autosave, catálogo GT, fo
 - ✅ **A.2** Infornet pre-empleo (`/infornet`, misma firma)
 - ✅ **A.3** `motivo_hecho_evaluacion` en evaluado + form admin
 - ✅ **A.5** PDF cuestionario con snapshot autorización + Infornet
-- ⏳ Sustituir textos por plantillas oficiales REPRO cuando las entreguen
+- ⏳ **Swap textos oficiales pendiente:** los textos en `config/autorizaciones_legales.php` son funcionales (no copia literal del paquete del cliente). En repo solo está `docs/formularios/autorizacion-general.pdf` (Socio/VSA + Infornet, 1 pág.); **no están versionadas las 7 plantillas definitivas** que el cliente mencionó en jun-2026.
+- 📣 **Al entregar versión de pruebas al cliente:** pedir **directamente** (WhatsApp/correo/reunión) el paquete oficial: **7 autorizaciones legales + Infornet definitivos** (PDF/DOCX o texto editable). Incluir la misma solicitud en el **informe de entrega / informe final** para que quede documentado y no se olvide antes del cierre.
 
-### ✅ E7 — Word .docx (18-jul-2026)
+### ✅ E7 — Word .docx (18-jul base · F7 tabular 20-jul-2026)
 
-- ✅ Botón «Descargar informe Word» por evaluado (`InformeWordExport`, PhpWord)
-- ⏳ Plantilla .docx oficial cliente (layout base en código)
+- ✅ Botón «Descargar informe Word» por evaluado (`InformeWordExport`)
+- ✅ **7.1 plantillas jul-2026:** `informe-poligrafo-preempleo.docx` + `informe-poligrafo-periodica.docx` (origen `docs/Plantillas Word/`)
+- ✅ Selector servicio×formulario (`InformeWordPlantillas`); VSA/Socio/Específica reutilizan base con etiqueta de proceso
+- ✅ Relleno tabular sin destruir diseño (`InformeWordRelleno`, `InformeWordXml`, `InformeWordDatos`)
+- ✅ Encabezado + tablas auto (familiar, académico, laboral, deudas, complementaria/periódica)
+- ✅ Foto evaluado en cuerpo (encima tabla Proceso): proporción, altura máx., espaciado compacto, sin anclaje legacy
+- ✅ Anexos tatuaje (`InformeWordAnexos`) · totales deudas · `keepNext` títulos sección · `[Content_Types].xml` JPG
+- ✅ Admin: foto + documentos en editar/show cuestionario (`AdminCuestionarioFotoEditTest`)
+- ✅ **F7 fase D (7.6):** narrativas REPRO — salud, hábitos, drogas, judicial, info complementaria Q&A, poligráfica (NDI/DI), recomendaciones, conclusiones (nombre), APA (`InformeWordNarrativas`)
+- ⏳ Plantillas VSA/Socio dedicadas si el cliente las entrega
+- 📦 **Deprecado:** `informe-repro.docx` (ago-2025 · data ejemplo Jorge Luis)
+
+**Demo Word:** `docker compose exec app php artisan db:seed --class=DemoPruebaWordMultiservicioSeeder --force`  
+→ orden `ORD-DEMO-WORD-2026` · login `http://localhost:8000/login` → `admin@repro.com` / `admin1234` (el seeder crea el usuario si falta)
 
 ### ✅ Fase F E6 — CERRADA (Integración, 18-jul-2026)
 
@@ -148,6 +161,7 @@ docker compose exec app php -d memory_limit=512M vendor/bin/phpunit
 
 - App: http://localhost:8000 · phpMyAdmin: http://localhost:8080
 - **Demo manual Pre-empleo:** `docker compose exec app php artisan db:seed --class=DemoPruebaManualE1Seeder --force` → token `e1demo2026pruebamanualtokenrepr0` · DPI `2405617300105`
+- **Demo Word multiservicio:** `docker compose exec app php artisan db:seed --class=DemoPruebaWordMultiservicioSeeder --force` → orden `ORD-DEMO-WORD-2026` · login `/login` → `admin@repro.com` / `admin1234`
 - Contenedores: `repro-app`, `repro-db`, `repro-nginx`, `repro-phpmyadmin`
 - Formulario actual (depto/municipio residencia): `resources/views/cuestionario/secciones/datos-personales.blade.php` + `<x-depto-municipio-select>`
 
@@ -178,7 +192,11 @@ La cliente entregó la **especificación funcional completa de formularios** (`C
 - Campos internos del evaluador: **solo REPRO** los edita; empresa solo sube info general.
 
 **Plan de trabajo ordenado:** `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
-**Pendientes del cliente:** plantilla .docx oficial de REPRO; auditoría de campos internos (se piden por etapa). Foto obligatoria: **decidido sí** (cámara o subir).
+**Pendientes del cliente:**
+- **7 autorizaciones legales + Infornet definitivos** — pedir al entregar versión de pruebas **y** repetir en informe final (swap en `config/autorizaciones_legales.php`).
+- Confirmar si `resources/templates/informe-repro.docx` (`PERIODICO ESPECIFICO.docx`) aplica a **todos** los tipos servicio/formulario o hay variantes.
+- Auditoría de campos internos (se piden por etapa).
+- Foto obligatoria: **decidido sí** (cámara o subir).
 
 ---
 
@@ -648,7 +666,29 @@ app/, database/, resources/, routes/  (+ vendor/ en deploy completo)
 
 ---
 
-**Última actualización:** 18 de julio de 2026  
-**Estado:** 🔄 **E6 Integración** (6.1–6.3 ✅ · 6.4/6.5 pendientes) · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
+## PRÓXIMAS REVISIONES (post-F7, jul-2026)
 
-**E3 cierre:** tablas informe editables · filtro campos internos empresa/PDF · vista portal estilizada · PDF agrupado · tests `InformePreempleoTest`, `InformePreempleoVisibilidadTest`.
+### Portal empresa / dashboard cliente
+
+**Alcance esperado:** los cambios F7 (Word, narrativas, foto admin, notas evaluador) son **internos REPRO**. El cliente **no** debe verlos en su portal; solo resultados liberados (PDF cuestionario filtrado, informe preliminar HTML/archivo, documentos papelería).
+
+| Área | Qué revisar | Archivos clave |
+|------|-------------|----------------|
+| **Visibilidad resultados** | UI empresa muestra botones con solo `resultados_visibles_empresa`; descargas exigen además `orden.estado === entregado` | `empresa/ordenes/show.blade.php` · `Orden::resultadosDisponiblesParaEmpresa()` |
+| **Informe preliminar HTML** | ¿Debe ocultarse hasta `entregado`? Hoy puede verse antes que los archivos | `empresa/ordenes/show.blade.php` |
+| **Enlaces admin en vistas empresa** | Algunas rutas apuntan a `ordenes.show` (admin) en lugar de `empresa.ordenes.show` | `empresa/cuestionarios/show.blade.php` · `admin/reportes/evaluaciones.blade.php` |
+| **Permisos sub-usuario** | `permisos_empresa` definidos pero no aplicados en `EmpresaController` | `User::tienePermisoEmpresa()` |
+| **Campos internos PDF empresa** | Confirmar que salud/judicial/notas no filtran al PDF — tests en `InformePreempleoVisibilidadTest` | `CuestionarioPresentacionEmpresa.php` |
+| **Word vs cliente** | Confirmar que no hay botón Word ni narrativas en layout empresa | `layouts/empresa.blade.php` · `empresa/ordenes/show.blade.php` |
+
+### Deploy y cierre proyecto
+
+1. Deploy iPage: Fase F + A + E7 (plantillas `resources/templates/`, seeders no en prod)
+2. Swap textos legales definitivos (`config/autorizaciones_legales.php`)
+3. Plantillas Word VSA/Socio dedicadas (si el cliente las entrega)
+4. Campo opcional `registro_apa` en User para párrafo APA
+
+---
+
+**Última actualización:** 21 de julio de 2026  
+**Estado:** ✅ **F7 Word completo (7.1–7.6)** · suite **810/810** · deploy Fase F + A + E7 pendiente · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`

@@ -262,6 +262,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
             Route::get('/', [App\Http\Controllers\Admin\CuestionariosController::class, 'index'])->name('index');
             Route::get('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'show'])->name('show');
             Route::get('/{cuestionario}/pdf', [App\Http\Controllers\Admin\CuestionariosController::class, 'generarPDF'])->name('pdf');
+            Route::get('/{cuestionario}/foto-candidato', [App\Http\Controllers\Admin\CuestionariosController::class, 'fotoCandidato'])->name('foto-candidato');
         });
         Route::middleware(['permission:evaluaciones.editar'])->group(function () {
             Route::get('/{cuestionario}/editar', [App\Http\Controllers\Admin\CuestionariosController::class, 'edit'])->name('edit');

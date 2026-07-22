@@ -14,6 +14,12 @@
     <h6 class="text-primary mb-3">
         <i class="bi bi-person"></i> {{ $nombreSeccion }}
     </h6>
+
+    <div class="row">
+        <div class="col-12">
+            <x-foto-candidato :foto-url="$fotoCandidatoUrl ?? null" :requerido="false" />
+        </div>
+    </div>
     
     <div class="row">
         <div class="col-md-6">

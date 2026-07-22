@@ -34,6 +34,26 @@
         <i class="bi bi-person"></i> {{ $nombreSeccion ?? 'Datos Generales del Evaluado' }}
     </h5>
 
+    @if(!empty($fotoCandidatoUrl))
+        <div class="row mb-4">
+            <div class="col-md-4 col-lg-3">
+                <div class="card">
+                    <div class="card-header py-2">
+                        <h6 class="mb-0"><i class="bi bi-camera"></i> Fotografía del candidato</h6>
+                    </div>
+                    <div class="card-body text-center p-2">
+                        <a href="{{ $fotoCandidatoUrl }}" target="_blank" rel="noopener">
+                            <img src="{{ $fotoCandidatoUrl }}"
+                                 alt="Fotografía del candidato"
+                                 class="img-fluid rounded border"
+                                 style="max-height: 320px; object-fit: cover;">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-md-6">
             <div class="card">

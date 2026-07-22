@@ -282,7 +282,8 @@
                                                 'respuestas' => $cuestionario->obtenerRespuestasSeccion($i),
                                                 'tablas' => $cuestionario->getTablasPorNumeroSeccion($i),
                                                 'completada' => $cuestionario->progreso_secciones[$i] ?? false,
-                                                'nombreSeccion' => $secciones[$i] ?? 'Sección ' . $i
+                                                'nombreSeccion' => $secciones[$i] ?? 'Sección ' . $i,
+                                                'fotoCandidatoUrl' => $i === 1 ? ($fotoCandidatoUrl ?? null) : null,
                                             ])
                                         @else
                                             {{-- Vista genérica para secciones sin partial específico --}}

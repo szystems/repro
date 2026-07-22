@@ -33,6 +33,7 @@ class InformeWordExportTest extends TestCase
 
         $this->assertFileExists($path);
         $this->assertStringEndsWith('.docx', $path);
+        $this->assertFileExists(InformeWordExport::rutaPlantilla());
 
         @unlink($path);
     }

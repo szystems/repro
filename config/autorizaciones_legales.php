@@ -2,7 +2,9 @@
 
 /**
  * Plantillas de autorización legal por servicio + tipo de formulario (Fase A).
- * Sustituir textos cuando REPRO entregue las 7 plantillas oficiales definitivas.
+ * Textos actuales: borrador funcional — NO copia literal del cliente.
+ * Pendiente A.6: swap con 7 autorizaciones + Infornet definitivos de REPRO.
+ * Pedir al entregar versión de pruebas + repetir en informe final (ver CONTEXTO_AGENTES.md / PROGRESS.md).
  */
 return [
     'infornet' => <<<'HTML'

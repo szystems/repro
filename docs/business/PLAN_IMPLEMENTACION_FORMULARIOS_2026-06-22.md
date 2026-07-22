@@ -150,7 +150,9 @@
 - [x] **7.2** Generación .docx nativo por candidato. → `InformeWordExport` + ruta `ordenes.informe-word`
 - [x] **7.3** Datos base del informe (resultado, preliminar, notas). → versión base
 - [x] **7.4** Pruebas. → `InformeWordExportTest`
-- [ ] **7.1** Plantilla oficial .docx REPRO (pendiente cliente; layout base en código)
+- [x] **7.1** Plantillas oficiales REPRO (jul-2026). → `informe-poligrafo-preempleo.docx` + `informe-poligrafo-periodica.docx`
+- [x] **7.5** Relleno tabular F7 fase A–C. → `InformeWordRelleno` + `InformeWordFoto` + `InformeWordAnexos` + `InformeWordXml` (encabezado, tablas BD, foto, anexos, layout, Content_Types JPG) — **cerrado 20-jul-2026**
+- [x] **7.6** Narrativas manuales REPRO + variantes VSA/Socio. → `InformeWordNarrativas` + relleno en plantilla (salud, hábitos, judicial, poligráfica, recomendaciones, APA) — **cerrado 20-jul-2026**
 
 ---
 
@@ -161,6 +163,9 @@
 - [x] **A.3** Campo motivo/hecho en evaluado (REPRO). → `motivo_hecho_evaluacion`
 - [x] **A.4** Corrección Específica. → cubierto por E5
 - [x] **A.5** Autorizaciones firmadas en PDF cuestionario. → snapshot HTML + Infornet
+- [ ] **A.6** Swap textos oficiales del cliente en `config/autorizaciones_legales.php`. → **pendiente entrega REPRO**
+  - **Pedir al entregar versión de pruebas** (directo al cliente: 7 autorizaciones + Infornet definitivos).
+  - **Repetir en informe final** del proyecto para no olvidar antes del cierre.
 
 ---
 
@@ -185,9 +190,9 @@ Paralelo: Track legal (A) + E7 (Word base ahora, rico tras E3)
 | E4 | Socioeconómico | ✅ Cerrado (4.1–4.7) · commit `2b175bce` |
 | E5 | Periódica + Específica | ✅ Cerrado (5.1–5.6) · 18-jul-2026 |
 | E6 | Integración + ajustes | ✅ Cerrado (6.1–6.5 · deploy pendiente) |
-| E7 | Word (.docx) | ✅ **Cerrado** (7.2–7.4 · 7.1 plantilla cliente opcional) |
-| A | Track legal | ✅ **Cerrado** (A.1–A.5 · swap textos oficiales pendiente) |
+| E7 | Word (.docx) | ✅ **7.1–7.6** completo (20-jul) |
+| A | Track legal | ✅ **Cerrado** (A.1–A.5) · **A.6 swap textos** pendiente — pedir archivos al cliente en entrega pruebas + informe final |
 
 ---
 
-*Plan vivo — se actualiza marcando cada punto al cerrarlo. Szystems · 22-jun-2026 · contexto sincronizado 18-jul-2026 (E6 ✅ cerrada 6.1–6.5 · 786 tests · deploy pendiente)*
+*Plan vivo — se actualiza marcando cada punto al cerrarlo. Szystems · 22-jun-2026 · contexto sincronizado 20-jul-2026 (F7 tabular ✅ · 808 tests · deploy pendiente)*

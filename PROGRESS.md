@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-07-18 — **Fase A + E7 ✅** · suite **796/796** · deploy Fase F pendiente
+**Ultima actualizacion:** 2026-07-21 — **F7 Word completo (7.1–7.6) ✅** · suite **810/810** · deploy Fase F + A + E7 pendiente
 
 > **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
@@ -17,8 +17,8 @@
 | Qué | Detalle |
 |-----|---------|
 | **Fase** | **F — Formularios (cierre del proyecto)** |
-| **Etapa activa** | **Deploy Fase F + Fase A/E7 a producción** |
-| **Etapa anterior** | **Fase A (legal) + E7 (Word) ✅ CERRADAS (18-jul)** |
+| **Etapa activa** | **Deploy Fase F + A + E7 a producción (iPage)** |
+| **Etapa anterior** | **F7 Word completo (tabular + narrativas + demo seeder) ✅ (21-jul)** |
 | **Plan detallado (checklists)** | `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` ← **documento principal para avanzar punto por punto** |
 | **Análisis / spec / decisiones comerciales** | `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` |
 | **Contexto para agentes IA** | `docs/status/CONTEXTO_AGENTES.md` |
@@ -153,16 +153,41 @@
 | **A.4** Corrección Específica | ✅ cubierto por E5 |
 | **A.5** Autorizaciones en PDF cuestionario | ✅ snapshot HTML + Infornet en `pdf.blade.php` |
 
-**Nota:** textos legales en `config/autorizaciones_legales.php` — reemplazar con las 7 plantillas oficiales de REPRO cuando las entreguen (estructura lista).
+**Nota:** textos legales en `config/autorizaciones_legales.php` — borrador funcional; reemplazar con las **7 plantillas + Infornet definitivos** cuando REPRO los entregue (estructura/flujo ya listos).
 
-### Progreso E7 (Word) — ✅ CERRADO (18-jul-2026)
+**📣 Comunicación al cliente (no olvidar):**
+- Al **entregar la versión para pruebas** (deploy Fase F + A + E7): pedir **directamente** el paquete oficial de autorizaciones (7 textos por servicio/formulario + Infornet).
+- Repetir la solicitud en el **informe de entrega / informe final** del proyecto, para dejar constancia escrita y cerrar el swap antes del cierre.
+- Referencia: jun-2026 dijimos que ya nos las habían enviado, pero **no están completas en el repo** (solo `docs/formularios/autorizacion-general.pdf`).
+
+### Progreso E7 (Word) — F7 completo ✅ (21-jul-2026)
 
 | Punto | Estado |
 |-------|--------|
 | **7.2** Generación .docx por evaluado | ✅ `InformeWordExport` + botón en show orden |
-| **7.3** Datos del informe (resultado, preliminar, notas) | ✅ versión base operativa |
-| **7.4** Pruebas | ✅ `InformeWordExportTest` |
-| **7.1** Plantilla oficial .docx REPRO | ⏳ pendiente cliente (Word usa layout REPRO en código) |
+| **7.3** Datos del informe (resultado, preliminar, notas) | ✅ encabezado + tablas desde BD |
+| **7.4** Pruebas | ✅ `InformeWordExportTest` (11 tests) · `AdminCuestionarioFotoEditTest` |
+| **7.1** Plantillas cliente jul-2026 | ✅ `informe-poligrafo-preempleo.docx` + `informe-poligrafo-periodica.docx` |
+| **7.5** Relleno tabular F7 (A–C) | ✅ **CERRADO 20-jul** — ver detalle abajo |
+| **7.6** Narrativas manuales REPRO | ✅ **CERRADO 20-jul** — `InformeWordNarrativas` + `InformeWordRelleno::rellenarNarrativas()` |
+
+**F7 tabular + narrativas cerrado (20–21-jul) — incluye:**
+- Encabezado tabular (Proceso, datos candidato, resultado, observaciones) sin destruir diseño
+- Tablas auto: familiar, académico, laboral, deudas (+ totales Q.), complementaria / labor complementaria (periódica)
+- **Narrativas REPRO (7.6):** salud, hábitos, drogas, judicial, info complementaria Q&A, poligráfica (NDI/DI), recomendaciones, conclusiones (nombre), APA
+- Foto evaluado en **cuerpo** (encima tabla Proceso): proporción preservada, altura máx., sin marco flotante legacy
+- Anexos: fotos tatuaje en sección ANEXOS
+- Layout: espaciado compacto, `keepNext` en títulos de sección, sin huecos labor/complementaria
+- Fix apertura Word: registro `image/jpeg` en `[Content_Types].xml` al insertar JPG
+- Admin: edición foto candidato en `/cuestionarios/{id}/editar` + galería documentos en show
+
+**Demo Word multiservicio:** `DemoPruebaWordMultiservicioSeeder` → orden `ORD-DEMO-WORD-2026` · login auto `admin@repro.com` / `admin1234` si no existen usuarios
+
+**Archivos clave F7:** `InformeWordExport.php` · `InformeWordPlantillas.php` · `InformeWordDatos.php` · `InformeWordRelleno.php` · `InformeWordNarrativas.php` · `InformeWordXml.php` · `InformeWordFoto.php` · `InformeWordAnexos.php`
+
+**Siguiente paso F7:** **deploy** Fase F + A + E7 a iPage. Opcional: plantillas VSA/Socio dedicadas; campo `registro_apa` en User.
+
+**Revisión portal empresa (post-F7):** Word/narrativas/foto/notas evaluador son **solo REPRO** (no deben aparecer en dashboard cliente). Auditar coherencia UI vs backend en resultados liberados — ver `CONTEXTO_AGENTES.md` § «Próximas revisiones».
 
 **Migraciones E1 (batch 11–14):** `valor_json` · `evaluador_notas` · `departamentos` · `municipios` · `instrucciones_*` · `datos_precarga_json`
 
@@ -190,8 +215,8 @@
 | Fase 18 | Rediseño a 4 estados independientes (Formulario/Programación/Evaluación/Orden) | ✅ COMPLETADA Y DEPLOYADA 2026-06-10 — informe enviado al cliente |
 | Fase 19 | Ajustes confirmados cliente 11/06 (duplicación, capacidad sede, historial empresa, archivar, búsqueda) | ✅ COMPLETADA Y DEPLOYADA 2026-06-13 — informe listo para cliente |
 | Fase 20 | Hotfix enlace cuestionario — UX 404, logging, vigencia token | ✅ DEPLOYADA 2026-06-16 |
-| Fase A (legal) | 7 autorizaciones + Infornet + motivo/hecho + PDF | ✅ **CERRADA** (18-jul) · textos oficiales pendientes swap |
-| Fase Word | Informe empresa .docx editable (Q 1,600) | ✅ **CERRADA** (18-jul) · plantilla .docx cliente opcional |
+| Fase A (legal) | 7 autorizaciones + Infornet + motivo/hecho + PDF | ✅ **CERRADA** (18-jul) · **A.6 swap textos** pendiente — pedir archivos al cliente (pruebas + informe final) |
+| Fase Word | Informe empresa .docx editable (Q 1,600) | ✅ **7.1–7.6** completo (20-jul) |
 | **Fase F (formularios)** | Motor + 4 formularios + integración | ✅ **E1–E6 CERRADOS** · **deploy pendiente** |
 | Fase C (1B) | Agregar servicio con reutilización de datos (Q 5,200) | 🕐 DIFERIDA 2–3 meses (decisión cliente) |
 | WhatsApp API | Notificaciones automáticas (Q 3,800) | 🕐 POSPUESTA (decisión cliente) |

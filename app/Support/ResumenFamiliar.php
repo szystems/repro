@@ -62,7 +62,10 @@ class ResumenFamiliar
             'nombre' => $r['pareja_nombre'] ?? null,
             'edad' => $r['pareja_edad'] ?? null,
             'telefono' => $r['pareja_telefono'] ?? null,
+            'direccion' => $r['pareja_direccion'] ?? null,
             'ocupacion' => $r['pareja_ocupacion'] ?? null,
+            'tiempo_relacion' => $r['pareja_tiempo_relacion'] ?? null,
+            'calidad_relacion' => InformacionFamiliarPareja::etiquetaCalidad($r['pareja_calidad_relacion'] ?? null),
         ];
     }
 
@@ -77,7 +80,9 @@ class ResumenFamiliar
             'aplica' => true,
             'nombre' => $r['expareja_nombre'] ?? null,
             'tipo' => InformacionFamiliarExparejas::TIPOS_RELACION[$r['expareja_tipo_relacion'] ?? ''] ?? null,
+            'tiempo_relacion' => $r['expareja_tiempo_relacion'] ?? null,
             'hijos_comun' => $r['expareja_hijos_comun'] ?? null,
+            'cantidad_hijos' => $r['expareja_cantidad_hijos'] ?? null,
             'problemas_legales' => $r['expareja_problemas_legales'] ?? null,
         ];
     }

@@ -181,7 +181,8 @@
                                         'respuestas' => $cuestionario->obtenerRespuestasSeccion($numSeccion),
                                         'seccion' => $numSeccion,
                                         'tipoFormulario' => $cuestionario->tipo_formulario,
-                                        'nombreSeccion' => $nombreSeccion
+                                        'nombreSeccion' => $nombreSeccion,
+                                        'fotoCandidatoUrl' => $numSeccion === 1 ? ($fotoCandidatoUrl ?? null) : null,
                                     ])
                                 </div>
                             @endforeach
@@ -250,6 +251,8 @@
                     </div>
                 </div>
             </form>
+
+            @include('admin.ordenes._documentos_evaluado', ['evaluado' => $cuestionario->evaluadoOrden])
         </div>
     </div>
 </div>
@@ -274,6 +277,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/foto-candidato.js') }}?v={{ filemtime(public_path('js/foto-candidato.js')) }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formEditarCuestionario');

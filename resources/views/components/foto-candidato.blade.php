@@ -1,3 +1,5 @@
+@props(['fotoUrl' => null, 'requerido' => true])
+
 {{-- Estilos inline: @push('styles') no llega al <head> (content se rinde después del stack). --}}
 @once
 <style>
@@ -49,9 +51,9 @@
 </style>
 @endonce
 
-<div class="form-group foto-candidato-group @error('foto_candidato') is-invalid @enderror" data-foto-candidato>
+<div class="form-group foto-candidato-group @error('foto_candidato') is-invalid @enderror" data-foto-candidato @unless($requerido) data-foto-opcional="1" @endunless>
     <label class="form-label">
-        Fotografía del candidato <span class="required">*</span>
+        Fotografía del candidato @if($requerido)<span class="required">*</span>@endif
     </label>
     <p class="form-text mb-3">Tome una foto con la cámara web o del celular, o suba una imagen reciente (JPG, PNG o WEBP, máx. 5 MB).</p>
 
@@ -70,10 +72,10 @@
 
         <div class="d-flex flex-wrap gap-2 mb-2" data-foto-actions>
             <button type="button" class="btn btn-outline-primary btn-sm" data-foto-trigger="camera">
-                <i class="fas fa-camera"></i> Tomar foto
+                <i class="bi bi-camera"></i> Tomar foto
             </button>
             <button type="button" class="btn btn-outline-secondary btn-sm" data-foto-trigger="upload">
-                <i class="fas fa-upload"></i> Subir archivo
+                <i class="bi bi-upload"></i> Subir archivo
             </button>
         </div>
     </div>
@@ -102,14 +104,16 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="fotoWebcamModalLabel">
-                    <i class="fas fa-camera"></i> Tomar fotografía
+                    <i class="bi bi-camera"></i> Tomar fotografía
                 </h5>
                 <button type="button" class="btn-close" data-foto-webcam-close aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <div id="fotoWebcamError" class="alert alert-warning mb-3"></div>
                 <div id="fotoWebcamLoading" class="text-white-50 py-4">
-                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <div class="spinner-border text-light mb-2" role="status">
+                        <span class="visually-hidden">Cargando…</span>
+                    </div>
                     <p class="mt-2 mb-0 small">Conectando con la cámara…</p>
                 </div>
                 <video id="fotoWebcamVideo" autoplay playsinline muted class="d-none"></video>
@@ -118,7 +122,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-foto-webcam-close>Cancelar</button>
                 <button type="button" class="btn btn-primary" id="fotoWebcamCapture" disabled>
-                    <i class="fas fa-circle"></i> Capturar
+                    <i class="bi bi-record-circle"></i> Capturar
                 </button>
             </div>
         </div>

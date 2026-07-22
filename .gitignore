@@ -38,3 +38,4 @@ scripts/
 # Permitir carpetas necesarias
 !storage/framework/.gitignore
 !database/.gitignore
+*.Zone.Identifier

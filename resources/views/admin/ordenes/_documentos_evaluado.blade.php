@@ -54,6 +54,38 @@
 
     {{-- Lista de documentos --}}
     <div class="card-body p-0">
+        @php $documentosImagen = $evaluado->documentos->filter(fn ($d) => $d->es_imagen); @endphp
+        @if($documentosImagen->count() > 0)
+            <div class="p-3 border-bottom bg-light">
+                <h6 class="text-muted mb-3"><i class="bi bi-images"></i> Galería de imágenes</h6>
+                <div class="row g-2">
+                    @foreach($documentosImagen as $documento)
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <div class="card h-100 shadow-sm">
+                                <button type="button"
+                                        class="btn p-0 border-0 bg-transparent w-100 btn-preview-doc"
+                                        data-url="{{ route('documentos-evaluado.preview', $documento) }}"
+                                        data-tipo="imagen"
+                                        data-nombre="{{ $documento->nombre_original }}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalPreviewDoc"
+                                        title="Ver {{ $documento->tipo_documento_texto }}">
+                                    <img src="{{ route('documentos-evaluado.preview', $documento) }}"
+                                         alt="{{ $documento->tipo_documento_texto }}"
+                                         class="card-img-top"
+                                         style="height: 140px; object-fit: cover;">
+                                </button>
+                                <div class="card-body p-2">
+                                    <small class="d-block fw-semibold">{{ $documento->tipo_documento_texto }}</small>
+                                    <small class="text-muted">{{ Str::limit($documento->nombre_original, 24) }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         @if($evaluado->documentos->count() > 0)
             <div class="table-responsive">
                 <table class="table table-sm table-hover mb-0">
@@ -81,6 +113,21 @@
                                 {{ $documento->tipo_documento_texto }}
                             </td>
                             <td>
+                                @if($documento->es_imagen)
+                                    <button type="button"
+                                            class="btn p-0 border-0 bg-transparent me-2 align-middle btn-preview-doc"
+                                            data-url="{{ route('documentos-evaluado.preview', $documento) }}"
+                                            data-tipo="imagen"
+                                            data-nombre="{{ $documento->nombre_original }}"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalPreviewDoc"
+                                            title="Vista previa">
+                                        <img src="{{ route('documentos-evaluado.preview', $documento) }}"
+                                             alt="{{ $documento->tipo_documento_texto }}"
+                                             class="rounded border"
+                                             style="width: 48px; height: 48px; object-fit: cover;">
+                                    </button>
+                                @endif
                                 <small>{{ Str::limit($documento->nombre_original, 30) }}</small>
                                 @if($documento->notas)
                                     <br><small class="text-muted fst-italic"><i class="bi bi-chat-left-text"></i> {{ $documento->notas }}</small>

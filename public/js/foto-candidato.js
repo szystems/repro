@@ -339,6 +339,10 @@
                 window.CamposCondicionales.syncAll();
             }
 
+            if (group.hasAttribute('data-foto-opcional')) {
+                return;
+            }
+
             const hasFile = input.files && input.files.length > 0;
             const hasExistente = form.querySelector('[name="foto_candidato_existente"]');
             if (!hasFile && !hasExistente) {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cuestionario;
+use App\Support\CuestionarioFotoCandidato;
 use App\Support\CuestionarioPrecarga;
 use App\Support\CuestionarioSecciones;
 use App\Support\EvaluadorNotasSupport;
@@ -14,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Controlador administrativo para gestión de cuestionarios
@@ -183,6 +186,10 @@ class CuestionariosController extends Controller
         $cambiosPrecarga = CuestionarioPrecarga::cambiosRegistrados($cuestionario);
         $etiquetasPrecarga = CuestionarioPrecarga::etiquetasCampos();
         $contextoNotas = $this->contextoNotasEvaluador($cuestionario);
+        $seccionFotoSlug = CuestionarioSecciones::slug(1, $cuestionario->tipo_formulario);
+        $fotoCandidatoUrl = CuestionarioFotoCandidato::obtenerRuta($cuestionario->id, $seccionFotoSlug)
+            ? route('admin.cuestionarios.foto-candidato', $cuestionario)
+            : null;
 
         return view('admin.cuestionarios.show', compact(
             'cuestionario', 
@@ -190,7 +197,8 @@ class CuestionariosController extends Controller
             'secciones',
             'historialDPI',
             'cambiosPrecarga',
-            'etiquetasPrecarga'
+            'etiquetasPrecarga',
+            'fotoCandidatoUrl'
         ) + $contextoNotas + $this->contextoInformePreempleo($cuestionario));
     }
 
@@ -202,6 +210,7 @@ class CuestionariosController extends Controller
     {
         $cuestionario = Cuestionario::with([
             'evaluadoOrden.orden.empresa',
+            'evaluadoOrden.documentos',
             'respuestas' => function($query) {
                 $query->orderBy('seccion')->orderBy('campo');
             }
@@ -213,11 +222,16 @@ class CuestionariosController extends Controller
         // Obtener configuración de secciones
         $secciones = $cuestionario->getSeccionesConfig();
         $contextoNotas = $this->contextoNotasEvaluador($cuestionario);
+        $seccionFotoSlug = CuestionarioSecciones::slug(1, $cuestionario->tipo_formulario);
+        $fotoCandidatoUrl = CuestionarioFotoCandidato::obtenerRuta($cuestionario->id, $seccionFotoSlug)
+            ? route('admin.cuestionarios.foto-candidato', $cuestionario)
+            : null;
 
         return view('admin.cuestionarios.edit', compact(
             'cuestionario', 
             'respuestasPorSeccion',
-            'secciones'
+            'secciones',
+            'fotoCandidatoUrl'
         ) + $contextoNotas + $this->contextoInformePreempleo($cuestionario));
     }
 
@@ -236,6 +250,7 @@ class CuestionariosController extends Controller
             'evaluador_notas.*' => 'nullable|string|max:10000',
             'informe_tablas' => 'nullable|array',
             'informe_tablas_restaurar' => 'nullable|array',
+            'foto_candidato' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
         ]);
 
         if (($request->has('evaluador_notas') || $request->has('informe_tablas') || $request->has('informe_tablas_restaurar'))
@@ -266,6 +281,15 @@ class CuestionariosController extends Controller
                     $request->input('informe_tablas', []),
                     $request->input('informe_tablas_restaurar', []),
                     Auth::id()
+                );
+            }
+
+            if ($request->hasFile('foto_candidato')) {
+                $seccionFotoSlug = CuestionarioSecciones::slug(1, $cuestionario->tipo_formulario);
+                CuestionarioFotoCandidato::guardar(
+                    $request->file('foto_candidato'),
+                    $cuestionario->id,
+                    $seccionFotoSlug
                 );
             }
 
@@ -321,11 +345,12 @@ class CuestionariosController extends Controller
                 return response()->json(['success' => true]);
             }
 
-            $mensaje = $request->has('respuestas')
-                ? 'Cuestionario actualizado correctamente.'
-                : ($request->has('evaluador_notas')
-                    ? 'Notas del evaluador guardadas correctamente.'
-                    : 'Observaciones guardadas correctamente.');
+            $mensaje = match (true) {
+                $request->hasFile('foto_candidato') => 'Fotografía del evaluado actualizada correctamente.',
+                $request->has('respuestas') => 'Cuestionario actualizado correctamente.',
+                $request->has('evaluador_notas') => 'Notas del evaluador guardadas correctamente.',
+                default => 'Observaciones guardadas correctamente.',
+            };
 
             return redirect()
                 ->route('admin.cuestionarios.show', $cuestionario->id)
@@ -342,6 +367,22 @@ class CuestionariosController extends Controller
                 ->withErrors(['error' => 'Error al actualizar el cuestionario.'])
                 ->withInput();
         }
+    }
+
+    /**
+     * Servir la foto del candidato en contexto administrativo (auth).
+     */
+    public function fotoCandidato(int $id): Response
+    {
+        $cuestionario = Cuestionario::findOrFail($id);
+        $seccionSlug = CuestionarioSecciones::slug(1, $cuestionario->tipo_formulario);
+        $path = CuestionarioFotoCandidato::obtenerRuta($cuestionario->id, $seccionSlug);
+
+        if (! $path || ! Storage::disk('local')->exists($path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->response($path);
     }
 
     /**
