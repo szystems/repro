@@ -674,12 +674,13 @@ app/, database/, resources/, routes/  (+ vendor/ en deploy completo)
 
 | Área | Qué revisar | Archivos clave |
 |------|-------------|----------------|
-| **Visibilidad resultados** | UI empresa muestra botones con solo `resultados_visibles_empresa`; descargas exigen además `orden.estado === entregado` | `empresa/ordenes/show.blade.php` · `Orden::resultadosDisponiblesParaEmpresa()` |
+| **Visibilidad resultados** | ✅ UI empresa usa `resultadosDisponiblesParaEmpresa()`; mensaje «en validación» si flag activo pero orden no entregada | `empresa/ordenes/show.blade.php` |
+| **Informe Word empresa** | ✅ Bloqueado en backend (`role_as >= 2`) aunque conozcan la URL | `OrdenesController::informeWord()` |
 | **Informe preliminar HTML** | ¿Debe ocultarse hasta `entregado`? Hoy puede verse antes que los archivos | `empresa/ordenes/show.blade.php` |
 | **Enlaces admin en vistas empresa** | Algunas rutas apuntan a `ordenes.show` (admin) en lugar de `empresa.ordenes.show` | `empresa/cuestionarios/show.blade.php` · `admin/reportes/evaluaciones.blade.php` |
 | **Permisos sub-usuario** | `permisos_empresa` definidos pero no aplicados en `EmpresaController` | `User::tienePermisoEmpresa()` |
 | **Campos internos PDF empresa** | Confirmar que salud/judicial/notas no filtran al PDF — tests en `InformePreempleoVisibilidadTest` | `CuestionarioPresentacionEmpresa.php` |
-| **Word vs cliente** | Confirmar que no hay botón Word ni narrativas en layout empresa | `layouts/empresa.blade.php` · `empresa/ordenes/show.blade.php` |
+| **Word vs cliente** | ✅ Sin botón Word en portal empresa; ruta bloqueada para `role_as < 2` | `OrdenesController::informeWord()` |
 
 ### Deploy y cierre proyecto
 

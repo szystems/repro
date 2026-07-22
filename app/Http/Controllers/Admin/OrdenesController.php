@@ -1126,6 +1126,10 @@ class OrdenesController extends Controller
             abort(403, 'No tienes permisos para ver esta orden.');
         }
 
+        if (Auth::user()->role_as < 2) {
+            abort(403, 'Solo usuarios REPRO pueden descargar el informe Word.');
+        }
+
         $evaluado->load(['poligrafista', 'responsable', 'sede', 'orden.empresa', 'orden.sede']);
 
         $path = \App\Support\InformeWordExport::generar($orden, $evaluado);

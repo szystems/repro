@@ -51,4 +51,21 @@ class InformeWordExportTest extends TestCase
         $response->assertOk();
         $response->assertHeader('content-disposition');
     }
+
+    public function test_empresa_no_puede_descargar_informe_word(): void
+    {
+        $empresa = \App\Models\Empresa::factory()->create();
+        $usuarioEmpresa = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+        ]);
+        $usuarioEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create(['orden_id' => $orden->id]);
+
+        $response = $this->actingAs($usuarioEmpresa)->get(route('ordenes.informe-word', [$orden, $evaluado]));
+
+        $response->assertForbidden();
+    }
 }
