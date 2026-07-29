@@ -14,6 +14,7 @@ use App\Notifications\EvaluadoAsignadoNotification;
 use App\Notifications\OrdenCreadaNotification;
 use App\Notifications\ResultadoPreliminarNotification;
 use App\Notifications\ResultadosDisponiblesNotification;
+use App\Support\InformeWordBloquesEvaluador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -1247,6 +1248,10 @@ class OrdenesController extends Controller
 
         $tipo = $request->tipo_resultado;
 
+        if ($tipo === 'final' && ! InformeWordBloquesEvaluador::completos($evaluado->id)) {
+            return back()->with('error', InformeWordBloquesEvaluador::mensajeBloqueo($evaluado));
+        }
+
         // CO3: bloquear subida de informe final si la orden ya fue entregada
         // Solo admins pueden reemplazarlo
         if ($tipo === 'final' && $evaluado->orden->estado === 'entregado' && Auth::user()->role_as < 3) {
@@ -1327,8 +1332,8 @@ class OrdenesController extends Controller
             abort(403, 'No tiene permisos para esta acción.');
         }
 
-        // Empresa solo puede ver si resultados están disponibles
-        if (Auth::user()->role_as == 1 && !$evaluado->orden->resultadosDisponiblesParaEmpresa()) {
+        // Empresa solo puede ver si resultados están disponibles para este evaluado
+        if (Auth::user()->role_as == 1 && !$evaluado->resultadosDisponiblesParaEmpresa()) {
             return back()->with('error', 'Los resultados aún no están disponibles.');
         }
 

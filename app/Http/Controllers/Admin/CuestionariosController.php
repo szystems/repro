@@ -60,6 +60,18 @@ class CuestionariosController extends Controller
             });
         }
 
+        if ($request->filled('asignacion_sede')) {
+            match ($request->asignacion_sede) {
+                'sin_sede' => $query->whereNull('sede_id')
+                    ->whereHas('orden', fn ($q) => $q->whereNull('sede_id')),
+                'con_sede' => $query->where(function ($q) {
+                    $q->whereNotNull('sede_id')
+                        ->orWhereHas('orden', fn ($oq) => $oq->whereNotNull('sede_id'));
+                }),
+                default => null,
+            };
+        }
+
         if ($request->filled('tipo_formulario')) {
             $query->where('tipo_formulario', $request->tipo_formulario);
         }

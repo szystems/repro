@@ -129,6 +129,7 @@ class ResultadosVisibilidadTest extends TestCase
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
             'cuestionario_completado' => true,
+            'texto_informe_preliminar' => '<p>Informe liberado al cliente</p>',
         ]);
 
         $response = $this->actingAs($usuarioEmpresa)
@@ -295,6 +296,7 @@ class ResultadosVisibilidadTest extends TestCase
         $evaluadoDisponible = EvaluadoOrden::factory()->create([
             'orden_id' => $ordenDisponible->id,
             'nombre' => 'EvaluadoConInforme',
+            'texto_informe_preliminar' => '<p>Informe disponible</p>',
         ]);
 
         $ordenEnProceso = Orden::factory()->create([
@@ -316,7 +318,7 @@ class ResultadosVisibilidadTest extends TestCase
         $response->assertSee('En proceso');
     }
 
-    public function test_empresa_orden_show_oculta_resultados_hasta_entregado(): void
+    public function test_empresa_orden_show_oculta_resultados_sin_liberacion_repro(): void
     {
         $empresa = Empresa::factory()->create();
         $usuarioEmpresa = User::factory()->create([
@@ -327,7 +329,7 @@ class ResultadosVisibilidadTest extends TestCase
 
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
-            'resultados_visibles_empresa' => true,
+            'resultados_visibles_empresa' => false,
             'estado' => 'en_proceso',
         ]);
         $evaluado = EvaluadoOrden::factory()->create([
@@ -344,7 +346,6 @@ class ResultadosVisibilidadTest extends TestCase
         $response->assertDontSee('Informe preliminar confidencial', false);
         $response->assertDontSee(route('evaluados.descargar-resultado-archivo', [$evaluado, 'preliminar']), false);
         $response->assertDontSee(route('empresa.cuestionarios.pdf', $evaluado), false);
-        $response->assertSee('Los resultados están en validación');
     }
 
     public function test_empresa_orden_show_muestra_resultados_cuando_entregado(): void
@@ -372,5 +373,41 @@ class ResultadosVisibilidadTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Informe visible para empresa', false);
+    }
+
+    public function test_empresa_ve_informe_de_evaluado_listo_aunque_orden_no_este_entregada(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $usuarioEmpresa = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+        ]);
+        $usuarioEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'resultados_visibles_empresa' => true,
+            'estado' => 'en_proceso',
+        ]);
+
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'ListoPrimero',
+            'cuestionario_completado' => true,
+            'texto_informe_preliminar' => '<p>Informe del primero listo</p>',
+        ]);
+
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'AunEnProceso',
+            'cuestionario_completado' => false,
+        ]);
+
+        $response = $this->actingAs($usuarioEmpresa)
+            ->get(route('empresa.ordenes.show', $orden));
+
+        $response->assertStatus(200);
+        $response->assertSee('Informe del primero listo', false);
+        $response->assertDontSee('Los resultados están en validación. Estarán disponibles cuando la orden se marque como entregada.');
     }
 }

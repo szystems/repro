@@ -134,7 +134,7 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <div class="btn-group" role="group">
-                                @if($orden->resultadosDisponiblesParaEmpresa())
+                                @if($evaluado->resultadosDisponiblesParaEmpresa())
                                     @if($evaluado->archivo_resultado_final)
                                         <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'final']) }}" class="btn btn-success btn-sm" title="Descargar Informe Final" target="_blank">
                                             <i class="bi bi-file-earmark-arrow-down"></i> Informe Final
@@ -182,7 +182,7 @@
                     @endif
 
                     {{-- Informes disponibles para empresa --}}
-                    @if($orden->resultadosDisponiblesParaEmpresa())
+                    @if($evaluado->resultadosDisponiblesParaEmpresa())
                         {{-- Informe Final (texto del resultado definitivo) --}}
                         @if($evaluado->archivo_resultado_final)
                         <div class="card border-success mt-2">
@@ -231,10 +231,10 @@
                             </div>
                         </div>
                         @endif
-                    @elseif($orden->resultados_visibles_empresa && $orden->estado !== 'entregado')
+                    @elseif($orden->resultados_visibles_empresa)
                         <div class="alert alert-info mt-2 mb-0 py-2">
                             <i class="bi bi-hourglass-split"></i>
-                            Los resultados están en validación. Estarán disponibles cuando la orden se marque como entregada.
+                            Los resultados de este candidato aún están en proceso de validación.
                         </div>
                     @endif
 

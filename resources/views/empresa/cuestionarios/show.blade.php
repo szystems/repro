@@ -137,7 +137,7 @@
 
             <!-- Información adicional si está completado -->
             @if($evaluado->cuestionario_completado)
-                @if($evaluado->orden->resultadosDisponiblesParaEmpresa())
+                @if($evaluado->resultadosDisponiblesParaEmpresa())
                 <div class="col-12">
                     <div class="card mb-3">
                         <div class="card-header bg-success-subtle">

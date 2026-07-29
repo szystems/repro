@@ -17,7 +17,7 @@
 
 <x-tabla-dinamica
     name="referencias_familiares"
-    titulo="Referencias familiares (mínimo 2)"
+    titulo="Referencias familiares (mínimo 3)"
     :columnas="TablaDinamica::columnasReferenciasFamiliares()"
     :filas="$tablas['referencias_familiares'] ?? []"
     :min-filas="2"
@@ -26,7 +26,7 @@
 
 <x-tabla-dinamica
     name="referencias_personales"
-    titulo="Referencias personales (mínimo 2)"
+    titulo="Referencias personales (mínimo 3)"
     :columnas="TablaDinamica::columnasReferenciasPersonales()"
     :filas="$tablas['referencias_personales'] ?? []"
     :min-filas="2"

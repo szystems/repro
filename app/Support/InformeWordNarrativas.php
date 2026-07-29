@@ -67,11 +67,17 @@ class InformeWordNarrativas
 
         $nombre = trim($evaluado->nombre . ' ' . $evaluado->apellidos);
 
+        $notasEvaluador = EvaluadorNotasSupport::mapaPorSeccion($evaluado->id);
+
         return [
-            'salud' => self::compilarCampos(self::CAMPOS_SALUD, $respuestasAntecedentes),
-            'habitos' => self::compilarCampos(self::CAMPOS_HABITOS, $respuestasAntecedentes),
-            'drogas' => self::compilarDrogas($respuestasAntecedentes),
-            'judicial' => self::compilarJudicial($respuestasAntecedentes, $notasEvaluador['antecedentes'] ?? null),
+            'salud' => self::textoEvaluador($notasEvaluador['word_salud'] ?? null)
+                ?: self::compilarCampos(self::CAMPOS_SALUD, $respuestasAntecedentes),
+            'habitos' => self::textoEvaluador($notasEvaluador['word_habitos'] ?? null)
+                ?: self::compilarCampos(self::CAMPOS_HABITOS, $respuestasAntecedentes),
+            'drogas' => self::textoEvaluador($notasEvaluador['word_sustancias'] ?? null)
+                ?: self::compilarDrogas($respuestasAntecedentes),
+            'judicial' => self::textoEvaluador($notasEvaluador['word_judicial'] ?? null)
+                ?: self::compilarJudicial($respuestasAntecedentes, $notasEvaluador['antecedentes'] ?? null),
             'recomendaciones' => self::compilarRecomendaciones($evaluado, $notasEvaluador['antecedentes'] ?? null),
             'conclusiones' => self::compilarConclusiones($evaluado),
             'nombre_candidato' => $nombre !== '' ? $nombre : '—',
@@ -299,5 +305,10 @@ class InformeWordNarrativas
     private static function texto(mixed $valor): string
     {
         return trim((string) $valor);
+    }
+
+    private static function textoEvaluador(?string $nota): string
+    {
+        return trim((string) $nota);
     }
 }

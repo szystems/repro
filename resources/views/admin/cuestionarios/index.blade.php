@@ -35,7 +35,7 @@
                 <div class="card-body">
                     {{-- Accesos rápidos --}}
                     <div class="mb-3 d-flex gap-2 flex-wrap">
-                        <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-sm {{ !request()->hasAny(['estado','tipo_servicio','sede_id','empresa_id','fecha_desde','fecha_hasta','buscar']) ? 'btn-primary' : 'btn-outline-primary' }}">
+                        <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-sm {{ !request()->hasAny(['estado','tipo_servicio','sede_id','asignacion_sede','empresa_id','fecha_desde','fecha_hasta','buscar']) ? 'btn-primary' : 'btn-outline-primary' }}">
                             <i class="bi bi-list-ul"></i> Todos
                         </a>
                         <a href="{{ route('admin.cuestionarios.index', ['estado' => 'pendiente']) }}" class="btn btn-sm {{ request('estado') == 'pendiente' ? 'btn-warning' : 'btn-outline-warning' }}">
@@ -102,6 +102,17 @@
                                                 <option value="poligrafo" {{ request('tipo_servicio') == 'poligrafo' ? 'selected' : '' }}>Polígrafo</option>
                                                 <option value="vsa" {{ request('tipo_servicio') == 'vsa' ? 'selected' : '' }}>VSA</option>
                                                 <option value="socioeconomico" {{ request('tipo_servicio') == 'socioeconomico' ? 'selected' : '' }}>Socioeconómico</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filtro_asignacion_sede" class="form-label">Asignación de sede</label>
+                                            <select class="form-control" id="filtro_asignacion_sede" name="asignacion_sede">
+                                                <option value="">Todas</option>
+                                                <option value="sin_sede" {{ request('asignacion_sede') === 'sin_sede' ? 'selected' : '' }}>Sin sede asignada</option>
+                                                <option value="con_sede" {{ request('asignacion_sede') === 'con_sede' ? 'selected' : '' }}>Con sede asignada</option>
                                             </select>
                                         </div>
                                     </div>

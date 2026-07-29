@@ -135,7 +135,7 @@
                                         </td>
                                         <td>
                                             @if($cuestionario->cuestionario_completado)
-                                                @if($cuestionario->orden->resultadosDisponiblesParaEmpresa())
+                                                @if($cuestionario->resultadosDisponiblesParaEmpresa())
                                                     <span class="badge bg-success">
                                                         <i class="bi bi-check-circle"></i> Completado
                                                     </span>
@@ -177,7 +177,7 @@
                                                         <i class="bi bi-clipboard"></i>
                                                     </button>
                                                 @endif
-                                                @if($cuestionario->cuestionario_completado && $cuestionario->orden->resultadosDisponiblesParaEmpresa())
+                                                @if($cuestionario->cuestionario_completado && $cuestionario->resultadosDisponiblesParaEmpresa())
                                                     <a href="{{ route('empresa.ordenes.show', $cuestionario->orden) }}"
                                                        class="btn btn-outline-danger" title="Descargar PDF de la Orden" target="_blank">
                                                         <i class="bi bi-file-pdf"></i>

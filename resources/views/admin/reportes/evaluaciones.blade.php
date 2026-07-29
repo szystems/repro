@@ -252,7 +252,7 @@
                                         </td>
                                         <td>{{ $evaluado->created_at->format('d/m/Y') }}</td>
                                         <td class="text-center">
-                                            @php $disponible = $evaluado->orden && $evaluado->orden->resultadosDisponiblesParaEmpresa(); @endphp
+                                            @php $disponible = $evaluado->resultadosDisponiblesParaEmpresa(); @endphp
                                             @if($disponible && Auth::user()->role_as == 1)
                                                 <a href="{{ route('empresa.cuestionarios.pdf', $evaluado) }}"
                                                    class="btn btn-sm btn-danger"

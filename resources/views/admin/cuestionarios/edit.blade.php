@@ -216,6 +216,7 @@
                 </div>
                 
                 @include('admin.cuestionarios.partials.notas-evaluador')
+                @include('admin.cuestionarios.partials.narrativas-word-evaluador')
 
                 @include('admin.cuestionarios.partials.tablas-informe-preempleo', ['soloLectura' => false])
                 

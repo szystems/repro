@@ -611,6 +611,36 @@ class EvaluadoOrden extends Model
     }
 
     /**
+     * I-5: visibilidad por evaluado — el cliente puede ver el informe de este candidato
+     * en cuanto REPRO lo libere, aunque otros evaluados de la misma orden sigan en proceso.
+     */
+    public function resultadosDisponiblesParaEmpresa(): bool
+    {
+        $this->loadMissing('orden');
+
+        if (!$this->orden?->resultados_visibles_empresa) {
+            return false;
+        }
+
+        return $this->tieneContenidoResultadoLiberado();
+    }
+
+    public function tieneContenidoResultadoLiberado(): bool
+    {
+        if ($this->estado_evaluacion === 'informe_final_enviado') {
+            return true;
+        }
+
+        if (filled($this->archivo_resultado_final) || filled($this->archivo_resultado_preliminar)) {
+            return true;
+        }
+
+        $textoPreliminar = trim(strip_tags((string) ($this->texto_informe_preliminar ?? '')));
+
+        return $textoPreliminar !== '';
+    }
+
+    /**
      * Obtener el nombre del polígrafo asignado
      */
     public function getNombrePoligrafoAttribute(): ?string

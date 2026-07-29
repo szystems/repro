@@ -469,8 +469,8 @@ class EmpresaController extends Controller
             if ($evaluado->orden->empresa_id != $empresa->id) {
                 abort(403, 'Acceso no autorizado');
             }
-            // Verificar que la orden esté entregada y resultados disponibles para empresa
-            if (!$evaluado->orden->resultadosDisponiblesParaEmpresa()) {
+            // Verificar que la orden tenga resultados liberados para este evaluado
+            if (!$evaluado->resultadosDisponiblesParaEmpresa()) {
                 abort(403, 'Resultados no autorizados para descarga');
             }
 
