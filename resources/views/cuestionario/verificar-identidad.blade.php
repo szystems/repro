@@ -108,8 +108,13 @@
                             
                             <h4 class="text-primary mb-3">Bienvenido/a</h4>
                             
+                            @php
+                                $etiquetaTipoCuestionario = \App\Support\CuestionarioPresentacionCandidato::etiquetaTipo(
+                                    $evaluado->tipoFormularioCuestionario()
+                                );
+                            @endphp
                             <p class="text-muted mb-4">
-                                Para continuar con su cuestionario socioeconómico, necesitamos verificar su identidad.
+                                Para continuar con su cuestionario {{ $etiquetaTipoCuestionario }}, necesitamos verificar su identidad.
                                 Por favor ingrese su <strong>Documento Personal de Identificación (DPI)</strong>.
                             </p>
                         </div>

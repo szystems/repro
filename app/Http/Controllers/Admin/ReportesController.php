@@ -49,6 +49,12 @@ class ReportesController extends Controller
         if (!empty($filters['tipo_servicio'])) {
             $query->where('tipo_servicio', $filters['tipo_servicio']);
         }
+        if (!empty($filters['sede_id'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('sede_id', $filters['sede_id'])
+                    ->orWhereHas('orden', fn ($oq) => $oq->where('sede_id', $filters['sede_id']));
+            });
+        }
         if (!empty($filters['estado'])) {
             if ($filters['estado'] == 'completado') {
                 $query->where('cuestionario_completado', true);
@@ -90,7 +96,10 @@ class ReportesController extends Controller
             ? Empresa::where('estado', 1)->orderBy('nombre')->get()
             : collect();
 
-        return view('admin.reportes.evaluaciones', compact('evaluados', 'stats', 'empresas'));
+        // Sedes para filtro
+        $sedes = Sede::activas()->orderBy('nombre')->get();
+
+        return view('admin.reportes.evaluaciones', compact('evaluados', 'stats', 'empresas', 'sedes'));
     }
 
     /**

@@ -12,7 +12,11 @@
                     <img src="{{ asset('img/logo-repro.png') }}" alt="REPRO" class="logo-repro">
                 @endif
                 
-                <h1>Cuestionario Socioeconómico</h1>
+                @php
+                    $tipoFormularioCandidato = \App\Support\CuestionarioPresentacionCandidato::resolverTipo($evaluado ?? null);
+                    $tituloNavbarCuestionario = \App\Support\CuestionarioPresentacionCandidato::tituloNavbar($tipoFormularioCandidato);
+                @endphp
+                <h1>{{ $tituloNavbarCuestionario }}</h1>
                 <p>Acceso Seguro con Documento de Identidad</p>
             </div>
             

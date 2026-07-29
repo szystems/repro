@@ -79,6 +79,12 @@
                 <p><strong>Empresa:</strong> {{ $empresa->nombre ?? 'N/A' }}</p>
                 <p><strong>Sede:</strong> {{ $sede->nombre ?? 'N/A' }}</p>
                 <p><strong>Evaluados:</strong> {{ $orden->evaluados->count() }}</p>
+                @php
+                    $servicios = $orden->evaluados->pluck('tipo_servicio')->filter()->unique()->map(fn($s) => ucfirst($s))->join(', ');
+                @endphp
+                @if($servicios)
+                    <p><strong>Tipos de Servicio:</strong> {{ $servicios }}</p>
+                @endif
                 <p><strong>Fecha de Solicitud:</strong> {{ \Carbon\Carbon::parse($orden->fecha_solicitud)->format('d/m/Y') }}</p>
                 @if($orden->prioridad && $orden->prioridad != 'normal')
                     <p><strong>Prioridad:</strong> {{ ucfirst($orden->prioridad) }}</p>

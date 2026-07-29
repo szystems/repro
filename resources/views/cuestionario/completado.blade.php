@@ -14,16 +14,14 @@
             
             <div class="form-content text-center">
                 @php
-                    $tipoCuestionarioLabel = match ($evaluado->tipoFormularioCuestionario()) {
-                        'socioeconomico' => 'socioeconómico',
-                        'periodica' => 'periódico',
-                        'especifica' => 'específico',
-                        default => 'de evaluación',
-                    };
+                    $tipoFormularioCandidato = $evaluado->tipoFormularioCuestionario();
+                    $etiquetaTipoCuestionario = \App\Support\CuestionarioPresentacionCandidato::etiquetaTipo($tipoFormularioCandidato);
+                    $cuestionario = $evaluado->cuestionario;
+                    $seccionesCompletadas = $cuestionario?->getSeccionesConfig() ?? [];
                 @endphp
                 <div class="alert alert-success">
                     <h5><i class="fas fa-trophy"></i> ¡Felicidades!</h5>
-                    <p class="mb-0">Ha completado satisfactoriamente el cuestionario {{ $tipoCuestionarioLabel }} para REPRO Guatemala.</p>
+                    <p class="mb-0">Ha completado satisfactoriamente el cuestionario {{ $etiquetaTipoCuestionario }} para REPRO Guatemala.</p>
                 </div>
                 
                 <div class="row mt-4">
@@ -102,20 +100,25 @@
                     </div>
                     
                     <div class="row text-start">
-                        <div class="col-md-6">
-                            <ul class="list-unstyled">
-                                <li><i class="fas fa-check text-success"></i> Datos Personales</li>
-                                <li><i class="fas fa-check text-success"></i> Información Familiar</li>
-                                <li><i class="fas fa-check text-success"></i> Historial Laboral</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <ul class="list-unstyled">
-                                <li><i class="fas fa-check text-success"></i> Situación Económica</li>
-                                <li><i class="fas fa-check text-success"></i> Antecedentes y Referencias</li>
-                                <li><i class="fas fa-check text-success"></i> Firma Digital</li>
-                            </ul>
-                        </div>
+                        @php
+                            $mitad = (int) ceil(count($seccionesCompletadas) / 2);
+                            $columnasSecciones = [
+                                array_slice($seccionesCompletadas, 0, $mitad, true),
+                                array_slice($seccionesCompletadas, $mitad, null, true),
+                            ];
+                        @endphp
+                        @foreach($columnasSecciones as $columnaSecciones)
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    @foreach($columnaSecciones as $nombreSeccion)
+                                        <li><i class="fas fa-check text-success"></i> {{ $nombreSeccion }}</li>
+                                    @endforeach
+                                    @if($loop->last && $cuestionario?->firma_digital)
+                                        <li><i class="fas fa-check text-success"></i> Firma Digital</li>
+                                    @endif
+                                </ul>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 

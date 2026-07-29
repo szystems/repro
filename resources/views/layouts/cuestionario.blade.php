@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Cuestionario Socioeconómico - REPRO')</title>
+    @php
+        $tipoFormularioCandidato = \App\Support\CuestionarioPresentacionCandidato::resolverTipo(
+            $evaluado ?? null,
+            $cuestionario ?? null
+        );
+        $tituloNavbarCuestionario = \App\Support\CuestionarioPresentacionCandidato::tituloNavbar($tipoFormularioCandidato);
+        $tituloDocumentoCuestionario = \App\Support\CuestionarioPresentacionCandidato::tituloDocumento($tipoFormularioCandidato);
+    @endphp
+    <title>@yield('title', $tituloDocumentoCuestionario)</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -411,7 +419,7 @@
                 <div class="d-flex align-items-center">
                     <a href="#" class="navbar-brand d-flex align-items-center">
                         <img src="{{ asset('img/logos/logoreproxelahorizontal.png') }}" alt="REPRO" class="logo-repro me-3">
-                        <span class="d-none d-md-inline">Cuestionario Socioeconómico</span>
+                        <span class="d-none d-md-inline">{{ $tituloNavbarCuestionario }}</span>
                     </a>
                 </div>
                 

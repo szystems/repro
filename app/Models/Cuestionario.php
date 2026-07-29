@@ -72,32 +72,32 @@ class Cuestionario extends Model
         // se maneja en la pantalla de finalización
         $secciones = [
             'preempleo' => [
-                1 => 'Datos Personales',
-                2 => 'Información Familiar', 
-                3 => 'Historial Laboral',
-                4 => 'Situación Económica',
-                5 => 'Antecedentes y Referencias',
+                1 => 'Información Personal',
+                2 => 'Información Familiar',
+                3 => 'Información Académica y Laboral',
+                4 => 'Información Económica',
+                5 => 'Salud, Hábitos y Aspectos Complementarios',
             ],
             'periodica' => [
                 1 => 'Actualización de Datos',
                 2 => 'Cambios Familiares',
-                3 => 'Situación Laboral Actual',
-                4 => 'Situación Económica',
-                5 => 'Antecedentes y Referencias',
+                3 => 'Información Académica y Laboral',
+                4 => 'Información Económica',
+                5 => 'Salud, Hábitos y Aspectos Judiciales',
             ],
             'especifica' => [
                 1 => 'Datos Básicos',
                 2 => 'Información Familiar',
-                3 => 'Situación Laboral y Caso',
-                4 => 'Situación Económica',
-                5 => 'Antecedentes Relevantes',
+                3 => 'Información Laboral y Caso',
+                4 => 'Información Económica',
+                5 => 'Salud, Hábitos y Aspectos Judiciales',
             ],
             'socioeconomico' => [
-                1 => 'Datos Personales',
+                1 => 'Información Personal',
                 2 => 'Información Familiar',
-                3 => 'Historial Laboral',
-                4 => 'Situación Económica',
-                5 => 'Aspectos Complementarios',
+                3 => 'Información Académica y Laboral',
+                4 => 'Información Económica',
+                5 => 'Salud, Hábitos y Aspectos Complementarios',
                 6 => 'Información Socioeconómica Complementaria',
             ]
         ];
