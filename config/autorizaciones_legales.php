@@ -32,7 +32,7 @@ HTML,
 </ul>
 <p>Entiendo que esta evaluación es únicamente una herramienta de apoyo para la toma de decisiones de la empresa solicitante y no garantiza contratación.</p>
 </ul>
-<p>Entiendo que los resultados serán tratados de forma confidencial y entregados exclusivamente a la empresa :nombre_completo:.</p>
+<p>Entiendo que los resultados serán tratados de forma confidencial y entregados exclusivamente a la empresa :empresa:.</p>
 <p>Libero de responsabilidad a REPRO, a sus colaboradores, a la empresa solicitante :empresa: y a las personas o entidades que proporcionen información dentro del marco del presente proceso de evaluación.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
@@ -62,7 +62,7 @@ HTML,
 </ul>
 <p>Entiendo que esta evaluación es únicamente una herramienta de apoyo para la toma de decisiones de la empresa solicitante y no garantiza contratación.</p>
 </ul>
-<p>Entiendo que los resultados serán tratados de forma confidencial y entregados exclusivamente a la empresa :nombre_completo:.</p>
+<p>Entiendo que los resultados serán tratados de forma confidencial y entregados exclusivamente a la empresa :empresa:.</p>
 <p>Libero de responsabilidad a REPRO, a sus colaboradores, a la empresa solicitante :empresa: y a las personas o entidades que proporcionen información dentro del marco del presente proceso de evaluación.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
@@ -83,7 +83,7 @@ HTML,
 </ul>
 <p>Entiendo que los resultados serán entregados exclusivamente a la empresa solicitante, en este caso a través de su área de Recursos Humanos o personal designado, garantizando siempre la confidencialidad y el manejo ético de la información.</p>
 <p>Declaro que la información que proporcionaré durante el proceso es veraz y completa. Reconozco que la falsedad, omisión o manipulación de información o documentos constituye una falta grave, lo cual puede afectar mi continuidad o participación en el proceso.</p>
-<p>En virtud de la presente, absuelvo de toda responsabilidad legal, moral, laboral o administrativa a la empresa REPRO, así como a la empresa solicitante xxxx, por la aplicación de la prueba de polígrafo/VSA y el uso de sus resultados dentro del marco descrito. Reconozco que la prueba es una herramienta de apoyo para la toma de decisiones.</p>
+<p>En virtud de la presente, absuelvo de toda responsabilidad legal, moral, laboral o administrativa a la empresa REPRO, así como a la empresa solicitante :empresa:, por la aplicación de la prueba de polígrafo/VSA y el uso de sus resultados dentro del marco descrito. Reconozco que la prueba es una herramienta de apoyo para la toma de decisiones.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
@@ -101,7 +101,7 @@ HTML,
 <p>Declaro que me encuentro en condiciones físicas y mentales aptas para realizar la evaluación y que no presento ningún malestar actual que pueda afectar mi participación en el proceso.</p>
 <p>Entiendo que los resultados serán entregados exclusivamente a la empresa solicitante, en este caso a través de su área de Recursos Humanos o personal designado, garantizando siempre la confidencialidad y el manejo ético de la información.</p>
 <p>Declaro que la información que proporcionaré durante el proceso es veraz y completa. Reconozco que la falsedad, omisión o manipulación de información o documentos constituye una falta grave, lo cual puede afectar mi continuidad o participación en el proceso.</p>
-<p>En virtud de la presente, absuelvo de toda responsabilidad legal, moral, laboral o administrativa a la empresa REPRO, así como a la empresa solicitante xxxx, por la aplicación de la prueba de polígrafo/VSA y el uso de sus resultados dentro del marco descrito. Reconozco que la prueba es una herramienta de apoyo para la toma de decisiones.</p>
+<p>En virtud de la presente, absuelvo de toda responsabilidad legal, moral, laboral o administrativa a la empresa REPRO, así como a la empresa solicitante :empresa:, por la aplicación de la prueba de polígrafo/VSA y el uso de sus resultados dentro del marco descrito. Reconozco que la prueba es una herramienta de apoyo para la toma de decisiones.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
@@ -125,7 +125,7 @@ HTML,
 <p>Autorizo a REPRO y a la empresa solicitante a utilizar los resultados de esta prueba exclusivamente para fines internos relacionados con la investigación del caso.</p>
 <p>Declaro que la información que proporcionaré durante la prueba de polígrafo, relacionada con la presente investigación, será veraz y completa. Reconozco que cualquier falsedad, omisión o manipulación de información o documentos podrá influir directamente en el resultado de la evaluación.</p>
 <p>Me comprometo a mantener una conducta respetuosa durante el proceso de evaluación. Entiendo que cualquier comportamiento inapropiado, así como la falsedad u omisión de información relevante, podrá afectar el desarrollo de la evaluación y resultado.</p>
-<p>Libero de toda responsabilidad legal y administrativa a REPRO, sus técnicos, a la empresa solicitante xxxx, y a cualquier persona relacionada con la aplicación e interpretación de esta evaluación.</p>
+<p>Libero de toda responsabilidad legal y administrativa a REPRO, sus técnicos, a la empresa solicitante :empresa:, y a cualquier persona relacionada con la aplicación e interpretación de esta evaluación.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
@@ -149,7 +149,7 @@ HTML,
 <p>Autorizo a REPRO y a la empresa solicitante a utilizar los resultados de esta prueba exclusivamente para fines internos relacionados con la investigación del caso.</p>
 <p>Declaro que la información que proporcionaré durante la prueba de polígrafo, relacionada con la presente investigación, será veraz y completa. Reconozco que cualquier falsedad, omisión o manipulación de información o documentos podrá influir directamente en el resultado de la evaluación.</p>
 <p>Me comprometo a mantener una conducta respetuosa durante el proceso de evaluación. Entiendo que cualquier comportamiento inapropiado, así como la falsedad u omisión de información relevante, podrá afectar el desarrollo de la evaluación y resultado.</p>
-<p>Libero de toda responsabilidad legal y administrativa a REPRO, sus técnicos, a la empresa solicitante xxxx, y a cualquier persona relacionada con la aplicación e interpretación de esta evaluación.</p>
+<p>Libero de toda responsabilidad legal y administrativa a REPRO, sus técnicos, a la empresa solicitante :empresa:, y a cualquier persona relacionada con la aplicación e interpretación de esta evaluación.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
@@ -177,7 +177,7 @@ HTML,
 <li>Autorizo la recopilación, almacenamiento, consulta y verificación de mis datos personales para fines de evaluación.</li>
 <li>Entiendo que este proceso es únicamente una herramienta de apoyo para la toma de decisiones de la empresa solicitante y no garantiza contratación.</li>
 </ul>
-<p>Entiendo que los resultados serán tratados de forma confidencial y entregados exclusivamente a la empresa :nombre_completo:.</p>
+<p>Entiendo que los resultados serán tratados de forma confidencial y entregados exclusivamente a la empresa :empresa:.</p>
 </ul>
 <p>Libero de responsabilidad a REPRO, a sus colaboradores, a la empresa solicitante :empresa: y a las personas o entidades que proporcionen información dentro del marco del presente proceso de evaluación.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
