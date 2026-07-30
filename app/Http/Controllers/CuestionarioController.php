@@ -25,6 +25,7 @@ use App\Support\AutorizacionesLegales;
 use App\Support\CuestionarioAutosave;
 use App\Support\CuestionarioFotoCandidato;
 use App\Support\CuestionarioPrecarga;
+use App\Support\CuestionarioPresentacionCandidato;
 use App\Support\DatosPersonalesCampos;
 use App\Support\CamposInternosPreempleo;
 use App\Support\SaludHabitosCampos;
@@ -108,22 +109,25 @@ class CuestionarioController extends Controller
      */
     public function verificarIdentidad(Request $request, string $token)
     {
-        $request->validate([
-            'dpi_ingresado' => 'required|string|size:13|regex:/^[0-9]{13}$/',
-        ], [
-            'dpi_ingresado.required' => 'Debe ingresar su DPI.',
-            'dpi_ingresado.size' => 'El DPI debe tener exactamente 13 dígitos.',
-            'dpi_ingresado.regex' => 'El DPI solo puede contener números.',
-        ]);
-
         $evaluado = EvaluadoOrden::where('token_unico', $token)
             ->where('token_expira_at', '>', now())
             ->firstOrFail();
+
+        $textos = CuestionarioPresentacionCandidato::textosVerificacionIdentidad($evaluado->tipo_documento);
+
+        $request->validate([
+            'dpi_ingresado' => 'required|string|size:13|regex:/^[0-9]{13}$/',
+        ], [
+            'dpi_ingresado.required' => $textos['required'],
+            'dpi_ingresado.size' => $textos['size'],
+            'dpi_ingresado.regex' => $textos['regex'],
+        ]);
+
         $dpiIngresado = preg_replace('/[^0-9]/', '', $request->dpi_ingresado);
 
         if ($dpiIngresado !== $evaluado->dpi) {
             return back()->withErrors([
-                'dpi_ingresado' => 'El DPI ingresado no coincide con nuestros registros.'
+                'dpi_ingresado' => $textos['mismatch'],
             ])->withInput();
         }
 
@@ -1148,6 +1152,10 @@ class CuestionarioController extends Controller
                 'mimes:pdf,jpg,jpeg,png,doc,docx',
                 'mimetypes:application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             ],
+        ], [
+            'archivo.max' => 'El archivo no debe exceder 10 MB.',
+            'archivo.mimes' => 'Solo se permiten archivos PDF, JPG, PNG, DOC y DOCX.',
+            'archivo.mimetypes' => 'El contenido del archivo no coincide con su extensión.',
         ]);
 
         $archivo = $request->file('archivo');

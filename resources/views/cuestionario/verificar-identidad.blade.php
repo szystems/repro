@@ -112,10 +112,13 @@
                                 $etiquetaTipoCuestionario = \App\Support\CuestionarioPresentacionCandidato::etiquetaTipo(
                                     $evaluado->tipoFormularioCuestionario()
                                 );
+                                $textosIdentidad = \App\Support\CuestionarioPresentacionCandidato::textosVerificacionIdentidad(
+                                    $evaluado->tipo_documento
+                                );
                             @endphp
                             <p class="text-muted mb-4">
                                 Para continuar con su cuestionario {{ $etiquetaTipoCuestionario }}, necesitamos verificar su identidad.
-                                Por favor ingrese su <strong>Documento Personal de Identificación (DPI)</strong>.
+                                {!! $textosIdentidad['instruccion_html'] !!}
                             </p>
                         </div>
                         
@@ -125,13 +128,13 @@
                             <div class="mb-4">
                                 <label for="dpi_ingresado" class="form-label fw-bold">
                                     <i class="fas fa-id-card me-2"></i>
-                                    Número de DPI
+                                    {{ $textosIdentidad['label'] }}
                                 </label>
                                 <input type="text" 
                                        class="form-control form-control-lg text-center @error('dpi_ingresado') is-invalid @enderror" 
                                        id="dpi_ingresado" 
                                        name="dpi_ingresado" 
-                                       placeholder="0000000000000"
+                                       placeholder="{{ $textosIdentidad['placeholder'] }}"
                                        maxlength="13"
                                        pattern="[0-9]{13}"
                                        value="{{ old('dpi_ingresado') }}"
@@ -147,7 +150,7 @@
                                 
                                 <div class="form-text">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    Ingrese los 13 dígitos de su DPI sin espacios ni guiones
+                                    {{ $textosIdentidad['ayuda'] }}
                                 </div>
                             </div>
                             
@@ -190,6 +193,7 @@
             const dpiInput = document.getElementById('dpi_ingresado');
             const btnVerificar = document.getElementById('btnVerificar');
             const form = document.getElementById('formVerificar');
+            const alertInvalido = @json($textosIdentidad['alert_js']);
             
             // Formatear entrada del DPI (solo números)
             dpiInput.addEventListener('input', function() {
@@ -213,7 +217,7 @@
                 
                 if (dpi.length !== 13) {
                     e.preventDefault();
-                    alert('Por favor ingrese un DPI válido de 13 dígitos.');
+                    alert(alertInvalido);
                     dpiInput.focus();
                     return false;
                 }

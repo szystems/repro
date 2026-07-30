@@ -27,4 +27,15 @@ class CuestionarioPresentacionCandidatoTest extends TestCase
             5 => 'Salud, Hábitos y Aspectos Complementarios',
         ], $cuestionario->getSeccionesConfig());
     }
+
+    public function test_textos_verificacion_identidad_por_tipo_documento(): void
+    {
+        $dpi = CuestionarioPresentacionCandidato::textosVerificacionIdentidad('dpi');
+        $this->assertSame('Número de DPI', $dpi['label']);
+        $this->assertStringContainsString('DPI', $dpi['instruccion_html']);
+
+        $pasaporte = CuestionarioPresentacionCandidato::textosVerificacionIdentidad('pasaporte');
+        $this->assertSame('Número de pasaporte', $pasaporte['label']);
+        $this->assertStringContainsString('pasaporte', $pasaporte['mismatch']);
+    }
 }

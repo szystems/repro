@@ -89,6 +89,22 @@ class E6PapeleriaPostEnvioTest extends TestCase
         $response->assertNotFound();
     }
 
+    public function test_rechaza_documento_mayor_a_10_mb_con_mensaje_claro(): void
+    {
+        $archivo = UploadedFile::fake()->create('grande.pdf', 11000, 'application/pdf');
+
+        $response = $this->post(route('cuestionario.subir-documento', $this->evaluado->token_unico), [
+            'tipo_documento' => 'dpi_archivo',
+            'archivo' => $archivo,
+        ]);
+
+        $response->assertSessionHasErrors(['archivo']);
+        $this->assertStringContainsString(
+            '10 MB',
+            session('errors')->first('archivo')
+        );
+    }
+
     public function test_completado_sin_formulario_subida_si_enlace_expirado(): void
     {
         $this->evaluado->update(['token_expira_at' => now()->subDay()]);
