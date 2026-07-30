@@ -103,10 +103,12 @@ class CuestionarioSocioeconomicoTest extends TestCase
             'referencias_familiares' => [
                 ['nombre' => 'Ana Pérez', 'parentesco' => 'Madre', 'telefono' => '50211111111', 'direccion' => 'Zona 1'],
                 ['nombre' => 'Luis Pérez', 'parentesco' => 'Padre', 'telefono' => '50222222222', 'direccion' => 'Zona 2'],
+                ['nombre' => 'Rosa Pérez', 'parentesco' => 'Hermana', 'telefono' => '50266666666', 'direccion' => 'Zona 3'],
             ],
             'referencias_personales' => [
                 ['nombre' => 'María López', 'relacion' => 'Amiga', 'telefono' => '50233333333', 'anos_conocerlo' => '5'],
                 ['nombre' => 'Carlos Ruiz', 'relacion' => 'Compañero', 'telefono' => '50244444444', 'anos_conocerlo' => '3'],
+                ['nombre' => 'Pedro Gómez', 'relacion' => 'Vecino', 'telefono' => '50277777777', 'anos_conocerlo' => '2'],
             ],
             'referencias_vecinales' => [
                 ['nombre' => 'Vecino Uno', 'telefono' => '50255555555', 'direccion' => 'Colonia X', 'tiempo_conocerlo' => '2 años'],
@@ -124,6 +126,7 @@ class CuestionarioSocioeconomicoTest extends TestCase
             'viv_monto_alquiler' => '2500',
             'viv_num_habitantes' => '4',
             'viv_zona_riesgo' => 'no',
+            'comp_ha_laborado_empresa' => 'No he laborado para esta empresa.',
             'action' => 'borrador',
         ];
 
@@ -136,7 +139,7 @@ class CuestionarioSocioeconomicoTest extends TestCase
         $cuestionario->refresh();
 
         $tablas = $cuestionario->getTablasPorSeccion($slug);
-        $this->assertCount(2, $tablas['referencias_familiares'] ?? []);
+        $this->assertCount(3, $tablas['referencias_familiares'] ?? []);
         $this->assertCount(1, $tablas['bienes'] ?? []);
 
         $respuestas = $cuestionario->getRespuestasPorSeccion($slug);
@@ -181,11 +184,13 @@ class CuestionarioSocioeconomicoTest extends TestCase
             'referencias_familiares' => [
                 ['nombre' => 'Ana Pérez', 'parentesco' => 'Madre', 'telefono' => '50211111111', 'direccion' => 'Zona 1'],
                 ['nombre' => 'Luis Pérez', 'parentesco' => 'Padre', 'telefono' => '50222222222', 'direccion' => 'Zona 2'],
+                ['nombre' => 'Rosa Pérez', 'parentesco' => 'Hermana', 'telefono' => '50266666666', 'direccion' => 'Zona 3'],
                 ['nombre' => '', 'parentesco' => '', 'telefono' => '', 'direccion' => ''],
             ],
             'referencias_personales' => [
                 ['nombre' => 'María López', 'relacion' => 'Amiga', 'telefono' => '50233333333', 'anos_conocerlo' => '5'],
                 ['nombre' => 'Carlos Ruiz', 'relacion' => 'Compañero', 'telefono' => '50244444444', 'anos_conocerlo' => '3'],
+                ['nombre' => 'Pedro Gómez', 'relacion' => 'Vecino', 'telefono' => '50277777777', 'anos_conocerlo' => '2'],
             ],
             'referencias_vecinales' => [
                 ['nombre' => 'Vecino Uno', 'telefono' => '50255555555', 'direccion' => 'Colonia X', 'tiempo_conocerlo' => '2 años'],
@@ -194,6 +199,7 @@ class CuestionarioSocioeconomicoTest extends TestCase
             'viv_tipo_vivienda' => 'propia',
             'viv_num_habitantes' => '4',
             'viv_zona_riesgo' => 'no',
+            'comp_ha_laborado_empresa' => 'No he laborado para esta empresa.',
             'action' => 'finalizar',
         ];
 

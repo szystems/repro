@@ -19,7 +19,9 @@ class InformeWordNarrativas
         ['key' => 'salud_ideacion_dano', 'label' => 'Ideación de daño'],
         ['key' => 'salud_detalle_ideacion', 'label' => 'Detalle ideación'],
         ['key' => 'salud_tipo_sangre', 'label' => 'Tipo de sangre'],
-        ['key' => 'salud_peso', 'label' => 'Peso (kg)'],
+        ['key' => 'salud_intento_suicidio', 'label' => 'Intento de suicidio'],
+        ['key' => 'salud_detalle_emocional', 'label' => 'Detalle situación emocional'],
+        ['key' => 'salud_peso', 'label' => 'Peso (libras)'],
         ['key' => 'salud_estatura', 'label' => 'Estatura (m)'],
         ['key' => 'salud_practica_deporte', 'label' => 'Practica deporte'],
         ['key' => 'salud_detalle_deporte', 'label' => 'Detalle deporte'],
@@ -34,12 +36,16 @@ class InformeWordNarrativas
     /** @var list<array{key: string, label: string}> */
     private const CAMPOS_HABITOS = [
         ['key' => 'habito_tiempo_libre', 'label' => 'Tiempo libre'],
-        ['key' => 'habito_alcohol_frecuencia', 'label' => 'Consumo de alcohol'],
+        ['key' => 'habito_bares_frecuencia', 'label' => 'Frecuencia en bares'],
         ['key' => 'habito_alcohol_ultimo', 'label' => 'Último consumo de alcohol'],
-        ['key' => 'habito_alcohol_excesos', 'label' => 'Excesos de alcohol'],
+        ['key' => 'habito_alcohol_mensual', 'label' => 'Consumo mensual de alcohol'],
+        ['key' => 'habito_alcohol_detenido', 'label' => 'Detenido por alcohol'],
         ['key' => 'habito_alcohol_laboral', 'label' => 'Alcohol en el trabajo'],
+        ['key' => 'habito_alcohol_despido', 'label' => 'Despido por alcohol'],
         ['key' => 'habito_tabaco', 'label' => 'Tabaco'],
         ['key' => 'habito_juegos_azar', 'label' => 'Juegos de azar'],
+        ['key' => 'habito_alcohol_frecuencia', 'label' => 'Consumo de alcohol (legacy)'],
+        ['key' => 'habito_alcohol_excesos', 'label' => 'Excesos de alcohol (legacy)'],
     ];
 
     /**
@@ -214,17 +220,16 @@ class InformeWordNarrativas
         string $variante
     ): array {
         if ($variante === InformeWordPlantillas::VARIANTE_PREEMPLEO) {
-            return [
-                ['etiqueta' => 'Licencia de conducir:', 'respuesta' => self::formatearValor($respuestasSeccion1['licencia_conducir'] ?? '')],
-                ['etiqueta' => 'Ha pertenecido a algún sindicato:', 'respuesta' => self::texto($respuestasAntecedentes['comp_sindicato'] ?? '')],
-                ['etiqueta' => 'Tiene algún familiar o amigo laborando en la empresa contratante:', 'respuesta' => self::texto($respuestasAntecedentes['comp_familiar_empresa'] ?? '')],
-                ['etiqueta' => 'Cómo se enteró del empleo:', 'respuesta' => self::texto($respuestasAntecedentes['comp_como_se_entero'] ?? '')],
-                ['etiqueta' => '¿Está de acuerdo con las condiciones laborales que le ofrecen?:', 'respuesta' => self::texto($respuestasAntecedentes['comp_disponibilidad'] ?? '')],
-                ['etiqueta' => 'Metas personales:', 'respuesta' => self::texto($respuestasAntecedentes['comp_metas'] ?? '')],
-                ['etiqueta' => 'Cómo se califica:', 'respuesta' => self::texto($respuestasAntecedentes['comp_cualidades'] ?? '')],
-                ['etiqueta' => 'Colaboración y actitud durante el proceso:', 'respuesta' => self::texto($respuestasAntecedentes['comp_redes_sociales'] ?? '')],
-                ['etiqueta' => 'Observaciones adicionales:', 'respuesta' => '—'],
-            ];
+            $filas = [];
+            foreach (InformacionComplementaria::PREGUNTAS as $pregunta) {
+                $filas[] = [
+                    'etiqueta' => rtrim($pregunta['label'], '.').':',
+                    'respuesta' => self::texto($respuestasAntecedentes[$pregunta['key']] ?? ''),
+                ];
+            }
+            $filas[] = ['etiqueta' => 'Observaciones adicionales:', 'respuesta' => self::texto($respuestasAntecedentes['informacion_adicional_final'] ?? '—')];
+
+            return $filas;
         }
 
         return [

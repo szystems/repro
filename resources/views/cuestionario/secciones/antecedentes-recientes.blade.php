@@ -10,7 +10,7 @@
 </div>
 
 @include('cuestionario.secciones.partials.preguntas-textarea', [
-    'titulo' => 'Aspecto judicial',
+    'titulo' => AntecedentesJudiciales::TITULO_BLOQUE,
     'badge' => 'Confidencial',
     'preguntas' => AntecedentesJudiciales::PREGUNTAS,
     'respuestas' => $respAnt,

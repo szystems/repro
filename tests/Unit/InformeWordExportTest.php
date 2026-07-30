@@ -426,10 +426,11 @@ class InformeWordExportTest extends TestCase
             'comp_sindicato' => 'No pertenezco a sindicatos.',
             'comp_familiar_empresa' => 'No tengo familiares en la empresa.',
             'comp_como_se_entero' => 'Portal de empleos.',
-            'comp_disponibilidad' => 'De acuerdo con las condiciones.',
+            'comp_licencia_conducir' => 'Tipo B vigente.',
+            'comp_condiciones_laborales' => 'De acuerdo con las condiciones.',
             'comp_metas' => 'Crecimiento profesional.',
-            'comp_cualidades' => 'Responsable y puntual.',
-            'comp_redes_sociales' => 'Buena actitud durante el proceso.',
+            'comp_cualidades_defectos' => 'Responsable y puntual.',
+            'comp_redes_usuario' => '@demo_test',
         ]);
 
         $evaluado = $evaluado->fresh(['cuestionario', 'poligrafista']);
@@ -444,7 +445,7 @@ class InformeWordExportTest extends TestCase
         $this->assertStringContainsString('Estado general: Bueno', $xml);
         $this->assertStringContainsString('Tiempo libre: Lectura', $xml);
         $this->assertStringContainsString('Sustancias declaradas: Ninguna', $xml);
-        $this->assertStringContainsString('¿Ha sido detenido o procesado penalmente?', $xml);
+        $this->assertStringContainsString('antecedentes penales y policiales', $xml);
         $this->assertStringContainsString('Recomendación demo: candidato idóneo para el puesto.', $xml);
         $this->assertStringContainsString('Carlos Narrativas Demo', $xml);
         $this->assertStringContainsString('Polígrafo Demo Test', $xml);

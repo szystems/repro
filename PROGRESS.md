@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-07-21 — **F7 Word completo (7.1–7.6) ✅** · suite **810/810** · deploy Fase F + A + E7 pendiente
+**Ultima actualizacion:** 2026-07-29 — **Alineación formularios reales cliente 🔴 EN CURSO** · plan maestro abajo · deploy pendiente post-alineación
 
 > **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
@@ -17,9 +17,12 @@
 | Qué | Detalle |
 |-----|---------|
 | **Fase** | **F — Formularios (cierre del proyecto)** |
-| **Etapa activa** | **Deploy Fase F + A + E7 a producción (iPage)** |
-| **Etapa anterior** | **F7 Word completo (tabular + narrativas + demo seeder) ✅ (21-jul)** |
-| **Plan detallado (checklists)** | `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` ← **documento principal para avanzar punto por punto** |
+| **Etapa activa** | **Alineación literal con formularios reales del cliente (Etapa A→J)** |
+| **Plan maestro (CHECKLIST ÚNICO)** | `docs/business/PLAN_ALINEACION_FORMULARIOS_REALES_2026-07-29.md` ← **usar este hasta cerrar entrega cliente** |
+| **Fuentes cliente** | `docs/ejemplos de formularios reales/` + `docs/repro/CREACIÓN FORMULARIOS DE SISTEMA.pdf` |
+| **Etapa anterior** | QA manual Fase G cerrado · UX fixes · push GitHub `1e86d7f7` |
+| **Deploy** | **Bloqueado** hasta cerrar alineación A–J + QA pre-entrega |
+| **Plan detallado (checklists)** | `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` ← histórico E1–E7 |
 | **Análisis / spec / decisiones comerciales** | `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` |
 | **Contexto para agentes IA** | `docs/status/CONTEXTO_AGENTES.md` |
 | **Cotización extras (Word, 1B, WhatsApp)** | `docs/business/COTIZACION_EXTRAS_JUNIO_2026_CLIENTE.md` |

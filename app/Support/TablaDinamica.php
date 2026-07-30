@@ -128,11 +128,11 @@ class TablaDinamica
     {
         return [
             ['key' => 'empresa', 'label' => 'Empresa', 'type' => 'text', 'required' => true, 'max' => 150],
-            ['key' => 'puesto', 'label' => 'Puesto', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'puesto', 'label' => 'Puesto ocupado', 'type' => 'text', 'required' => true, 'max' => 100],
             ['key' => 'fecha_ingreso', 'label' => 'Fecha ingreso', 'type' => 'date', 'required' => true],
             ['key' => 'fecha_salida', 'label' => 'Fecha salida', 'type' => 'date', 'required' => false],
-            ['key' => 'ultimo_salario', 'label' => 'Último salario (Q.)', 'type' => 'number', 'required' => false, 'min' => 0],
-            ['key' => 'motivo_retiro', 'label' => 'Motivo retiro', 'type' => 'text', 'required' => true, 'max' => 200],
+            ['key' => 'ultimo_salario', 'label' => 'Salario mensual (Q.)', 'type' => 'number', 'required' => false, 'min' => 0],
+            ['key' => 'motivo_retiro', 'label' => 'Motivo de retiro', 'type' => 'text', 'required' => true, 'max' => 200],
             ['key' => 'jefe_inmediato', 'label' => 'Jefe inmediato', 'type' => 'text', 'required' => false, 'max' => 100],
             ['key' => 'contacto_rrhh', 'label' => 'Contacto RRHH', 'type' => 'digits', 'required' => false, 'max' => 15],
             ['key' => 'tiene_constancia', 'label' => '¿Constancia?', 'type' => 'select', 'required' => true, 'options' => ['si' => 'Sí', 'no' => 'No']],
@@ -186,9 +186,10 @@ class TablaDinamica
     public static function columnasReferenciasFamiliares(): array
     {
         return [
-            ['key' => 'nombre', 'label' => 'Nombre completo', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'nombre', 'label' => 'Nombre', 'type' => 'text', 'required' => true, 'max' => 100],
             ['key' => 'parentesco', 'label' => 'Parentesco', 'type' => 'text', 'required' => true, 'max' => 50],
             ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => true, 'max' => 15],
+            ['key' => 'lugar_trabajo', 'label' => 'Lugar de trabajo', 'type' => 'text', 'required' => false, 'max' => 150],
             ['key' => 'direccion', 'label' => 'Dirección', 'type' => 'text', 'required' => true, 'max' => 300],
         ];
     }
@@ -197,8 +198,8 @@ class TablaDinamica
     public static function columnasReferenciasPersonales(): array
     {
         return [
-            ['key' => 'nombre', 'label' => 'Nombre completo', 'type' => 'text', 'required' => true, 'max' => 100],
-            ['key' => 'relacion', 'label' => 'Relación', 'type' => 'text', 'required' => true, 'max' => 50],
+            ['key' => 'nombre', 'label' => 'Nombre', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'relacion', 'label' => '¿Por qué motivo lo conoció?', 'type' => 'text', 'required' => true, 'max' => 50],
             ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => true, 'max' => 15],
             ['key' => 'anos_conocerlo', 'label' => 'Años de conocerlo', 'type' => 'number', 'required' => true, 'min' => 0, 'max' => 80],
         ];

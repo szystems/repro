@@ -265,7 +265,7 @@
 <hr class="my-4">
 <h5 class="mb-3">Experiencia laboral previa</h5>
 <div class="form-group">
-    <label for="experiencia_previa" class="form-label">¿Posee experiencia laboral previa? <span class="required">*</span></label>
+    <label for="experiencia_previa" class="form-label">{{ HistorialLaboralIntegridad::LABEL_EXPERIENCIA_PREVIA }} <span class="required">*</span></label>
     <select class="form-control @error('experiencia_previa') is-invalid @enderror" id="experiencia_previa" name="experiencia_previa" required>
         <option value="">Seleccione...</option>
         <option value="si" {{ old('experiencia_previa', $resp['experiencia_previa'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
@@ -287,12 +287,12 @@
 </x-campo-condicional>
 
 <div class="form-group">
-    <label for="observaciones_laborales" class="form-label">Observaciones laborales</label>
+    <label for="observaciones_laborales" class="form-label">{{ HistorialLaboralIntegridad::LABEL_OBSERVACIONES_LABORALES }}</label>
     <textarea class="form-control" id="observaciones_laborales" name="observaciones_laborales" rows="3">{{ old('observaciones_laborales', $resp['observaciones_laborales'] ?? '') }}</textarea>
 </div>
 
 @include('cuestionario.secciones.partials.preguntas-textarea', [
-    'titulo' => 'Preguntas complementarias de integridad',
+    'titulo' => HistorialLaboralIntegridad::TITULO_BLOQUE,
     'badge' => 'Confidencial',
     'preguntas' => HistorialLaboralIntegridad::PREGUNTAS,
     'respuestas' => $resp,

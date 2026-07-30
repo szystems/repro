@@ -44,6 +44,13 @@
         @endif
     </div>
 
+    @if(! in_array($tipoCuestionario, ['periodica', 'especifica', 'socioeconomico'], true))
+        <div class="alert alert-warning py-2">
+            <i class="fas fa-exclamation-triangle"></i>
+            Si no cuenta con toda la papelería al completar el formulario, podrá utilizar este mismo enlace durante los próximos 30 días para adjuntar documentación pendiente (DPI, antecedentes penales, constancias laborales, etc.).
+        </div>
+    @endif
+
     @if($evaluadoDoc->documentos->count() > 0)
         <div class="mb-3">
             <h6 class="mb-2">Documentos cargados</h6>

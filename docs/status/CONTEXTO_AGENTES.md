@@ -1,9 +1,9 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 20 de julio de 2026  
-**Estado:** ✅ FASE 20 DESPLEGADA · ✅ **Fase F E1–E6 + Fase A + F7 Word tabular cerrados** · deploy pendiente  
-**Repo:** https://github.com/szystems/repro · branch `master` · commit pendiente push Fase F + F7
+**Fecha de Contexto:** 29 de julio de 2026  
+**Estado:** 🔴 **ALINEACIÓN FORMULARIOS REALES EN CURSO** · no pedir revisión cliente hasta cerrar plan A–J  
+**Repo:** https://github.com/szystems/repro · branch `master` · commit `1e86d7f7` (QA Fase G + UX)
 
 ---
 
@@ -14,7 +14,10 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 
 ### ⚡ ESTADO ACTUAL (Julio 2026)
 - ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 + Fase 20 desplegadas en iPage (`reproappv2.szystems.com`)
-- ✅ **FASE F FORMULARIOS:** **E1–E6 cerrados** · **Fase A legal + F7 Word tabular cerrados** (20-jul) · **808 tests OK** · deploy pendiente
+- 🔴 **TRABAJO ACTIVO:** Alinear preguntas literales con formularios reales del cliente — ver `docs/business/PLAN_ALINEACION_FORMULARIOS_REALES_2026-07-29.md`
+- ⚠️ **GAPS CRÍTICOS:** 19 preguntas laborales incorrectas · judicial 12 vs 16–22 · complementaria distinta · legacy sección 5 · salud/hábitos resumidos
+- ✅ **FASE F FORMULARIOS:** E1–E6 + F7 Word · QA Fase G cerrado · **periódica 26 preg OK**
+- ⏸️ **Deploy Fase F post-QA:** bloqueado hasta cerrar alineación A–J
 - ✅ **4 ESTADOS INDEPENDIENTES:** Formulario / Programación / Evaluación / Orden (Fase 18)
 - ✅ **FASE 19:** Fix duplicación órdenes, capacidad por sede, historial empresa, archivar órdenes, búsqueda DPI/nombre
 - ✅ **TESTS:** **808 tests OK** — F7 Word tabular cerrado 20-jul
@@ -37,7 +40,9 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 | Documento | Uso |
 |-----------|-----|
 | `PROGRESS.md` | Seguimiento activo por fase |
-| `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` | **Plan principal** — checklists E1–E7 punto por punto |
+| `docs/business/PLAN_ALINEACION_FORMULARIOS_REALES_2026-07-29.md` | **🔴 PLAN ACTIVO** — alineación literal A→J, checklist entrega cliente |
+| `docs/ejemplos de formularios reales/` | Formularios reales ago-2025 (POLIGRAFO PRESENCIAL, SOCIO, etc.) |
+| `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` | Plan histórico E1–E7 punto por punto |
 | `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` | Spec formularios + informe Word + decisiones comerciales |
 | `docs/business/COTIZACION_EXTRAS_JUNIO_2026_CLIENTE.md` | Word Q 1,600 · 1B · WhatsApp |
 | `docs/status/CONTEXTO_AGENTES.md` | Contexto técnico para agentes IA |

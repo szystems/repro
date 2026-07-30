@@ -13,7 +13,7 @@ class DatosPersonalesCampos
     public const TIPOS_IDENTIFICACION = [
         'dpi' => 'DPI',
         'pasaporte' => 'Pasaporte',
-        'documento_extranjero' => 'Documento extranjero',
+        'documento_extranjero' => 'Documento de identidad extranjero',
         'otro' => 'Otro',
     ];
 

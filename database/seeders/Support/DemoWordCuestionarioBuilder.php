@@ -297,26 +297,37 @@ class DemoWordCuestionarioBuilder
 
         $datos = [
             'salud_preocupaciones' => 'Ninguna relevante',
-            'salud_estado_general' => 'bueno',
+            'salud_estado_general' => 'buena',
             'salud_atencion_psicologica' => 'no',
             'salud_situacion_emocional' => 'Estable, sin alteraciones reportadas.',
+            'salud_detalle_emocional' => '',
             'salud_ideacion_dano' => 'no',
             'salud_tipo_sangre' => 'O+',
-            'salud_peso' => '75',
+            'salud_peso' => '165',
             'salud_estatura' => '1.72',
             'salud_practica_deporte' => 'si',
             'salud_detalle_deporte' => 'Fútbol los fines de semana.',
             'salud_tratamiento_medico' => 'no',
             'salud_hospitalizaciones' => 'no',
             'salud_ausencias_enfermedad' => 'no',
+            'salud_intento_suicidio' => 'No',
             'habito_tiempo_libre' => 'Deportes y lectura',
-            'habito_alcohol_frecuencia' => 'ocasional',
-            'habito_alcohol_excesos' => 'no',
-            'habito_alcohol_laboral' => 'no',
-            'habito_tabaco' => 'no',
-            'habito_juegos_azar' => 'no',
+            'habito_bares_frecuencia' => 'Ocasionalmente',
+            'habito_alcohol_ultimo' => 'Hace un mes',
+            'habito_alcohol_mensual' => '1-2 veces',
+            'habito_alcohol_detenido' => 'Nunca',
+            'habito_alcohol_laboral' => 'No',
+            'habito_alcohol_despido' => 'No',
+            'habito_tabaco' => 'No fumo',
+            'habito_juegos_azar' => 'Ninguno',
             'sustancias_usadas' => ['ninguna'],
-            'sustancias_complemento' => 'Niega consumo de sustancias ilegales.',
+            'sustancia_experiencia' => 'Niega consumo de sustancias ilegales.',
+            'sustancia_ultima_vez' => 'N/A',
+            'sustancia_ultimos_6_meses' => 'N/A',
+            'sustancia_familiar_consume' => 'N/A',
+            'sustancia_consumo_frente' => 'N/A',
+            'sustancia_guardo_transporto' => 'N/A',
+            'sustancia_mejora_animo' => 'N/A',
             'tiene_tatuajes' => 'no',
             'tiene_perforaciones' => 'no',
         ];
@@ -327,13 +338,14 @@ class DemoWordCuestionarioBuilder
 
         foreach (InformacionComplementaria::PREGUNTAS as $pregunta) {
             $datos[$pregunta['key']] = match ($pregunta['key']) {
+                'comp_licencia_conducir' => 'Licencia tipo C vigente.',
                 'comp_sindicato' => 'No he pertenecido a sindicatos.',
                 'comp_familiar_empresa' => 'No tengo familiares en la empresa solicitante.',
                 'comp_como_se_entero' => 'Portal de empleos y referido interno.',
-                'comp_metas' => 'Estabilidad laboral y crecimiento profesional.',
-                'comp_cualidades' => 'Responsable, puntual y orientado a resultados.',
-                'comp_redes_sociales' => 'Facebook e Instagram de forma moderada.',
-                'comp_disponibilidad' => 'Tiempo completo; disponible para viajes ocasionales.',
+                'comp_condiciones_laborales' => 'De acuerdo con las condiciones ofrecidas.',
+                'comp_metas' => 'Estabilidad laboral y crecimiento profesional a mediano plazo.',
+                'comp_cualidades_defectos' => 'Responsable, puntual; debe mejorar delegación.',
+                'comp_redes_usuario' => '@demo_candidato en Facebook e Instagram.',
                 default => 'N/A para demo Word.',
             };
         }
@@ -352,16 +364,19 @@ class DemoWordCuestionarioBuilder
             'viv_zona_riesgo' => 'no',
             'presupuesto_total' => '8500',
             'bienes_total' => '85000',
+            'comp_ha_laborado_empresa' => 'No he laborado anteriormente para esta empresa.',
         ]);
 
         CuestionarioRespuesta::guardarTabla($cuestionario->id, $slug, 'referencias_familiares', [
-            ['nombre' => 'Rosa López', 'parentesco' => 'Madre', 'telefono' => '50255511222', 'direccion' => 'Quetzaltenango'],
-            ['nombre' => 'Mauricio López', 'parentesco' => 'Padre', 'telefono' => '50255533444', 'direccion' => 'Quetzaltenango'],
+            ['nombre' => 'Rosa López', 'parentesco' => 'Tía', 'telefono' => '50255511222', 'direccion' => 'Quetzaltenango'],
+            ['nombre' => 'Mauricio López', 'parentesco' => 'Tío', 'telefono' => '50255533444', 'direccion' => 'Quetzaltenango'],
+            ['nombre' => 'Elena Ruiz', 'parentesco' => 'Prima', 'telefono' => '50255555666', 'direccion' => 'Xela'],
         ]);
 
         CuestionarioRespuesta::guardarTabla($cuestionario->id, $slug, 'referencias_personales', [
-            ['nombre' => 'Pedro Ramírez', 'relacion' => 'Amigo', 'telefono' => '50255566778', 'anos_conocerlo' => '8'],
+            ['nombre' => 'Pedro Ramírez', 'relacion' => 'Compañero de trabajo', 'telefono' => '50255566778', 'anos_conocerlo' => '8'],
             ['nombre' => 'María Castillo', 'relacion' => 'Vecina', 'telefono' => '50255599001', 'anos_conocerlo' => '5'],
+            ['nombre' => 'Jorge Méndez', 'relacion' => 'Amigo de la universidad', 'telefono' => '50255588123', 'anos_conocerlo' => '6'],
         ]);
 
         CuestionarioRespuesta::guardarTabla($cuestionario->id, $slug, 'bienes', [

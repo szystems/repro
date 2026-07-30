@@ -15,21 +15,27 @@
 
 <h6 class="text-primary border-bottom pb-2 mb-3"><i class="fas fa-users"></i> Referencias</h6>
 
+<p class="form-text mb-2">
+    <strong>Referencias familiares:</strong> registre un mínimo de tres referencias familiares. No registre padres, pareja, hijos o hermanos.
+</p>
 <x-tabla-dinamica
     name="referencias_familiares"
     titulo="Referencias familiares (mínimo 3)"
     :columnas="TablaDinamica::columnasReferenciasFamiliares()"
     :filas="$tablas['referencias_familiares'] ?? []"
-    :min-filas="2"
+    :min-filas="3"
     texto-agregar="Agregar referencia familiar"
 />
 
+<p class="form-text mb-2 mt-3">
+    <strong>Referencias personales:</strong> registre un mínimo de tres referencias personales que no sean familiares directos.
+</p>
 <x-tabla-dinamica
     name="referencias_personales"
     titulo="Referencias personales (mínimo 3)"
     :columnas="TablaDinamica::columnasReferenciasPersonales()"
     :filas="$tablas['referencias_personales'] ?? []"
-    :min-filas="2"
+    :min-filas="3"
     texto-agregar="Agregar referencia personal"
 />
 
@@ -174,6 +180,16 @@
     <label for="viv_direcciones_anteriores" class="form-label">Direcciones anteriores (últimos 5 años)</label>
     <textarea class="form-control" id="viv_direcciones_anteriores" name="viv_direcciones_anteriores" rows="3"
               placeholder="Indique domicilios previos y tiempo aproximado en cada uno">{{ old('viv_direcciones_anteriores', $respuestas['viv_direcciones_anteriores'] ?? '') }}</textarea>
+</div>
+
+<div class="mb-3">
+    <label for="comp_ha_laborado_empresa" class="form-label">
+        ¿Ha laborado anteriormente para la empresa donde está aplicando? <span class="required">*</span>
+    </label>
+    <textarea class="form-control @error('comp_ha_laborado_empresa') is-invalid @enderror"
+              id="comp_ha_laborado_empresa" name="comp_ha_laborado_empresa" rows="2"
+              placeholder="Indique si/no y detalle puesto, fechas y motivo de retiro si aplica">{{ old('comp_ha_laborado_empresa', $respuestas['comp_ha_laborado_empresa'] ?? '') }}</textarea>
+    @error('comp_ha_laborado_empresa')<div class="invalid-feedback">{{ $message }}</div>@enderror
 </div>
 
 @include('cuestionario.partials.informacion-importante', [

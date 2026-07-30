@@ -132,6 +132,30 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
         $this->assertCount(19, HistorialLaboralIntegridad::claves());
     }
 
+    public function test_seccion_3_muestra_preguntas_laborales_literales_cliente(): void
+    {
+        $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890105');
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 1,
+        ]), $this->datosSeccion1Preempleo());
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 2,
+        ]), $this->datosSeccion2Preempleo());
+
+        $this->get(route('cuestionario.seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 3,
+        ]))
+            ->assertOk()
+            ->assertSee('Preguntas complementarias laborales', false)
+            ->assertSee('corporación policial o militar', false)
+            ->assertSee('lagunas de tiempo', false)
+            ->assertDontSee('Preguntas complementarias de integridad', false)
+            ->assertDontSee('currículum', false);
+    }
+
     public function test_deudas_tabla_y_gate(): void
     {
         $this->avanzarHastaSeccion(3);
@@ -281,6 +305,23 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
         foreach (array_column(InformacionComplementaria::PREGUNTAS, 'key') as $clave) {
             $this->assertFalse(CamposInternosPreempleo::esInterno($clave), "No debe ser interno: {$clave}");
         }
+    }
+
+    public function test_seccion_5_sin_referencias_legacy_ni_judicial_antiguo(): void
+    {
+        $this->evaluado->cuestionario()->create(array_merge([
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 5,
+            'total_secciones' => 5,
+        ], $this->atributosCuestionarioListoParaSecciones()));
+
+        $this->get(route('cuestionario.seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 5,
+        ]))
+            ->assertOk()
+            ->assertDontSee('Referencia Personal #1', false)
+            ->assertSee('antecedentes penales y policiales', false);
     }
 
     public function test_seccion_5_muestra_mensajes_finales(): void

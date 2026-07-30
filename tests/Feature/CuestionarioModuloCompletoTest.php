@@ -213,7 +213,7 @@ class CuestionarioModuloCompletoTest extends TestCase
         $response = $this->get("/cuestionario/{$this->evaluado->token_unico}/seccion/1");
 
         $response->assertStatus(200);
-        $response->assertSee('Datos Personales');
+        $response->assertSee('Datos generales del candidato');
     }
 
     /**
@@ -400,24 +400,14 @@ class CuestionarioModuloCompletoTest extends TestCase
         $this->completarSeccion3();
         $this->completarSeccion4();
 
-        // Datos incompletos - falta referencia1_nombre
-        $datosIncompletos = [
-            // 'referencia1_nombre' => 'María García', // Falta este campo
-            'referencia1_telefono' => '55551111',
-            'referencia1_relacion' => 'Amiga',
-            'referencia2_nombre' => 'Pedro López',
-            'referencia2_telefono' => '55552222',
-            'referencia2_relacion' => 'Vecino',
-            'antecedentes_penales' => 'no',
-            'despedido_trabajo' => 'no',
-            'consume_alcohol' => 'ocasionalmente',
-            'consume_drogas' => 'nunca',
-            'problemas_salud_mental' => 'no'
-        ];
+        $datosIncompletos = array_merge($this->datosSeccion5Preempleo(), [
+            'judicial_01' => '',
+        ]);
+        unset($datosIncompletos['judicial_01']);
 
         $response = $this->post("/cuestionario/{$this->evaluado->token_unico}/seccion/5", $datosIncompletos);
 
-        $response->assertSessionHasErrors(['referencia1_nombre']);
+        $response->assertSessionHasErrors(['judicial_01']);
     }
 
     // =========================================================================

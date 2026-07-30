@@ -201,27 +201,39 @@ trait CompletaFlujoCuestionario
     {
         return array_merge([
             'salud_preocupaciones' => 'Ninguna',
-            'salud_estado_general' => 'bueno',
+            'salud_estado_general' => 'buena',
             'salud_atencion_psicologica' => 'no',
-            'salud_situacion_emocional' => 'Estable',
+            'salud_situacion_emocional' => 'N/A',
+            'salud_detalle_emocional' => 'N/A',
             'salud_ideacion_dano' => 'no',
             'salud_tipo_sangre' => 'O+',
-            'salud_peso' => '70',
+            'salud_peso' => '150',
             'salud_estatura' => '1.75',
             'salud_practica_deporte' => 'si',
             'salud_detalle_deporte' => 'Fútbol',
             'salud_tratamiento_medico' => 'no',
             'salud_hospitalizaciones' => 'no',
             'salud_ausencias_enfermedad' => 'no',
+            'salud_intento_suicidio' => 'No',
             'tiene_tatuajes' => 'no',
             'tiene_perforaciones' => 'no',
             'habito_tiempo_libre' => 'Lectura',
-            'habito_alcohol_frecuencia' => 'ocasional',
-            'habito_alcohol_excesos' => 'no',
-            'habito_alcohol_laboral' => 'no',
-            'habito_tabaco' => 'no',
-            'habito_juegos_azar' => 'no',
+            'habito_bares_frecuencia' => 'Nunca',
+            'habito_alcohol_ultimo' => 'N/A',
+            'habito_alcohol_mensual' => 'N/A',
+            'habito_alcohol_detenido' => 'N/A',
+            'habito_alcohol_laboral' => 'N/A',
+            'habito_alcohol_despido' => 'N/A',
+            'habito_tabaco' => 'No fumo',
+            'habito_juegos_azar' => 'Ninguno',
             'sustancias_usadas' => ['ninguna'],
+            'sustancia_experiencia' => 'N/A',
+            'sustancia_ultima_vez' => 'N/A',
+            'sustancia_ultimos_6_meses' => 'N/A',
+            'sustancia_familiar_consume' => 'N/A',
+            'sustancia_consumo_frente' => 'N/A',
+            'sustancia_guardo_transporto' => 'N/A',
+            'sustancia_mejora_animo' => 'N/A',
         ], $extra);
     }
 
@@ -348,18 +360,11 @@ trait CompletaFlujoCuestionario
     /** @return array<string, mixed> */
     protected function datosSeccion5Preempleo(array $extra = []): array
     {
-        return array_merge([
-            'referencia1_nombre' => 'María García',
-            'referencia1_telefono' => '55551111',
-            'referencia1_relacion' => 'Amiga',
-            'referencia2_nombre' => 'Pedro López',
-            'referencia2_telefono' => '55552222',
-            'referencia2_relacion' => 'Vecino',
-            'antecedentes_penales' => 'no',
-            'despedido_trabajo' => 'no',
-            'consume_alcohol' => 'ocasionalmente',
-            'consume_drogas' => 'nunca',
-            'problemas_salud_mental' => 'no',
-        ], $this->datosSaludHabitosPreempleo(), $this->respuestasJudiciales(), $this->respuestasComplementarias(), $extra);
+        return array_merge(
+            $this->datosSaludHabitosPreempleo(),
+            $this->respuestasJudiciales(),
+            $this->respuestasComplementarias(),
+            $extra
+        );
     }
 }

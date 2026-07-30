@@ -10,8 +10,8 @@ class SocioeconomicoComplementariaCampos
     {
         return array_merge(
             [
-                'referencias_familiares' => 'required|array|min:2',
-                'referencias_personales' => 'required|array|min:2',
+                'referencias_familiares' => 'required|array|min:3',
+                'referencias_personales' => 'required|array|min:3',
                 'referencias_vecinales' => 'required|array|min:1',
                 'referencias_laborales' => 'nullable|array',
                 'bienes' => 'nullable|array',
@@ -24,6 +24,7 @@ class SocioeconomicoComplementariaCampos
                 'viv_refs_ubicacion' => 'nullable|string|max:2000',
                 'viv_zona_riesgo' => 'required|in:si,no',
                 'viv_direcciones_anteriores' => 'nullable|string|max:3000',
+                'comp_ha_laborado_empresa' => 'required|string|max:2000',
             ],
             TablaDinamica::reglasValidacion(6, 'socioeconomico'),
             self::reglasCondicionalesVivienda()
@@ -44,10 +45,10 @@ class SocioeconomicoComplementariaCampos
     public static function mensajesValidacion(): array
     {
         return array_merge(TablaDinamica::mensajesValidacion(), [
-            'referencias_familiares.required' => 'Debe registrar al menos 2 referencias familiares.',
-            'referencias_familiares.min' => 'Debe registrar al menos 2 referencias familiares.',
-            'referencias_personales.required' => 'Debe registrar al menos 2 referencias personales.',
-            'referencias_personales.min' => 'Debe registrar al menos 2 referencias personales.',
+            'referencias_familiares.required' => 'Debe registrar al menos 3 referencias familiares.',
+            'referencias_familiares.min' => 'Debe registrar al menos 3 referencias familiares.',
+            'referencias_personales.required' => 'Debe registrar al menos 3 referencias personales.',
+            'referencias_personales.min' => 'Debe registrar al menos 3 referencias personales.',
             'referencias_vecinales.required' => 'Debe registrar al menos 1 referencia vecinal.',
             'referencias_vecinales.min' => 'Debe registrar al menos 1 referencia vecinal.',
             'viv_tiempo_residencia.required' => 'Indique el tiempo de residencia en su domicilio actual.',
@@ -57,6 +58,7 @@ class SocioeconomicoComplementariaCampos
             'viv_propietario.required_if' => 'Indique el nombre del propietario o familiar.',
             'viv_monto_alquiler.required_if' => 'Indique el monto de alquiler mensual.',
             'viv_detalle_zona_riesgo.required_if' => 'Describa la zona de riesgo.',
+            'comp_ha_laborado_empresa.required' => 'Indique si ha laborado anteriormente para la empresa donde está aplicando.',
         ]);
     }
 
