@@ -109,6 +109,7 @@ class DemoPruebaManualE5EspecificaSeeder extends Seeder
                 'tipo_servicio' => 'poligrafo',
                 'tipo_formulario' => 'especifica',
                 'puesto_evaluar' => 'Cajero — demo específica',
+                'motivo_hecho_evaluacion' => 'Investigación por faltante en caja — demo manual REPRO.',
                 'token_expira_at' => now()->addDays(30),
                 'cuestionario_completado' => false,
                 'estado_evaluacion' => 'pendiente_de_evaluacion',

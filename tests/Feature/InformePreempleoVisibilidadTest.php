@@ -42,6 +42,8 @@ class InformePreempleoVisibilidadTest extends TestCase
             'tipo_formulario' => 'preempleo',
             'cuestionario_completado' => true,
             'cuestionario_completado_at' => now(),
+            'estado_evaluacion' => 'informe_final_enviado',
+            'texto_informe_preliminar' => '<p>Informe disponible para empresa</p>',
         ]);
 
         $this->cuestionario = Cuestionario::create([

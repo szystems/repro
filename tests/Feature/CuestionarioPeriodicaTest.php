@@ -8,6 +8,8 @@ use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Support\CuestionarioSecciones;
 use App\Support\HistorialLaboralPeriodico;
+use App\Support\InformacionComplementaria;
+use App\Support\SaludHabitosCampos;
 use App\Support\TablaDinamica;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\CompletaFlujoCuestionario;
@@ -25,10 +27,10 @@ class CuestionarioPeriodicaTest extends TestCase
         $this->assertSame('antecedentes_recientes', CuestionarioSecciones::slug(5, 'periodica'));
     }
 
-    public function test_historial_laboral_periodico_tiene_26_preguntas(): void
+    public function test_historial_laboral_periodico_tiene_31_preguntas(): void
     {
-        $this->assertCount(26, HistorialLaboralPeriodico::PREGUNTAS);
-        $this->assertCount(26, array_unique(array_column(HistorialLaboralPeriodico::PREGUNTAS, 'key')));
+        $this->assertCount(31, HistorialLaboralPeriodico::PREGUNTAS);
+        $this->assertCount(31, array_unique(array_column(HistorialLaboralPeriodico::PREGUNTAS, 'key')));
         $this->assertContains('periodico_info_adicional', HistorialLaboralPeriodico::claves());
     }
 
@@ -37,21 +39,23 @@ class CuestionarioPeriodicaTest extends TestCase
         $columnas = TablaDinamica::camposPorSeccion(3, 'periodica');
         $this->assertArrayHasKey('empleo_actual', $columnas);
         $this->assertArrayHasKey('formacion_academica', $columnas);
-        $this->assertCount(4, $columnas['empleo_actual']);
+        $this->assertCount(5, $columnas['empleo_actual']);
         $labels = array_column($columnas['empleo_actual'], 'label');
-        $this->assertContains('Puesto desempeñado', $labels);
-        $this->assertContains('Salario actual (Q.)', $labels);
+        $this->assertContains('Puesto Ocupado', $labels);
+        $this->assertContains('Salario mensual', $labels);
+        $this->assertContains('Fechas Laboradas', $labels);
+        $this->assertContains('Motivo de la prueba', $labels);
     }
 
     public function test_preguntas_periodicas_coinciden_con_pdf(): void
     {
         $this->assertSame(
-            'Describa de forma detallada el motivo por el cual se está realizando esta prueba:',
+            'Describa de forma detallada el motivo por el cual se está realizando está prueba:',
             HistorialLaboralPeriodico::PREGUNTAS[0]['label']
         );
         $this->assertSame(
-            '¿Alguien le ha pedido información confidencial de la empresa?',
-            HistorialLaboralPeriodico::PREGUNTAS[25]['label']
+            '¿Usted ha brindado información confidencial de la empresa?',
+            HistorialLaboralPeriodico::PREGUNTAS[30]['label']
         );
         $this->assertSame(
             'Desea agregar alguna información laboral:',
@@ -170,6 +174,9 @@ class CuestionarioPeriodicaTest extends TestCase
         ]))
             ->assertOk()
             ->assertSee('Aspecto judicial', false)
+            ->assertSee('Antecedentes recientes', false)
+            ->assertDontSee(SaludHabitosCampos::TITULO_SALUD, false)
+            ->assertDontSee(InformacionComplementaria::TITULO_BLOQUE, false)
             ->assertDontSee('Sección no disponible', false);
     }
 }

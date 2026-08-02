@@ -15,8 +15,11 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 ### ⚡ ESTADO ACTUAL (Julio 2026)
 - ✅ **PRODUCCIÓN:** Fase 18 + Fase 19 + Fase 20 desplegadas en iPage (`reproappv2.szystems.com`)
 - 🔴 **TRABAJO ACTIVO:** Alinear preguntas literales con formularios reales del cliente — ver `docs/business/PLAN_ALINEACION_FORMULARIOS_REALES_2026-07-29.md`
-- ⚠️ **GAPS CRÍTICOS:** 19 preguntas laborales incorrectas · judicial 12 vs 16–22 · complementaria distinta · legacy sección 5 · salud/hábitos resumidos
-- ✅ **FASE F FORMULARIOS:** E1–E6 + F7 Word · QA Fase G cerrado · **periódica 26 preg OK**
+- ✅ **P0 literal PDF (30-jul-2026):** 19 laborales · 16 judiciales · 8 complementarias
+- ✅ **P1 literal PDF (30-jul-2026):** salud/hábitos/sustancias · datos económicos (sin cuadrícula legacy)
+- ✅ **P2 (30-jul-2026):** tabla empleos PDF · retirados motivo_busqueda y textarea legacy
+- ✅ **Multi-tipo literal PDF (30-jul-2026):** periódica/específica 31 preg + §5 salud · socio §4 patrimonio + §6 vivienda/gastos PDF
+- ✅ **FASE F FORMULARIOS:** E1–E6 + F7 Word · QA Fase G cerrado · **periódica 31 preg OK**
 - ⏸️ **Deploy Fase F post-QA:** bloqueado hasta cerrar alineación A–J
 - ✅ **4 ESTADOS INDEPENDIENTES:** Formulario / Programación / Evaluación / Orden (Fase 18)
 - ✅ **FASE 19:** Fix duplicación órdenes, capacidad por sede, historial empresa, archivar órdenes, búsqueda DPI/nombre
@@ -107,7 +110,7 @@ Motor base 1.1–1.9: tabla dinámica, condicionales, autosave, catálogo GT, fo
 
 | Completado | Detalle |
 |------------|---------|
-| **5.1–5.3** | Periódica 5 sec.: omisiones IGSS/NIT/hermanos/complementaria; laboral 26 preguntas PDF; solo DPI |
+| **5.1–5.3** | Periódica 5 sec.: omisiones IGSS/NIT/hermanos/complementaria; laboral **31 preguntas** PDF; §5 salud completa; solo DPI |
 | **5.4–5.6** | Específica = base periódica; académica solo último grado; pregunta 1 caso/hecho amplia (max 8000) |
 | PDF flujo | `shared/pdf/flujo-pagina` — sin saltos forzados con huecos |
 
@@ -598,6 +601,45 @@ php artisan view:clear
 | Calendario | `CalendarioTest` | ✅ Capacidad sede |
 
 **Ejecutar:** `docker exec repro-app php -d memory_limit=512M vendor/bin/phpunit`
+
+---
+
+## 📋 AUDITORÍA LITERAL PDF (30-jul-2026)
+
+**Fuente:** `docs/ejemplos de formularios reales/POLIGRAFO PRESENCIAL (2).pdf`  
+**Extracción:** `pdftotext` → `/tmp/poligrafo_presencial.txt`
+
+| Bloque | Estado | Archivo |
+|--------|--------|---------|
+| 19 laborales (orden + texto) | ✅ P0 aplicado | `HistorialLaboralIntegridad.php` |
+| 16 judiciales | ✅ P0 aplicado | `AntecedentesJudiciales.php` |
+| 8 complementarias | ✅ P1 aplicado | `InformacionComplementaria.php` |
+| Salud/hábitos/sustancias | ✅ P1 aplicado | `SaludHabitosCampos.php`, `antecedentes.blade.php` |
+| Económica (cuadrícula legacy) | ✅ P1 aplicado | `SituacionEconomicaCampos.php`, `situacion-economica.blade.php` |
+| Tabla empleos extra (jefe, RRHH) | ✅ P2 aplicado | `TablaDinamica::columnasEmpleosPreempleo()` |
+
+### Periódica / Específica (`PERIODICO ESPECIFICO.pdf`)
+
+| Bloque | Estado | Archivo |
+|--------|--------|---------|
+| 31 preguntas laborales (orden + texto) | ✅ aplicado | `HistorialLaboralPeriodico.php` |
+| Tabla empleo actual (5 cols PDF) | ✅ aplicado | `TablaDinamica::columnasEmpleoActualPeriodico()` |
+| §5 salud/hábitos/judicial/complementaria | ✅ aplicado | `CuestionarioController` → `antecedentes.blade.php` |
+| §1–§2 (hermanos omitidos) | ✅ hereda matriz | `InformacionFamiliarRequest` / vistas compartidas |
+
+### Socioeconómico (`SOCIOECONOMICO...pdf`)
+
+| Bloque | Estado | Archivo |
+|--------|--------|---------|
+| §1–§5 matriz pre-empleo | ✅ hereda P0/P1 | mismas clases que pre-empleo |
+| §4 patrimonio | ✅ aplicado | `econ_patrimonio_aprox` en `situacion-economica.blade.php` |
+| §6 referencias / vivienda / gastos 10 rubros | ✅ aplicado | `socioeconomico-complementaria.blade.php`, `SocioeconomicoComplementariaCampos.php` |
+
+**Tests literales:** `tests/Unit/FormularioLiteralesClienteTest.php` · suites: `CuestionarioPeriodicaTest`, `CuestionarioSocioeconomicoTest`, `CuestionarioPreempleoSecciones345Test`.
+
+**⚠️ Claves reordenadas:** `integridad_01…19` y `periodico_01…31`; respuestas guardadas antes del 30-jul pueden no corresponder semánticamente a la misma pregunta.
+
+**Tokens QA local:** pre-empleo §3 `browserqa2026preempleoalign01` · §5 `aq0BoPHPkpnG6pM3Lhkm7NtX3vSqEItBZ1u0VTQs6vR10haeVIuHzdmLR2Gd86py` · periódica `e5demo2026periodicatokenrepr0` · socio §6 `browserqa2026socioalign00001`
 
 ---
 

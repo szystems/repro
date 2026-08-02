@@ -5,19 +5,20 @@
     $respuestas = $respuestasExistentes ?? [];
     $tablas = $tablasExistentes ?? [];
     $empleosHistorial = $empleosHistorial ?? [];
+    $presupuestoExistente = SocioeconomicoComplementariaCampos::filasPresupuestoIniciales(
+        old('presupuesto', $tablas['presupuesto'] ?? [])
+    );
 @endphp
 
 <div class="alert alert-info">
     <i class="fas fa-info-circle"></i>
-    Complete las referencias, bienes, presupuesto e información de vivienda. Los totales de bienes y gastos se calculan automáticamente.
-    <br><small class="text-muted">En tablas con mínimo de filas (p. ej. referencias familiares), el botón eliminar se habilita al agregar filas extra. Al eliminar, se pedirá confirmación.</small>
+    Complete las referencias, bienes, gastos e información de vivienda según el formulario original.
+    <br><small class="text-muted">Los totales de bienes y gastos se calculan automáticamente.</small>
 </div>
 
-<h6 class="text-primary border-bottom pb-2 mb-3"><i class="fas fa-users"></i> Referencias</h6>
-
-<p class="form-text mb-2">
-    <strong>Referencias familiares:</strong> registre un mínimo de tres referencias familiares. No registre padres, pareja, hijos o hermanos.
-</p>
+<h6 class="text-primary border-bottom pb-2 mb-3">
+    <i class="fas fa-users"></i> {{ SocioeconomicoComplementariaCampos::TITULO_REFERENCIAS_FAMILIARES }}
+</h6>
 <x-tabla-dinamica
     name="referencias_familiares"
     titulo="Referencias familiares (mínimo 3)"
@@ -27,9 +28,9 @@
     texto-agregar="Agregar referencia familiar"
 />
 
-<p class="form-text mb-2 mt-3">
-    <strong>Referencias personales:</strong> registre un mínimo de tres referencias personales que no sean familiares directos.
-</p>
+<h6 class="text-primary border-bottom pb-2 mb-3 mt-4">
+    <i class="fas fa-user-friends"></i> REFERENCIAS PERSONALES: (que no sean familiares)
+</h6>
 <x-tabla-dinamica
     name="referencias_personales"
     titulo="Referencias personales (mínimo 3)"
@@ -48,7 +49,7 @@
     texto-agregar="Agregar referencia vecinal"
 />
 
-<div class="d-flex justify-content-between align-items-center mb-2">
+<div class="d-flex justify-content-between align-items-center mb-2 mt-3">
     <h6 class="mb-0 text-muted">Referencias laborales (opcional)</h6>
     @if(count($empleosHistorial) > 0)
         <button type="button" class="btn btn-sm btn-outline-secondary" id="btnImportarEmpleos" data-empleos='@json($empleosHistorial)'>
@@ -85,16 +86,34 @@
     </div>
 </div>
 
-<h6 class="text-primary border-bottom pb-2 mb-3"><i class="fas fa-calculator"></i> Presupuesto personal mensual</h6>
-<div class="socio-total-wrapper" data-total-field="monto" data-display-id="presupuesto_total_display" data-hidden-id="presupuesto_total">
-<x-tabla-dinamica
-    name="presupuesto"
-    titulo="Detalle de gastos mensuales"
-    :columnas="TablaDinamica::columnasPresupuesto()"
-    :filas="$tablas['presupuesto'] ?? []"
-    :min-filas="0"
-    texto-agregar="Agregar gasto"
-/>
+<h6 class="text-primary border-bottom pb-2 mb-3">{{ SocioeconomicoComplementariaCampos::TITULO_GASTOS }}</h6>
+<div id="presupuesto_fijo_wrapper" class="socio-total-wrapper" data-total-field="monto" data-display-id="presupuesto_total_display" data-hidden-id="presupuesto_total">
+    <div class="table-responsive">
+        <table class="table table-bordered" id="presupuesto_fijo_table">
+            <thead>
+                <tr>
+                    <th>Concepto</th>
+                    <th style="width: 180px;">Monto (Q.)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($presupuestoExistente as $i => $fila)
+                    <tr>
+                        <td>
+                            {{ $fila['concepto'] }}
+                            <input type="hidden" name="presupuesto[{{ $i }}][concepto]" value="{{ $fila['concepto'] }}">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control presupuesto-monto @error('presupuesto.'.$i.'.monto') is-invalid @enderror"
+                                   name="presupuesto[{{ $i }}][monto]" min="0" step="0.01"
+                                   value="{{ old('presupuesto.'.$i.'.monto', $fila['monto'] ?? '') }}" required>
+                            @error('presupuesto.'.$i.'.monto')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
 <div class="row mb-4">
     <div class="col-md-4 ms-auto">
@@ -105,90 +124,87 @@
     </div>
 </div>
 
-<h6 class="text-primary border-bottom pb-2 mb-3"><i class="fas fa-home"></i> Información de vivienda</h6>
+<h6 class="text-primary border-bottom pb-2 mb-3"><i class="fas fa-home"></i> {{ SocioeconomicoComplementariaCampos::TITULO_VIVIENDA }}</h6>
 
-<div class="row">
-    <div class="col-md-6 mb-3">
-        <label for="viv_tiempo_residencia" class="form-label">Tiempo en el domicilio actual <span class="required">*</span></label>
-        <input type="text" class="form-control" id="viv_tiempo_residencia" name="viv_tiempo_residencia"
-               value="{{ old('viv_tiempo_residencia', $respuestas['viv_tiempo_residencia'] ?? '') }}"
-               placeholder="Ej: 3 años, 6 meses">
-    </div>
-    <div class="col-md-6 mb-3">
-        <label for="viv_tipo_vivienda" class="form-label">Tipo de vivienda <span class="required">*</span></label>
-        <select class="form-select" id="viv_tipo_vivienda" name="viv_tipo_vivienda">
-            <option value="">Seleccione...</option>
-            @foreach(SocioeconomicoComplementariaCampos::tiposVivienda() as $valor => $etiqueta)
-                <option value="{{ $valor }}" @selected(old('viv_tipo_vivienda', $respuestas['viv_tipo_vivienda'] ?? '') === $valor)>{{ $etiqueta }}</option>
-            @endforeach
-        </select>
-    </div>
+<div class="form-group">
+    <label for="viv_tiempo_residencia" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_TIEMPO_RESIDENCIA }} <span class="required">*</span></label>
+    <input type="text" class="form-control @error('viv_tiempo_residencia') is-invalid @enderror"
+           id="viv_tiempo_residencia" name="viv_tiempo_residencia"
+           value="{{ old('viv_tiempo_residencia', $respuestas['viv_tiempo_residencia'] ?? '') }}" required>
+    @error('viv_tiempo_residencia')<div class="invalid-feedback">{{ $message }}</div>@enderror
 </div>
 
-<x-campo-condicional trigger="viv_tipo_vivienda" show-when="alquilada,familiar,prestada">
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label for="viv_propietario" class="form-label">Nombre del propietario / familiar</label>
-            <input type="text" class="form-control" id="viv_propietario" name="viv_propietario"
-                   value="{{ old('viv_propietario', $respuestas['viv_propietario'] ?? '') }}">
-        </div>
-    </div>
-</x-campo-condicional>
-
-<x-campo-condicional trigger="viv_tipo_vivienda" show-when="alquilada">
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label for="viv_monto_alquiler" class="form-label">Monto de alquiler mensual (Q.)</label>
-            <input type="number" class="form-control" id="viv_monto_alquiler" name="viv_monto_alquiler" min="0" step="0.01"
-                   value="{{ old('viv_monto_alquiler', $respuestas['viv_monto_alquiler'] ?? '') }}">
-        </div>
-    </div>
-</x-campo-condicional>
-
-<div class="row">
-    <div class="col-md-4 mb-3">
-        <label for="viv_num_habitantes" class="form-label">Personas que habitan la vivienda <span class="required">*</span></label>
-        <input type="number" class="form-control" id="viv_num_habitantes" name="viv_num_habitantes" min="1" max="50"
-               value="{{ old('viv_num_habitantes', $respuestas['viv_num_habitantes'] ?? '') }}">
-    </div>
-    <div class="col-md-8 mb-3">
-        <label for="viv_refs_ubicacion" class="form-label">Referencias para ubicar la vivienda</label>
-        <textarea class="form-control" id="viv_refs_ubicacion" name="viv_refs_ubicacion" rows="2"
-                  placeholder="Colonia, calle, color de fachada, puntos de referencia...">{{ old('viv_refs_ubicacion', $respuestas['viv_refs_ubicacion'] ?? '') }}</textarea>
-    </div>
+<div class="form-group">
+    <label for="viv_tipo_vivienda_detalle" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_TIPO_VIVIENDA }} <span class="required">*</span></label>
+    <input type="text" class="form-control @error('viv_tipo_vivienda_detalle') is-invalid @enderror"
+           id="viv_tipo_vivienda_detalle" name="viv_tipo_vivienda_detalle"
+           value="{{ old('viv_tipo_vivienda_detalle', $respuestas['viv_tipo_vivienda_detalle'] ?? $respuestas['viv_tipo_vivienda'] ?? '') }}" required>
+    @error('viv_tipo_vivienda_detalle')<div class="invalid-feedback">{{ $message }}</div>@enderror
 </div>
 
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label for="viv_zona_riesgo" class="form-label">¿Considera que vive en zona de riesgo? <span class="required">*</span></label>
-        <select class="form-select" id="viv_zona_riesgo" name="viv_zona_riesgo">
-            <option value="">Seleccione...</option>
-            <option value="si" @selected(old('viv_zona_riesgo', $respuestas['viv_zona_riesgo'] ?? '') === 'si')>Sí</option>
-            <option value="no" @selected(old('viv_zona_riesgo', $respuestas['viv_zona_riesgo'] ?? '') === 'no')>No</option>
-        </select>
+        <label for="viv_monto_alquiler" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_MONTO_RENTA }}</label>
+        <input type="number" class="form-control @error('viv_monto_alquiler') is-invalid @enderror"
+               id="viv_monto_alquiler" name="viv_monto_alquiler" min="0" step="0.01"
+               value="{{ old('viv_monto_alquiler', $respuestas['viv_monto_alquiler'] ?? '') }}">
+        @error('viv_monto_alquiler')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
+    <div class="col-md-6 mb-3">
+        <label for="viv_propietario" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_PROPIETARIO }}</label>
+        <input type="text" class="form-control @error('viv_propietario') is-invalid @enderror"
+               id="viv_propietario" name="viv_propietario"
+               value="{{ old('viv_propietario', $respuestas['viv_propietario'] ?? '') }}">
+        @error('viv_propietario')<div class="invalid-feedback">{{ $message }}</div>@enderror
+    </div>
+</div>
+
+<div class="form-group">
+    <label for="viv_habitantes_detalle" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_HABITANTES }} <span class="required">*</span></label>
+    <textarea class="form-control @error('viv_habitantes_detalle') is-invalid @enderror"
+              id="viv_habitantes_detalle" name="viv_habitantes_detalle" rows="2" required>{{ old('viv_habitantes_detalle', $respuestas['viv_habitantes_detalle'] ?? $respuestas['viv_num_habitantes'] ?? '') }}</textarea>
+    @error('viv_habitantes_detalle')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+<div class="form-group">
+    <label for="viv_refs_ubicacion" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_REFS_UBICACION }} <span class="required">*</span></label>
+    <textarea class="form-control @error('viv_refs_ubicacion') is-invalid @enderror"
+              id="viv_refs_ubicacion" name="viv_refs_ubicacion" rows="2" required>{{ old('viv_refs_ubicacion', $respuestas['viv_refs_ubicacion'] ?? '') }}</textarea>
+    @error('viv_refs_ubicacion')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+
+<div class="form-group">
+    <label for="viv_zona_riesgo" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_ZONA_ROJA }} <span class="required">*</span></label>
+    <select class="form-control @error('viv_zona_riesgo') is-invalid @enderror" id="viv_zona_riesgo" name="viv_zona_riesgo" required>
+        <option value="">Seleccione...</option>
+        <option value="si" @selected(old('viv_zona_riesgo', $respuestas['viv_zona_riesgo'] ?? '') === 'si')>Sí</option>
+        <option value="no" @selected(old('viv_zona_riesgo', $respuestas['viv_zona_riesgo'] ?? '') === 'no')>No</option>
+    </select>
+    @error('viv_zona_riesgo')<div class="invalid-feedback">{{ $message }}</div>@enderror
 </div>
 
 <x-campo-condicional trigger="viv_zona_riesgo" show-when="si">
-    <div class="mb-3">
-        <label for="viv_detalle_zona_riesgo" class="form-label">Detalle de la zona de riesgo</label>
-        <textarea class="form-control" id="viv_detalle_zona_riesgo" name="viv_detalle_zona_riesgo" rows="2">{{ old('viv_detalle_zona_riesgo', $respuestas['viv_detalle_zona_riesgo'] ?? '') }}</textarea>
+    <div class="form-group">
+        <label for="viv_detalle_zona_riesgo" class="form-label">Detalle de la zona roja</label>
+        <textarea class="form-control @error('viv_detalle_zona_riesgo') is-invalid @enderror"
+                  id="viv_detalle_zona_riesgo" name="viv_detalle_zona_riesgo" rows="2">{{ old('viv_detalle_zona_riesgo', $respuestas['viv_detalle_zona_riesgo'] ?? '') }}</textarea>
+        @error('viv_detalle_zona_riesgo')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 </x-campo-condicional>
 
-<div class="mb-3">
-    <label for="viv_direcciones_anteriores" class="form-label">Direcciones anteriores (últimos 5 años)</label>
-    <textarea class="form-control" id="viv_direcciones_anteriores" name="viv_direcciones_anteriores" rows="3"
-              placeholder="Indique domicilios previos y tiempo aproximado en cada uno">{{ old('viv_direcciones_anteriores', $respuestas['viv_direcciones_anteriores'] ?? '') }}</textarea>
+<div class="form-group">
+    <label for="viv_direcciones_anteriores" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_DIRECCIONES_ANTERIORES }}</label>
+    <textarea class="form-control @error('viv_direcciones_anteriores') is-invalid @enderror"
+              id="viv_direcciones_anteriores" name="viv_direcciones_anteriores" rows="3">{{ old('viv_direcciones_anteriores', $respuestas['viv_direcciones_anteriores'] ?? '') }}</textarea>
+    @error('viv_direcciones_anteriores')<div class="invalid-feedback">{{ $message }}</div>@enderror
 </div>
 
-<div class="mb-3">
+<div class="form-group">
     <label for="comp_ha_laborado_empresa" class="form-label">
-        ¿Ha laborado anteriormente para la empresa donde está aplicando? <span class="required">*</span>
+        {{ SocioeconomicoComplementariaCampos::LABEL_HA_LABORADO_EMPRESA }} <span class="required">*</span>
     </label>
     <textarea class="form-control @error('comp_ha_laborado_empresa') is-invalid @enderror"
-              id="comp_ha_laborado_empresa" name="comp_ha_laborado_empresa" rows="2"
-              placeholder="Indique si/no y detalle puesto, fechas y motivo de retiro si aplica">{{ old('comp_ha_laborado_empresa', $respuestas['comp_ha_laborado_empresa'] ?? '') }}</textarea>
+              id="comp_ha_laborado_empresa" name="comp_ha_laborado_empresa" rows="2" required>{{ old('comp_ha_laborado_empresa', $respuestas['comp_ha_laborado_empresa'] ?? '') }}</textarea>
     @error('comp_ha_laborado_empresa')<div class="invalid-feedback">{{ $message }}</div>@enderror
 </div>
 

@@ -276,34 +276,15 @@
                                     <div class="tab-pane fade {{ $i == 1 ? 'show active' : '' }}" 
                                          id="seccion{{ $i }}" 
                                          role="tabpanel">
-                                        @if(View::exists('admin.cuestionarios.partials.seccion_' . $i))
-                                            @include('admin.cuestionarios.partials.seccion_' . $i, [
-                                                'cuestionario' => $cuestionario,
-                                                'respuestas' => $cuestionario->obtenerRespuestasSeccion($i),
-                                                'tablas' => $cuestionario->getTablasPorNumeroSeccion($i),
-                                                'completada' => $cuestionario->progreso_secciones[$i] ?? false,
-                                                'nombreSeccion' => $secciones[$i] ?? 'Sección ' . $i,
-                                                'fotoCandidatoUrl' => $i === 1 ? ($fotoCandidatoUrl ?? null) : null,
-                                            ])
-                                        @else
-                                            {{-- Vista genérica para secciones sin partial específico --}}
-                                            <div class="alert alert-info">
-                                                <h6><i class="bi bi-info-circle"></i> {{ $secciones[$i] ?? 'Sección ' . $i }}</h6>
-                                                @php $respuestasSeccion = $cuestionario->obtenerRespuestasSeccion($i); @endphp
-                                                @if(count($respuestasSeccion) > 0)
-                                                    <table class="table table-sm table-striped mt-2">
-                                                        @foreach($respuestasSeccion as $campo => $valor)
-                                                            <tr>
-                                                                <td class="fw-bold" style="width: 30%;">{{ ucfirst(str_replace('_', ' ', $campo)) }}:</td>
-                                                                <td>{{ is_array($valor) ? json_encode($valor) : $valor }}</td>
-                                                            </tr>
-                                                        @endforeach
-                                                    </table>
-                                                @else
-                                                    <p class="text-muted mb-0">No hay datos registrados en esta sección.</p>
-                                                @endif
-                                            </div>
-                                        @endif
+                                        @include('shared.cuestionario.seccion-contenido', [
+                                            'cuestionario' => $cuestionario,
+                                            'numeroSeccion' => $i,
+                                            'nombreSeccion' => $secciones[$i] ?? 'Sección ' . $i,
+                                            'soloEmpresa' => false,
+                                            'completada' => $cuestionario->progreso_secciones[$i] ?? false,
+                                            'ocultarEstadoSeccion' => false,
+                                            'fotoCandidatoUrl' => $i === 1 ? ($fotoCandidatoUrl ?? null) : null,
+                                        ])
                                     </div>
                                 @endfor
                             </div>

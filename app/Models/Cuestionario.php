@@ -83,14 +83,14 @@ class Cuestionario extends Model
                 2 => 'Cambios Familiares',
                 3 => 'Información Académica y Laboral',
                 4 => 'Información Económica',
-                5 => 'Salud, Hábitos y Aspectos Judiciales',
+                5 => 'Antecedentes recientes',
             ],
             'especifica' => [
                 1 => 'Datos Básicos',
                 2 => 'Información Familiar',
                 3 => 'Información Laboral y Caso',
                 4 => 'Información Económica',
-                5 => 'Salud, Hábitos y Aspectos Judiciales',
+                5 => 'Antecedentes relevantes',
             ],
             'socioeconomico' => [
                 1 => 'Información Personal',

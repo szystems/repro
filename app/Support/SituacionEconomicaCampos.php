@@ -2,30 +2,76 @@
 
 namespace App\Support;
 
-/** E2.12 — Situación económica general ampliada (interna). */
+/** E2.12 — Datos económicos (internos). Literales POLIGRAFO PRESENCIAL (2).pdf. */
 class SituacionEconomicaCampos
 {
+    public const LABEL_ES_FIADOR = '¿Es fiador de alguien? (si la respuesta es afirmativa ampliar información)';
+
+    public const LABEL_PROBLEMAS_BANCARIOS = '¿Tiene problemas o ha tenido problemas con sus cuentas bancarias? (si la respuesta es afirmativa ampliar información)';
+
+    public const LABEL_VIVIENDA = '¿Dónde vive actualmente es propio o alquila? ¿Cuanto paga de alquiler?';
+
+    public const LABEL_DEPENDIENTES = '¿Cuántas personas dependen económicamente de usted? ¿Quienes?';
+
+    public const LABEL_INGRESOS_ADICIONALES = '¿Tiene algún ingreso adicional? (Amplié información y cuanto de ingreso mensual obtiene de ello)';
+
+    public const LABEL_PROPIEDADES = '¿Tiene alguna propiedad a su nombre? (Amplié información)';
+
+    public const LABEL_VEHICULOS = 'Tiene vehículo propio (describa cuantos, tipo de vehículo, modelo, marca)';
+
+    public const LABEL_DEMANDAS = '¿Tiene o tuvo alguna demanda por alguna deuda? (Amplié información)';
+
+    public const LABEL_PRETENSION = '¿Cuál es su pretensión salarial?';
+
+    public const LABEL_GASTOS_MENSUALES = '¿A cuánto ascienden sus gastos mensuales?';
+
+    public const LABEL_SAT = '¿Tiene algún omiso en SAT?';
+
+    public const LABEL_PATRIMONIO_SOCIO =
+        '¿Monto aproximado del valor su patrimonio? (vehiculos, propiedad, electrodomesticos, objetos de su propiedad, entre otros)';
+
     /** @return array<string, mixed> */
     public static function reglasValidacion(): array
     {
         return [
-            'econ_tipo_vivienda_detalle' => 'nullable|string|max:100',
-            'econ_monto_alquiler' => 'nullable|numeric|min:0',
-            'econ_ingresos_adicionales_detalle' => 'nullable|string|max:1000',
+            'tiene_deudas' => 'required|in:si,no',
+            'detalle_deudas' => 'nullable|string|max:2000',
+            'econ_es_fiador' => 'required|in:si,no',
+            'econ_detalle_es_fiador' => 'nullable|required_if:econ_es_fiador,si|string|max:2000',
+            'econ_problemas_bancarios' => 'required|in:si,no',
+            'econ_detalle_problemas_bancarios' => 'nullable|required_if:econ_problemas_bancarios,si|string|max:2000',
+            'econ_tipo_vivienda_detalle' => 'required|string|max:500',
+            'econ_dependientes_detalle' => 'required|string|max:1000',
+            'econ_ingresos_adicionales_detalle' => 'required|string|max:1000',
             'econ_posee_propiedades' => 'required|in:si,no',
             'econ_detalle_propiedades' => 'nullable|required_if:econ_posee_propiedades,si|string|max:2000',
             'econ_posee_vehiculos' => 'required|in:si,no',
             'econ_detalle_vehiculos' => 'nullable|required_if:econ_posee_vehiculos,si|string|max:1000',
-            'econ_pretension_salarial' => 'nullable|numeric|min:0',
-            'econ_gastos_mensuales_aprox' => 'nullable|numeric|min:0',
-            'econ_tiene_fiador' => 'required|in:si,no',
-            'econ_detalle_fiador' => 'nullable|string|max:500',
-            'econ_problemas_bancarios' => 'required|in:si,no',
-            'econ_detalle_problemas_bancarios' => 'nullable|required_if:econ_problemas_bancarios,si|string|max:2000',
             'econ_demandas_deudas' => 'required|in:si,no',
             'econ_detalle_demandas' => 'nullable|required_if:econ_demandas_deudas,si|string|max:2000',
+            'econ_pretension_salarial' => 'required|numeric|min:0',
+            'econ_gastos_mensuales_aprox' => 'required|numeric|min:0',
             'econ_problemas_sat' => 'required|in:si,no',
             'econ_detalle_sat' => 'nullable|required_if:econ_problemas_sat,si|string|max:2000',
+            'econ_patrimonio_aprox' => 'nullable|string|max:500',
+            // Legacy — cuadrícula ingresos/gastos retirada del formulario
+            'ingresos_principales' => 'nullable|numeric|min:0|max:999999.99',
+            'ingresos_adicionales' => 'nullable|numeric|min:0|max:999999.99',
+            'ingresos_familiares' => 'nullable|numeric|min:0|max:999999.99',
+            'total_ingresos' => 'nullable|numeric|min:0',
+            'gastos_vivienda' => 'nullable|numeric|min:0|max:99999.99',
+            'gastos_alimentacion' => 'nullable|numeric|min:0|max:99999.99',
+            'gastos_transporte' => 'nullable|numeric|min:0|max:99999.99',
+            'gastos_educacion' => 'nullable|numeric|min:0|max:99999.99',
+            'gastos_salud' => 'nullable|numeric|min:0|max:99999.99',
+            'gastos_otros' => 'nullable|numeric|min:0|max:99999.99',
+            'total_gastos' => 'nullable|numeric|min:0',
+            'balance_mensual' => 'nullable|numeric',
+            'tiene_ahorros' => 'nullable|in:si,no',
+            'observaciones_economicas' => 'nullable|string|max:2000',
+            'econ_monto_alquiler' => 'nullable|numeric|min:0',
+            'econ_tiene_fiador' => 'nullable|in:si,no',
+            'econ_detalle_fiador' => 'nullable|string|max:500',
         ];
     }
 
@@ -33,10 +79,18 @@ class SituacionEconomicaCampos
     public static function mensajesValidacion(): array
     {
         return [
+            'tiene_deudas.required' => 'Debe indicar si tiene deudas.',
+            'econ_es_fiador.required' => 'Debe indicar si es fiador de alguien.',
+            'econ_detalle_es_fiador.required_if' => 'Amplíe la información sobre la persona de la que es fiador.',
+            'econ_tipo_vivienda_detalle.required' => 'Indique si su vivienda es propia o alquilada y el monto de alquiler si aplica.',
+            'econ_dependientes_detalle.required' => 'Indique cuántas personas dependen económicamente de usted.',
+            'econ_ingresos_adicionales_detalle.required' => 'Indique si tiene ingresos adicionales y de qué monto.',
             'econ_detalle_propiedades.required_if' => 'Describa las propiedades que posee.',
-            'econ_detalle_vehiculos.required_if' => 'Describa los vehículos que posee (marca, modelo, año, etc.).',
+            'econ_detalle_vehiculos.required_if' => 'Describa los vehículos que posee.',
             'econ_detalle_problemas_bancarios.required_if' => 'Describa los problemas bancarios.',
             'econ_detalle_demandas.required_if' => 'Describa las demandas por deudas.',
+            'econ_pretension_salarial.required' => 'Indique su pretensión salarial.',
+            'econ_gastos_mensuales_aprox.required' => 'Indique el monto aproximado de sus gastos mensuales.',
             'econ_detalle_sat.required_if' => 'Describa los problemas con SAT.',
         ];
     }

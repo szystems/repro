@@ -15,15 +15,22 @@
         var displayId = outer.getAttribute('data-display-id');
         var hiddenId = outer.getAttribute('data-hidden-id');
         var wrapper = outer.querySelector('[data-tabla-dinamica]');
-        if (!wrapper) return;
-
         var total = 0;
-        wrapper.querySelectorAll('tbody tr').forEach(function (row) {
-            var input = row.querySelector('[name*="[' + fieldKey + ']"]');
-            if (input) {
+
+        if (wrapper) {
+            wrapper.querySelectorAll('tbody tr').forEach(function (row) {
+                var input = row.querySelector('[name*="[' + fieldKey + ']"]');
+                if (input) {
+                    total += parseNum(input.value);
+                }
+            });
+        } else if (outer.id === 'presupuesto_fijo_wrapper') {
+            outer.querySelectorAll('.presupuesto-monto').forEach(function (input) {
                 total += parseNum(input.value);
-            }
-        });
+            });
+        } else {
+            return;
+        }
 
         var display = document.getElementById(displayId);
         var hidden = document.getElementById(hiddenId);

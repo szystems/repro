@@ -8,6 +8,8 @@ use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Support\CuestionarioSecciones;
 use App\Support\HistorialLaboralPeriodico;
+use App\Support\InformacionComplementaria;
+use App\Support\SaludHabitosCampos;
 use App\Support\TablaDinamica;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\CompletaFlujoCuestionario;
@@ -89,6 +91,38 @@ class CuestionarioEspecificaTest extends TestCase
             ->assertSee('Circunstancias, fechas, personas involucradas', false)
             ->assertSee('solo se solicita el último grado académico', false)
             ->assertDontSee('Detalle por nivel académico', false)
+            ->assertDontSee('Sección no disponible', false);
+    }
+
+    public function test_seccion_5_especifica_muestra_solo_judicial(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_formulario' => 'especifica',
+            'tipo_servicio' => 'poligrafo',
+            'token_unico' => 'testespecsec5token123456789012345',
+            'token_expira_at' => now()->addDays(7),
+            'cuestionario_completado' => false,
+            'dpi' => '2405617300405',
+        ]);
+
+        Cuestionario::create(array_merge([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'especifica',
+            'seccion_actual' => 5,
+            'total_secciones' => 5,
+        ], $this->atributosCuestionarioListoParaSecciones()));
+
+        $this->get(route('cuestionario.seccion', [
+            'token' => $evaluado->token_unico,
+            'numero' => 5,
+        ]))
+            ->assertOk()
+            ->assertSee('Aspecto judicial', false)
+            ->assertSee('Antecedentes recientes', false)
+            ->assertDontSee(SaludHabitosCampos::TITULO_SALUD, false)
+            ->assertDontSee(InformacionComplementaria::TITULO_BLOQUE, false)
             ->assertDontSee('Sección no disponible', false);
     }
 }

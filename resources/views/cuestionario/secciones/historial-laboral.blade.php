@@ -182,42 +182,10 @@
     </div>
 </div>
 
-<h5 class="mt-4 mb-3">Historial de Empleos Anteriores</h5>
-
-<div class="form-group">
-    <label for="empleos_anteriores" class="form-label">
-        Detalle sus últimos 3 empleos (más recientes)
-    </label>
-    <textarea class="form-control @error('empleos_anteriores') is-invalid @enderror" 
-              id="empleos_anteriores" 
-              name="empleos_anteriores" 
-              rows="6"
-              placeholder="Para cada empleo indique: Empresa, Puesto, Fechas (inicio-fin), Motivo de salida, Jefe inmediato y teléfono de referencia...">{{ old('empleos_anteriores', $respuestasExistentes['empleos_anteriores'] ?? '') }}</textarea>
-    @error('empleos_anteriores')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-</div>
-
-<div class="form-group">
-    <label for="motivo_busqueda" class="form-label">
-        Si está buscando empleo, ¿cuál es el motivo principal?
-    </label>
-    <select class="form-control @error('motivo_busqueda') is-invalid @enderror" 
-            id="motivo_busqueda" 
-            name="motivo_busqueda">
-        <option value="">No aplica / No estoy buscando empleo</option>
-        <option value="desempleo" {{ old('motivo_busqueda', $respuestasExistentes['motivo_busqueda'] ?? '') == 'desempleo' ? 'selected' : '' }}>Actualmente desempleado</option>
-        <option value="mejor_oportunidad" {{ old('motivo_busqueda', $respuestasExistentes['motivo_busqueda'] ?? '') == 'mejor_oportunidad' ? 'selected' : '' }}>Busco mejor oportunidad</option>
-        <option value="cambio_de_area" {{ old('motivo_busqueda', $respuestasExistentes['motivo_busqueda'] ?? '') == 'cambio_de_area' ? 'selected' : '' }}>Cambio de área profesional</option>
-        <option value="mejores_ingresos" {{ old('motivo_busqueda', $respuestasExistentes['motivo_busqueda'] ?? '') == 'mejores_ingresos' ? 'selected' : '' }}>Mejores ingresos económicos</option>
-        <option value="crecimiento_profesional" {{ old('motivo_busqueda', $respuestasExistentes['motivo_busqueda'] ?? '') == 'crecimiento_profesional' ? 'selected' : '' }}>Crecimiento profesional</option>
-        <option value="ambiente_laboral" {{ old('motivo_busqueda', $respuestasExistentes['motivo_busqueda'] ?? '') == 'ambiente_laboral' ? 'selected' : '' }}>Mejor ambiente laboral</option>
-        <option value="otro" {{ old('motivo_busqueda', $respuestasExistentes['motivo_busqueda'] ?? '') == 'otro' ? 'selected' : '' }}>Otro motivo</option>
-    </select>
-    @error('motivo_busqueda')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-</div>
+<h5 class="mt-4 mb-3">Historial de empleos</h5>
+<p class="text-muted small mb-2">
+    EMPLEOS: (colocar todos los empleos, aunque hayan sido periodos cortos, temporales, informales o aunque no tenga constancia laboral)
+</p>
 
 @php
     use App\Support\HistorialAcademico;
@@ -278,7 +246,7 @@
     <x-tabla-dinamica
         name="empleos"
         titulo="Historial de empleos"
-        :columnas="\App\Support\TablaDinamica::columnasEmpleos()"
+        :columnas="\App\Support\TablaDinamica::columnasEmpleosPreempleo()"
         :filas="$tablasExistentes['empleos'] ?? []"
         :minFilas="1"
         textoAgregar="Agregar empleo"

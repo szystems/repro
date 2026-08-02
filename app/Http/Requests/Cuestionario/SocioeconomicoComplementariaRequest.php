@@ -25,6 +25,12 @@ class SocioeconomicoComplementariaRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->prepararTablasDinamicas();
+
+        if (! $this->has('presupuesto') || ! is_array($this->input('presupuesto')) || $this->input('presupuesto') === []) {
+            $this->merge([
+                'presupuesto' => SocioeconomicoComplementariaCampos::filasPresupuestoIniciales(),
+            ]);
+        }
     }
 
     public function rules(): array

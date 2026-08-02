@@ -5,7 +5,7 @@ namespace App\Support;
 /**
  * E2.17 — Aspecto judicial (interno).
  *
- * Textos alineados a POLIGRAFO PRESENCIAL (ago-2025) + CREACIÓN FORMULARIOS DE SISTEMA.pdf.
+ * Redacción literales de POLIGRAFO PRESENCIAL (2).pdf (ago-2025).
  */
 class AntecedentesJudiciales
 {
@@ -13,22 +13,22 @@ class AntecedentesJudiciales
 
     /** @var list<array{key: string, label: string}> */
     public const PREGUNTAS = [
-        ['key' => 'judicial_01', 'label' => '¿Cuándo fue la última vez que tramitó sus antecedentes penales y policiales?'],
-        ['key' => 'judicial_02', 'label' => '¿Tiene actualmente algún antecedente penal o policial? Explique.'],
-        ['key' => 'judicial_03', 'label' => '¿Alguna vez realizó gestiones para eliminar, cancelar o limpiar un antecedente penal o policial? Explique.'],
-        ['key' => 'judicial_04', 'label' => '¿Cuándo fue la última vez que fue detenido(a), arrestado(a) o permaneció en una cárcel, delegación policial o centro de detención? Explique.'],
-        ['key' => 'judicial_05', 'label' => '¿Ha presentado alguna demanda, denuncia o proceso legal contra una persona o empresa? Explique.'],
-        ['key' => 'judicial_06', 'label' => '¿Ha sido demandado, denunciado o sujeto de algún proceso legal? Explique.'],
-        ['key' => 'judicial_07', 'label' => '¿Alguna vez ha tenido la necesidad de ocultar su identidad o utilizar información distinta a la propia? Explique.'],
-        ['key' => 'judicial_08', 'label' => '¿Ha portado armas de fuego u otras armas? ¿Por qué motivo? Explique.'],
-        ['key' => 'judicial_09', 'label' => '¿Ha tomado alguna vez un objeto, dinero o bien ajeno sin autorización por un valor superior a Q.200.00? Explique.'],
-        ['key' => 'judicial_10', 'label' => '¿Ha tomado alguna vez un objeto, dinero o bien ajeno sin autorización por un valor igual o menor a Q.200.00? Explique.'],
-        ['key' => 'judicial_11', 'label' => '¿Ha tenido necesidad de falsificar, alterar o utilizar documentos falsos? Explique.'],
-        ['key' => 'judicial_12', 'label' => '¿Algún familiar ha estado involucrado en extorsiones, delitos o actividades ilícitas? Explique.'],
-        ['key' => 'judicial_13', 'label' => '¿Algún amigo o familiar se encuentra privado de libertad? Explique.'],
-        ['key' => 'judicial_14', 'label' => '¿Cuándo fue la última vez que visitó a una persona privada de libertad? Explique.'],
-        ['key' => 'judicial_15', 'label' => '¿Alguna vez se ha visto involucrado, aunque haya sido involuntariamente, en una actividad ilícita? Explique.'],
-        ['key' => 'judicial_16', 'label' => '¿Considera que su lugar de residencia presenta problemas de delincuencia, pandillas, extorsiones o actividades ilícitas? Explique.'],
+        ['key' => 'judicial_01', 'label' => '¿Cuándo fue la última vez que tramitó sus antecedentes penales y policiacos?'],
+        ['key' => 'judicial_02', 'label' => '¿Tiene algún antecedente penal o policiaco?'],
+        ['key' => 'judicial_03', 'label' => '¿Alguna vez tuvo que limpiar algun antecedentepenal o policial ¿Por qué motivo?'],
+        ['key' => 'judicial_04', 'label' => '¿Alguna vez estuvo detenido en cárceles o delegaciones? ¿Por qué motivo?'],
+        ['key' => 'judicial_05', 'label' => '¿Ha demandado alguna vez a alguien o a alguna empresa por cualquier motivo?'],
+        ['key' => 'judicial_06', 'label' => '¿Lo han demandado a usted alguna vez? ¿Por qué motivo?'],
+        ['key' => 'judicial_07', 'label' => '¿Alguna vez tuvo necesidad de ocultar su identidad por cualquier motivo?'],
+        ['key' => 'judicial_08', 'label' => '¿Ha portado armas alguna vez? ¿Por qué motivo?'],
+        ['key' => 'judicial_09', 'label' => '¿Ha robado cualquier objeto con valor superior a Q.200?'],
+        ['key' => 'judicial_10', 'label' => '¿Ha robado cualquier objeto con valor menor a Q.200?'],
+        ['key' => 'judicial_11', 'label' => '¿Ha tenido la necesidad de alguna vez falsificar, alterar o utilizar documentos falsos?'],
+        ['key' => 'judicial_12', 'label' => '¿Usted o algún familiar involuntariamente ha estado involucrado en extorsiones o alguna actividad delictiva?'],
+        ['key' => 'judicial_13', 'label' => '¿Algún amigo o familiar está privado de libertad? Por qué motivo?'],
+        ['key' => 'judicial_14', 'label' => '¿Cuándo fue la última vez que lo visitó?'],
+        ['key' => 'judicial_15', 'label' => '¿Alguna vez usted involuntariamente ha estado involucrado en alguna actividad ilicita?'],
+        ['key' => 'judicial_16', 'label' => '¿Su lugar de residencia es considerado zona roja?'],
     ];
 
     /** @return array<string, mixed> */

@@ -328,12 +328,17 @@ class InformeWordRelleno
                     break;
                 }
 
-                $fechas = trim((string) ($empleo['fecha_ingreso'] ?? ''));
-                $salida = trim((string) ($empleo['fecha_salida'] ?? ''));
-                if ($fechas !== '' && $salida !== '') {
-                    $fechas .= ' - ' . $salida;
-                } elseif ($salida !== '') {
-                    $fechas = $salida;
+                $fechas = trim((string) ($empleo['fechas_laboradas'] ?? ''));
+                if ($fechas === '') {
+                    $ingreso = trim((string) ($empleo['fecha_ingreso'] ?? ''));
+                    $salida = trim((string) ($empleo['fecha_salida'] ?? ''));
+                    if ($ingreso !== '' && $salida !== '') {
+                        $fechas = $ingreso.' - '.$salida;
+                    } elseif ($salida !== '') {
+                        $fechas = $salida;
+                    } else {
+                        $fechas = $ingreso;
+                    }
                 }
 
                 $tabla = InformeWordXml::reemplazarFilaEnTabla($tabla, $fila, [

@@ -12,12 +12,7 @@ class CuestionarioPresentacionEmpresa
      */
     public static function respuestasSeccion(Cuestionario $cuestionario, int $numeroSeccion): array
     {
-        $respuestas = $cuestionario->obtenerRespuestasSeccion($numeroSeccion);
-
-        return CamposInternosPreempleo::filtrarRespuestasParaEmpresa(
-            $respuestas,
-            $cuestionario->tipo_formulario ?? 'preempleo'
-        );
+        return CuestionarioPresentacionDashboard::respuestasSeccion($cuestionario, $numeroSeccion, true);
     }
 
     /**
@@ -25,12 +20,6 @@ class CuestionarioPresentacionEmpresa
      */
     public static function tablasSeccion(Cuestionario $cuestionario, int $numeroSeccion): array
     {
-        $tablas = $cuestionario->getTablasPorNumeroSeccion($numeroSeccion);
-
-        if ($cuestionario->tipo_formulario === 'socioeconomico' && $numeroSeccion === 6) {
-            unset($tablas['referencias_vecinales']);
-        }
-
-        return $tablas;
+        return CuestionarioPresentacionDashboard::tablasSeccion($cuestionario, $numeroSeccion, true);
     }
 }

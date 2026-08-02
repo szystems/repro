@@ -233,13 +233,12 @@ class InformeWordNarrativas
         }
 
         return [
-            ['etiqueta' => '¿Cuánto tiempo piensa seguir laborando en la empresa?', 'respuesta' => self::texto($respuestasLaborales['periodico_03'] ?? '')],
-            ['etiqueta' => '¿Está de acuerdo con las condiciones laborales que le ofrece la empresa?:', 'respuesta' => self::texto($respuestasLaborales['periodico_04'] ?? '')],
-            ['etiqueta' => '¿Qué cambios o mejoras sugiere a la empresa?', 'respuesta' => self::texto($respuestasLaborales['periodico_05'] ?? '')],
-            ['etiqueta' => 'Cuáles son sus metas laborales:', 'respuesta' => self::texto($respuestasLaborales['periodico_06'] ?? '')],
-            ['etiqueta' => 'Cuáles son sus metas personales:', 'respuesta' => self::texto($respuestasLaborales['comp_metas'] ?? $respuestasAntecedentes['comp_metas'] ?? '')],
-            ['etiqueta' => 'Colaboración y actitud durante este proceso:', 'respuesta' => self::texto($respuestasLaborales['periodico_07'] ?? '')],
-            ['etiqueta' => 'Observaciones adicionales:', 'respuesta' => self::texto($respuestasLaborales['periodico_info_adicional'] ?? '')],
+            ['etiqueta' => rtrim(HistorialLaboralPeriodico::PREGUNTAS[2]['label'], '.').':', 'respuesta' => self::texto($respuestasLaborales['periodico_03'] ?? '')],
+            ['etiqueta' => rtrim(HistorialLaboralPeriodico::PREGUNTAS[3]['label'], '.').':', 'respuesta' => self::texto($respuestasLaborales['periodico_04'] ?? '')],
+            ['etiqueta' => rtrim(HistorialLaboralPeriodico::PREGUNTAS[4]['label'], '.').':', 'respuesta' => self::texto($respuestasLaborales['periodico_05'] ?? '')],
+            ['etiqueta' => rtrim(HistorialLaboralPeriodico::PREGUNTAS[5]['label'], '.').':', 'respuesta' => self::texto($respuestasLaborales['periodico_06'] ?? '')],
+            ['etiqueta' => rtrim(HistorialLaboralPeriodico::PREGUNTAS[6]['label'], '.').':', 'respuesta' => self::texto($respuestasLaborales['periodico_07'] ?? $respuestasAntecedentes['comp_metas'] ?? '')],
+            ['etiqueta' => rtrim(HistorialLaboralPeriodico::CAMPO_INFORMACION_ADICIONAL['label'], '.').':', 'respuesta' => self::texto($respuestasLaborales['periodico_info_adicional'] ?? '')],
         ];
     }
 

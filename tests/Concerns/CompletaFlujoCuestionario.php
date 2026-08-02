@@ -203,9 +203,6 @@ trait CompletaFlujoCuestionario
             'salud_preocupaciones' => 'Ninguna',
             'salud_estado_general' => 'buena',
             'salud_atencion_psicologica' => 'no',
-            'salud_situacion_emocional' => 'N/A',
-            'salud_detalle_emocional' => 'N/A',
-            'salud_ideacion_dano' => 'no',
             'salud_tipo_sangre' => 'O+',
             'salud_peso' => '150',
             'salud_estatura' => '1.75',
@@ -213,7 +210,7 @@ trait CompletaFlujoCuestionario
             'salud_detalle_deporte' => 'Fútbol',
             'salud_tratamiento_medico' => 'no',
             'salud_hospitalizaciones' => 'no',
-            'salud_ausencias_enfermedad' => 'no',
+            'salud_ausencias_enfermedad' => 'Ninguna',
             'salud_intento_suicidio' => 'No',
             'tiene_tatuajes' => 'no',
             'tiene_perforaciones' => 'no',
@@ -241,12 +238,17 @@ trait CompletaFlujoCuestionario
     protected function datosEconomicosAmpliadosPreempleo(array $extra = []): array
     {
         return array_merge([
+            'econ_es_fiador' => 'no',
             'econ_posee_propiedades' => 'no',
             'econ_posee_vehiculos' => 'no',
-            'econ_tiene_fiador' => 'no',
             'econ_problemas_bancarios' => 'no',
             'econ_demandas_deudas' => 'no',
             'econ_problemas_sat' => 'no',
+            'econ_tipo_vivienda_detalle' => 'Propio',
+            'econ_dependientes_detalle' => 'Ninguna',
+            'econ_ingresos_adicionales_detalle' => 'No',
+            'econ_pretension_salarial' => 8500,
+            'econ_gastos_mensuales_aprox' => 6000,
         ], $extra);
     }
 
@@ -268,13 +270,7 @@ trait CompletaFlujoCuestionario
     protected function datosSeccion4Preempleo(array $extra = []): array
     {
         return array_merge([
-            'ingresos_principales' => 8000,
-            'ingresos_adicionales' => 1000,
-            'gastos_vivienda' => 2500,
-            'gastos_alimentacion' => 3000,
-            'gastos_transporte' => 800,
             'tiene_deudas' => 'no',
-            'tiene_ahorros' => 'si',
         ], $this->datosEconomicosAmpliadosPreempleo(), $extra);
     }
 
@@ -325,13 +321,9 @@ trait CompletaFlujoCuestionario
                 [
                     'empresa' => 'Empresa Anterior S.A.',
                     'puesto' => 'Asistente',
-                    'fecha_ingreso' => '2018-01-15',
-                    'fecha_salida' => '2022-06-30',
+                    'fechas_laboradas' => '2018-01-15 al 2022-06-30',
                     'ultimo_salario' => '4500',
                     'motivo_retiro' => 'Mejor oportunidad',
-                    'jefe_inmediato' => 'Carlos Ruiz',
-                    'contacto_rrhh' => '55556666',
-                    'tiene_constancia' => 'si',
                 ],
             ],
         ], $extra);
@@ -364,6 +356,17 @@ trait CompletaFlujoCuestionario
             $this->datosSaludHabitosPreempleo(),
             $this->respuestasJudiciales(),
             $this->respuestasComplementarias(),
+            $extra
+        );
+    }
+
+    /** Periódica y específica §5: solo aspecto judicial + información adicional. */
+    /** @return array<string, mixed> */
+    protected function datosSeccion5PeriodicaEspecifica(array $extra = []): array
+    {
+        return array_merge(
+            $this->respuestasJudiciales(),
+            ['informacion_adicional_final' => 'Sin información adicional.'],
             $extra
         );
     }

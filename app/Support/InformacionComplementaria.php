@@ -2,21 +2,21 @@
 
 namespace App\Support;
 
-/** E2.18 — Información complementaria (va al informe). */
+/** E2.18 — Información complementaria (va al informe). Textos de POLIGRAFO PRESENCIAL (2).pdf. */
 class InformacionComplementaria
 {
     public const TITULO_BLOQUE = 'Información complementaria';
 
     /** @var list<array{key: string, label: string}> */
     public const PREGUNTAS = [
-        ['key' => 'comp_licencia_conducir', 'label' => 'Tipo de licencia de conducir / vigencia'],
-        ['key' => 'comp_sindicato', 'label' => '¿En qué empleos perteneció a un sindicato? Explique.'],
-        ['key' => 'comp_familiar_empresa', 'label' => '¿Tiene algún familiar o amigo laborando en la empresa contratante? Explique.'],
-        ['key' => 'comp_como_se_entero', 'label' => '¿Cómo se enteró de esta oportunidad laboral?'],
-        ['key' => 'comp_condiciones_laborales', 'label' => '¿Está de acuerdo con las condiciones laborales que le ofrece la empresa? Explique.'],
-        ['key' => 'comp_metas', 'label' => '¿Cuáles son sus metas personales y laborales a corto, mediano y largo plazo?'],
-        ['key' => 'comp_cualidades_defectos', 'label' => 'Mencione sus principales cualidades y aspectos que considera debe mejorar.'],
-        ['key' => 'comp_redes_usuario', 'label' => 'Indique los nombres de usuario o perfiles que utiliza en redes sociales actualmente.'],
+        ['key' => 'comp_licencia_conducir', 'label' => 'Tipo de Licencia de conducir/ Vigencia:'],
+        ['key' => 'comp_sindicato', 'label' => '¿En qué empleos perteneció a un sindicato?'],
+        ['key' => 'comp_familiar_empresa', 'label' => 'Tiene algún familiar o amigo laborando en la empresa contratante:'],
+        ['key' => 'comp_como_se_entero', 'label' => '¿Cómo se enteró del empleo?'],
+        ['key' => 'comp_condiciones_laborales', 'label' => '¿Está de acuerdo con las condiciones laborales que le ofrece la empresa?'],
+        ['key' => 'comp_metas', 'label' => '¿Cuales son sus metas personales y laborales a corto, mediano y largo plazo?'],
+        ['key' => 'comp_cualidades_defectos', 'label' => 'Mencione sus cualidades y defectos:'],
+        ['key' => 'comp_redes_usuario', 'label' => 'Usuario en redes sociales:'],
     ];
 
     /** @return array<string, mixed> */

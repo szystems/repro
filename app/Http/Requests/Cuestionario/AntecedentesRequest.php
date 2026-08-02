@@ -31,6 +31,10 @@ class AntecedentesRequest extends FormRequest
             $this->merge(['sustancias_usadas' => [$this->input('sustancias_usadas')]]);
         }
 
+        if ($this->has('tiene_tatuajes') && ! $this->has('tiene_perforaciones')) {
+            $this->merge(['tiene_perforaciones' => $this->input('tiene_tatuajes')]);
+        }
+
         $this->prepararTablasDinamicas();
     }
 

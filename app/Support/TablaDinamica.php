@@ -59,7 +59,9 @@ class TablaDinamica
 
         return [
             'formacion_academica' => self::columnasFormacionAcademica(),
-            'empleos' => self::columnasEmpleos(),
+            'empleos' => $tipoFormulario === 'preempleo'
+                ? self::columnasEmpleosPreempleo()
+                : self::columnasEmpleos(),
         ];
     }
 
@@ -123,6 +125,18 @@ class TablaDinamica
         ];
     }
 
+    /** Tabla empleos pre-empleo — POLIGRAFO PRESENCIAL (2).pdf. */
+    public static function columnasEmpleosPreempleo(): array
+    {
+        return [
+            ['key' => 'empresa', 'label' => 'Empresa', 'type' => 'text', 'required' => true, 'max' => 150],
+            ['key' => 'puesto', 'label' => 'Puesto Ocupado', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'fechas_laboradas', 'label' => 'Fechas Laboradas', 'type' => 'text', 'required' => true, 'max' => 150],
+            ['key' => 'ultimo_salario', 'label' => 'Salario mensual', 'type' => 'number', 'required' => false, 'min' => 0],
+            ['key' => 'motivo_retiro', 'label' => 'Motivo de retiro', 'type' => 'text', 'required' => true, 'max' => 200],
+        ];
+    }
+
     /** @return list<array<string, mixed>> */
     public static function columnasEmpleos(): array
     {
@@ -139,14 +153,14 @@ class TablaDinamica
         ];
     }
 
-    /** Tabla simplificada empleo actual (E5.2 Periódica — PDF jun-2026). */
     public static function columnasEmpleoActualPeriodico(): array
     {
         return [
             ['key' => 'empresa', 'label' => 'Empresa', 'type' => 'text', 'required' => true, 'max' => 150],
-            ['key' => 'puesto', 'label' => 'Puesto desempeñado', 'type' => 'text', 'required' => true, 'max' => 100],
-            ['key' => 'fecha_ingreso', 'label' => 'Fecha de ingreso', 'type' => 'date', 'required' => true],
-            ['key' => 'salario_actual', 'label' => 'Salario actual (Q.)', 'type' => 'number', 'required' => false, 'min' => 0],
+            ['key' => 'puesto', 'label' => 'Puesto Ocupado', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'fechas_laboradas', 'label' => 'Fechas Laboradas', 'type' => 'text', 'required' => true, 'max' => 150],
+            ['key' => 'salario_actual', 'label' => 'Salario mensual', 'type' => 'number', 'required' => false, 'min' => 0],
+            ['key' => 'motivo_prueba', 'label' => 'Motivo de la prueba', 'type' => 'text', 'required' => false, 'max' => 500],
         ];
     }
 
@@ -154,14 +168,14 @@ class TablaDinamica
     public static function columnasDeudas(): array
     {
         return [
-            ['key' => 'entidad', 'label' => 'Entidad', 'type' => 'text', 'required' => true, 'max' => 150],
-            ['key' => 'monto', 'label' => 'Monto original (Q.)', 'type' => 'number', 'required' => true, 'min' => 0],
-            ['key' => 'saldo', 'label' => 'Saldo (Q.)', 'type' => 'number', 'required' => true, 'min' => 0],
-            ['key' => 'cuota', 'label' => 'Cuota mensual (Q.)', 'type' => 'number', 'required' => true, 'min' => 0],
-            ['key' => 'motivo', 'label' => 'Motivo', 'type' => 'text', 'required' => true, 'max' => 200],
-            ['key' => 'antiguedad', 'label' => 'Antigüedad', 'type' => 'text', 'required' => false, 'max' => 50],
-            ['key' => 'estatus', 'label' => 'Estatus', 'type' => 'select', 'required' => true, 'options' => ['al_dia' => 'Al día', 'atrasado' => 'Atrasado', 'pagado' => 'Pagado']],
-            ['key' => 'meses_atraso', 'label' => 'Meses de atraso', 'type' => 'number', 'required' => false, 'min' => 0, 'max' => 120],
+            ['key' => 'entidad', 'label' => 'Entidad financiera', 'type' => 'text', 'required' => true, 'max' => 150],
+            ['key' => 'monto', 'label' => 'Monto solicitado', 'type' => 'number', 'required' => true, 'min' => 0],
+            ['key' => 'saldo', 'label' => 'Saldo pendiente', 'type' => 'number', 'required' => true, 'min' => 0],
+            ['key' => 'cuota', 'label' => 'Cuota mensual', 'type' => 'number', 'required' => true, 'min' => 0],
+            ['key' => 'motivo', 'label' => 'Motivo del prestamo', 'type' => 'text', 'required' => true, 'max' => 200],
+            ['key' => 'antiguedad', 'label' => 'Antiguedad', 'type' => 'text', 'required' => false, 'max' => 50],
+            ['key' => 'estatus', 'label' => 'Estatus actual (al dia o en mora)', 'type' => 'select', 'required' => true, 'options' => ['al_dia' => 'Al día', 'en_mora' => 'En mora', 'atrasado' => 'Atrasado', 'pagado' => 'Pagado']],
+            ['key' => 'meses_atraso', 'label' => 'Tiempo de atraso', 'type' => 'text', 'required' => false, 'max' => 50],
         ];
     }
 
@@ -187,10 +201,10 @@ class TablaDinamica
     {
         return [
             ['key' => 'nombre', 'label' => 'Nombre', 'type' => 'text', 'required' => true, 'max' => 100],
-            ['key' => 'parentesco', 'label' => 'Parentesco', 'type' => 'text', 'required' => true, 'max' => 50],
-            ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => true, 'max' => 15],
-            ['key' => 'lugar_trabajo', 'label' => 'Lugar de trabajo', 'type' => 'text', 'required' => false, 'max' => 150],
             ['key' => 'direccion', 'label' => 'Dirección', 'type' => 'text', 'required' => true, 'max' => 300],
+            ['key' => 'telefono', 'label' => 'Telefono', 'type' => 'digits', 'required' => true, 'max' => 15],
+            ['key' => 'lugar_trabajo', 'label' => 'Lugar de trabajo/ ocupación', 'type' => 'text', 'required' => false, 'max' => 150],
+            ['key' => 'parentesco', 'label' => 'Parentesco', 'type' => 'text', 'required' => true, 'max' => 50],
         ];
     }
 

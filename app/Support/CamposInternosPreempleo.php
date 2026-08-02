@@ -27,11 +27,13 @@ class CamposInternosPreempleo
                 'sustancia_familiar_consume', 'sustancia_consumo_frente', 'sustancia_guardo_transporto',
                 'sustancia_mejora_animo', 'sustancias_complemento',
                 'econ_tipo_vivienda_detalle', 'econ_monto_alquiler', 'econ_ingresos_adicionales_detalle',
+                'econ_dependientes_detalle', 'econ_es_fiador', 'econ_detalle_es_fiador',
                 'econ_posee_propiedades', 'econ_detalle_propiedades', 'econ_posee_vehiculos',
                 'econ_detalle_vehiculos', 'econ_pretension_salarial', 'econ_gastos_mensuales_aprox',
                 'econ_tiene_fiador', 'econ_detalle_fiador', 'econ_problemas_bancarios',
                 'econ_detalle_problemas_bancarios', 'econ_demandas_deudas', 'econ_detalle_demandas',
-                'econ_problemas_sat', 'econ_detalle_sat',
+                'econ_problemas_sat', 'econ_detalle_sat', 'econ_patrimonio_aprox',
+                'viv_tipo_vivienda_detalle', 'viv_habitantes_detalle',
             ]
         );
     }

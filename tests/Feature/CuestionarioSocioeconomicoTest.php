@@ -101,9 +101,9 @@ class CuestionarioSocioeconomicoTest extends TestCase
 
         $payload = [
             'referencias_familiares' => [
-                ['nombre' => 'Ana Pérez', 'parentesco' => 'Madre', 'telefono' => '50211111111', 'direccion' => 'Zona 1'],
-                ['nombre' => 'Luis Pérez', 'parentesco' => 'Padre', 'telefono' => '50222222222', 'direccion' => 'Zona 2'],
-                ['nombre' => 'Rosa Pérez', 'parentesco' => 'Hermana', 'telefono' => '50266666666', 'direccion' => 'Zona 3'],
+                ['nombre' => 'Ana Pérez', 'parentesco' => 'Madre', 'telefono' => '50211111111', 'direccion' => 'Zona 1', 'lugar_trabajo' => 'N/A'],
+                ['nombre' => 'Luis Pérez', 'parentesco' => 'Padre', 'telefono' => '50222222222', 'direccion' => 'Zona 2', 'lugar_trabajo' => 'N/A'],
+                ['nombre' => 'Rosa Pérez', 'parentesco' => 'Hermana', 'telefono' => '50266666666', 'direccion' => 'Zona 3', 'lugar_trabajo' => 'N/A'],
             ],
             'referencias_personales' => [
                 ['nombre' => 'María López', 'relacion' => 'Amiga', 'telefono' => '50233333333', 'anos_conocerlo' => '5'],
@@ -116,15 +116,16 @@ class CuestionarioSocioeconomicoTest extends TestCase
             'bienes' => [
                 ['descripcion' => 'Motocicleta', 'valor' => '15000'],
             ],
-            'presupuesto' => [
-                ['concepto' => 'Alimentación', 'monto' => '2000'],
-                ['concepto' => 'Transporte', 'monto' => '500'],
-            ],
+            'presupuesto' => array_map(
+                fn (array $fila) => ['concepto' => $fila['concepto'], 'monto' => '100'],
+                SocioeconomicoComplementariaCampos::filasPresupuestoIniciales()
+            ),
             'viv_tiempo_residencia' => '4 años',
-            'viv_tipo_vivienda' => 'alquilada',
+            'viv_tipo_vivienda_detalle' => 'Alquilada',
             'viv_propietario' => 'Juan Dueño',
             'viv_monto_alquiler' => '2500',
-            'viv_num_habitantes' => '4',
+            'viv_habitantes_detalle' => 'Cuatro personas: padres y dos hijos',
+            'viv_refs_ubicacion' => 'Frente al parque central',
             'viv_zona_riesgo' => 'no',
             'comp_ha_laborado_empresa' => 'No he laborado para esta empresa.',
             'action' => 'borrador',
@@ -143,14 +144,14 @@ class CuestionarioSocioeconomicoTest extends TestCase
         $this->assertCount(1, $tablas['bienes'] ?? []);
 
         $respuestas = $cuestionario->getRespuestasPorSeccion($slug);
-        $this->assertSame(2500.0, (float) ($respuestas['presupuesto_total'] ?? 0));
+        $this->assertSame(1000.0, (float) ($respuestas['presupuesto_total'] ?? 0));
 
         $totales = SocioeconomicoComplementariaCampos::calcularTotales(
             $tablas['bienes'] ?? [],
             $tablas['presupuesto'] ?? []
         );
         $this->assertSame(15000.0, $totales['bienes_total']);
-        $this->assertSame(2500.0, $totales['presupuesto_total']);
+        $this->assertSame(1000.0, $totales['presupuesto_total']);
     }
 
     public function test_seccion_6_ignora_filas_vacias_en_tablas(): void
@@ -195,9 +196,14 @@ class CuestionarioSocioeconomicoTest extends TestCase
             'referencias_vecinales' => [
                 ['nombre' => 'Vecino Uno', 'telefono' => '50255555555', 'direccion' => 'Colonia X', 'tiempo_conocerlo' => '2 años'],
             ],
+            'presupuesto' => array_map(
+                fn (array $fila) => ['concepto' => $fila['concepto'], 'monto' => '50'],
+                SocioeconomicoComplementariaCampos::filasPresupuestoIniciales()
+            ),
             'viv_tiempo_residencia' => '4 años',
-            'viv_tipo_vivienda' => 'propia',
-            'viv_num_habitantes' => '4',
+            'viv_tipo_vivienda_detalle' => 'Propia',
+            'viv_habitantes_detalle' => 'Cuatro personas',
+            'viv_refs_ubicacion' => 'Cerca del mercado',
             'viv_zona_riesgo' => 'no',
             'comp_ha_laborado_empresa' => 'No he laborado para esta empresa.',
             'action' => 'finalizar',

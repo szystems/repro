@@ -150,7 +150,8 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
         ]))
             ->assertOk()
             ->assertSee('Preguntas complementarias laborales', false)
-            ->assertSee('corporación policial o militar', false)
+            ->assertSee('problema más serio que tuvo en sus empleos', false)
+            ->assertSee('cuantas veces estuvo ausente en su empleo', false)
             ->assertSee('lagunas de tiempo', false)
             ->assertDontSee('Preguntas complementarias de integridad', false)
             ->assertDontSee('currículum', false);
@@ -198,8 +199,8 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
         ]), array_merge($this->datosSeccion4Preempleo(), [
             'econ_posee_vehiculos' => 'si',
             'econ_detalle_vehiculos' => 'Toyota Corolla 2018, placa P-123ABC',
-            'econ_tiene_fiador' => 'si',
-            'econ_detalle_fiador' => 'Juan Pérez, hermano',
+            'econ_es_fiador' => 'si',
+            'econ_detalle_es_fiador' => 'Préstamo hipotecario de mi hermano Juan Pérez',
         ]));
 
         $response->assertSessionHasNoErrors();
@@ -266,14 +267,11 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
             'salud_tratamiento_medico' => 'si',
             'salud_hospitalizaciones' => 'si',
             'salud_ausencias_enfermedad' => 'si',
-            'salud_ideacion_dano' => 'si',
         ]));
 
         $response->assertSessionHasErrors([
             'salud_detalle_tratamiento',
             'salud_detalle_hospitalizaciones',
-            'salud_detalle_ausencias',
-            'salud_detalle_ideacion',
         ]);
     }
 
@@ -288,8 +286,7 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
             'salud_tratamiento_medico' => 'si',
             'salud_detalle_tratamiento' => 'Control de presión con losartán',
             'salud_hospitalizaciones' => 'no',
-            'salud_ausencias_enfermedad' => 'no',
-            'salud_ideacion_dano' => 'no',
+            'salud_ausencias_enfermedad' => 'Ninguna',
         ]));
 
         $response->assertSessionHasNoErrors();
@@ -321,7 +318,7 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
         ]))
             ->assertOk()
             ->assertDontSee('Referencia Personal #1', false)
-            ->assertSee('antecedentes penales y policiales', false);
+            ->assertSee('antecedentes penales y policiacos', false);
     }
 
     public function test_seccion_5_muestra_mensajes_finales(): void

@@ -32,7 +32,11 @@
                 @elseif($numeroSeccion === 4)
                     <div class="subseccion-titulo">Resumen económico</div>
                 @elseif($numeroSeccion === 5)
-                    <div class="subseccion-titulo">Información complementaria visible</div>
+                    @if(in_array($cuestionario->tipo_formulario, ['periodica', 'especifica'], true))
+                        <div class="subseccion-titulo">Aspecto judicial</div>
+                    @else
+                        <div class="subseccion-titulo">Información complementaria visible</div>
+                    @endif
                 @elseif($numeroSeccion === 6)
                     <div class="subseccion-titulo">Información socioeconómica complementaria</div>
                 @endif
@@ -116,7 +120,10 @@
                 @endforeach
 
                 @php
-                    $tieneComplementaria = collect($compKeys)->contains(fn ($k) => !empty($respuestasSeccion[$k] ?? null));
+                    $esSeccion5Judicial = $numeroSeccion === 5
+                        && in_array($cuestionario->tipo_formulario, ['periodica', 'especifica'], true);
+                    $tieneComplementaria = ! $esSeccion5Judicial
+                        && collect($compKeys)->contains(fn ($k) => !empty($respuestasSeccion[$k] ?? null));
                 @endphp
                 @if($tieneComplementaria && $numeroSeccion === 5)
                     <div class="subseccion-titulo">Información complementaria</div>

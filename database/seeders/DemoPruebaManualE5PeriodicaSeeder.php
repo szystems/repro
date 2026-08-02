@@ -111,6 +111,7 @@ class DemoPruebaManualE5PeriodicaSeeder extends Seeder
                 'tipo_servicio' => 'poligrafo',
                 'tipo_formulario' => 'periodica',
                 'puesto_evaluar' => 'Supervisor — demo periódica',
+                'motivo_hecho_evaluacion' => 'Evaluación periódica programada — demo manual REPRO.',
                 'token_expira_at' => now()->addDays(30),
                 'cuestionario_completado' => false,
                 'estado_evaluacion' => 'pendiente_de_evaluacion',

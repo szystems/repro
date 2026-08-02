@@ -97,8 +97,29 @@ class AutorizacionesLegales
         }
 
         $html = '<h5 class="text-center mb-3">' . e($plantilla['titulo']) . '</h5>' . ($plantilla['cuerpo'] ?? '');
+        $html .= self::bloqueConsentimientoAdicional($evaluado);
 
         return self::aplicarVariables($html, self::variables($evaluado));
+    }
+
+    /** Bloque requerido por el cliente para polígrafo y VSA (no socioeconómico). */
+    public static function bloqueConsentimientoAdicional(EvaluadoOrden $evaluado): string
+    {
+        if (($evaluado->tipo_servicio ?? '') === 'socioeconomico') {
+            return '';
+        }
+
+        if (($evaluado->tipo_servicio ?? '') === 'vsa') {
+            return <<<'HTML'
+<h6><strong>Consentimiento adicional</strong></h6>
+<p>Declaro que entiendo que el análisis de estrés de voz (CVSA III) registra y analiza patrones de voz como herramienta de apoyo a la evaluación, y que no constituye un examen médico ni psicológico. Confirmo que me encuentro en pleno uso de mis facultades mentales, que no padezco condiciones que impidan mi participación, y que consiento libremente someterme al procedimiento.</p>
+HTML;
+        }
+
+        return <<<'HTML'
+<h6><strong>Consentimiento adicional</strong></h6>
+<p>Declaro que entiendo que la prueba de polígrafo (detector de verdad) mide indicadores fisiológicos de respuesta y no constituye un examen médico ni psicológico. Confirmo que me encuentro en pleno uso de mis facultades mentales, que no padezco condiciones que impidan mi participación, y que consiento libremente someterme al procedimiento.</p>
+HTML;
     }
 
     public static function renderInfornetHtml(EvaluadoOrden $evaluado): string

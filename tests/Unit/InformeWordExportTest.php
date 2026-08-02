@@ -445,7 +445,7 @@ class InformeWordExportTest extends TestCase
         $this->assertStringContainsString('Estado general: Bueno', $xml);
         $this->assertStringContainsString('Tiempo libre: Lectura', $xml);
         $this->assertStringContainsString('Sustancias declaradas: Ninguna', $xml);
-        $this->assertStringContainsString('antecedentes penales y policiales', $xml);
+        $this->assertStringContainsString('antecedentes penales y policiacos', $xml);
         $this->assertStringContainsString('Recomendación demo: candidato idóneo para el puesto.', $xml);
         $this->assertStringContainsString('Carlos Narrativas Demo', $xml);
         $this->assertStringContainsString('Polígrafo Demo Test', $xml);

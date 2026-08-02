@@ -177,11 +177,11 @@
                                 <div class="tab-pane fade {{ $numSeccion == 1 ? 'show active' : '' }}" 
                                      id="editarSeccion{{ $numSeccion }}" 
                                      role="tabpanel">
-                                    @include('admin.cuestionarios.partials.editar_seccion_' . $numSeccion, [
-                                        'respuestas' => $cuestionario->obtenerRespuestasSeccion($numSeccion),
-                                        'seccion' => $numSeccion,
-                                        'tipoFormulario' => $cuestionario->tipo_formulario,
+                                    @include('shared.cuestionario.seccion-edicion', [
+                                        'cuestionario' => $cuestionario,
+                                        'numeroSeccion' => $numSeccion,
                                         'nombreSeccion' => $nombreSeccion,
+                                        'respuestas' => $cuestionario->obtenerRespuestasSeccion($numSeccion),
                                         'fotoCandidatoUrl' => $numSeccion === 1 ? ($fotoCandidatoUrl ?? null) : null,
                                     ])
                                 </div>

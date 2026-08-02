@@ -9,6 +9,7 @@ use App\Support\AntecedentesJudiciales;
 use App\Support\CuestionarioSecciones;
 use App\Support\HistorialLaboralPeriodico;
 use App\Support\InformacionComplementaria;
+use App\Support\SocioeconomicoComplementariaCampos;
 use Illuminate\Support\Facades\Storage;
 
 /** Pobla cuestionarios completos para pruebas de export Word. */
@@ -205,8 +206,9 @@ class DemoWordCuestionarioBuilder
                 [
                     'empresa' => 'Distribuidora La Central S.A.',
                     'puesto' => $evaluado->puesto_evaluar ?: 'Supervisor de bodega',
-                    'fecha_ingreso' => '2019-03-01',
+                    'fechas_laboradas' => '2019-03-01 al Actual',
                     'salario_actual' => '6500',
+                    'motivo_prueba' => 'Evaluación periódica de confianza',
                 ],
             ]);
 
@@ -234,24 +236,16 @@ class DemoWordCuestionarioBuilder
             [
                 'empresa' => 'Comercial El Progreso',
                 'puesto' => 'Auxiliar administrativo',
-                'fecha_ingreso' => '2015-01-10',
-                'fecha_salida' => '2018-12-20',
+                'fechas_laboradas' => '2015-01-10 al 2018-12-20',
                 'ultimo_salario' => '4200',
                 'motivo_retiro' => 'Mejor oportunidad laboral',
-                'jefe_inmediato' => 'Carlos Ruiz',
-                'contacto_rrhh' => '55556677',
-                'tiene_constancia' => 'si',
             ],
             [
                 'empresa' => 'Distribuidora La Central S.A.',
                 'puesto' => $evaluado->puesto_evaluar ?: 'Analista de inventarios',
-                'fecha_ingreso' => '2019-03-01',
-                'fecha_salida' => '',
+                'fechas_laboradas' => '2019-03-01 al Actual',
                 'ultimo_salario' => '7500',
                 'motivo_retiro' => 'Empleo actual',
-                'jefe_inmediato' => 'María Torres',
-                'contacto_rrhh' => '55558899',
-                'tiene_constancia' => 'si',
             ],
         ]);
     }
@@ -260,22 +254,23 @@ class DemoWordCuestionarioBuilder
     {
         $slug = CuestionarioSecciones::slug(4, $tipoCuestionario);
 
-        CuestionarioRespuesta::guardarRespuestas($cuestionario->id, $slug, [
-            'ingresos_principales' => 7500,
-            'ingresos_adicionales' => 1200,
-            'gastos_vivienda' => 2800,
-            'gastos_alimentacion' => 3200,
-            'gastos_transporte' => 900,
+        CuestionarioRespuesta::guardarRespuestas($cuestionario->id, $slug, array_merge([
             'tiene_deudas' => 'si',
-            'tiene_ahorros' => 'si',
+            'econ_es_fiador' => 'no',
+            'econ_tipo_vivienda_detalle' => 'Propio',
+            'econ_dependientes_detalle' => '1, mi hija',
+            'econ_ingresos_adicionales_detalle' => 'No',
             'econ_posee_propiedades' => 'no',
             'econ_posee_vehiculos' => 'si',
             'econ_detalle_vehiculos' => 'Motocicleta Honda 2020',
-            'econ_tiene_fiador' => 'no',
             'econ_problemas_bancarios' => 'no',
             'econ_demandas_deudas' => 'no',
+            'econ_pretension_salarial' => 7500,
+            'econ_gastos_mensuales_aprox' => 5500,
             'econ_problemas_sat' => 'no',
-        ]);
+        ], $tipoCuestionario === 'socioeconomico' ? [
+            'econ_patrimonio_aprox' => 'Q 85,000 en vehículo y electrodomésticos.',
+        ] : []));
 
         CuestionarioRespuesta::guardarTabla($cuestionario->id, $slug, 'deudas', [
             [
@@ -299,9 +294,6 @@ class DemoWordCuestionarioBuilder
             'salud_preocupaciones' => 'Ninguna relevante',
             'salud_estado_general' => 'buena',
             'salud_atencion_psicologica' => 'no',
-            'salud_situacion_emocional' => 'Estable, sin alteraciones reportadas.',
-            'salud_detalle_emocional' => '',
-            'salud_ideacion_dano' => 'no',
             'salud_tipo_sangre' => 'O+',
             'salud_peso' => '165',
             'salud_estatura' => '1.72',
@@ -309,7 +301,7 @@ class DemoWordCuestionarioBuilder
             'salud_detalle_deporte' => 'Fútbol los fines de semana.',
             'salud_tratamiento_medico' => 'no',
             'salud_hospitalizaciones' => 'no',
-            'salud_ausencias_enfermedad' => 'no',
+            'salud_ausencias_enfermedad' => 'Ninguna',
             'salud_intento_suicidio' => 'No',
             'habito_tiempo_libre' => 'Deportes y lectura',
             'habito_bares_frecuencia' => 'Ocasionalmente',
@@ -359,8 +351,9 @@ class DemoWordCuestionarioBuilder
 
         CuestionarioRespuesta::guardarRespuestas($cuestionario->id, $slug, [
             'viv_tiempo_residencia' => '6 años',
-            'viv_tipo_vivienda' => 'propia',
-            'viv_num_habitantes' => '4',
+            'viv_tipo_vivienda_detalle' => 'Propia',
+            'viv_habitantes_detalle' => 'Cuatro personas: pareja e hijos',
+            'viv_refs_ubicacion' => 'Colonia El Progreso, frente al parque',
             'viv_zona_riesgo' => 'no',
             'presupuesto_total' => '8500',
             'bienes_total' => '85000',
@@ -368,9 +361,9 @@ class DemoWordCuestionarioBuilder
         ]);
 
         CuestionarioRespuesta::guardarTabla($cuestionario->id, $slug, 'referencias_familiares', [
-            ['nombre' => 'Rosa López', 'parentesco' => 'Tía', 'telefono' => '50255511222', 'direccion' => 'Quetzaltenango'],
-            ['nombre' => 'Mauricio López', 'parentesco' => 'Tío', 'telefono' => '50255533444', 'direccion' => 'Quetzaltenango'],
-            ['nombre' => 'Elena Ruiz', 'parentesco' => 'Prima', 'telefono' => '50255555666', 'direccion' => 'Xela'],
+            ['nombre' => 'Rosa López', 'parentesco' => 'Tía', 'telefono' => '50255511222', 'direccion' => 'Quetzaltenango', 'lugar_trabajo' => 'Comercio'],
+            ['nombre' => 'Mauricio López', 'parentesco' => 'Tío', 'telefono' => '50255533444', 'direccion' => 'Quetzaltenango', 'lugar_trabajo' => 'Albañilería'],
+            ['nombre' => 'Elena Ruiz', 'parentesco' => 'Prima', 'telefono' => '50255555666', 'direccion' => 'Xela', 'lugar_trabajo' => 'Oficina'],
         ]);
 
         CuestionarioRespuesta::guardarTabla($cuestionario->id, $slug, 'referencias_personales', [
@@ -384,11 +377,11 @@ class DemoWordCuestionarioBuilder
             ['descripcion' => 'Electrodomésticos', 'valor' => '15000'],
         ]);
 
-        CuestionarioRespuesta::guardarTabla($cuestionario->id, $slug, 'presupuesto', [
-            ['concepto' => 'Alimentación', 'monto' => '3200'],
-            ['concepto' => 'Vivienda', 'monto' => '2800'],
-            ['concepto' => 'Transporte', 'monto' => '900'],
-        ]);
+        CuestionarioRespuesta::guardarTabla($cuestionario->id, $slug, 'presupuesto', array_map(
+            fn (array $fila, int $i) => ['concepto' => $fila['concepto'], 'monto' => (string) (800 + ($i * 100))],
+            SocioeconomicoComplementariaCampos::filasPresupuestoIniciales(),
+            array_keys(SocioeconomicoComplementariaCampos::filasPresupuestoIniciales())
+        ));
     }
 
     /** @return array<string, string> */

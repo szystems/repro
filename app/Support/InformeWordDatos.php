@@ -168,12 +168,15 @@ class InformeWordDatos
             return [];
         }
 
-        $fechas = trim((string) ($empleo['fecha_ingreso'] ?? ''));
-        if ($fechas !== '') {
-            try {
-                $fechas = Carbon::parse($fechas)->format('d/m/Y');
-            } catch (\Throwable) {
-                // conservar valor original
+        $fechas = trim((string) ($empleo['fechas_laboradas'] ?? ''));
+        if ($fechas === '') {
+            $ingreso = trim((string) ($empleo['fecha_ingreso'] ?? ''));
+            if ($ingreso !== '') {
+                try {
+                    $fechas = Carbon::parse($ingreso)->format('d/m/Y');
+                } catch (\Throwable) {
+                    $fechas = $ingreso;
+                }
             }
         }
 

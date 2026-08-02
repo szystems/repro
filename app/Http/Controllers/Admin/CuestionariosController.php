@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cuestionario;
+use App\Support\CamposInternosPreempleo;
 use App\Support\CuestionarioFotoCandidato;
 use App\Support\CuestionarioPrecarga;
 use App\Support\CuestionarioSecciones;
@@ -258,6 +259,8 @@ class CuestionariosController extends Controller
         $request->validate([
             'observaciones_repro' => 'nullable|string|max:2000',
             'respuestas' => 'nullable|array',
+            'respuestas_campo' => 'nullable|array',
+            'respuestas_campo.*' => 'nullable|array',
             'evaluador_notas' => 'nullable|array',
             'evaluador_notas.*' => 'nullable|string|max:10000',
             'informe_tablas' => 'nullable|array',
@@ -305,7 +308,29 @@ class CuestionariosController extends Controller
                 );
             }
 
-            // Si hay respuestas para actualizar
+            // Respuestas por slug+campo (formulario admin alineado al PDF)
+            if ($request->has('respuestas_campo') && is_array($request->respuestas_campo)) {
+                foreach ($request->respuestas_campo as $slugSeccion => $campos) {
+                    if (! is_string($slugSeccion) || ! is_array($campos)) {
+                        continue;
+                    }
+                    foreach ($campos as $campo => $nuevoValor) {
+                        if (! is_string($campo) || CamposInternosPreempleo::esCampoSistema($campo)) {
+                            continue;
+                        }
+                        CuestionarioRespuesta::updateOrCreate(
+                            [
+                                'cuestionario_id' => $cuestionario->id,
+                                'seccion' => $slugSeccion,
+                                'campo' => $campo,
+                            ],
+                            ['valor' => is_array($nuevoValor) ? json_encode($nuevoValor, JSON_UNESCAPED_UNICODE) : (string) $nuevoValor]
+                        );
+                    }
+                }
+            }
+
+            // Si hay respuestas para actualizar (legacy por ID de fila)
             if ($request->has('respuestas') && is_array($request->respuestas)) {
                 // Log especial para ediciones de cuestionarios completados
                 if ($cuestionario->estado === 'completado') {
@@ -359,7 +384,7 @@ class CuestionariosController extends Controller
 
             $mensaje = match (true) {
                 $request->hasFile('foto_candidato') => 'Fotografía del evaluado actualizada correctamente.',
-                $request->has('respuestas') => 'Cuestionario actualizado correctamente.',
+                $request->has('respuestas_campo') || $request->has('respuestas') => 'Cuestionario actualizado correctamente.',
                 $request->has('evaluador_notas') => 'Notas del evaluador guardadas correctamente.',
                 default => 'Observaciones guardadas correctamente.',
             };

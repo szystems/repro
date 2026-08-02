@@ -94,7 +94,7 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted small">Orden:</label>
                                 <div class="fw-medium">
-                                    <a href="{{ route('ordenes.show', $evaluado->orden) }}" class="text-decoration-none">
+                                    <a href="{{ route('empresa.ordenes.show', $evaluado->orden) }}" class="text-decoration-none">
                                         {{ $evaluado->orden->codigo_orden ?? '#'.$evaluado->orden_id }}
                                     </a>
                                 </div>

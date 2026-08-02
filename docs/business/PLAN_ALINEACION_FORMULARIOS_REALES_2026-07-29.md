@@ -2,7 +2,7 @@
 
 **Fecha:** 29 de julio de 2026  
 **Objetivo:** Dejar el sistema **literal y estructuralmente equivalente** a los formularios que REPRO usa hoy con sus candidatos, para evitar reclamos en la entrega final.  
-**Estado:** 🔴 **PENDIENTE DE IMPLEMENTACIÓN** — usar este documento como checklist único hasta cerrar.
+**Estado:** 🟡 **Parcialmente implementado** — P0 cerrado (31-jul-2026); app alineada a **PDF ago-2025**. Spec jun-2026 (etapas A–G) pendiente de decisión del cliente.
 
 ---
 
@@ -29,7 +29,7 @@
 - [ ] **Test por bloque:** cada archivo Support con preguntas tiene test que compara **cada `label`** contra constantes extraídas del plan (como `CuestionarioPeriodicaTest::test_preguntas_periodicas_coinciden_con_pdf`).
 - [ ] **Migración de datos:** al cambiar `key` de campos, mapear respuestas existentes en BD (migración o alias en lectura); no perder datos de evaluados ya capturados.
 - [ ] **Campos internos vs informe:** respetar `CamposInternosPreempleo` — integridad, judicial, salud/hábitos = internos; complementaria = va al informe.
-- [ ] **Sin campos fantasma:** eliminar todo lo que no exista en formulario real (referencias personales en pre-empleo sección 5, antecedentes sí/no legacy, etc.).
+- [x] **Sin campos fantasma:** eliminar todo lo que no exista en formulario real (referencias personales en pre-empleo sección 5, antecedentes sí/no legacy, etc.) — admin PDF unificado 31-jul-2026.
 - [ ] **Commit por sub-etapa** (A→H abajo); suite completa verde antes de marcar `[x]`.
 - [ ] **QA manual** con tokens demo re-ejecutar al cerrar (checklist en §8).
 - [ ] **Actualizar** `PROGRESS.md`, este plan y `CONTEXTO_AGENTES.md` al cerrar cada sub-etapa.
@@ -126,13 +126,13 @@
 
 **Reglas spec:** todos texto libre obligatorio; **sin** sí/no condicional previo.
 
-**Periódica / específica sección 5:** solo judicial (sin complementaria) — ya usa `antecedentes-recientes.blade.php`; debe heredar las mismas preguntas.
+**Periódica / específica sección 5:** solo judicial (sin complementaria) — usa `antecedentes-recientes.blade.php` + `AntecedentesRecientesRequest` ✅ (31-jul-2026).
 
 **Checklist B:**
 - [ ] B.1 Reemplazar `AntecedentesJudiciales::PREGUNTAS` (16–22)
 - [ ] B.2 Migración keys `judicial_01`… si cambian
 - [ ] B.3 Test literales judicial
-- [ ] B.4 Periódica/específica: mismas preguntas, sin complementaria
+- [x] B.4 Periódica/específica: mismas preguntas, sin complementaria — 31-jul-2026
 - [ ] B.5 Admin + Word narrativas actualizados
 
 ---
@@ -185,7 +185,7 @@
 - [ ] D.7 `observaciones_adicionales` (si duplica otros campos)
 - [ ] D.8 Scripts JS legacy en `antecedentes.blade.php` (toggle antecedentes/despido/salud mental)
 - [ ] D.9 Reorganizar vista: **Salud → Hábitos → Drogas → Judicial → Complementaria → Información importante**
-- [ ] D.10 Auditar vistas huérfanas `seccion_5.blade.php` / `seccion_3.blade.php` — eliminar o marcar deprecated si no se usan
+- [x] D.10 Auditar vistas huérfanas `seccion_5.blade.php` / `seccion_3.blade.php` — eliminadas 01-ago-2026
 
 ---
 
@@ -328,7 +328,7 @@ Preguntas del real (verificar labels en `situacion-economica.blade.php` / `Situa
 
 - [ ] H.1.1 26 preguntas laborales — **ya alineadas** (`HistorialLaboralPeriodico.php`)
 - [ ] H.1.2 Tabla empleo actual 4 columnas — **OK**
-- [ ] H.1.3 Sección 5: solo judicial (sin salud/complementaria) — verificar `antecedentes-recientes` no mezcla salud
+- [x] H.1.3 Sección 5: solo judicial (sin salud/complementaria) — cableado 31-jul-2026
 - [ ] H.1.4 Documentos: solo DPI — **OK**
 - [ ] H.1.5 Mensajes finales sin papelería pendiente — `MensajesInformacionImportante.php`
 
@@ -345,8 +345,8 @@ Preguntas del real (verificar labels en `situacion-economica.blade.php` / `Situa
 
 - [ ] I.1 `MensajesInformacionImportante.php` — viñetas oficiales del PDF spec (Confidencialidad, Proceso, Papelería pendiente solo pre-empleo, Contacto, Resultados)
 - [ ] I.2 `documentos-candidato.blade.php` — mensaje amarillo pre-empleo literal del spec
-- [ ] I.3 Autorizaciones legales G5 — **ya cerrado**; no reabrir salvo plantillas definitivas cliente
-- [ ] I.4 Títulos de sección en `Cuestionario::getSeccionesConfig()` — evaluar si cliente prefiere nombres del real vs actuales (cosmético; baja prioridad)
+- [x] I.3 Autorizaciones legales G5 — consentimiento adicional polígrafo/VSA en términos y PDF (01-ago-2026)
+- [x] I.4 Títulos §5 periódica/específica — «Antecedentes recientes» / «Antecedentes relevantes» (01-ago-2026)
 
 ---
 

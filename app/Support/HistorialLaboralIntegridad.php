@@ -5,7 +5,9 @@ namespace App\Support;
 /**
  * E2.10 — Preguntas complementarias laborales (internas).
  *
- * Textos alineados a POLIGRAFO PRESENCIAL (ago-2025) + CREACIÓN FORMULARIOS DE SISTEMA.pdf.
+ * Orden y redacción literales de POLIGRAFO PRESENCIAL (2).pdf (ago-2025).
+ * Las claves integridad_01…19 siguen el orden del PDF (1→19); respuestas
+ * guardadas con el orden anterior pueden quedar desalineadas semánticamente.
  */
 class HistorialLaboralIntegridad
 {
@@ -19,25 +21,25 @@ class HistorialLaboralIntegridad
 
     /** @var list<array{key: string, label: string}> */
     public const PREGUNTAS = [
-        ['key' => 'integridad_01', 'label' => '¿Ha trabajado en alguna corporación policial o militar? ¿Cuál?'],
-        ['key' => 'integridad_02', 'label' => '¿Cuál fue la cantidad máxima de efectivo que manejó en sus empleos?'],
-        ['key' => 'integridad_03', 'label' => '¿Cuál fue la cantidad máxima de producto, inventario o mercadería que tuvo bajo su responsabilidad en sus empleos?'],
-        ['key' => 'integridad_04', 'label' => '¿Cuál fue el faltante más grande que tuvo y cómo lo resolvió?'],
-        ['key' => 'integridad_05', 'label' => '¿Cuál fue el sobrante más grande que tuvo y cómo lo resolvió?'],
-        ['key' => 'integridad_06', 'label' => '¿Cuál fue el problema más serio que tuvo en sus empleos y cómo lo resolvió?'],
-        ['key' => 'integridad_07', 'label' => '¿Cuántas veces alteró documentos, registros o facturas en sus empleos para no meterse en problemas? Explique'],
-        ['key' => 'integridad_08', 'label' => 'Cuando solicitemos referencias laborales, ¿considera que algún empleador o compañero podría brindar una referencia negativa sobre usted? ¿Por qué motivo?'],
-        ['key' => 'integridad_09', 'label' => '¿Cuál ha sido la cantidad máxima de efectivo, producto, material promocional o recurso de la empresa que conservó para uso personal?'],
-        ['key' => 'integridad_10', 'label' => '¿Cuál fue el soborno, beneficio o favor más grande que aceptó en sus empleos?'],
-        ['key' => 'integridad_11', 'label' => '¿En qué empleo fue acusado de deshonestidad y cuál fue la situación?'],
-        ['key' => 'integridad_12', 'label' => '¿Ha tomado alguna vez dinero, producto o recursos de una empresa sin autorización?'],
-        ['key' => 'integridad_13', 'label' => 'Si tuviera que reponer dinero, producto o recursos tomados sin autorización, ¿a cuánto ascendería aproximadamente el monto?'],
-        ['key' => 'integridad_14', 'label' => '¿Cuántas actas administrativas, llamados de atención o sanciones recibió en sus empleos y cuál fue el motivo?'],
-        ['key' => 'integridad_15', 'label' => '¿Algún compañero le enseñó o sugirió cómo obtener beneficios no autorizados o sustraer producto o efectivo en sus empleos? Explique.'],
-        ['key' => 'integridad_16', 'label' => '¿Cuántas veces omitió reportar una conducta incorrecta de un compañero por pena, amistad o para evitar problemas? Explique.'],
-        ['key' => 'integridad_17', 'label' => '¿Ha abandonado algún empleo sin previo aviso? ¿Cuál fue?'],
-        ['key' => 'integridad_18', 'label' => '¿Alguna vez utilizó, prestó o tomó dinero de una empresa sin autorización con la intención de devolverlo posteriormente?'],
-        ['key' => 'integridad_19', 'label' => '¿Existe algún empleo que no haya registrado en este formulario? ¿Cuál?'],
+        ['key' => 'integridad_01', 'label' => '¿Cuál fue el problema más serio que tuvo en sus empleos? ¿Cómo lo resolvió?'],
+        ['key' => 'integridad_02', 'label' => '¿Ha trabajado en alguna corporación policial o militar? ¿Cuál?'],
+        ['key' => 'integridad_03', 'label' => '¿En el último año, cuantas veces estuvo ausente en su empleo?'],
+        ['key' => 'integridad_04', 'label' => '¿Manejó efectivo en sus empleos? ¿Cuánto fue el monto máximo?'],
+        ['key' => 'integridad_05', 'label' => '¿Cuál fue el faltante más grande que tuvo? ¿Cómo lo resolvió?'],
+        ['key' => 'integridad_06', 'label' => '¿Cuál fue el sobrante más grande que tuvo en sus empleos?'],
+        ['key' => 'integridad_07', 'label' => '¿Cuántas veces alteró documentos o facturas en sus empleos?'],
+        ['key' => 'integridad_08', 'label' => '¿Cuándo llamemos a pedir referencias en sus empleos ¿cree que alguien vaya a recomendarlo mal?'],
+        ['key' => 'integridad_09', 'label' => '¿Cuál ha sido la cantidad máxima que se ha quedado de producto sobrante o promocional de sus empleos?'],
+        ['key' => 'integridad_10', 'label' => '¿Cuál fue el soborno más grande que aceptó en sus empleos?'],
+        ['key' => 'integridad_11', 'label' => '¿En qué empleo le acusaron de deshonestidad?'],
+        ['key' => 'integridad_12', 'label' => '¿Con justificación tomó sin autorización dinero, producto en sus empleos?'],
+        ['key' => 'integridad_13', 'label' => '¿Cuánto tendría que pagar por lo que ha tomado en sus empleos?'],
+        ['key' => 'integridad_14', 'label' => '¿Cuántas actas administrativas le fueron impuestas en sus empleos? y ¿Cuál fue el motivo?'],
+        ['key' => 'integridad_15', 'label' => '¿Algún compañero le enseñó a como robar en sus empleos?'],
+        ['key' => 'integridad_16', 'label' => '¿Cuántas veces no reportó a algún compañero por pena o por no meterse en problemas?'],
+        ['key' => 'integridad_17', 'label' => '¿Alguna vez abandonó algún empleo sin previo aviso? ¿cuál fue?'],
+        ['key' => 'integridad_18', 'label' => '¿Tuvo necesidad alguna vez de prestar dinero sin autorización o sin permiso en sus empleos?'],
+        ['key' => 'integridad_19', 'label' => '¿Qué empleo está omitiendo porque pudiera afectar su proceso de contratación actual?'],
     ];
 
     /** @return list<string> */

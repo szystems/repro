@@ -308,218 +308,22 @@
         </table>
     </div>
 
-    {{-- Obtener configuración de secciones según tipo de formulario --}}
+    {{-- Contenido de las Secciones --}}
     @php
         $seccionesConfig = $cuestionario->getSeccionesConfig();
-        
-        // Mapeo de campos a etiquetas legibles
-        $etiquetasCampos = [
-            // Datos personales / Actualización de datos
-            'nombres_completos' => 'Nombres completos',
-            'nombre' => 'Nombre',
-            'apellidos' => 'Apellidos',
-            'apellidos_completos' => 'Apellidos completos',
-            'dpi' => 'Número de identificación',
-            'tipo_identificacion' => 'Tipo de identificación',
-            'fecha_nacimiento' => 'Fecha de nacimiento',
-            'edad' => 'Edad',
-            'departamento_nacimiento' => 'Departamento de nacimiento',
-            'municipio_nacimiento' => 'Municipio de nacimiento',
-            'nacionalidad' => 'Nacionalidad',
-            'estado_civil' => 'Estado civil',
-            'email' => 'Correo electrónico',
-            'email_personal' => 'Correo electrónico',
-            'telefono' => 'Teléfono',
-            'telefono_personal' => 'Teléfono personal',
-            'telefono_alternativo' => 'Teléfono de emergencia',
-            'direccion' => 'Dirección',
-            'direccion_residencia' => 'Dirección de residencia',
-            'departamento' => 'Departamento de residencia',
-            'municipio' => 'Municipio de residencia',
-            'igss' => 'IGSS',
-            'nit' => 'NIT',
-            'licencia_conducir' => 'Licencia de conducir',
-            
-            // Información familiar / Cambios familiares
-            'convive_con' => '¿Con quién vive?',
-            'padre_nombre' => 'Nombre del padre',
-            'padre_vive' => '¿Padre vive?',
-            'padre_edad' => 'Edad del padre',
-            'padre_direccion' => 'Dirección del padre',
-            'padre_ocupacion' => 'Ocupación del padre',
-            'padre_lugar_trabajo' => 'Lugar de trabajo del padre',
-            'padre_telefono' => 'Teléfono del padre',
-            'madre_nombre' => 'Nombre de la madre',
-            'madre_vive' => '¿Madre vive?',
-            'madre_edad' => 'Edad de la madre',
-            'madre_direccion' => 'Dirección de la madre',
-            'madre_ocupacion' => 'Ocupación de la madre',
-            'madre_lugar_trabajo' => 'Lugar de trabajo de la madre',
-            'madre_telefono' => 'Teléfono de la madre',
-            'estado_civil_detalle' => 'Estado civil actual',
-            'vive_con_pareja' => '¿Tiene pareja actual?',
-            'pareja_tipo_relacion' => 'Tipo de relación (pareja)',
-            'pareja_nombre' => 'Nombre de la pareja',
-            'pareja_edad' => 'Edad de la pareja',
-            'pareja_telefono' => 'Teléfono de la pareja',
-            'pareja_direccion' => 'Dirección de la pareja',
-            'pareja_ocupacion' => 'Ocupación de la pareja',
-            'pareja_lugar_trabajo' => 'Lugar de trabajo de la pareja',
-            'pareja_tiempo_relacion' => 'Tiempo de relación',
-            'pareja_calidad_relacion' => 'Calidad de la relación',
-            'pareja_trabaja' => '¿Su pareja trabaja?',
-            'tiene_hijos' => '¿Tiene hijos?',
-            'numero_hijos' => 'Número de hijos',
-            'hijos_dependientes' => 'Hijos dependientes',
-            'hijos_menores' => 'Hijos menores de edad',
-            'dependientes_economicos' => 'Dependientes económicos',
-            'personas_hogar' => 'Personas en el hogar',
-            'personas_contribuyen_gastos' => 'Personas que contribuyen a gastos',
-            'tipo_vivienda' => 'Tipo de vivienda',
-            'monto_alquiler' => 'Monto de alquiler',
-            'monto_hipoteca' => 'Monto de hipoteca',
-            'anos_restantes_hipoteca' => 'Años restantes de hipoteca',
-            'observaciones_familiares' => 'Observaciones familiares',
-            
-            // Situación laboral
-            'situacion_laboral_actual' => 'Situación laboral actual',
-            'empresa_actual' => 'Empresa actual',
-            'puesto_actual' => 'Puesto actual',
-            'fecha_inicio_actual' => 'Fecha de inicio',
-            'salario_actual' => 'Salario actual',
-            'jefe_inmediato' => 'Jefe inmediato',
-            'motivo_busqueda' => 'Motivo de búsqueda de empleo',
-            'anos_experiencia_laboral' => 'Años de experiencia laboral',
-            'empleos_anteriores' => 'Empleos anteriores',
-            'ingresos_mensuales' => 'Ingresos mensuales',
-            'tipo_negocio' => 'Tipo de negocio',
-            
-            // Situación económica
-            'ingresos_principales' => 'Ingresos principales',
-            'ingresos_adicionales' => 'Ingresos adicionales',
-            'ingresos_familiares' => 'Ingresos familiares',
-            'total_ingresos' => 'Total de ingresos',
-            'gastos_vivienda' => 'Gastos de vivienda',
-            'gastos_alimentacion' => 'Gastos de alimentación',
-            'gastos_transporte' => 'Gastos de transporte',
-            'gastos_educacion' => 'Gastos de educación',
-            'gastos_salud' => 'Gastos de salud',
-            'gastos_otros' => 'Otros gastos',
-            'total_gastos' => 'Total de gastos',
-            'balance_mensual' => 'Balance mensual',
-            'tiene_ahorros' => '¿Tiene ahorros?',
-            'tiene_deudas' => '¿Tiene deudas?',
-            'detalle_deudas' => 'Detalle de deudas',
-            'observaciones_economicas' => 'Observaciones económicas',
-            
-            // Antecedentes y referencias
-            'antecedentes_penales' => 'Antecedentes penales',
-            'despedido_trabajo' => '¿Ha sido despedido?',
-            'motivo_despido' => 'Motivo del despido',
-            'detalle_antecedentes' => 'Detalle de antecedentes',
-            'problemas_salud_mental' => 'Problemas de salud mental',
-            'detalle_salud_mental' => 'Detalle salud mental',
-            'consume_alcohol' => 'Consumo de alcohol',
-            'consume_drogas' => 'Consumo de drogas',
-            'referencia1_nombre' => 'Referencia 1 - Nombre',
-            'referencia1_relacion' => 'Referencia 1 - Relación',
-            'referencia1_telefono' => 'Referencia 1 - Teléfono',
-            'referencia2_nombre' => 'Referencia 2 - Nombre',
-            'referencia2_relacion' => 'Referencia 2 - Relación',
-            'referencia2_telefono' => 'Referencia 2 - Teléfono',
-            'referencia3_nombre' => 'Referencia 3 - Nombre',
-            'referencia3_relacion' => 'Referencia 3 - Relación',
-            'referencia3_telefono' => 'Referencia 3 - Teléfono',
-            'observaciones_adicionales' => 'Observaciones adicionales',
-        ];
     @endphp
 
-    {{-- Contenido de las Secciones --}}
     @foreach($seccionesConfig as $numeroSeccion => $nombreSeccion)
         <div class="seccion">
             <div class="seccion-titulo">
                 Sección {{ $numeroSeccion }}: {{ $nombreSeccion }}
             </div>
 
-            @php
-                $respuestasSeccion = \App\Support\CamposInternosPreempleo::excluirCamposSistema(
-                    $cuestionario->obtenerRespuestasSeccion($numeroSeccion)
-                );
-                $tablasSeccion = $cuestionario->getTablasPorNumeroSeccion($numeroSeccion);
-            @endphp
-
-            @if(count($respuestasSeccion) > 0 || count($tablasSeccion) > 0)
-                @if(count($respuestasSeccion) > 0)
-                <table class="datos-table">
-                    @foreach($respuestasSeccion as $campo => $valor)
-                        @php
-                            $etiqueta = $etiquetasCampos[$campo] ?? ucfirst(str_replace('_', ' ', $campo));
-                            
-                            // Formatear valor
-                            $valorFormateado = $valor;
-                            if (empty($valor)) {
-                                $valorFormateado = null;
-                            } elseif (in_array(strtolower($valor), ['si', 'sí', '1', 'true'])) {
-                                $valorFormateado = 'Sí';
-                            } elseif (in_array(strtolower($valor), ['no', '0', 'false'])) {
-                                $valorFormateado = 'No';
-                            } elseif ((str_contains($campo, 'ingreso') || str_contains($campo, 'gasto') || 
-                                str_contains($campo, 'salario') || str_contains($campo, 'monto') ||
-                                str_contains($campo, 'balance') || str_contains($campo, 'total')) && is_numeric($valor)) {
-                                $valorFormateado = 'Q' . number_format((float)$valor, 2);
-                            } else {
-                                $valorFormateado = ucfirst(str_replace('_', ' ', $valor));
-                            }
-                        @endphp
-                        <tr>
-                            <th>{{ $etiqueta }}:</th>
-                            <td class="{{ empty($valorFormateado) ? 'vacio' : '' }}">
-                                {!! $valorFormateado ? nl2br(e($valorFormateado)) : 'No proporcionado' !!}
-                            </td>
-                        </tr>
-                    @endforeach
-                </table>
-                @endif
-
-                @if(!empty($tablasSeccion['hijos']))
-                    <p style="font-weight: bold; margin: 16px 0 8px;">Detalle de hijos</p>
-                    @include('admin.cuestionarios.partials.tabla-dinamica-resumen', [
-                        'filas' => $tablasSeccion['hijos'],
-                        'columnas' => \App\Support\TablaDinamica::columnasHijos(),
-                        'tableClass' => 'datos-table',
-                    ])
-                @endif
-
-                @php
-                    $tablasPdf = [
-                        'hermanos' => [\App\Support\TablaDinamica::class, 'columnasHermanos', 'Hermanos'],
-                        'formacion_academica' => [\App\Support\TablaDinamica::class, 'columnasFormacionAcademica', 'Formación académica'],
-                        'empleos' => [\App\Support\TablaDinamica::class, 'columnasEmpleos', 'Historial de empleos'],
-                        'empleo_actual' => [\App\Support\TablaDinamica::class, 'columnasEmpleoActualPeriodico', 'Empleo actual'],
-                        'deudas' => [\App\Support\TablaDinamica::class, 'columnasDeudas', 'Deudas'],
-                        'tatuajes' => [\App\Support\TablaDinamica::class, 'columnasTatuajes', 'Tatuajes'],
-                        'perforaciones' => [\App\Support\TablaDinamica::class, 'columnasPerforaciones', 'Perforaciones'],
-                    ];
-                @endphp
-                @foreach($tablasPdf as $campoTabla => [$clase, $metodo, $titulo])
-                    @if(!empty($tablasSeccion[$campoTabla]))
-                        <p style="font-weight: bold; margin: 16px 0 8px;">{{ $titulo }}</p>
-                        @include('admin.cuestionarios.partials.tabla-dinamica-resumen', [
-                            'filas' => $tablasSeccion[$campoTabla],
-                            'columnas' => $clase::$metodo(),
-                            'tableClass' => 'datos-table',
-                        ])
-                    @endif
-                @endforeach
-            @else
-                <table class="datos-table">
-                    <tr>
-                        <td class="vacio" style="text-align: center;" colspan="2">
-                            Esta sección no tiene respuestas registradas.
-                        </td>
-                    </tr>
-                </table>
-            @endif
+            @include('shared.cuestionario.pdf-seccion-contenido-admin', [
+                'cuestionario' => $cuestionario,
+                'numeroSeccion' => $numeroSeccion,
+                'soloEmpresa' => false,
+            ])
         </div>
     @endforeach
 

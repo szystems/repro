@@ -82,7 +82,7 @@ class CuestionarioEvaluadorNotasTest extends TestCase
             ->get(route('admin.cuestionarios.show', $this->cuestionario->id))
             ->assertOk()
             ->assertSee('Notas internas del evaluador')
-            ->assertSee('Datos Personales');
+            ->assertSee('Información Personal');
 
         $this->actingAs($repro)
             ->get(route('admin.cuestionarios.edit', $this->cuestionario->id))

@@ -30,35 +30,26 @@ class SituacionEconomicaRequest extends FormRequest
 
     public function rules(): array
     {
-        return array_merge([
-            'ingresos_principales' => 'required|numeric|min:0|max:999999.99',
-            'ingresos_adicionales' => 'nullable|numeric|min:0|max:999999.99',
-            'ingresos_familiares' => 'nullable|numeric|min:0|max:999999.99',
-            'total_ingresos' => 'nullable|numeric|min:0',
-            'gastos_vivienda' => 'required|numeric|min:0|max:99999.99',
-            'gastos_alimentacion' => 'required|numeric|min:0|max:99999.99',
-            'gastos_transporte' => 'required|numeric|min:0|max:99999.99',
-            'gastos_educacion' => 'nullable|numeric|min:0|max:99999.99',
-            'gastos_salud' => 'nullable|numeric|min:0|max:99999.99',
-            'gastos_otros' => 'nullable|numeric|min:0|max:99999.99',
-            'total_gastos' => 'nullable|numeric|min:0',
-            'balance_mensual' => 'nullable|numeric',
-            'tiene_deudas' => 'required|in:si,no',
-            'detalle_deudas' => 'nullable|string|max:2000',
-            'tiene_ahorros' => 'required|in:si,no',
-            'observaciones_economicas' => 'nullable|string|max:2000',
-        ], TablaDinamica::reglasValidacion(4, $this->resolverTipoFormularioCuestionario()), SituacionEconomicaCampos::reglasValidacion());
+        $reglas = SituacionEconomicaCampos::reglasValidacion();
+
+        if ($this->resolverTipoFormularioCuestionario() === 'socioeconomico') {
+            $reglas['econ_patrimonio_aprox'] = 'required|string|max:500';
+        }
+
+        return array_merge(
+            $reglas,
+            TablaDinamica::reglasValidacion(4, $this->resolverTipoFormularioCuestionario())
+        );
     }
 
     public function messages(): array
     {
-        return array_merge([
-            'ingresos_principales.required' => 'Los ingresos mensuales principales son obligatorios.',
-            'gastos_vivienda.required' => 'El gasto en vivienda es obligatorio.',
-            'gastos_alimentacion.required' => 'El gasto en alimentación es obligatorio.',
-            'gastos_transporte.required' => 'El gasto en transporte es obligatorio.',
-            'tiene_deudas.required' => 'Debe indicar si tiene deudas.',
-            'tiene_ahorros.required' => 'Debe indicar si tiene ahorros.',
-        ], TablaDinamica::mensajesValidacion(), SituacionEconomicaCampos::mensajesValidacion());
+        return array_merge(
+            TablaDinamica::mensajesValidacion(),
+            SituacionEconomicaCampos::mensajesValidacion(),
+            [
+                'econ_patrimonio_aprox.required' => 'Indique el monto aproximado de su patrimonio.',
+            ]
+        );
     }
 }
