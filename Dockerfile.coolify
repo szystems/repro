@@ -1,0 +1,36 @@
+FROM php:8.3-fpm-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        nginx \
+        git unzip curl \
+        libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
+        libzip-dev libonig-dev libxml2-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && printf "upload_max_filesize=20M\npost_max_size=20M\n" > /usr/local/etc/php/conf.d/uploads.ini \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+
+COPY . .
+
+RUN mkdir -p \
+        bootstrap/cache \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/views \
+        storage/logs \
+    && composer install --no-dev --ignore-platform-reqs --no-interaction --prefer-dist --optimize-autoloader --no-scripts \
+    && chown -R www-data:www-data /var/www/bootstrap/cache /var/www/storage
+
+COPY docker/coolify/nginx.conf /etc/nginx/sites-available/default
+RUN rm -f /etc/nginx/sites-enabled/default \
+    && ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+
+COPY docker/coolify/start.sh /usr/local/bin/start-repro
+RUN chmod +x /usr/local/bin/start-repro
+
+EXPOSE 80
+CMD ["/usr/local/bin/start-repro"]

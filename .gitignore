@@ -38,4 +38,5 @@ scripts/
 # Permitir carpetas necesarias
 !storage/framework/.gitignore
 !database/.gitignore
+!docker/coolify/*.sh
 *.Zone.Identifier
