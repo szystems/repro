@@ -49,28 +49,31 @@
                 <!-- Módulo de Órdenes -->
                 <li class="menu-category">Órdenes</li>
                 <li class="{{ Request::is('ordenes') && !Request::is('ordenes/create') ? 'active-page-link':''  }}">
-                    <a href="{{ route('empresa.ordenes.index') }}">
+                    <a href="{{ route('ordenes.index') }}">
                         <i class="bi bi-file-earmark-text"></i>
                         <span class="menu-text">Mis Órdenes</span>
                     </a>
                 </li>
+                @if(Auth::user()->hasPermission('ordenes.crear'))
                 <li class="{{ Request::is('ordenes/create') ? 'active-page-link':''  }}">
                     <a href="{{ route('ordenes.create') }}">
                         <i class="bi bi-file-plus-fill"></i>
                         <span class="menu-text">Nueva Orden</span>
                     </a>
                 </li>
+                @endif
 
                 <!-- Cuestionarios (solo lectura) -->
                 <li class="menu-category">Cuestionarios</li>
-                <li class="{{ Request::is('empresa/cuestionarios*') ? 'active-page-link':''  }}">
-                    <a href="{{ url('empresa/cuestionarios') }}">
+                <li class="{{ Request::is('cuestionarios*') || Request::is('empresa/cuestionarios*') ? 'active-page-link':''  }}">
+                    <a href="{{ route('admin.cuestionarios.index') }}">
                         <i class="bi bi-clipboard-check"></i>
                         <span class="menu-text">Estado de Procesos</span>
                     </a>
                 </li>
 
                 <!-- Módulo de Reportes -->
+                @if(Auth::user()->hasPermission('reportes.ver'))
                 <li class="menu-category">Reportes</li>
                 <li class="{{ Request::is('reportes/evaluaciones') ? 'active-page-link':''  }}">
                     <a href="{{ url('reportes/evaluaciones') }}">
@@ -78,6 +81,7 @@
                         <span class="menu-text">Mis Reportes</span>
                     </a>
                 </li>
+                @endif
 
                 <!-- Mi Empresa -->
                 <li class="menu-category">Mi Empresa</li>
@@ -104,6 +108,15 @@
                     <a href="{{ route('empresa.sedes-repro') }}">
                         <i class="bi bi-geo-alt-fill"></i>
                         <span class="menu-text">Sedes REPRO</span>
+                    </a>
+                </li>
+
+                <!-- Centro de Ayuda -->
+                <li class="menu-category">Ayuda</li>
+                <li class="{{ Request::is('ayuda*') ? 'active-page-link' : '' }}">
+                    <a href="{{ route('ayuda.index') }}">
+                        <i class="bi bi-book"></i>
+                        <span class="menu-text">Centro de Ayuda</span>
                     </a>
                 </li>
 
@@ -225,6 +238,10 @@
     }
     .sidebar-wrapper.collapsed + .content-wrapper {
         margin-left: 70px;
+    }
+    .sidebar-wrapper .sidebar-menu,
+    .sidebar-wrapper .sidebarMenuScroll {
+        padding-bottom: 72px;
     }
     .sidebar-wrapper .sidebar-footer {
         padding: 10px 15px;

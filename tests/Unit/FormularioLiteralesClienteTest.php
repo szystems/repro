@@ -125,6 +125,8 @@ class FormularioLiteralesClienteTest extends TestCase
         $this->assertArrayHasKey('lsc', SaludHabitosCampos::SUSTANCIAS);
         $this->assertStringContainsString('acercamientocon', SaludHabitosCampos::INTRO_SUSTANCIAS);
         $this->assertSame('¿Cual es el problema personal mas serio que tiene actualmente?', SaludHabitosCampos::LABEL_PREOCUPACIONES);
+        $this->assertSame('¿Padece alergias?', SaludHabitosCampos::LABEL_ALERGIAS);
+        $this->assertSame('¿Está embarazada?', SaludHabitosCampos::LABEL_EMBARAZADA);
         $this->assertSame('buena', SaludHabitosCampos::normalizarEstadoGeneral('bueno'));
     }
 

@@ -1,0 +1,16 @@
+---
+description: Migración REPRO a Hetzner/Coolify/reprogt.com — no cortar iPage; huecos C3–C9
+alwaysApply: true
+---
+
+# Migración (autorizada 31-ago-2026)
+
+Plan canónico: `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`
+
+- Web: `reprogt.com` (hoy reproxela.com). App: `portal.reprogt.com`.
+- Prod sigue en `https://reproappv2.szystems.com` hasta M6.
+- No `migrate:fresh`. Copiar el mismo `APP_KEY` del `.env` iPage.
+- **M5 = copia exacta.** Antes de dump/import: avisar a Otto. Él avisa a Stephany (no crear órdenes/registros) **o** se pone iPage en mantenimiento / se desconecta para que no escriban. No empezar el dump hasta que Otto confirme el freeze.
+- No resetear passwords de Stephany. No regenerar Word NEVERIA/CORALSA/PERCO.
+- Coolify **sí** está: v4.1.2 en `http://5.78.235.235:8000/` (CPX31 `5.78.235.235`). Proyecto **REPRO** vacío. No tocar Asonata/ControClinic/Portal Szystems/Clínicas del Valle.
+- Siguiente: pushear código actual a GitHub (master ≠ FTP prod). No `portal` DNS aún. Datos = M5.

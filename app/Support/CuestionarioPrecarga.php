@@ -40,9 +40,6 @@ class CuestionarioPrecarga
         $telefono = trim((string) ($evaluado->telefono ?? ''));
 
         $agencia = trim((string) ($evaluado->sede_region_empresa ?? ''));
-        if ($agencia === '') {
-            $agencia = trim((string) ($evaluado->sede?->nombre ?? $orden?->sede?->nombre ?? ''));
-        }
 
         return [
             'nombres_completos' => trim((string) ($evaluado->nombre ?? '')),

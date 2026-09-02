@@ -29,7 +29,6 @@
 
                 <div class="border rounded p-3 mb-4" style="max-height: 400px; overflow-y: auto; background: #fafafa;">
                     {!! $contenidoInfornet !!}
-                    <p class="mt-3 mb-0"><strong>Fecha:</strong> {{ now()->format('d/m/Y') }}</p>
                 </div>
 
                 @if($cuestionario->firma_digital)

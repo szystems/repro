@@ -16,6 +16,18 @@ class Role extends Model
         'level',
     ];
 
+    /** Roles internos creados al guardar permisos de un usuario REPRO (`user_{id}`). */
+    public function esPersonal(): bool
+    {
+        return str_starts_with((string) $this->name, 'user_');
+    }
+
+    /** Roles que se muestran en Gestión de Roles / selector de usuario. */
+    public function scopeSinPersonales($query)
+    {
+        return $query->where('name', 'not like', 'user_%');
+    }
+
     /**
      * Relación con permisos
      */

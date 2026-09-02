@@ -55,9 +55,12 @@
 
                         <div class="contact-info mt-4 pt-3 border-top">
                             <p class="small text-muted mb-2"><strong>¿Necesita ayuda?</strong></p>
-                            <p class="small text-muted mb-0">
+                            <p class="small text-muted mb-2">
                                 Contacte a la empresa que lo evalúa o a REPRO para solicitar un enlace actualizado.
                             </p>
+                            <a href="{{ route('cuestionario.ayuda') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-book me-1"></i> Ver guía de ayuda
+                            </a>
                         </div>
                     </div>
 

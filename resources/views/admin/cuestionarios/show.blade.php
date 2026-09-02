@@ -26,7 +26,10 @@
                             <i class="bi bi-pencil"></i> Editar
                         </a>
                         <a href="{{ route('admin.cuestionarios.pdf', $cuestionario) }}" class="btn btn-success" target="_blank">
-                            <i class="bi bi-file-earmark-pdf"></i> Generar PDF
+                            <i class="bi bi-file-earmark-pdf"></i> PDF cuestionario
+                        </a>
+                        <a href="{{ route('admin.cuestionarios.pdf-autorizacion', $cuestionario) }}" class="btn btn-outline-success" target="_blank">
+                            <i class="bi bi-file-earmark-check"></i> PDF autorización
                         </a>
                     </div>
                 </div>
@@ -351,9 +354,12 @@
                                 </div>
                                 
                                 @include('admin.cuestionarios.partials.notas-evaluador')
+                                @include('admin.cuestionarios.partials.inicio-redaccion-word')
+                                @include('admin.cuestionarios.partials.resultado-word-detalle', ['soloLectura' => true])
+                                @include('admin.cuestionarios.partials.tablas-informe-preempleo', ['soloLectura' => true])
                                 @include('admin.cuestionarios.partials.narrativas-word-evaluador', ['soloLectura' => true])
-
-                @include('admin.cuestionarios.partials.tablas-informe-preempleo', ['soloLectura' => true])
+                                @include('admin.cuestionarios.partials.anexos-word-papeleria', ['soloLectura' => true])
+                                @include('admin.cuestionarios.partials.preguntas-poligraficas-word', ['soloLectura' => true])
                                 
                                 <div class="d-flex justify-content-end">
                                     <button type="submit" class="btn btn-primary">

@@ -7,10 +7,17 @@ use PHPUnit\Framework\TestCase;
 
 class HistorialAcademicoTest extends TestCase
 {
-    public function test_niveles_visibles_hasta_universitario(): void
+    public function test_niveles_visibles_ultimos_segun_tabla_cliente(): void
     {
+        $this->assertSame(['primaria'], HistorialAcademico::nivelesVisibles('primaria'));
+        $this->assertSame(['basico'], HistorialAcademico::nivelesVisibles('basico'));
+        $this->assertSame(['diversificado'], HistorialAcademico::nivelesVisibles('diversificado'));
+        $this->assertSame(['tecnico'], HistorialAcademico::nivelesVisibles('tecnico'));
+        $this->assertSame(['universitario'], HistorialAcademico::nivelesVisibles('universitario'));
+        $this->assertSame(['postgrado'], HistorialAcademico::nivelesVisibles('postgrado'));
+        $this->assertSame([], HistorialAcademico::nivelesVisibles('ninguno'));
         $this->assertSame(
-            ['primaria', 'basico', 'diversificado', 'tecnico', 'universitario'],
+            HistorialAcademico::mapaNivelesVisibles()['universitario'],
             HistorialAcademico::nivelesVisibles('universitario')
         );
     }
@@ -18,16 +25,15 @@ class HistorialAcademicoTest extends TestCase
     public function test_filas_para_formulario_genera_una_por_nivel_visible(): void
     {
         $filas = HistorialAcademico::filasParaFormulario('tecnico', [
-            ['nivel' => 'primaria', 'estado' => 'completo', 'institucion' => 'Escuela A', 'anio' => '2000', 'respaldo' => 'si'],
+            ['nivel' => 'diversificado', 'estado' => 'completo', 'institucion' => 'Instituto A', 'anio' => '2010', 'respaldo' => 'si'],
         ]);
 
-        $this->assertCount(4, $filas);
-        $this->assertSame('primaria', $filas[0]['nivel']);
-        $this->assertSame('Escuela A', $filas[0]['institucion']);
-        $this->assertSame('tecnico', $filas[3]['nivel']);
+        $this->assertCount(1, $filas);
+        $this->assertSame('tecnico', $filas[0]['nivel']);
+        $this->assertSame('', $filas[0]['institucion']);
     }
 
-    public function test_filas_para_almacenamiento_solo_guarda_completas(): void
+    public function test_filas_para_almacenamiento_solo_guarda_completas_visibles(): void
     {
         $guardadas = HistorialAcademico::filasParaAlmacenamiento('universitario', [
             [
@@ -35,6 +41,13 @@ class HistorialAcademicoTest extends TestCase
                 'estado' => 'completo',
                 'institucion' => 'Escuela A',
                 'anio' => '2000',
+                'respaldo' => 'si',
+            ],
+            [
+                'nivel' => 'diversificado',
+                'estado' => 'completo',
+                'institucion' => 'Instituto B',
+                'anio' => '2010',
                 'respaldo' => 'si',
             ],
             [
@@ -46,8 +59,8 @@ class HistorialAcademicoTest extends TestCase
             ],
         ]);
 
-        $this->assertCount(2, $guardadas);
-        $this->assertSame('primaria', $guardadas[0]['nivel']);
-        $this->assertSame('universitario', $guardadas[1]['nivel']);
+        $this->assertCount(1, $guardadas);
+        $this->assertSame('universitario', $guardadas[0]['nivel']);
+        $this->assertSame('Universidad B', $guardadas[0]['institucion']);
     }
 }

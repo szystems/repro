@@ -71,6 +71,8 @@ class Fase2DocumentacionTest extends TestCase
         $this->assertArrayHasKey('dpi_archivo', $tipos);
         $this->assertArrayHasKey('antecedentes_penales', $tipos);
         $this->assertArrayHasKey('cv', $tipos);
+        $this->assertArrayHasKey('foto_tatuaje', $tipos);
+        $this->assertSame('Tatuajes', $tipos['foto_tatuaje']);
     }
 
     public function test_modelo_documento_evaluado_tiene_estados(): void
@@ -508,6 +510,60 @@ class Fase2DocumentacionTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('warning');
+    }
+
+    public function test_admin_puede_habilitar_enlace_formulario_vencido(): void
+    {
+        $evaluadoVencido = EvaluadoOrden::factory()->expirado()->create([
+            'orden_id' => $this->orden->id,
+            'cuestionario_completado' => false,
+        ]);
+
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluadoVencido->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 2,
+            'total_secciones' => 5,
+            'progreso_porcentaje' => 20,
+            'completado' => false,
+            'bloqueado' => false,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->post(
+            route('evaluados.habilitar-enlace-formulario', $evaluadoVencido->id)
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $evaluadoVencido->refresh();
+        $cuestionario->refresh();
+
+        $this->assertEquals('pendiente_de_llenar', $evaluadoVencido->estado_formulario);
+        $this->assertTrue($evaluadoVencido->token_expira_at->isFuture());
+        $this->assertFalse($cuestionario->bloqueado);
+        $this->assertSame(20, (int) $cuestionario->progreso_porcentaje);
+    }
+
+    public function test_admin_puede_invalidar_enlace_formulario(): void
+    {
+        $evaluadoPendiente = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->orden->id,
+            'cuestionario_completado' => false,
+            'estado_formulario' => 'pendiente_de_llenar',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->post(
+            route('evaluados.invalidar-enlace-formulario', $evaluadoPendiente->id)
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $evaluadoPendiente->refresh();
+
+        $this->assertEquals('vencido', $evaluadoPendiente->estado_formulario);
+        $this->assertTrue($evaluadoPendiente->token_expira_at->lte(now()));
     }
 
     // ══════════════════════════════════════════

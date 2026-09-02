@@ -1,6 +1,7 @@
 @php
     $filas = $filas ?? [];
     $soloLectura = $soloLectura ?? false;
+    $claveTabla = $claveTabla ?? 'complementaria';
 @endphp
 
 @if($soloLectura)
@@ -29,14 +30,14 @@
                 <tr>
                     <td>
                         <input type="hidden"
-                               name="informe_tablas[complementaria][{{ $index }}][pregunta]"
-                               value="{{ old("informe_tablas.complementaria.{$index}.pregunta", $fila['pregunta'] ?? '') }}">
+                               name="informe_tablas[{{ $claveTabla }}][{{ $index }}][pregunta]"
+                               value="{{ old("informe_tablas.{$claveTabla}.{$index}.pregunta", $fila['pregunta'] ?? '') }}">
                         {{ $fila['pregunta'] ?? '' }}
                     </td>
                     <td>
                         <textarea class="form-control form-control-sm"
-                                  name="informe_tablas[complementaria][{{ $index }}][respuesta]"
-                                  rows="2">{{ old("informe_tablas.complementaria.{$index}.respuesta", $fila['respuesta'] ?? '') }}</textarea>
+                                  name="informe_tablas[{{ $claveTabla }}][{{ $index }}][respuesta]"
+                                  rows="2">{{ old("informe_tablas.{$claveTabla}.{$index}.respuesta", $fila['respuesta'] ?? '') }}</textarea>
                     </td>
                 </tr>
             @empty

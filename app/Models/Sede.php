@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 class Sede extends Model
 {
@@ -30,6 +31,14 @@ class Sede extends Model
             'capacidad' => 'integer',
             'estado'    => 'integer',
         ];
+    }
+
+    public const CACHE_WHATSAPP = 'sedes_whatsapp_activas';
+
+    protected static function booted(): void
+    {
+        static::saved(static fn () => Cache::forget(self::CACHE_WHATSAPP));
+        static::deleted(static fn () => Cache::forget(self::CACHE_WHATSAPP));
     }
 
     /** Evaluados asignados a esta sede. */

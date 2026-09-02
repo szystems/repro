@@ -44,6 +44,7 @@ class ResumenFamiliar
             'nombre' => $r[$prefijo.'_nombre'] ?? null,
             'vive' => $r[$prefijo.'_vive'] ?? null,
             'edad' => $r[$prefijo.'_edad'] ?? null,
+            'direccion' => $r[$prefijo.'_direccion'] ?? null,
             'ocupacion' => $r[$prefijo.'_ocupacion'] ?? null,
             'telefono' => $r[$prefijo.'_telefono'] ?? null,
         ];
@@ -52,7 +53,10 @@ class ResumenFamiliar
     /** @return array<string, mixed> */
     private static function resumenPareja(array $r): array
     {
-        if (($r['vive_con_pareja'] ?? '') !== 'si') {
+        $tienePareja = ($r['vive_con_pareja'] ?? '') === 'si'
+            || trim((string) ($r['pareja_nombre'] ?? '')) !== '';
+
+        if (! $tienePareja) {
             return ['tiene' => false];
         }
 
@@ -72,7 +76,10 @@ class ResumenFamiliar
     /** @return array<string, mixed> */
     private static function resumenExpareja(array $r): array
     {
-        if (($r['tuvo_matrimonio_union_hijos'] ?? '') !== 'si') {
+        $tieneDatos = ($r['tuvo_matrimonio_union_hijos'] ?? '') === 'si'
+            || trim((string) ($r['expareja_nombre'] ?? '')) !== '';
+
+        if (! $tieneDatos) {
             return ['aplica' => false];
         }
 

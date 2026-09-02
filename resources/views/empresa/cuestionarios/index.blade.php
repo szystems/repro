@@ -160,8 +160,9 @@
                                         <td class="text-center">
                                             <div class="btn-group btn-group-sm">
                                                 <a href="{{ route('empresa.cuestionarios.show', $cuestionario) }}"
-                                                   class="btn btn-outline-success" title="Ver detalle">
-                                                    <i class="bi bi-eye"></i>
+                                                   class="btn btn-outline-success"
+                                                   title="{{ $cuestionario->resultadosDisponiblesParaEmpresa() ? 'Ver informe de evaluación' : 'Ver detalle' }}">
+                                                    <i class="bi {{ $cuestionario->resultadosDisponiblesParaEmpresa() ? 'bi-file-earmark-text' : 'bi-eye' }}"></i>
                                                 </a>
                                                 @if(!$cuestionario->cuestionario_completado)
                                                     <a href="{{ route('cuestionario.mostrar', $cuestionario->token_unico) }}"
@@ -178,14 +179,23 @@
                                                     </button>
                                                 @endif
                                                 @if($cuestionario->cuestionario_completado && $cuestionario->resultadosDisponiblesParaEmpresa())
-                                                    <a href="{{ route('empresa.ordenes.show', $cuestionario->orden) }}"
-                                                       class="btn btn-outline-danger" title="Descargar PDF de la Orden" target="_blank">
+                                                    @if($cuestionario->archivo_resultado_final)
+                                                        <a href="{{ route('evaluados.descargar-resultado-archivo', [$cuestionario, 'final']) }}"
+                                                           class="btn btn-success" title="Descargar Informe Final" target="_blank">
+                                                            <i class="bi bi-file-earmark-arrow-down"></i>
+                                                        </a>
+                                                    @elseif($cuestionario->archivo_resultado_preliminar)
+                                                        <a href="{{ route('evaluados.descargar-resultado-archivo', [$cuestionario, 'preliminar']) }}"
+                                                           class="btn btn-outline-info" title="Descargar Informe Preliminar" target="_blank">
+                                                            <i class="bi bi-file-earmark-arrow-down"></i>
+                                                        </a>
+                                                    @endif
+                                                    @if(Auth::user()->hasPermission('ordenes.ver'))
+                                                    <a href="{{ route('ordenes.pdf', $cuestionario->orden) }}"
+                                                       class="btn btn-outline-danger" title="PDF orden de servicio" target="_blank">
                                                         <i class="bi bi-file-pdf"></i>
                                                     </a>
-                                                    <a href="{{ route('empresa.cuestionarios.pdf', $cuestionario) }}"
-                                                       class="btn btn-outline-primary" title="Descargar PDF del Cuestionario" target="_blank">
-                                                        <i class="bi bi-file-earmark-pdf"></i>
-                                                    </a>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </td>

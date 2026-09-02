@@ -50,11 +50,17 @@ class SituacionLaboralPeriodicaRequest extends FormRequest
         $tipo = $this->tipoFormulario();
         $esEspecifica = $tipo === 'especifica';
 
+        $reglas = [
+            'ultimo_nivel_academico' => HistorialAcademico::reglasValidacion()['ultimo_nivel_academico'],
+            'tiene_empleo_actual' => 'required|in:si,no',
+        ];
+
+        if ($tipo === 'periodica') {
+            $reglas['estudia_actualmente'] = HistorialAcademico::reglasEstudiaActualmente()['estudia_actualmente'];
+        }
+
         return array_merge(
-            [
-                'ultimo_nivel_academico' => HistorialAcademico::reglasValidacion()['ultimo_nivel_academico'],
-                'tiene_empleo_actual' => 'required|in:si,no',
-            ],
+            $reglas,
             TablaDinamica::reglasValidacion(3, $tipo),
             HistorialLaboralPeriodico::reglasValidacion($esEspecifica)
         );

@@ -71,7 +71,7 @@ class CuestionarioPreempleoPadresTest extends TestCase
         $response->assertSessionHasNoErrors();
     }
 
-    public function test_padre_vive_si_requiere_detalles(): void
+    public function test_padre_vive_si_permite_detalles_opcionales(): void
     {
         $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
         $this->post(route('cuestionario.guardar-seccion', [
@@ -90,7 +90,7 @@ class CuestionarioPreempleoPadresTest extends TestCase
             'numero' => 2,
         ]), $datos);
 
-        $response->assertSessionHasErrors(['padre_edad', 'padre_direccion']);
+        $response->assertSessionHasNoErrors();
     }
 
     public function test_guarda_datos_padres_y_convive_con(): void

@@ -12,6 +12,7 @@ use App\Models\Orden;
 use App\Models\EvaluadoOrden;
 use App\Models\Sede;
 use App\Models\Cuestionario;
+use App\Support\EmpresaVisibilidadReclutadoresSupport;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -71,7 +72,7 @@ class AdminController extends Controller
         $totalEmpresas = Empresa::where('estado', 1)->count();
         $totalUsuarios = User::where('estado', 1)->count();
         $totalOrdenes = Orden::activas()->count();
-        $totalEvaluados = EvaluadoOrden::count();
+        $totalEvaluados = EvaluadoOrden::deOrdenesActivas()->count();
 
         // Órdenes por estado
         $ordenesPorEstado = Orden::activas()->select('estado', DB::raw('count(*) as total'))
@@ -87,20 +88,20 @@ class AdminController extends Controller
             : ($ordenesEsteMes > 0 ? 100 : 0);
 
         // Evaluados del mes
-        $evaluadosEsteMes = EvaluadoOrden::where('created_at', '>=', $inicioMes)->count();
-        $evaluadosMesAnterior = EvaluadoOrden::whereBetween('created_at', [$inicioMesAnterior, $finMesAnterior])->count();
+        $evaluadosEsteMes = EvaluadoOrden::deOrdenesActivas()->where('created_at', '>=', $inicioMes)->count();
+        $evaluadosMesAnterior = EvaluadoOrden::deOrdenesActivas()->whereBetween('created_at', [$inicioMesAnterior, $finMesAnterior])->count();
         $variacionEvaluados = $evaluadosMesAnterior > 0 
             ? round((($evaluadosEsteMes - $evaluadosMesAnterior) / $evaluadosMesAnterior) * 100, 1) 
             : ($evaluadosEsteMes > 0 ? 100 : 0);
 
         // Cuestionarios completados
-        $cuestionariosCompletados = EvaluadoOrden::where('cuestionario_completado', true)->count();
-        $cuestionariosPendientes = EvaluadoOrden::where('cuestionario_completado', false)
+        $cuestionariosCompletados = EvaluadoOrden::deOrdenesActivas()->where('cuestionario_completado', true)->count();
+        $cuestionariosPendientes = EvaluadoOrden::deOrdenesActivas()->where('cuestionario_completado', false)
             ->whereNotNull('token_unico')
             ->count();
 
         // Evaluados por tipo de servicio
-        $evaluadosPorServicio = EvaluadoOrden::select('tipo_servicio', DB::raw('count(*) as total'))
+        $evaluadosPorServicio = EvaluadoOrden::deOrdenesActivas()->select('tipo_servicio', DB::raw('count(*) as total'))
             ->groupBy('tipo_servicio')
             ->pluck('total', 'tipo_servicio')
             ->toArray();
@@ -169,41 +170,38 @@ class AdminController extends Controller
         $inicioMes = Carbon::now()->startOfMonth();
 
         // Órdenes de la empresa
-        $totalOrdenes = Orden::where('empresa_id', $empresaId)->activas()->count();
-        $ordenesEsteMes = Orden::where('empresa_id', $empresaId)
-            ->activas()
-            ->where('created_at', '>=', $inicioMes)
-            ->count();
+        $ordenesBase = Orden::where('empresa_id', $empresaId)->activas();
+        EmpresaVisibilidadReclutadoresSupport::aplicaFiltroTrabajador($ordenesBase, $user);
+
+        $totalOrdenes = (clone $ordenesBase)->count();
+        $ordenesEsteMes = (clone $ordenesBase)->where('created_at', '>=', $inicioMes)->count();
 
         // Órdenes por estado
-        $ordenesPorEstado = Orden::where('empresa_id', $empresaId)
-            ->activas()
+        $ordenesPorEstado = (clone $ordenesBase)
             ->select('estado', DB::raw('count(*) as total'))
             ->groupBy('estado')
             ->pluck('total', 'estado')
             ->toArray();
 
         // Evaluados de la empresa
-        $totalEvaluados = EvaluadoOrden::whereHas('orden', function($q) use ($empresaId) {
-            $q->where('empresa_id', $empresaId)->activas();
-        })->count();
+        $evaluadosBase = EvaluadoOrden::query();
+        EmpresaVisibilidadReclutadoresSupport::filtrarQueryEvaluadosEmpresa($evaluadosBase, $user);
+
+        $totalEvaluados = (clone $evaluadosBase)->count();
 
         // Cuestionarios completados
-        $cuestionariosCompletados = EvaluadoOrden::whereHas('orden', function($q) use ($empresaId) {
-            $q->where('empresa_id', $empresaId)->activas();
-        })->where('cuestionario_completado', true)->count();
+        $cuestionariosCompletados = (clone $evaluadosBase)
+            ->where('cuestionario_completado', true)->count();
 
         // Últimas órdenes
-        $ultimasOrdenes = Orden::where('empresa_id', $empresaId)
-            ->activas()
+        $ultimasOrdenes = (clone $ordenesBase)
             ->with('evaluados')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
         // Órdenes pendientes
-        $ordenesPendientes = Orden::where('empresa_id', $empresaId)
-            ->activas()
+        $ordenesPendientes = (clone $ordenesBase)
             ->whereNotIn('estado', ['entregado', 'cancelado'])
             ->count();
 

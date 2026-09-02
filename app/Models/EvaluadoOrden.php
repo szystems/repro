@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\Sede;
 use App\Traits\RegistraCambiosEstado;
@@ -74,6 +76,7 @@ class EvaluadoOrden extends Model
         'resultado_final_at',
         'resultado_subido_por',
         'fecha_programada_original',
+        'motivo_reprogramacion',
     ];
 
     /**
@@ -100,6 +103,7 @@ class EvaluadoOrden extends Model
     protected function casts(): array
     {
         return [
+            'orden_id' => 'integer',
             'cuestionario_completado' => 'boolean',
             'notificado' => 'boolean',
             'intentos_acceso' => 'integer',
@@ -169,6 +173,20 @@ class EvaluadoOrden extends Model
     public function responsable()
     {
         return $this->belongsTo(User::class, 'responsable_id');
+    }
+
+    /**
+     * Encargado que hará la prueba. No toca quién programó (poligrafista_id).
+     */
+    public function autoasignarEncargado(?int $userId = null): bool
+    {
+        $id = $userId ?? Auth::id();
+        if (!$id) {
+            return false;
+        }
+        $this->responsable_id = $id;
+
+        return $this->save();
     }
 
     /**
@@ -332,6 +350,12 @@ class EvaluadoOrden extends Model
             ->where('token_expira_at', '<', now());
     }
 
+    /** Excluye evaluados cuya orden fue archivada. */
+    public function scopeDeOrdenesActivas($query)
+    {
+        return $query->whereHas('orden', fn ($q) => $q->activas());
+    }
+
     /**
      * Scope: Evaluados programados (con fecha_programada asignada)
      */
@@ -411,6 +435,43 @@ class EvaluadoOrden extends Model
     public static function calcularExpiracionToken(): \Illuminate\Support\Carbon
     {
         return now()->addDays(Config::diasVigenciaTokenEnlace());
+    }
+
+    /**
+     * Umbral mínimo aceptable para token_expira_at (I13b).
+     *
+     * El bug original creaba tokens con vigencia de ~2 h. Vigencias legítimas
+     * cortas usadas en tests/negocio son en días (3, 7, 20). Por eso el umbral
+     * es 1 día: atrapa el bug real sin interferir con vigencias válidas.
+     */
+    public static function umbralMinimoTokenExpira(): \Illuminate\Support\Carbon
+    {
+        return now()->addDay();
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (EvaluadoOrden $evaluado): void {
+            if (! $evaluado->isDirty('token_expira_at') || $evaluado->token_expira_at === null) {
+                return;
+            }
+
+            $expira = $evaluado->token_expira_at;
+
+            // Invalidación manual (invalidar enlace / deshabilitar cuestionario).
+            if ($expira->lte(now()->addMinute())) {
+                return;
+            }
+
+            if ($expira->lt(self::umbralMinimoTokenExpira())) {
+                Log::warning('token_expira_at demasiado corto; extendiendo vigencia del enlace', [
+                    'evaluado_id' => $evaluado->id,
+                    'token_expira_at_original' => $expira->toIso8601String(),
+                    'orden_id' => $evaluado->orden_id,
+                ]);
+                $evaluado->token_expira_at = self::calcularExpiracionToken();
+            }
+        });
     }
 
     /**
@@ -522,12 +583,10 @@ class EvaluadoOrden extends Model
     {
         $termino = trim($termino);
 
-        $query = self::with(['orden', 'cuestionario']);
+        $query = self::with(['orden.empresa', 'cuestionario'])->deOrdenesActivas();
 
         if ($empresaId !== null) {
-            $query->whereHas('orden', fn ($q) => $q->where('empresa_id', $empresaId)->activas());
-        } else {
-            $query->with(['orden.empresa']);
+            $query->whereHas('orden', fn ($q) => $q->where('empresa_id', $empresaId));
         }
 
         if (preg_match('/^\d{13}$/', $termino)) {
@@ -782,8 +841,10 @@ class EvaluadoOrden extends Model
         return match($this->resultado) {
             'pendiente' => 'Pendiente',
             // Polígrafo / VSA
-            'aprobado' => 'Aprobado / Sin Observaciones',
-            'aprobado_con_obs' => 'Aprobado / Con Observación Leve',
+            'aprobado' => 'Aprobado',
+            'aprobado_con_obs' => $this->tipo_servicio === 'socioeconomico'
+                ? 'Tipo A — Presenta observaciones'
+                : 'Aprobado / Con Observación Leve',
             'aprobado_excepcion' => 'Aprobado con Excepción',
             'no_aprobado' => 'No Aprobado / Indicación de Mentira',
             'inconcluso' => 'Inconcluso',
@@ -827,6 +888,7 @@ class EvaluadoOrden extends Model
             return [
                 'pendiente' => 'Pendiente',
                 'tipo_a' => 'Tipo A (cumple requisitos)',
+                'aprobado_con_obs' => 'Tipo A — Presenta observaciones',
                 'a_condicionado' => 'A - Condicionado (info pendiente)',
                 'tipo_b' => 'Tipo B (requiere análisis)',
                 'tipo_c' => 'Tipo C (no cumple criterios)',
@@ -837,7 +899,7 @@ class EvaluadoOrden extends Model
         // Polígrafo y VSA
         return [
             'pendiente' => 'Pendiente',
-            'aprobado' => 'Aprobado / Sin Observaciones',
+            'aprobado' => 'Aprobado',
             'aprobado_con_obs' => 'Aprobado / Con Observación Leve',
             'aprobado_excepcion' => 'Aprobado con Excepción',
             'no_aprobado' => 'No Aprobado / Indicación de Mentira',
@@ -867,7 +929,9 @@ class EvaluadoOrden extends Model
         if ($modalidad) {
             $this->modalidad = $modalidad;
         }
-        $this->responsable_id = $responsableId;
+        if ($responsableId) {
+            $this->responsable_id = $responsableId;
+        }
         // Fase 18: la programación se refleja en estado_programacion, no en estado_evaluacion
         $this->estado_programacion = 'programado';
         $resultado = $this->save();
@@ -880,8 +944,15 @@ class EvaluadoOrden extends Model
     /**
      * Reprogramar evaluación (actualizar fecha/hora).
      */
-    public function reprogramarEvaluacion(string $inicio, string $fin, ?int $poligrafistaId = null, ?int $sedeId = null, ?string $modalidad = null, ?int $responsableId = null): bool
-    {
+    public function reprogramarEvaluacion(
+        string $inicio,
+        string $fin,
+        ?int $poligrafistaId = null,
+        ?int $sedeId = null,
+        ?string $modalidad = null,
+        ?int $responsableId = null,
+        ?string $motivoReprogramacion = null
+    ): bool {
         $estadoAnterior = $this->estado_programacion;
         if ($this->fecha_programada) {
             $this->fecha_programada_original = $this->fecha_programada;
@@ -897,7 +968,12 @@ class EvaluadoOrden extends Model
         if ($modalidad) {
             $this->modalidad = $modalidad;
         }
-        $this->responsable_id = $responsableId;
+        if ($responsableId) {
+            $this->responsable_id = $responsableId;
+        }
+        if ($motivoReprogramacion !== null && trim($motivoReprogramacion) !== '') {
+            $this->motivo_reprogramacion = trim($motivoReprogramacion);
+        }
         // Fase 18: la reprogramación se refleja en estado_programacion, no en estado_evaluacion
         $this->estado_programacion = 'reprogramado';
         $resultado = $this->save();
@@ -1222,6 +1298,45 @@ class EvaluadoOrden extends Model
             'estado_programacion'  => array_keys(self::estadosProgramacionDisponibles()),
             'estado_evaluacion'    => array_keys(self::estadosEvaluacionDisponibles()),
         ];
+    }
+
+    /**
+     * Se puede quitar de la orden solo si aún no hay expediente (formulario, papelería o informe).
+     */
+    public function puedeEliminarseDeOrden(): bool
+    {
+        return $this->motivoNoEliminableDeOrden() === null;
+    }
+
+    public function motivoNoEliminableDeOrden(): ?string
+    {
+        if ($this->cuestionario_completado) {
+            return 'Ya completó el cuestionario.';
+        }
+
+        if ($this->tieneResultadoPreliminar() || $this->tieneResultadoFinal()) {
+            return 'Ya tiene un informe cargado.';
+        }
+
+        $textoPreliminar = trim(strip_tags((string) ($this->texto_informe_preliminar ?? '')));
+        if ($textoPreliminar !== '') {
+            return 'Ya tiene informe preliminar escrito.';
+        }
+
+        if (($this->estado_evaluacion ?? 'pendiente_de_evaluacion') !== 'pendiente_de_evaluacion') {
+            return 'La evaluación ya está en proceso.';
+        }
+
+        if ($this->documentos()->exists()) {
+            return 'Ya tiene papelería cargada.';
+        }
+
+        $cuestionario = $this->cuestionario;
+        if ($cuestionario && ($cuestionario->completado || $cuestionario->respuestas()->exists())) {
+            return 'Ya tiene respuestas en el cuestionario.';
+        }
+
+        return null;
     }
 
     /**

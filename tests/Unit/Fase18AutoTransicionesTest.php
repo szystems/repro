@@ -5,8 +5,12 @@ namespace Tests\Unit;
 use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
+use App\Models\Role;
 use App\Models\User;
+use App\Support\FormularioAutoTransiciones;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
 /**
@@ -20,13 +24,15 @@ use Tests\TestCase;
  */
 class Fase18AutoTransicionesTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesRolesAndPermissions;
 
     private Orden $orden;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->setUpRolesAndPermissions();
+        Cache::flush();
         $empresa = Empresa::factory()->create();
         $admin   = User::factory()->create(['role_as' => 3]);
         $this->orden = Orden::factory()->create([
@@ -143,5 +149,44 @@ class Fase18AutoTransicionesTest extends TestCase
         $this->artisan('formulario:auto-transiciones --dry-run')->assertSuccessful();
 
         $this->assertEquals('link_enviado', $evaluado->fresh()->estado_formulario);
+    }
+
+    public function test_on_access_aplica_24h_al_abrir_listado_de_ordenes(): void
+    {
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->orden->id,
+            'estado_formulario' => 'link_enviado',
+            'token_expira_at' => now()->addDays(25),
+        ]);
+
+        $admin = User::factory()->create(['role_as' => 3, 'estado' => 1]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $this->actingAs($admin)->get(route('ordenes.index'))->assertOk();
+
+        $this->assertEquals('pendiente_de_llenar', $evaluado->fresh()->estado_formulario);
+    }
+
+    public function test_on_access_no_repite_dentro_de_5_minutos(): void
+    {
+        $primero = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->orden->id,
+            'estado_formulario' => 'link_enviado',
+            'token_expira_at' => now()->addDays(25),
+        ]);
+        FormularioAutoTransiciones::aplicarAlAcceder();
+        $this->assertEquals('pendiente_de_llenar', $primero->fresh()->estado_formulario);
+
+        $segundo = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->orden->id,
+            'estado_formulario' => 'link_enviado',
+            'token_expira_at' => now()->addDays(25),
+        ]);
+        FormularioAutoTransiciones::aplicarAlAcceder();
+        $this->assertEquals('link_enviado', $segundo->fresh()->estado_formulario);
+
+        Cache::flush();
+        FormularioAutoTransiciones::aplicarAlAcceder();
+        $this->assertEquals('pendiente_de_llenar', $segundo->fresh()->estado_formulario);
     }
 }

@@ -12,6 +12,9 @@
                 <h5>Historial por DPI o nombre</h5>
             </div>
         </div>
+        <div class="d-flex align-items-center">
+            @include('partials._ayuda_contextual')
+        </div>
     </div>
 
     <div class="content-wrapper">

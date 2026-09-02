@@ -51,6 +51,7 @@
 <div class="form-group">
     <label for="econ_es_fiador" class="form-label">{{ SituacionEconomicaCampos::LABEL_ES_FIADOR }} <span class="required">*</span></label>
     <select class="form-control @error('econ_es_fiador') is-invalid @enderror" id="econ_es_fiador" name="econ_es_fiador" required>
+        <option value="">Seleccione...</option>
         <option value="no" {{ old('econ_es_fiador', $respEco['econ_es_fiador'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
         <option value="si" {{ old('econ_es_fiador', $respEco['econ_es_fiador'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
     </select>
@@ -71,6 +72,7 @@
 <div class="form-group">
     <label for="econ_problemas_bancarios" class="form-label">{{ SituacionEconomicaCampos::LABEL_PROBLEMAS_BANCARIOS }} <span class="required">*</span></label>
     <select class="form-control @error('econ_problemas_bancarios') is-invalid @enderror" id="econ_problemas_bancarios" name="econ_problemas_bancarios" required>
+        <option value="">Seleccione...</option>
         <option value="no" {{ old('econ_problemas_bancarios', $respEco['econ_problemas_bancarios'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
         <option value="si" {{ old('econ_problemas_bancarios', $respEco['econ_problemas_bancarios'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
     </select>
@@ -88,16 +90,49 @@
     </div>
 </x-campo-condicional>
 
-<div class="form-group">
-    <label for="econ_tipo_vivienda_detalle" class="form-label">{{ SituacionEconomicaCampos::LABEL_VIVIENDA }} <span class="required">*</span></label>
-    <textarea class="form-control @error('econ_tipo_vivienda_detalle') is-invalid @enderror"
-              id="econ_tipo_vivienda_detalle"
-              name="econ_tipo_vivienda_detalle"
-              rows="2"
-              required
-              placeholder="Ej: Propio / Alquilo Q2,500 mensuales">{{ old('econ_tipo_vivienda_detalle', $respEco['econ_tipo_vivienda_detalle'] ?? '') }}</textarea>
-    @error('econ_tipo_vivienda_detalle')<div class="invalid-feedback">{{ $message }}</div>@enderror
+<hr class="my-4">
+<h5 class="mb-3">Vivienda y gastos del hogar</h5>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="form-group">
+            <label for="personas_hogar" class="form-label">
+                Número de personas en el hogar <span class="required">*</span>
+            </label>
+            <input type="number"
+                   class="form-control @error('personas_hogar') is-invalid @enderror"
+                   id="personas_hogar"
+                   name="personas_hogar"
+                   value="{{ old('personas_hogar', $respEco['personas_hogar'] ?? '') }}"
+                   min="1"
+                   max="50"
+                   required>
+            <div class="form-text">Incluyéndose a usted mismo</div>
+            @error('personas_hogar')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="form-group">
+            <label for="dependientes_economicos" class="form-label">
+                Número de dependientes económicos <span class="required">*</span>
+            </label>
+            <input type="number"
+                   class="form-control @error('dependientes_economicos') is-invalid @enderror"
+                   id="dependientes_economicos"
+                   name="dependientes_economicos"
+                   value="{{ old('dependientes_economicos', $respEco['dependientes_economicos'] ?? '') }}"
+                   min="0"
+                   max="20"
+                   required>
+            <div class="form-text">Personas que dependen de sus ingresos</div>
+            @error('dependientes_economicos')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+    </div>
 </div>
+
+@include('cuestionario.secciones.partials.campos-vivienda-hogar', [
+    'respuestasExistentes' => $respEco,
+])
 
 <div class="form-group">
     <label for="econ_dependientes_detalle" class="form-label">{{ SituacionEconomicaCampos::LABEL_DEPENDIENTES }} <span class="required">*</span></label>
@@ -124,7 +159,8 @@
         <div class="form-group">
             <label for="econ_posee_propiedades" class="form-label">{{ SituacionEconomicaCampos::LABEL_PROPIEDADES }} <span class="required">*</span></label>
             <select class="form-control @error('econ_posee_propiedades') is-invalid @enderror" id="econ_posee_propiedades" name="econ_posee_propiedades" required>
-                <option value="no" {{ old('econ_posee_propiedades', $respEco['econ_posee_propiedades'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="">Seleccione...</option>
+        <option value="no" {{ old('econ_posee_propiedades', $respEco['econ_posee_propiedades'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
                 <option value="si" {{ old('econ_posee_propiedades', $respEco['econ_posee_propiedades'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
             </select>
             @error('econ_posee_propiedades')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -145,7 +181,8 @@
         <div class="form-group">
             <label for="econ_posee_vehiculos" class="form-label">{{ SituacionEconomicaCampos::LABEL_VEHICULOS }} <span class="required">*</span></label>
             <select class="form-control @error('econ_posee_vehiculos') is-invalid @enderror" id="econ_posee_vehiculos" name="econ_posee_vehiculos" required>
-                <option value="no" {{ old('econ_posee_vehiculos', $respEco['econ_posee_vehiculos'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
+                <option value="">Seleccione...</option>
+        <option value="no" {{ old('econ_posee_vehiculos', $respEco['econ_posee_vehiculos'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
                 <option value="si" {{ old('econ_posee_vehiculos', $respEco['econ_posee_vehiculos'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
             </select>
             @error('econ_posee_vehiculos')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -167,6 +204,7 @@
 <div class="form-group">
     <label for="econ_demandas_deudas" class="form-label">{{ SituacionEconomicaCampos::LABEL_DEMANDAS }} <span class="required">*</span></label>
     <select class="form-control @error('econ_demandas_deudas') is-invalid @enderror" id="econ_demandas_deudas" name="econ_demandas_deudas" required>
+        <option value="">Seleccione...</option>
         <option value="no" {{ old('econ_demandas_deudas', $respEco['econ_demandas_deudas'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
         <option value="si" {{ old('econ_demandas_deudas', $respEco['econ_demandas_deudas'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
     </select>
@@ -220,6 +258,7 @@
 <div class="form-group">
     <label for="econ_problemas_sat" class="form-label">{{ SituacionEconomicaCampos::LABEL_SAT }} <span class="required">*</span></label>
     <select class="form-control @error('econ_problemas_sat') is-invalid @enderror" id="econ_problemas_sat" name="econ_problemas_sat" required>
+        <option value="">Seleccione...</option>
         <option value="no" {{ old('econ_problemas_sat', $respEco['econ_problemas_sat'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
         <option value="si" {{ old('econ_problemas_sat', $respEco['econ_problemas_sat'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
     </select>
@@ -236,3 +275,24 @@
         @error('econ_detalle_sat')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 </x-campo-condicional>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const personasHogar = document.getElementById('personas_hogar');
+    const dependientesEconomicos = document.getElementById('dependientes_economicos');
+
+    function validarDependientesEconomicos() {
+        const totalPersonas = parseInt(personasHogar?.value, 10) || 0;
+        const dependientes = parseInt(dependientesEconomicos?.value, 10) || 0;
+
+        if (dependientes >= totalPersonas && totalPersonas > 0) {
+            dependientesEconomicos.value = Math.max(0, totalPersonas - 1);
+        }
+    }
+
+    personasHogar?.addEventListener('change', validarDependientesEconomicos);
+    dependientesEconomicos?.addEventListener('change', validarDependientesEconomicos);
+});
+</script>
+@endpush

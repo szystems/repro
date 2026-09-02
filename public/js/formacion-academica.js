@@ -4,11 +4,26 @@
 (function () {
     'use strict';
 
-    function nivelesVisibles(ultimo) {
-        const orden = Object.keys(window.formacionAcademicaNiveles || {});
-        const idx = orden.indexOf(ultimo);
+    function mapaVisibles() {
+        if (window.formacionAcademicaVisibles && typeof window.formacionAcademicaVisibles === 'object') {
+            return window.formacionAcademicaVisibles;
+        }
 
-        return idx >= 0 ? orden.slice(0, idx + 1) : [];
+        // Mismo mapa que HistorialAcademico::mapaNivelesVisibles() (por si el blade no lo inyectó).
+        return {
+            primaria: ['primaria'],
+            basico: ['basico'],
+            diversificado: ['diversificado'],
+            tecnico: ['tecnico'],
+            universitario: ['universitario'],
+            postgrado: ['postgrado']
+        };
+    }
+
+    function nivelesVisibles(ultimo) {
+        const mapa = mapaVisibles();
+
+        return Array.isArray(mapa[ultimo]) ? mapa[ultimo].slice() : [];
     }
 
     function collectRowsByNivel(wrapper) {

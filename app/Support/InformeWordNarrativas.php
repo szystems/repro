@@ -31,6 +31,9 @@ class InformeWordNarrativas
         ['key' => 'salud_detalle_hospitalizaciones', 'label' => 'Detalle hospitalizaciones'],
         ['key' => 'salud_ausencias_enfermedad', 'label' => 'Ausencias por enfermedad'],
         ['key' => 'salud_detalle_ausencias', 'label' => 'Detalle ausencias'],
+        ['key' => 'salud_alergias', 'label' => 'Alergias'],
+        ['key' => 'salud_detalle_alergias', 'label' => 'Detalle de alergias'],
+        ['key' => 'salud_embarazada', 'label' => 'Embarazada'],
     ];
 
     /** @var list<array{key: string, label: string}> */
@@ -58,42 +61,46 @@ class InformeWordNarrativas
      *   conclusiones: string,
      *   nombre_candidato: string,
      *   resultado_poligrafico: string,
+     *   preguntas_poligraficas: list<array{pregunta: string, respuesta: string, resultado: string, puntuacion: string}>,
      *   poligrafista: string,
      *   informacion_complementaria: list<array{etiqueta: string, respuesta: string}>
      * }
      */
     public static function compilar(Orden $orden, EvaluadoOrden $evaluado, string $variante): array
     {
-        $evaluado->loadMissing(['cuestionario', 'poligrafista']);
+        $evaluado->loadMissing(['cuestionario', 'poligrafista', 'responsable']);
         $cuestionario = $evaluado->cuestionario;
         $respuestasAntecedentes = self::respuestasAntecedentes($cuestionario);
         $respuestasSeccion1 = self::respuestasSeccion1($cuestionario);
         $respuestasLaborales = self::respuestasLaborales($cuestionario);
         $notasEvaluador = EvaluadorNotasSupport::mapaPorSeccion($evaluado->id);
+        $tablasInforme = InformeDatos::tablas($evaluado);
 
         $nombre = trim($evaluado->nombre . ' ' . $evaluado->apellidos);
-
-        $notasEvaluador = EvaluadorNotasSupport::mapaPorSeccion($evaluado->id);
+        $esSocio = $variante === InformeWordPlantillas::VARIANTE_SOCIO
+            || ($evaluado->tipo_servicio ?? '') === 'socioeconomico';
 
         return [
             'salud' => self::textoEvaluador($notasEvaluador['word_salud'] ?? null)
-                ?: self::compilarCampos(self::CAMPOS_SALUD, $respuestasAntecedentes),
+                ?: ($esSocio ? '' : self::compilarCampos(self::CAMPOS_SALUD, $respuestasAntecedentes)),
             'habitos' => self::textoEvaluador($notasEvaluador['word_habitos'] ?? null)
                 ?: self::compilarCampos(self::CAMPOS_HABITOS, $respuestasAntecedentes),
             'drogas' => self::textoEvaluador($notasEvaluador['word_sustancias'] ?? null)
                 ?: self::compilarDrogas($respuestasAntecedentes),
             'judicial' => self::textoEvaluador($notasEvaluador['word_judicial'] ?? null)
                 ?: self::compilarJudicial($respuestasAntecedentes, $notasEvaluador['antecedentes'] ?? null),
-            'recomendaciones' => self::compilarRecomendaciones($evaluado, $notasEvaluador['antecedentes'] ?? null),
+            'recomendaciones' => InformeWordBloquesEvaluador::recomendaciones($evaluado->id),
             'conclusiones' => self::compilarConclusiones($evaluado),
             'nombre_candidato' => $nombre !== '' ? $nombre : '—',
             'resultado_poligrafico' => self::codigoResultadoPoligrafico($evaluado),
-            'poligrafista' => trim((string) ($evaluado->poligrafista?->name ?: '—')),
+            'preguntas_poligraficas' => InformeWordPreguntasPoligraficas::filas($evaluado->id, $evaluado),
+            'poligrafista' => trim((string) ($evaluado->poligrafista?->name ?: $evaluado->responsable?->name ?: '')),
             'informacion_complementaria' => self::filasInformacionComplementaria(
                 $respuestasAntecedentes,
                 $respuestasSeccion1,
                 $respuestasLaborales,
-                $variante
+                $variante,
+                is_array($tablasInforme['complementaria'] ?? null) ? $tablasInforme['complementaria'] : null
             ),
         ];
     }
@@ -172,16 +179,6 @@ class InformeWordNarrativas
         return rtrim(implode("\n", $lineas));
     }
 
-    private static function compilarRecomendaciones(EvaluadoOrden $evaluado, ?string $notaAntecedentes): string
-    {
-        $texto = trim((string) ($evaluado->notas_poligrafo ?? ''));
-        if ($texto === '') {
-            $texto = trim((string) $notaAntecedentes);
-        }
-
-        return $texto !== '' ? $texto : '—';
-    }
-
     private static function compilarConclusiones(EvaluadoOrden $evaluado): string
     {
         $texto = trim((string) ($evaluado->texto_informe_preliminar ?? ''));
@@ -217,9 +214,34 @@ class InformeWordNarrativas
         array $respuestasAntecedentes,
         array $respuestasSeccion1,
         array $respuestasLaborales,
-        string $variante
+        string $variante,
+        ?array $complementariaInforme = null
     ): array {
-        if ($variante === InformeWordPlantillas::VARIANTE_PREEMPLEO) {
+        if (InformeWordPlantillas::esVariantePreempleoLike($variante)) {
+            if ($complementariaInforme !== null && $complementariaInforme !== []) {
+                $filas = [];
+
+                foreach ($complementariaInforme as $fila) {
+                    if (! is_array($fila)) {
+                        continue;
+                    }
+
+                    $pregunta = trim((string) ($fila['pregunta'] ?? ''));
+                    if ($pregunta === '') {
+                        continue;
+                    }
+
+                    $filas[] = [
+                        'etiqueta' => rtrim($pregunta, '.') . ':',
+                        'respuesta' => self::texto($fila['respuesta'] ?? '') ?: '—',
+                    ];
+                }
+
+                if ($filas !== []) {
+                    return $filas;
+                }
+            }
+
             $filas = [];
             foreach (InformacionComplementaria::PREGUNTAS as $pregunta) {
                 $filas[] = [
@@ -227,8 +249,6 @@ class InformeWordNarrativas
                     'respuesta' => self::texto($respuestasAntecedentes[$pregunta['key']] ?? ''),
                 ];
             }
-            $filas[] = ['etiqueta' => 'Observaciones adicionales:', 'respuesta' => self::texto($respuestasAntecedentes['informacion_adicional_final'] ?? '—')];
-
             return $filas;
         }
 

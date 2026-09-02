@@ -75,11 +75,12 @@
 
         <div class="row gx-3">
             <!-- Información de la Orden -->
-            <div class="col-xl-8">
+            <div class="col-xl-{{ Auth::user()->role_as == 1 ? '12' : '8' }}">
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">Detalles de la Orden</div>
                         <div class="card-options">
+                            @include('partials._ayuda_contextual')
                             <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm me-1">
                                 <i class="bi bi-arrow-left"></i> Volver
                             </a>
@@ -87,7 +88,7 @@
                                 <i class="bi bi-file-pdf"></i> Orden de Servicio
                             </a>
 
-                            @if(!in_array($orden->estado, ['entregado', 'cancelado']) && !$orden->archivada && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && $orden->estado === 'orden_recibida')))
+                            @if(!in_array($orden->estado, ['entregado', 'cancelado']) && !$orden->archivada && (Auth::user()->role_as >= 2 || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && $orden->estado === 'orden_recibida')))
                             <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil"></i> Editar
                             </a>
@@ -138,6 +139,23 @@
                                 <div>{{ $orden->creador->name ?? 'N/A' }}</div>
                             </div>
                         </div>
+
+                        @if(Auth::user()->role_as == 1 || Auth::user()->role_as >= 2)
+                        <div class="row">
+                            @if($orden->reclutador)
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Reclutador asignado</label>
+                                <div>{{ $orden->reclutador->name }}</div>
+                            </div>
+                            @endif
+                            @if($orden->confidencial)
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Visibilidad</label>
+                                <div><span class="badge bg-dark"><i class="bi bi-lock-fill"></i> Proceso confidencial</span></div>
+                            </div>
+                            @endif
+                        </div>
+                        @endif
 
                         @if($orden->sede)
                         <div class="row">
@@ -194,21 +212,34 @@
                         </div>
 
                         <div class="row">
+                            @if((int) Auth::user()->role_as >= 2)
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Polígrafos Asignados</label>
+                                <label class="form-label fw-bold">Programó</label>
                                 <div>
                                     @php
-                                        $poligrafistasAsignados = $orden->evaluados->whereNotNull('poligrafista_id')->pluck('poligrafista.name')->unique();
+                                        $quienProgramo = $orden->evaluados->whereNotNull('poligrafista_id')->pluck('poligrafista.name')->unique();
+                                        $encargadosAsignados = $orden->evaluados->whereNotNull('responsable_id')->pluck('responsable.name')->unique();
                                     @endphp
-                                    @if($poligrafistasAsignados->isNotEmpty())
-                                        @foreach($poligrafistasAsignados as $polAsignado)
-                                            <span class="badge bg-info me-1">{{ $polAsignado }}</span>
+                                    @if($quienProgramo->isNotEmpty())
+                                        @foreach($quienProgramo as $nombreProgramo)
+                                            <span class="badge bg-info me-1">{{ $nombreProgramo }}</span>
+                                        @endforeach
+                                    @else
+                                        <span class="text-muted">Sin asignar</span>
+                                    @endif
+                                </div>
+                                <label class="form-label fw-bold mt-2">Encargado</label>
+                                <div>
+                                    @if($encargadosAsignados->isNotEmpty())
+                                        @foreach($encargadosAsignados as $nombreEncargado)
+                                            <span class="badge bg-success me-1">{{ $nombreEncargado }}</span>
                                         @endforeach
                                     @else
                                         <span class="text-muted">Sin asignar</span>
                                     @endif
                                 </div>
                             </div>
+                            @endif
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Prioridad</label>
                                 <div>
@@ -264,7 +295,8 @@
                 </div>
             </div>
 
-            <!-- Panel de Estado de Orden -->
+            @if(Auth::user()->role_as >= 2)
+            <!-- Panel de Estado de Orden (solo REPRO) -->
             <div class="col-xl-4">
                 <div class="card">
                     <div class="card-header">
@@ -368,6 +400,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
 
         <!-- Evaluados -->
@@ -389,10 +422,11 @@
                     <div class="card-body">
                         <div class="accordion" id="accordionEvaluados">
                             @php $dpisMultiServicio = $orden->evaluados->groupBy('dpi')->filter(fn($g) => $g->count() > 1)->keys(); @endphp
+                            @php $diasVigenciaEnlace = \App\Models\Config::diasVigenciaTokenEnlace(); @endphp
                             @foreach($orden->evaluados as $index => $evaluado)
                             @php $cuestionario = $evaluado->cuestionario; @endphp
                             @php $bgAlt = $index % 2 !== 0 ? 'background-color: #f4f5f7;' : ''; @endphp
-                            <div class="accordion-item" style="{{ $bgAlt }}">
+                            <div class="accordion-item" id="evaluado-{{ $evaluado->id }}" style="{{ $bgAlt }}">
                                 <h2 class="accordion-header" id="heading-evaluado-{{ $evaluado->id }}">
                                     <button class="accordion-button collapsed" type="button"
                                             data-bs-toggle="collapse"
@@ -518,11 +552,25 @@
                                                         <span class="badge bg-light text-muted border"><i class="bi bi-question-circle"></i> Sin modalidad</span>
                                                     @endif
                                                 </small>
-                                                @if($evaluado->poligrafista)
-                                                    <br><small class="text-muted"><i class="bi bi-person"></i> {{ $evaluado->poligrafista->name }}</small>
+                                                @if((int) Auth::user()->role_as >= 2)
+                                                    <br><small class="text-muted d-block mt-1">
+                                                        <i class="bi bi-person"></i> <strong>Programó:</strong> {{ $evaluado->poligrafista->name ?? '—' }}
+                                                    </small>
+                                                    <small class="d-block">
+                                                        <i class="bi bi-person-check"></i> <strong>Encargado:</strong> {{ $evaluado->responsable->name ?? 'Sin asignar' }}
+                                                    </small>
+                                                    <form action="{{ route('evaluados.autoasignar-encargado', $evaluado) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-outline-primary btn-sm mt-1" title="Asignarte como encargado sin cambiar quién programó">
+                                                            <i class="bi bi-person-plus"></i> Autoasignarme
+                                                        </button>
+                                                    </form>
                                                 @endif
-                                                @if($evaluado->responsable)
-                                                    <br><small class="text-muted"><i class="bi bi-person-check"></i> Resp: {{ $evaluado->responsable->name }}</small>
+                                                @if(filled($evaluado->motivo_reprogramacion))
+                                                    <br><small class="text-info d-block mt-1">
+                                                        <i class="bi bi-chat-left-quote"></i>
+                                                        <strong>Motivo reprogramación:</strong> {{ $evaluado->motivo_reprogramacion }}
+                                                    </small>
                                                 @endif
                                                 @if(Auth::user()->role_as >= 2)
                                                     <br>
@@ -605,6 +653,14 @@
                                             $transicionesEval = Auth::user()->role_as >= 2
                                                 ? (\App\Models\EvaluadoOrden::transicionesEvaluacion()[$evaluado->estado_evaluacion] ?? [])
                                                 : [];
+                                            $transicionesEvalFiltradas = array_values(array_filter($transicionesEval, function ($estado) use ($evaluado) {
+                                                if ($estado === 'en_proceso') {
+                                                    return $evaluado->estado_formulario === 'formulario_completado_y_recibido'
+                                                        && in_array($evaluado->estado_programacion, ['programado', 'proceso_realizado'], true);
+                                                }
+
+                                                return true;
+                                            }));
                                             $transicionesForm = Auth::user()->role_as >= 2
                                                 ? $evaluado->transicionesFormularioDisponibles()
                                                 : [];
@@ -624,7 +680,7 @@
                                             <div class="col-md-4">
                                                 <small class="text-muted d-block mb-1"><i class="bi bi-clipboard2-check"></i> Estado de Evaluación</small>
                                                 <span class="badge bg-{{ $evaluado->estado_evaluacion_color }}">{{ $evaluado->estado_evaluacion_texto }}</span>
-                                                @if(Auth::user()->role_as >= 2 && count($transicionesEval) > 0)
+                                                @if(Auth::user()->role_as >= 2 && count($transicionesEvalFiltradas) > 0)
                                                 <form action="{{ route('evaluados.cambiar-estado', $evaluado->id) }}" method="POST" class="mt-1">
                                                     @csrf
                                                     @method('PATCH')
@@ -632,7 +688,7 @@
                                                     <div class="d-flex gap-1 align-items-center">
                                                         <select name="nuevo_estado" class="form-select form-select-sm" style="max-width: 180px;" required>
                                                             <option value="">Cambiar a...</option>
-                                                            @foreach($transicionesEval as $estado)
+                                                            @foreach($transicionesEvalFiltradas as $estado)
                                                                 <option value="{{ $estado }}">{{ $nombresEval[$estado] ?? ucfirst($estado) }}</option>
                                                             @endforeach
                                                         </select>
@@ -645,6 +701,10 @@
                                                         <textarea name="observacion" class="form-control form-control-sm mt-1" rows="2" maxlength="1000" placeholder="Ej: Candidato reagendó por viaje..."></textarea>
                                                     </details>
                                                 </form>
+                                                @elseif(Auth::user()->role_as >= 2 && in_array('en_proceso', $transicionesEval, true))
+                                                <small class="text-warning d-block mt-1">
+                                                    Para pasar a «En proceso»: formulario «Completado y recibido» + cita programada.
+                                                </small>
                                                 @endif
                                             </div>
 
@@ -655,7 +715,24 @@
                                                 @if($evaluado->completado_at)
                                                     <small class="text-muted ms-1 d-block">{{ \Carbon\Carbon::parse($evaluado->completado_at)->format('d/m/Y H:i') }}</small>
                                                 @elseif($evaluado->token_expira_at)
-                                                    <small class="text-muted ms-1 d-block">Expira: {{ \Carbon\Carbon::parse($evaluado->token_expira_at)->format('d/m/Y') }}</small>
+                                                    @php
+                                                        $expiraEnlace = \Carbon\Carbon::parse($evaluado->token_expira_at);
+                                                        $diasRestantesEnlace = (int) now()->diffInDays($expiraEnlace, false);
+                                                        $claseExpiraEnlace = $expiraEnlace->isPast()
+                                                            ? 'text-danger'
+                                                            : ($diasRestantesEnlace <= 7 ? 'text-warning' : 'text-muted');
+                                                    @endphp
+                                                    <small class="{{ $claseExpiraEnlace }} ms-1 d-block">
+                                                        @if($expiraEnlace->isPast())
+                                                            <i class="bi bi-exclamation-triangle"></i>
+                                                            Enlace venció: {{ $expiraEnlace->format('d/m/Y H:i') }}
+                                                        @else
+                                                            Vence: {{ $expiraEnlace->format('d/m/Y') }}
+                                                            @if($diasRestantesEnlace <= 7)
+                                                                ({{ $diasRestantesEnlace }} {{ $diasRestantesEnlace === 1 ? 'día' : 'días' }} restantes)
+                                                            @endif
+                                                        @endif
+                                                    </small>
                                                 @endif
                                                 @if(Auth::user()->role_as >= 2 && count($transicionesForm) > 0)
                                                 <form action="{{ route('evaluados.cambiar-estado', $evaluado->id) }}" method="POST" class="mt-1">
@@ -733,55 +810,15 @@
                                         </div>
 
                                         {{-- Historial de cambios de estado --}}
-                                        @if(Auth::user()->role_as >= 2)
-                                        @php $historial = $evaluado->historialEstados()->with('usuario')->get(); @endphp
-                                        @if($historial->isNotEmpty())
-                                        <div class="mb-3">
-                                            <details>
-                                                <summary class="text-muted small" style="cursor:pointer;">
-                                                    <i class="bi bi-clock-history"></i> Historial de cambios ({{ $historial->count() }})
-                                                </summary>
-                                                <div class="table-responsive mt-2">
-                                                    <table class="table table-sm table-bordered small mb-0">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th>Fecha</th>
-                                                                <th>Campo</th>
-                                                                <th>Anterior</th>
-                                                                <th>Nuevo</th>
-                                                                <th>Usuario</th>
-                                                                <th>Observación</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach($historial as $entrada)
-                                                            <tr>
-                                                                <td class="text-nowrap">{{ $entrada->created_at->format('d/m/Y H:i') }}</td>
-                                                                <td>
-                                                                    @php
-                                                                        $campoLabel = match($entrada->campo) {
-                                                                            'estado_evaluacion'   => 'Estado de Evaluación',
-                                                                            'estado_formulario'   => 'Estado de Formulario',
-                                                                            'estado_programacion' => 'Estado de Programación',
-                                                                            'estado_orden'        => 'Estado de Orden',
-                                                                            'modalidad'           => 'Modalidad',
-                                                                            default               => ucfirst($entrada->campo),
-                                                                        };
-                                                                    @endphp
-                                                                    <span class="badge bg-light text-dark border">{{ $campoLabel }}</span>
-                                                                </td>
-                                                                <td class="text-muted">{{ $entrada->estado_anterior ?: '—' }}</td>
-                                                                <td><strong>{{ $entrada->estado_nuevo }}</strong></td>
-                                                                <td>{{ $entrada->usuario?->name ?? 'Sistema' }}</td>
-                                                                <td class="text-muted">{{ $entrada->observacion ?: '—' }}</td>
-                                                            </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </details>
-                                        </div>
-                                        @endif
+                                        @php
+                                            $mostrarHistorialEvaluado = Auth::user()->role_as >= 2
+                                                || (($historialVisibleEmpresa ?? false) && Auth::user()->role_as == 1);
+                                        @endphp
+                                        @if($mostrarHistorialEvaluado)
+                                            @include('partials._historial_estados_evaluado', [
+                                                'evaluado' => $evaluado,
+                                                'paraEmpresa' => Auth::user()->role_as == 1,
+                                            ])
                                         @endif
 
                                         {{-- Acciones del evaluado --}}
@@ -794,8 +831,12 @@
                                                             <i class="bi bi-eye"></i> Ver Cuestionario
                                                         </a>
                                                         <a href="{{ route('admin.cuestionarios.pdf', $cuestionario->id) }}"
-                                                           class="btn btn-outline-danger btn-sm" title="Imprimir PDF" target="_blank">
+                                                           class="btn btn-outline-danger btn-sm" title="PDF cuestionario" target="_blank">
                                                             <i class="bi bi-file-pdf"></i> PDF
+                                                        </a>
+                                                        <a href="{{ route('admin.cuestionarios.pdf-autorizacion', $cuestionario->id) }}"
+                                                           class="btn btn-outline-secondary btn-sm" title="PDF autorización" target="_blank">
+                                                            <i class="bi bi-file-earmark-check"></i> Auth
                                                         </a>
                                                         <a href="{{ route('admin.cuestionarios.edit', $cuestionario->id) }}"
                                                            class="btn btn-outline-warning btn-sm" title="Editar Cuestionario">
@@ -828,26 +869,53 @@
                                                         </button>
                                                     </form>
                                                     @endif
+                                                    <div class="mt-2">
+                                                        @include('shared.partials.aviso-formulario-solo-candidato')
+                                                    </div>
                                                 @endif
 
                                                 @if($evaluado->cuestionario_completado && Auth::user()->role_as >= 2)
                                                 <form action="{{ route('evaluados.rehabilitar-cuestionario', $evaluado->id) }}"
                                                       method="POST" class="d-inline"
-                                                      onsubmit="return confirm('¿Rehabilitar el cuestionario de {{ $evaluado->nombre }}? Esto permitirá que vuelva a llenarlo con un nuevo enlace.');">
+                                                      onsubmit="return confirm('¿Rehabilitar el cuestionario de {{ $evaluado->nombre }}? Esto permitirá que vuelva a llenarlo con un nuevo enlace (se borrarán las respuestas actuales).');">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-outline-warning btn-sm" title="Rehabilitar cuestionario">
+                                                    <button type="submit" class="btn btn-outline-warning btn-sm" title="Rehabilitar cuestionario (desde cero)">
                                                         <i class="bi bi-arrow-counterclockwise"></i> Rehabilitar
                                                     </button>
                                                 </form>
-                                                @elseif(!$evaluado->cuestionario_completado && $cuestionario && Auth::user()->role_as >= 2)
-                                                <form action="{{ route('evaluados.deshabilitar-cuestionario', $evaluado->id) }}"
-                                                      method="POST" class="d-inline"
-                                                      onsubmit="return confirm('¿Deshabilitar el cuestionario de {{ $evaluado->nombre }}? Esto bloqueará el acceso y marcará el cuestionario como completado.');">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Deshabilitar cuestionario">
-                                                        <i class="bi bi-lock"></i> Deshabilitar
-                                                    </button>
-                                                </form>
+                                                @endif
+
+                @if(Auth::user()->role_as >= 2)
+                    @if($evaluado->estado_formulario === 'vencido' || ! $evaluado->enlaceCuestionarioVigente())
+                    <form action="{{ route('evaluados.habilitar-enlace-formulario', $evaluado->id) }}"
+                          method="POST" class="d-inline"
+                          onsubmit="return confirm('¿Habilitar el enlace de {{ $evaluado->nombre }}? Se extiende la vigencia {{ $diasVigenciaEnlace }} días{{ $evaluado->cuestionario_completado ? ' (el cuestionario ya está marcado como completado)' : ' y conserva el progreso parcial' }}.');">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-success btn-sm" title="Habilitar enlace ({{ $diasVigenciaEnlace }} días)">
+                            <i class="bi bi-unlock"></i> Habilitar enlace
+                        </button>
+                    </form>
+                    @elseif($evaluado->enlaceCuestionarioVigente())
+                    <form action="{{ route('evaluados.invalidar-enlace-formulario', $evaluado->id) }}"
+                          method="POST" class="d-inline"
+                          onsubmit="return confirm('¿Invalidar el enlace de {{ $evaluado->nombre }}? El candidato no podrá continuar hasta que lo habiliten de nuevo.');">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Invalidar enlace (vencido manual)">
+                            <i class="bi bi-lock"></i> Invalidar enlace
+                        </button>
+                    </form>
+                    @endif
+
+                    @if($cuestionario && ! $evaluado->cuestionario_completado && $evaluado->enlaceCuestionarioVigente())
+                                                    <form action="{{ route('evaluados.deshabilitar-cuestionario', $evaluado->id) }}"
+                                                          method="POST" class="d-inline"
+                                                          onsubmit="return confirm('¿Marcar como completado sin acceso del candidato? Bloqueará el enlace y marcará el cuestionario como recibido.');">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-outline-secondary btn-sm" title="Marcar completado sin acceso del candidato">
+                                                            <i class="bi bi-check2-square"></i> Marcar recibido
+                                                        </button>
+                                                    </form>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </div>
@@ -855,19 +923,24 @@
                                         <hr>
 
                                         {{-- Documentos del evaluado --}}
+                                        @if(Auth::user()->role_as == 1)
+                                        @include('empresa.ordenes._documentos_evaluado', ['evaluado' => $evaluado])
+                                        @else
                                         @include('admin.ordenes._documentos_evaluado', ['evaluado' => $evaluado])
+                                        @endif
 
                                         <hr>
 
                                         @if(Auth::user()->role_as >= 2)
                                         <div class="mb-3">
-                                            <a href="{{ route('ordenes.informe-word', [$orden, $evaluado]) }}" class="btn btn-sm btn-outline-primary">
+                                            <a href="{{ route('ordenes.informe-word', [$orden, $evaluado]) }}?v={{ now()->timestamp }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-file-earmark-word"></i> Descargar informe Word (.docx)
                                             </a>
                                         </div>
                                         @endif
 
                                         {{-- Archivos de Resultado --}}
+                                        @if(Auth::user()->role_as >= 2)
                                         <div class="mt-3">
                                             <h6 class="mb-3">
                                                 <i class="bi bi-file-earmark-check"></i> Archivos de Resultado
@@ -895,7 +968,6 @@
                                                                            class="btn btn-sm btn-outline-info" title="Descargar">
                                                                             <i class="bi bi-download"></i>
                                                                         </a>
-                                                                        @if(Auth::user()->role_as >= 2)
                                                                         <form action="{{ route('evaluados.eliminar-resultado-archivo', [$evaluado->id, 'preliminar']) }}"
                                                                               method="POST" class="d-inline"
                                                                               onsubmit="return confirm('¿Eliminar resultado preliminar?')">
@@ -905,11 +977,9 @@
                                                                                 <i class="bi bi-trash"></i>
                                                                             </button>
                                                                         </form>
-                                                                        @endif
                                                                     </div>
                                                                 </div>
                                                             @else
-                                                                @if(Auth::user()->role_as >= 2)
                                                                 <form action="{{ route('evaluados.subir-resultado-archivo', $evaluado->id) }}"
                                                                       method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
                                                                     @csrf
@@ -919,9 +989,6 @@
                                                                         <i class="bi bi-upload"></i>
                                                                     </button>
                                                                 </form>
-                                                                @else
-                                                                    <span class="text-muted"><i class="bi bi-dash-circle"></i> No disponible</span>
-                                                                @endif
                                                             @endif
                                                         </div>
                                                     </div>
@@ -959,7 +1026,6 @@
                                                                     </div>
                                                                 </div>
                                                             @else
-                                                                @if(Auth::user()->role_as >= 2)
                                                                 <form action="{{ route('evaluados.subir-resultado-archivo', $evaluado->id) }}"
                                                                       method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
                                                                     @csrf
@@ -969,18 +1035,33 @@
                                                                         <i class="bi bi-upload"></i>
                                                                     </button>
                                                                 </form>
-                                                                @else
-                                                                    <span class="text-muted"><i class="bi bi-dash-circle"></i> No disponible</span>
-                                                                @endif
                                                             @endif
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
+                                        @elseif($evaluado->resultadosDisponiblesParaEmpresa())
+                                        <div class="mt-3">
+                                            <h6 class="mb-3"><i class="bi bi-file-earmark-check"></i> Informe de Evaluación</h6>
+                                            @include('shared.partials._informes_evaluado_empresa', ['evaluado' => $evaluado])
+                                            @if($evaluado->cuestionario_completado && $cuestionario)
+                                            <div class="mt-2">
+                                                <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-ui-checks"></i> Ver formulario candidato (referencia)
+                                                </a>
+                                            </div>
+                                            @endif
+                                        </div>
+                                        @elseif($orden->resultados_visibles_empresa)
+                                        <div class="alert alert-info mt-3 mb-0 py-2">
+                                            <i class="bi bi-hourglass-split"></i>
+                                            Los resultados de este candidato aún están en proceso de validación.
+                                        </div>
+                                        @endif
 
                                         {{-- Informe Preliminar (Editor de texto enriquecido) --}}
-                                        @if(Auth::user()->role_as >= 2 || ($orden->resultados_visibles_empresa && $evaluado->texto_informe_preliminar))
+                                        @if(Auth::user()->role_as >= 2)
                                         <div class="card border-info mt-3">
                                             <div class="card-header bg-info bg-opacity-10 py-2">
                                                 <h6 class="mb-0 text-info">
@@ -993,32 +1074,22 @@
                                                 </h6>
                                             </div>
                                             <div class="card-body">
-                                                @if(Auth::user()->role_as >= 2)
-                                                    {{-- Editor para admin/repro --}}
-                                                    <form action="{{ route('evaluados.guardar-informe-preliminar', $evaluado->id) }}"
-                                                          method="POST" class="informe-preliminar-form">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <div id="editor-preliminar-{{ $evaluado->id }}" style="min-height: 150px; max-height: 400px; overflow-y: auto;">
-                                                            {!! $evaluado->texto_informe_preliminar !!}
-                                                        </div>
-                                                        <input type="hidden" name="texto_informe_preliminar"
-                                                               id="hidden-preliminar-{{ $evaluado->id }}"
-                                                               value="{{ $evaluado->texto_informe_preliminar }}">
-                                                        <div class="mt-2 d-flex justify-content-end">
-                                                            <button type="submit" class="btn btn-sm btn-info text-white">
-                                                                <i class="bi bi-save"></i> Guardar informe
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                @else
-                                                    {{-- Vista de solo lectura para empresa --}}
-                                                    @if($evaluado->texto_informe_preliminar)
-                                                        <div class="border rounded p-3 bg-light">
-                                                            {!! $evaluado->texto_informe_preliminar !!}
-                                                        </div>
-                                                    @endif
-                                                @endif
+                                                <form action="{{ route('evaluados.guardar-informe-preliminar', $evaluado->id) }}"
+                                                      method="POST" class="informe-preliminar-form">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <div id="editor-preliminar-{{ $evaluado->id }}" style="min-height: 150px; max-height: 400px; overflow-y: auto;">
+                                                        {!! $evaluado->texto_informe_preliminar !!}
+                                                    </div>
+                                                    <input type="hidden" name="texto_informe_preliminar"
+                                                           id="hidden-preliminar-{{ $evaluado->id }}"
+                                                           value="{{ $evaluado->texto_informe_preliminar }}">
+                                                    <div class="mt-2 d-flex justify-content-end">
+                                                        <button type="submit" class="btn btn-sm btn-info text-white">
+                                                            <i class="bi bi-save"></i> Guardar informe
+                                                        </button>
+                                                    </div>
+                                                </form>
                                             </div>
                                         </div>
                                         @endif
@@ -1055,7 +1126,7 @@
                                                                 ? \Carbon\Carbon::parse($evaluado->fecha_hora_fin)->format('H:i')
                                                                 : '10:00');
                                                             $sedeModal = old('sede_id', $evaluado->sede_id ?? $orden->sede_id);
-                                                            $poligrafistaModal = old('poligrafista_id', $evaluado->poligrafista_id ?? (Auth::user()->role_as >= 2 ? Auth::id() : null));
+                                                            $poligrafistaModal = old('poligrafista_id', $evaluado->poligrafista_id);
                                                             $responsableModal = old('responsable_id', $evaluado->responsable_id);
                                                         @endphp
                                                         <div class="mb-3">
@@ -1127,28 +1198,16 @@
                                                             </select>
                                                             <small class="text-muted">La modalidad se guarda al guardar la orden o al programar la cita.</small>
                                                         </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label fw-bold">Poligrafista / Evaluador</label>
-                                                            <select name="poligrafista_id" class="form-select">
-                                                                <option value="">Sin asignar</option>
-                                                                @foreach($poligrafistas as $pol)
-                                                                    <option value="{{ $pol->id }}" {{ (string) $poligrafistaModal === (string) $pol->id ? 'selected' : '' }}>
-                                                                        {{ $pol->name }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label fw-bold">Responsable del Proceso</label>
-                                                            <select name="responsable_id" class="form-select">
-                                                                <option value="">Sin asignar</option>
-                                                                @foreach($poligrafistas as $pol)
-                                                                    <option value="{{ $pol->id }}" {{ (string) $responsableModal === (string) $pol->id ? 'selected' : '' }}>
-                                                                        {{ $pol->name }} {{ $pol->cargo ? '('.$pol->cargo.')' : '' }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
+                                                        <input type="hidden" name="poligrafista_id" value="{{ $poligrafistaModal ?: Auth::id() }}">
+                                                        <input type="hidden" name="responsable_id" value="{{ $responsableModal }}">
+                                                        @if($evaluado->fecha_programada)
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">Motivo de reprogramación</label>
+                                                                <textarea name="motivo_reprogramacion" class="form-control" rows="2" required
+                                                                          maxlength="500"
+                                                                          placeholder="Indique por qué se reprograma la cita">{{ old('motivo_reprogramacion', $evaluado->motivo_reprogramacion) }}</textarea>
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -1319,6 +1378,21 @@ function confirmarToggleResultados(checkbox) {
 }
 
 // Función para expandir/colapsar todos los accordions de evaluados
+(function abrirEvaluadoDesdeHash() {
+    const match = (window.location.hash || '').match(/^#evaluado-(\d+)$/);
+    if (!match) {
+        return;
+    }
+    const collapse = document.getElementById('collapse-evaluado-' + match[1]);
+    const ficha = document.getElementById('evaluado-' + match[1]);
+    if (collapse && window.bootstrap) {
+        bootstrap.Collapse.getOrCreateInstance(collapse, { toggle: false }).show();
+    }
+    if (ficha) {
+        ficha.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+})();
+
 function toggleAllAccordions(expand) {
     const accordionItems = document.querySelectorAll('#accordionEvaluados .accordion-collapse');
     accordionItems.forEach(function(item) {

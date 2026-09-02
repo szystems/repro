@@ -36,9 +36,11 @@
                     <i class="bi bi-pencil"></i> Editar
                 </a>
                 @endif
+                @if(Auth::user()->hasPermission('ordenes.ver'))
                 <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-danger btn-sm me-1" target="_blank">
                     <i class="bi bi-file-pdf"></i> Orden de Servicio
                 </a>
+                @endif
             </div>
             <div class="card-body">
                 <div class="row">
@@ -139,18 +141,14 @@
                                         <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'final']) }}" class="btn btn-success btn-sm" title="Descargar Informe Final" target="_blank">
                                             <i class="bi bi-file-earmark-arrow-down"></i> Informe Final
                                         </a>
-                                    @endif
-                                    @if($evaluado->archivo_resultado_preliminar)
+                                    @elseif($evaluado->archivo_resultado_preliminar)
                                         <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'preliminar']) }}" class="btn btn-outline-info btn-sm" title="Descargar Informe Preliminar" target="_blank">
                                             <i class="bi bi-file-earmark-arrow-down"></i> Preliminar
                                         </a>
                                     @endif
                                     @if($evaluado->cuestionario_completado)
-                                        <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}" class="btn btn-outline-success btn-sm" title="Ver Cuestionario">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a href="{{ route('empresa.cuestionarios.pdf', $evaluado) }}" class="btn btn-outline-primary btn-sm" title="Descargar PDF Cuestionario" target="_blank">
-                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}" class="btn btn-primary btn-sm" title="Ver informe de evaluación">
+                                            <i class="bi bi-file-earmark-text"></i> Ver Informe
                                         </a>
                                     @endif
                                 @endif
@@ -173,6 +171,9 @@
                                             </button>
                                         </form>
                                     @endif
+                                    <div class="mt-2">
+                                        @include('shared.partials.aviso-formulario-solo-candidato')
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -183,54 +184,9 @@
 
                     {{-- Informes disponibles para empresa --}}
                     @if($evaluado->resultadosDisponiblesParaEmpresa())
-                        {{-- Informe Final (texto del resultado definitivo) --}}
-                        @if($evaluado->archivo_resultado_final)
-                        <div class="card border-success mt-2">
-                            <div class="card-header bg-success bg-opacity-10 py-2">
-                                <h6 class="mb-0 text-success">
-                                    <i class="bi bi-file-earmark-check"></i> Informe Final
-                                    <span class="badge bg-success ms-2">Disponible</span>
-                                </h6>
-                            </div>
-                            <div class="card-body py-2">
-                                <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'final']) }}" class="btn btn-success btn-sm" target="_blank">
-                                    <i class="bi bi-download"></i> Descargar Informe Final
-                                </a>
-                            </div>
+                        <div class="mt-2">
+                            @include('shared.partials._informes_evaluado_empresa', ['evaluado' => $evaluado])
                         </div>
-                        @endif
-
-                        {{-- Informe Preliminar / Observaciones (texto enriquecido) --}}
-                        @if($evaluado->texto_informe_preliminar)
-                        <div class="card border-info mt-2">
-                            <div class="card-header bg-info bg-opacity-10 py-2">
-                                <h6 class="mb-0 text-info">
-                                    <i class="bi bi-file-earmark-text"></i> Informe Preliminar / Observaciones
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="border rounded p-3 bg-light">
-                                    {!! $evaluado->texto_informe_preliminar !!}
-                                </div>
-                            </div>
-                        </div>
-                        @endif
-
-                        {{-- Archivo Preliminar (PDF descargable si existe) --}}
-                        @if(!$evaluado->archivo_resultado_final && $evaluado->archivo_resultado_preliminar)
-                        <div class="card border-info mt-2">
-                            <div class="card-header bg-info bg-opacity-10 py-2">
-                                <h6 class="mb-0 text-info">
-                                    <i class="bi bi-file-earmark-arrow-down"></i> Informe Preliminar
-                                </h6>
-                            </div>
-                            <div class="card-body py-2">
-                                <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'preliminar']) }}" class="btn btn-outline-info btn-sm" target="_blank">
-                                    <i class="bi bi-download"></i> Descargar Preliminar
-                                </a>
-                            </div>
-                        </div>
-                        @endif
                     @elseif($orden->resultados_visibles_empresa)
                         <div class="alert alert-info mt-2 mb-0 py-2">
                             <i class="bi bi-hourglass-split"></i>

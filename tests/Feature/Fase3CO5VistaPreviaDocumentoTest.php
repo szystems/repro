@@ -38,6 +38,7 @@ class Fase3CO5VistaPreviaDocumentoTest extends TestCase
             'role_as' => 1,
             'estado' => 1,
             'empresa_id' => $this->empresa->id,
+            'principal' => 1,
         ]);
         $this->empresaUser->roles()->attach(Role::where('name', 'empresa')->first());
 
@@ -131,5 +132,51 @@ class Fase3CO5VistaPreviaDocumentoTest extends TestCase
 
         $response = $this->get(route('documentos-evaluado.preview', $doc));
         $response->assertRedirect(route('login'));
+    }
+
+    /** @test */
+    public function test_preview_de_imagen_grande_sirve_miniatura_y_no_toca_el_original(): void
+    {
+        if (! function_exists('imagecreatetruecolor') || ! function_exists('imagepng')) {
+            $this->markTestSkipped('GD no está disponible en este PHP.');
+        }
+
+        $ruta = 'documentos_evaluados/'.$this->evaluado->id.'/foto_grande.png';
+        Storage::disk('local')->put($ruta, $this->pngBytes(1600, 1200));
+        $tamanoOriginal = Storage::disk('local')->size($ruta);
+        $thumb = \App\Support\DocumentoEvaluadoPreview::rutaMiniatura($ruta);
+
+        $doc = DocumentoEvaluado::factory()->create([
+            'evaluado_orden_id' => $this->evaluado->id,
+            'ruta_archivo' => $ruta,
+            'nombre_original' => 'foto_grande.png',
+            'mime_type' => 'image/png',
+            'tamano' => $tamanoOriginal,
+            'subido_por_tipo' => 'repro',
+            'subido_por_user_id' => $this->adminUser->id,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('documentos-evaluado.preview', $doc));
+
+        $response->assertStatus(200);
+        $this->assertLessThan($tamanoOriginal, strlen($response->getContent()));
+        $this->assertTrue(Storage::disk('local')->exists($thumb));
+        $this->assertSame($tamanoOriginal, Storage::disk('local')->size($ruta));
+
+        $doc->eliminarConArchivo();
+        $this->assertFalse(Storage::disk('local')->exists($ruta));
+        $this->assertFalse(Storage::disk('local')->exists($thumb));
+    }
+
+    private function pngBytes(int $ancho, int $alto): string
+    {
+        $im = \imagecreatetruecolor($ancho, $alto);
+        \imagefilledrectangle($im, 0, 0, $ancho, $alto, \imagecolorallocate($im, 90, 90, 90));
+        ob_start();
+        \imagepng($im, null, 6);
+        \imagedestroy($im);
+
+        return (string) ob_get_clean();
     }
 }

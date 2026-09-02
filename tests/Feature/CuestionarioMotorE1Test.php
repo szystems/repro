@@ -129,9 +129,6 @@ class CuestionarioMotorE1Test extends TestCase
     {
         return array_merge($this->datosSeccion2Preempleo(), $this->datosParejaPreempleo([
             'estado_civil_detalle' => 'casado',
-            'personas_hogar' => 3,
-            'dependientes_economicos' => 1,
-            'tipo_vivienda' => 'propia_pagada',
         ]), $this->datosHijosPreempleo([
             'numero_hijos' => 1,
             'hijos_menores' => 1,

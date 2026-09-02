@@ -15,21 +15,42 @@ class HistorialAcademico
         'postgrado' => 'Postgrado',
     ];
 
-    /** @return list<string> */
+    /**
+     * 27-ago noche: el Word solo lleva el último grado; el candidato llena esa fila nada más.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function mapaNivelesVisibles(): array
+    {
+        $mapa = [];
+        foreach (array_keys(self::NIVELES) as $clave) {
+            $mapa[$clave] = [$clave];
+        }
+
+        return $mapa;
+    }
+
+    /**
+     * @return list<string>
+     */
     public static function nivelesVisibles(?string $ultimoNivel): array
     {
         if ($ultimoNivel === null || $ultimoNivel === '' || $ultimoNivel === 'ninguno') {
             return [];
         }
 
-        $orden = array_keys(self::NIVELES);
-        $indice = array_search($ultimoNivel, $orden, true);
+        $mapa = self::mapaNivelesVisibles();
 
-        if ($indice === false) {
-            return [$ultimoNivel];
+        if (isset($mapa[$ultimoNivel])) {
+            return $mapa[$ultimoNivel];
         }
 
-        return array_slice($orden, 0, $indice + 1);
+        return [$ultimoNivel];
+    }
+
+    public static function textoAyudaFilas(): string
+    {
+        return 'Complete solo el último grado que seleccionó arriba. El informe Word muestra únicamente ese nivel.';
     }
 
     /**
@@ -125,8 +146,16 @@ class HistorialAcademico
     /** @return array<string, mixed> */
     public static function reglasValidacion(): array
     {
-        return [
+        return array_merge([
             'ultimo_nivel_academico' => 'required|in:ninguno,'.implode(',', array_keys(self::NIVELES)),
+        ], self::reglasEstudiaActualmente());
+    }
+
+    /** @return array<string, mixed> */
+    public static function reglasEstudiaActualmente(): array
+    {
+        return [
+            'estudia_actualmente' => 'required|in:si,no',
         ];
     }
 
@@ -135,6 +164,8 @@ class HistorialAcademico
     {
         return [
             'ultimo_nivel_academico.required' => 'Seleccione su último nivel académico.',
+            'estudia_actualmente.required' => 'Indique si estudia actualmente.',
+            'estudia_actualmente.in' => 'Seleccione si estudia actualmente.',
         ];
     }
 }

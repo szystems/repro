@@ -5,11 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Cuestionario;
 use App\Support\CamposInternosPreempleo;
+use App\Support\CuestionariosIndexSupport;
 use App\Support\CuestionarioFotoCandidato;
 use App\Support\CuestionarioPrecarga;
 use App\Support\CuestionarioSecciones;
 use App\Support\EvaluadorNotasSupport;
+use App\Support\FormularioAutoTransiciones;
 use App\Support\InformePreempleo;
+use App\Support\InformeWordAnexosPapeleria;
+use App\Support\InformeWordBloquesEvaluador;
+use App\Support\InformeWordExport;
+use App\Support\InformeWordNombresArchivo;
+use App\Support\InformeWordPreguntasPoligraficas;
+use App\Support\InformeWordResultado;
+use App\Support\TablaDinamica;
 use App\Models\CuestionarioRespuesta;
 use App\Models\EvaluadoOrden;
 use Illuminate\Http\Request;
@@ -40,135 +49,9 @@ class CuestionariosController extends Controller
      */
     public function index(Request $request)
     {
-        $query = EvaluadoOrden::with(['orden.empresa', 'orden.sede', 'cuestionario'])
-            ->whereHas('orden', fn ($q) => $q->activas())
-            ->orderBy('created_at', 'desc');
+        FormularioAutoTransiciones::aplicarAlAcceder();
 
-        if ($request->filled('empresa_id')) {
-            $query->whereHas('orden', function ($q) use ($request) {
-                $q->where('empresa_id', $request->empresa_id);
-            });
-        }
-
-        if ($request->filled('tipo_servicio')) {
-            $query->where('tipo_servicio', $request->tipo_servicio);
-        }
-
-        if ($request->filled('sede_id')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('sede_id', $request->sede_id)
-                    ->orWhereHas('orden', fn ($oq) => $oq->where('sede_id', $request->sede_id));
-            });
-        }
-
-        if ($request->filled('asignacion_sede')) {
-            match ($request->asignacion_sede) {
-                'sin_sede' => $query->whereNull('sede_id')
-                    ->whereHas('orden', fn ($q) => $q->whereNull('sede_id')),
-                'con_sede' => $query->where(function ($q) {
-                    $q->whereNotNull('sede_id')
-                        ->orWhereHas('orden', fn ($oq) => $oq->whereNotNull('sede_id'));
-                }),
-                default => null,
-            };
-        }
-
-        if ($request->filled('tipo_formulario')) {
-            $query->where('tipo_formulario', $request->tipo_formulario);
-        }
-
-        if ($request->filled('estado')) {
-            match ($request->estado) {
-                'completado' => $query->where('cuestionario_completado', true),
-                'en_progreso' => $query->where('cuestionario_completado', false)
-                    ->whereHas('cuestionario', fn ($q) => $q->where('seccion_actual', '>', 1)),
-                'pendiente' => $query->where('cuestionario_completado', false)
-                    ->where(function ($q) {
-                        $q->doesntHave('cuestionario')
-                            ->orWhereHas('cuestionario', fn ($c) => $c->where('seccion_actual', '<=', 1));
-                    }),
-                default => null,
-            };
-        } elseif ($request->filled('completado')) {
-            $query->where('cuestionario_completado', $request->boolean('completado'));
-        }
-
-        if ($request->filled('fecha_desde')) {
-            $query->whereDate('created_at', '>=', $request->fecha_desde);
-        }
-
-        if ($request->filled('fecha_hasta')) {
-            $query->whereDate('created_at', '<=', $request->fecha_hasta);
-        }
-
-        if ($request->filled('buscar')) {
-            $busqueda = $request->buscar;
-            $query->where(function ($q) use ($busqueda) {
-                $q->where('nombre', 'LIKE', "%{$busqueda}%")
-                    ->orWhere('apellidos', 'LIKE', "%{$busqueda}%")
-                    ->orWhere('dpi', 'LIKE', "%{$busqueda}%")
-                    ->orWhere('telefono', 'LIKE', "%{$busqueda}%")
-                    ->orWhere('email', 'LIKE', "%{$busqueda}%");
-            });
-        }
-
-        if ($request->filled('sort')) {
-            $direction = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
-            $query->reorder()->orderBy(
-                in_array($request->sort, ['id', 'created_at'], true) ? $request->sort : 'created_at',
-                $direction
-            );
-        }
-
-        $evaluados = $query->paginate(20)->appends($request->query());
-
-        $baseStats = EvaluadoOrden::whereHas('orden', fn ($q) => $q->activas());
-
-        $estadisticas = [
-            'total' => (clone $baseStats)->count(),
-            'completados' => (clone $baseStats)->where('cuestionario_completado', true)->count(),
-            'en_progreso' => (clone $baseStats)->where('cuestionario_completado', false)
-                ->whereHas('cuestionario', fn ($q) => $q->where('seccion_actual', '>', 1))->count(),
-            'pendientes' => (clone $baseStats)->where('cuestionario_completado', false)
-                ->where(function ($q) {
-                    $q->doesntHave('cuestionario')
-                        ->orWhereHas('cuestionario', fn ($c) => $c->where('seccion_actual', '<=', 1));
-                })->count(),
-            'iniciados' => (clone $baseStats)->whereHas('cuestionario', fn ($q) => $q->where('seccion_actual', 1))->count(),
-            'completados_hoy' => (clone $baseStats)->where('cuestionario_completado', true)
-                ->whereDate('completado_at', today())->count(),
-            'progreso_promedio' => round((float) Cuestionario::avg('progreso_porcentaje') ?? 0, 1),
-            'por_tipo' => (clone $baseStats)->select('tipo_formulario', DB::raw('count(*) as total'))
-                ->groupBy('tipo_formulario')
-                ->pluck('total', 'tipo_formulario')
-                ->toArray(),
-            'por_estado' => [],
-        ];
-
-        $estadisticas['por_estado'] = [
-            'completados' => $estadisticas['completados'],
-            'en_progreso' => $estadisticas['en_progreso'],
-            'pendientes' => $estadisticas['pendientes'],
-            'iniciados' => $estadisticas['iniciados'],
-        ];
-
-        // Datos para filtros
-        $empresas = \App\Models\Empresa::where('estado', 1)->orderBy('nombre')->get();
-        $sedes = \App\Models\Sede::where('estado', 1)->orderBy('nombre')->get();
-        $tiposFormulario = [
-            'preempleo' => 'Pre-empleo',
-            'periodica' => 'Periódica',
-            'especifica' => 'Específica',
-            'socioeconomico' => 'Socioeconómico'
-        ];
-
-        return view('admin.cuestionarios.index', compact(
-            'evaluados',
-            'empresas',
-            'sedes',
-            'tiposFormulario',
-            'estadisticas'
-        ));
+        return view('admin.cuestionarios.index', CuestionariosIndexSupport::resolver($request));
     }
 
     /**
@@ -212,7 +95,7 @@ class CuestionariosController extends Controller
             'cambiosPrecarga',
             'etiquetasPrecarga',
             'fotoCandidatoUrl'
-        ) + $contextoNotas + $this->contextoInformePreempleo($cuestionario));
+        ) + $contextoNotas + $this->contextoInformePreempleo($cuestionario) + $this->contextoInformeWord($cuestionario));
     }
 
     /**
@@ -245,7 +128,7 @@ class CuestionariosController extends Controller
             'respuestasPorSeccion',
             'secciones',
             'fotoCandidatoUrl'
-        ) + $contextoNotas + $this->contextoInformePreempleo($cuestionario));
+        ) + $contextoNotas + $this->contextoInformePreempleo($cuestionario) + $this->contextoInformeWord($cuestionario));
     }
 
     /**
@@ -258,6 +141,7 @@ class CuestionariosController extends Controller
         // Validar datos básicos - respuestas es opcional para permitir solo guardar observaciones
         $request->validate([
             'observaciones_repro' => 'nullable|string|max:2000',
+            'sede_region_empresa' => 'nullable|string|max:100',
             'respuestas' => 'nullable|array',
             'respuestas_campo' => 'nullable|array',
             'respuestas_campo.*' => 'nullable|array',
@@ -265,7 +149,9 @@ class CuestionariosController extends Controller
             'evaluador_notas.*' => 'nullable|string|max:10000',
             'informe_tablas' => 'nullable|array',
             'informe_tablas_restaurar' => 'nullable|array',
+            'respuestas_tablas' => 'nullable|array',
             'foto_candidato' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'resultado_informe' => 'nullable|string|max:40',
         ]);
 
         if (($request->has('evaluador_notas') || $request->has('informe_tablas') || $request->has('informe_tablas_restaurar'))
@@ -275,10 +161,42 @@ class CuestionariosController extends Controller
 
         DB::beginTransaction();
         try {
-            // Actualizar observaciones de REPRO
-            $cuestionario->update([
-                'observaciones_repro' => $request->observaciones_repro
-            ]);
+            $datosActualizar = [
+                'observaciones_repro' => $request->observaciones_repro,
+            ];
+
+            if ($request->has('estado')) {
+                $datosActualizar['estado'] = $request->input('estado');
+            }
+
+            if ($request->has('completado_at')) {
+                $completadoAt = $request->input('completado_at');
+                $datosActualizar['completado_at'] = $completadoAt !== '' && $completadoAt !== null
+                    ? $completadoAt
+                    : null;
+            }
+
+            if ($request->has('progreso_secciones') && is_array($request->input('progreso_secciones'))) {
+                $progreso = [];
+                foreach ($request->input('progreso_secciones') as $num => $valor) {
+                    $progreso[(int) $num] = (bool) $valor;
+                }
+                $datosActualizar['progreso_secciones'] = $progreso;
+            }
+
+            $cuestionario->update($datosActualizar);
+
+            if ($request->has('sede_region_empresa') && Auth::user()->role_as >= 2) {
+                $evaluado = $cuestionario->evaluadoOrden;
+                $nuevaAgencia = trim((string) $request->input('sede_region_empresa'));
+                $evaluado->update(['sede_region_empresa' => $nuevaAgencia !== '' ? $nuevaAgencia : null]);
+
+                $snapshot = $cuestionario->datos_precarga_json;
+                if (is_array($snapshot)) {
+                    $snapshot['agencia_region'] = $nuevaAgencia;
+                    $cuestionario->update(['datos_precarga_json' => $snapshot]);
+                }
+            }
 
             if ($request->has('evaluador_notas') && EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
                 EvaluadorNotasSupport::guardarDesdeRequest(
@@ -286,6 +204,31 @@ class CuestionariosController extends Controller
                     $request->input('evaluador_notas', []),
                     Auth::id()
                 );
+            }
+
+            if ($request->has('resultado_informe') && EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
+                InformeWordResultado::guardarEnEvaluado(
+                    $cuestionario->evaluadoOrden,
+                    (string) $request->input('resultado_informe')
+                );
+            }
+
+            if (EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
+                if ($request->has('_word_anexos_papeleria')) {
+                    InformeWordAnexosPapeleria::guardarSeleccion(
+                        $cuestionario->evaluado_orden_id,
+                        $request->input('word_anexos_papeleria', []),
+                        Auth::id()
+                    );
+                }
+
+                if ($request->has('_preguntas_poligraficas')) {
+                    InformeWordPreguntasPoligraficas::guardarDesdeRequest(
+                        $cuestionario->evaluado_orden_id,
+                        $request->input('preguntas_poligraficas', []),
+                        Auth::id()
+                    );
+                }
             }
 
             if (InformePreempleo::aplicaATipo($cuestionario->tipo_formulario)
@@ -306,6 +249,10 @@ class CuestionariosController extends Controller
                     $cuestionario->id,
                     $seccionFotoSlug
                 );
+            }
+
+            if ($request->has('respuestas_tablas') && is_array($request->respuestas_tablas)) {
+                $this->guardarTablasDesdeAdmin($cuestionario, $request->respuestas_tablas);
             }
 
             // Respuestas por slug+campo (formulario admin alineado al PDF)
@@ -384,13 +331,13 @@ class CuestionariosController extends Controller
 
             $mensaje = match (true) {
                 $request->hasFile('foto_candidato') => 'Fotografía del evaluado actualizada correctamente.',
-                $request->has('respuestas_campo') || $request->has('respuestas') => 'Cuestionario actualizado correctamente.',
+                $request->has('respuestas_tablas') || $request->has('respuestas_campo') || $request->has('respuestas') => 'Cuestionario actualizado correctamente.',
                 $request->has('evaluador_notas') => 'Notas del evaluador guardadas correctamente.',
                 default => 'Observaciones guardadas correctamente.',
             };
 
             return redirect()
-                ->route('admin.cuestionarios.show', $cuestionario->id)
+                ->route('admin.cuestionarios.edit', $cuestionario->id)
                 ->with('success', $mensaje);
 
         } catch (\Exception $e) {
@@ -403,6 +350,40 @@ class CuestionariosController extends Controller
             return back()
                 ->withErrors(['error' => 'Error al actualizar el cuestionario.'])
                 ->withInput();
+        }
+    }
+
+    /** @param  array<string, mixed>  $tablasPorSlug */
+    private function guardarTablasDesdeAdmin(Cuestionario $cuestionario, array $tablasPorSlug): void
+    {
+        $tipo = $cuestionario->tipo_formulario ?? 'preempleo';
+        $slugANumero = array_flip(CuestionarioSecciones::slugsPorTipo()[$tipo] ?? []);
+
+        foreach ($tablasPorSlug as $slugSeccion => $tablas) {
+            if (! is_string($slugSeccion) || ! is_array($tablas)) {
+                continue;
+            }
+
+            $numero = $slugANumero[$slugSeccion] ?? null;
+            if ($numero === null) {
+                continue;
+            }
+
+            $camposColumnas = TablaDinamica::camposPorSeccion((int) $numero, $tipo);
+
+            foreach ($tablas as $campo => $filas) {
+                if (! isset($camposColumnas[$campo])) {
+                    continue;
+                }
+
+                $normalizadas = TablaDinamica::normalizarFilas($filas, $camposColumnas[$campo]);
+                CuestionarioRespuesta::guardarTabla(
+                    $cuestionario->id,
+                    $slugSeccion,
+                    (string) $campo,
+                    $normalizadas
+                );
+            }
         }
     }
 
@@ -482,7 +463,7 @@ class CuestionariosController extends Controller
             ($cuestionario->evaluadoOrden->apellidos ?? '') . '_Orden' .
             $cuestionario->evaluadoOrden->orden->codigo_orden . '.pdf';
 
-        return $pdf->download($nombreArchivo);
+        return $pdf->stream($nombreArchivo);
     }
 
     /**
@@ -503,7 +484,7 @@ class CuestionariosController extends Controller
         if ($evaluado->token_expira_at < now()) {
             $evaluado->update([
                 'token_unico' => EvaluadoOrden::generarToken(),
-                'token_expira_at' => now()->addDays(30)
+                'token_expira_at' => EvaluadoOrden::calcularExpiracionToken(),
             ]);
         }
 
@@ -513,7 +494,7 @@ class CuestionariosController extends Controller
     }
 
     /**
-     * Generar PDF del cuestionario
+     * PDF del cuestionario: se abre en el navegador (inline). El usuario descarga desde el visor si lo necesita.
      */
     public function generarPDF(int $id)
     {
@@ -538,7 +519,113 @@ class CuestionariosController extends Controller
             ($cuestionario->evaluadoOrden->apellidos ?? '') . '_Orden' .
             $cuestionario->evaluadoOrden->orden->codigo_orden . '.pdf';
 
-        return $pdf->download($nombreArchivo);
+        return $pdf->stream($nombreArchivo);
+    }
+
+    /**
+     * G1.3 — Borrador Word desde edición de cuestionario (mismo motor que orden).
+     */
+    public function informeWordBorrador(int $id)
+    {
+        $cuestionario = Cuestionario::with([
+            'evaluadoOrden.orden.empresa',
+            'evaluadoOrden.poligrafista',
+            'evaluadoOrden.responsable',
+            'evaluadoOrden.sede',
+        ])->findOrFail($id);
+
+        if (! EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
+            abort(403, 'No autorizado para generar el informe Word.');
+        }
+
+        $evaluado = $cuestionario->evaluadoOrden;
+        $orden = $evaluado->orden;
+
+        $path = InformeWordExport::generar($orden, $evaluado);
+        $filename = InformeWordNombresArchivo::generar($evaluado, $orden, 'Borrador');
+
+        return response()->download($path, $filename)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * H13 — Vista previa inline del borrador Word generado (mismo motor que descarga).
+     */
+    public function informeWordPreview(int $id)
+    {
+        $cuestionario = Cuestionario::with([
+            'evaluadoOrden.orden.empresa',
+            'evaluadoOrden.poligrafista',
+            'evaluadoOrden.responsable',
+            'evaluadoOrden.sede',
+        ])->findOrFail($id);
+
+        if (! EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
+            abort(403, 'No autorizado para previsualizar el informe Word.');
+        }
+
+        $evaluado = $cuestionario->evaluadoOrden;
+        $orden = $evaluado->orden;
+
+        $path = InformeWordExport::generar($orden, $evaluado);
+        $filename = InformeWordNombresArchivo::generar($evaluado, $orden, 'Borrador');
+
+        return response()->file($path, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * G1.3 — Vista previa inline del informe final subido (PDF).
+     */
+    public function informeFinalPreview(int $id)
+    {
+        $cuestionario = Cuestionario::with('evaluadoOrden')->findOrFail($id);
+
+        if (! EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
+            abort(403);
+        }
+
+        $evaluado = $cuestionario->evaluadoOrden;
+        $archivo = $evaluado->archivo_resultado_final;
+
+        if (! $archivo || ! Storage::disk('local')->exists($archivo)) {
+            abort(404, 'No hay informe final subido para este evaluado.');
+        }
+
+        $extension = strtolower(pathinfo($archivo, PATHINFO_EXTENSION));
+        if ($extension !== 'pdf') {
+            abort(415, 'La vista previa solo está disponible para informes finales en PDF.');
+        }
+
+        $path = Storage::disk('local')->path($archivo);
+        $nombre = 'InformeFinal_' . ($evaluado->dpi ?: $evaluado->id) . '.pdf';
+
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $nombre . '"',
+        ]);
+    }
+
+    /**
+     * PDF de autorización y términos (documento aparte del cuestionario).
+     * Se abre en el navegador (inline); el usuario descarga desde el visor si lo necesita.
+     */
+    public function generarPdfAutorizacion(int $id)
+    {
+        $cuestionario = Cuestionario::with([
+            'evaluadoOrden.orden.empresa',
+            'evaluadoOrden.responsable',
+        ])->findOrFail($id);
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('admin.cuestionarios.pdf-autorizacion', compact('cuestionario'));
+
+        $nombreArchivo = $cuestionario->evaluadoOrden->nombre . '_' .
+            ($cuestionario->evaluadoOrden->apellidos ?? '') . '_Autorizacion_Orden' .
+            $cuestionario->evaluadoOrden->orden->codigo_orden . '.pdf';
+
+        return $pdf->stream($nombreArchivo);
     }
 
     /**
@@ -657,6 +744,39 @@ class CuestionariosController extends Controller
                 ? InformePreempleo::clavesConOverride($cuestionario->evaluado_orden_id)
                 : [],
             'puedeGestionarInformePreempleo' => $puedeGestionar,
+        ];
+    }
+
+    /**
+     * @return array{
+     *   informeWordPoligrafico: bool,
+     *   preguntasPoligraficas: list<array{pregunta: string, respuesta: string, resultado: string, puntuacion: string}>,
+     *   tiposAnexoDisponibles: array<string, string>,
+     *   anexosPapeleriaSeleccionados: list<string>
+     * }
+     */
+    private function contextoInformeWord(Cuestionario $cuestionario): array
+    {
+        $evaluado = $cuestionario->evaluadoOrden;
+        $puede = EvaluadorNotasSupport::puedeGestionar(Auth::user());
+
+        return [
+            'informeWordPoligrafico' => InformeWordPreguntasPoligraficas::aplicaA($evaluado),
+            'preguntasPoligraficasUsaPuntuacion' => InformeWordPreguntasPoligraficas::usaPuntuacion($evaluado),
+            'preguntasPoligraficas' => $puede
+                ? InformeWordPreguntasPoligraficas::filas($evaluado->id, $evaluado)
+                : [],
+            'tiposAnexoDisponibles' => $puede
+                ? InformeWordAnexosPapeleria::tiposDisponibles($evaluado)
+                : [],
+            'anexosPapeleriaSeleccionados' => $puede
+                ? InformeWordAnexosPapeleria::tiposSeleccionados($evaluado->id)
+                : [],
+            'bloquesWordCompletos' => InformeWordBloquesEvaluador::completos($evaluado->id),
+            'bloquesWordFaltantes' => InformeWordBloquesEvaluador::titulosFaltantes($evaluado->id),
+            'tieneInformeFinal' => $evaluado->tieneResultadoFinal(),
+            'informeFinalEsPdf' => $evaluado->archivo_resultado_final
+                && strtolower(pathinfo($evaluado->archivo_resultado_final, PATHINFO_EXTENSION)) === 'pdf',
         ];
     }
 }

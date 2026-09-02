@@ -101,36 +101,47 @@
                             </div>
 
                             {{-- Permisos del sub-usuario --}}
+                            @php
+                                $permisosSeleccionados = old('permisos_empresa', \App\Support\EmpresaPermisosSupport::permisosDefaultTrabajador());
+                            @endphp
                             <div class="card bg-light mb-3">
                                 <div class="card-body">
                                     <h6 class="card-title mb-2"><i class="bi bi-shield-check text-success"></i> Permisos del usuario</h6>
-                                    <p class="form-text mb-2">Seleccione qué puede hacer este usuario:</p>
+                                    <p class="form-text mb-2">Perfil <strong>trabajador</strong> (reclutador/asistente): por defecto puede ver órdenes, editar las propias, gestionar papelería y descargar PDF de orden de servicio. Solo marque «Crear órdenes» si debe actuar como usuario principal.</p>
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" value="ver_ordenes" name="permisos_empresa[]" id="perm_ver_ordenes" checked>
+                                                <input class="form-check-input" type="checkbox" value="ver_ordenes" name="permisos_empresa[]" id="perm_ver_ordenes" {{ in_array('ver_ordenes', $permisosSeleccionados, true) ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="perm_ver_ordenes">Ver órdenes</label>
                                             </div>
                                             <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" value="crear_ordenes" name="permisos_empresa[]" id="perm_crear_ordenes" checked>
-                                                <label class="form-check-label" for="perm_crear_ordenes">Crear órdenes</label>
+                                                <input class="form-check-input" type="checkbox" value="crear_ordenes" name="permisos_empresa[]" id="perm_crear_ordenes" {{ in_array('crear_ordenes', $permisosSeleccionados, true) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_crear_ordenes">Crear órdenes <span class="text-muted">(solo si aplica)</span></label>
                                             </div>
                                             <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" value="ver_resultados" name="permisos_empresa[]" id="perm_ver_resultados" checked>
+                                                <input class="form-check-input" type="checkbox" value="ver_resultados" name="permisos_empresa[]" id="perm_ver_resultados" {{ in_array('ver_resultados', $permisosSeleccionados, true) ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="perm_ver_resultados">Ver resultados</label>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" value="descargar_pdf" name="permisos_empresa[]" id="perm_descargar_pdf" checked>
-                                                <label class="form-check-label" for="perm_descargar_pdf">Descargar PDFs</label>
+                                                <input class="form-check-input" type="checkbox" value="descargar_pdf" name="permisos_empresa[]" id="perm_descargar_pdf" {{ in_array('descargar_pdf', $permisosSeleccionados, true) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_descargar_pdf">Descargar PDFs (orden de servicio)</label>
                                             </div>
                                             <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" value="subir_documentos" name="permisos_empresa[]" id="perm_subir_documentos" checked>
-                                                <label class="form-check-label" for="perm_subir_documentos">Subir documentos</label>
+                                                <input class="form-check-input" type="checkbox" value="subir_documentos" name="permisos_empresa[]" id="perm_subir_documentos" {{ in_array('subir_documentos', $permisosSeleccionados, true) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_subir_documentos">Subir papelería</label>
                                             </div>
                                             <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" value="ver_reportes" name="permisos_empresa[]" id="perm_ver_reportes">
+                                                <input class="form-check-input" type="checkbox" value="editar_ordenes" name="permisos_empresa[]" id="perm_editar_ordenes" {{ in_array('editar_ordenes', $permisosSeleccionados, true) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_editar_ordenes">Editar / cancelar órdenes propias</label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" value="descargar_documentos" name="permisos_empresa[]" id="perm_descargar_documentos" {{ in_array('descargar_documentos', $permisosSeleccionados, true) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_descargar_documentos">Ver y descargar papelería</label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" value="ver_reportes" name="permisos_empresa[]" id="perm_ver_reportes" {{ in_array('ver_reportes', $permisosSeleccionados, true) ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="perm_ver_reportes">Ver reportes</label>
                                             </div>
                                         </div>
@@ -164,14 +175,15 @@
                     <div class="card-body">
                         <h6 class="card-title"><i class="bi bi-info-circle"></i> Información</h6>
                         <p class="card-text small">
-                            Los usuarios creados aquí podrán:
+                            Los <strong>trabajadores</strong> (reclutadores/asistentes) acceden al panel con los permisos que marque abajo.
                         </p>
                         <ul class="small mb-0">
-                            <li>Acceder al panel de empresa</li>
-                            <li>Ver y crear órdenes de evaluación</li>
-                            <li>Ver el estado de procesos</li>
-                            <li>Acceder a reportes</li>
+                            <li>Ver órdenes y estado de procesos</li>
+                            <li>Editar/cancelar órdenes propias (si aplica)</li>
+                            <li>Subir y descargar papelería del candidato</li>
+                            <li>Descargar PDF de orden de servicio</li>
                         </ul>
+                        <p class="small text-muted mt-2 mb-0">Crear órdenes nuevas queda reservado al <strong>usuario principal</strong>, salvo que usted lo habilite explícitamente.</p>
                         <hr>
                         <p class="card-text small text-muted mb-0">
                             <i class="bi bi-shield-check"></i> Solo el usuario principal puede gestionar otros usuarios.

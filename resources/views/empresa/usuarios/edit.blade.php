@@ -130,6 +130,14 @@
                                                 <label class="form-check-label" for="perm_subir_documentos">Subir documentos</label>
                                             </div>
                                             <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" value="editar_ordenes" name="permisos_empresa[]" id="perm_editar_ordenes" {{ in_array('editar_ordenes', $permisosUsuario) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_editar_ordenes">Editar / cancelar órdenes propias</label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" value="descargar_documentos" name="permisos_empresa[]" id="perm_descargar_documentos" {{ in_array('descargar_documentos', $permisosUsuario) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="perm_descargar_documentos">Ver y descargar papelería</label>
+                                            </div>
+                                            <div class="form-check mb-2">
                                                 <input class="form-check-input" type="checkbox" value="ver_reportes" name="permisos_empresa[]" id="perm_ver_reportes" {{ in_array('ver_reportes', $permisosUsuario) ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="perm_ver_reportes">Ver reportes</label>
                                             </div>

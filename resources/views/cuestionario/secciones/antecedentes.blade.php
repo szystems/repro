@@ -29,6 +29,7 @@
 <div class="form-group">
     <label for="salud_estado_general" class="form-label">{{ SaludHabitosCampos::LABEL_ESTADO_GENERAL }} <span class="required">*</span></label>
     <select class="form-control" id="salud_estado_general" name="salud_estado_general" required>
+        <option value="">Seleccione...</option>
         @foreach(SaludHabitosCampos::ESTADOS_GENERAL as $op => $et)
             <option value="{{ $op }}" {{ old('salud_estado_general', SaludHabitosCampos::normalizarEstadoGeneral($respAnt['salud_estado_general'] ?? '')) === $op ? 'selected' : '' }}>{{ $et }}</option>
         @endforeach
@@ -38,6 +39,7 @@
 <div class="form-group">
     <label for="salud_atencion_psicologica" class="form-label">{{ SaludHabitosCampos::LABEL_PSICOLOGICA }} <span class="required">*</span></label>
     <select class="form-control" id="salud_atencion_psicologica" name="salud_atencion_psicologica" required>
+        <option value="">Seleccione...</option>
         <option value="no" {{ old('salud_atencion_psicologica', $respAnt['salud_atencion_psicologica'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
         <option value="si" {{ old('salud_atencion_psicologica', $respAnt['salud_atencion_psicologica'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
     </select>
@@ -64,13 +66,13 @@
     </div>
     <div class="col-md-4">
         <div class="form-group">
-            <label for="salud_peso" class="form-label">{{ SaludHabitosCampos::LABEL_PESO_ESTATURA }} — Peso (libras) <span class="required">*</span></label>
+            <label for="salud_peso" class="form-label">{{ SaludHabitosCampos::LABEL_PESO }} <span class="required">*</span></label>
             <input type="number" class="form-control" id="salud_peso" name="salud_peso" value="{{ old('salud_peso', $respAnt['salud_peso'] ?? '') }}" required>
         </div>
     </div>
     <div class="col-md-4">
         <div class="form-group">
-            <label for="salud_estatura" class="form-label">{{ SaludHabitosCampos::LABEL_PESO_ESTATURA }} — Estatura (m) <span class="required">*</span></label>
+            <label for="salud_estatura" class="form-label">{{ SaludHabitosCampos::LABEL_ESTATURA }} <span class="required">*</span></label>
             <input type="number" step="0.01" class="form-control" id="salud_estatura" name="salud_estatura" value="{{ old('salud_estatura', $respAnt['salud_estatura'] ?? '') }}" required>
         </div>
     </div>
@@ -79,6 +81,7 @@
 <div class="form-group">
     <label for="salud_practica_deporte" class="form-label">{{ SaludHabitosCampos::LABEL_DEPORTE }} <span class="required">*</span></label>
     <select class="form-control @error('salud_practica_deporte') is-invalid @enderror" id="salud_practica_deporte" name="salud_practica_deporte" required>
+        <option value="">Seleccione...</option>
         <option value="no" {{ old('salud_practica_deporte', $respAnt['salud_practica_deporte'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
         <option value="si" {{ old('salud_practica_deporte', $respAnt['salud_practica_deporte'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
     </select>
@@ -98,6 +101,7 @@
 <div class="form-group">
     <label for="salud_tratamiento_medico" class="form-label">{{ SaludHabitosCampos::LABEL_TRATAMIENTO_MEDICO }} <span class="required">*</span></label>
     <select class="form-control @error('salud_tratamiento_medico') is-invalid @enderror" id="salud_tratamiento_medico" name="salud_tratamiento_medico" required>
+        <option value="">Seleccione...</option>
         <option value="no" {{ old('salud_tratamiento_medico', $respAnt['salud_tratamiento_medico'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
         <option value="si" {{ old('salud_tratamiento_medico', $respAnt['salud_tratamiento_medico'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
     </select>
@@ -118,6 +122,7 @@
 <div class="form-group">
     <label for="salud_hospitalizaciones" class="form-label">{{ SaludHabitosCampos::LABEL_HOSPITALIZACIONES }} <span class="required">*</span></label>
     <select class="form-control @error('salud_hospitalizaciones') is-invalid @enderror" id="salud_hospitalizaciones" name="salud_hospitalizaciones" required>
+        <option value="">Seleccione...</option>
         <option value="no" {{ old('salud_hospitalizaciones', $respAnt['salud_hospitalizaciones'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
         <option value="si" {{ old('salud_hospitalizaciones', $respAnt['salud_hospitalizaciones'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
     </select>
@@ -135,9 +140,12 @@
     </div>
 </x-campo-condicional>
 
+@include('cuestionario.secciones.partials.campos-alergias-embarazo')
+
 <div class="form-group">
     <label for="tiene_tatuajes" class="form-label">{{ SaludHabitosCampos::LABEL_TATUAJES_PERFORACIONES }} <span class="required">*</span></label>
     <select class="form-control" id="tiene_tatuajes" name="tiene_tatuajes" required>
+        <option value="">Seleccione...</option>
         <option value="no" {{ old('tiene_tatuajes', $respAnt['tiene_tatuajes'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
         <option value="si" {{ old('tiene_tatuajes', $respAnt['tiene_tatuajes'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
     </select>

@@ -15,6 +15,18 @@ class DatosPersonalesRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $fecha = $this->input('fecha_nacimiento');
+        if (! is_string($fecha)) {
+            return;
+        }
+
+        $this->merge([
+            'fecha_nacimiento' => DatosPersonalesCampos::normalizarFechaNacimiento($fecha),
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */

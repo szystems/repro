@@ -21,10 +21,10 @@
 </h6>
 <x-tabla-dinamica
     name="referencias_familiares"
-    titulo="Referencias familiares (mínimo 3)"
+    titulo="Referencias familiares (mínimo 2)"
     :columnas="TablaDinamica::columnasReferenciasFamiliares()"
     :filas="$tablas['referencias_familiares'] ?? []"
-    :min-filas="3"
+    :min-filas="2"
     texto-agregar="Agregar referencia familiar"
 />
 
@@ -33,19 +33,19 @@
 </h6>
 <x-tabla-dinamica
     name="referencias_personales"
-    titulo="Referencias personales (mínimo 3)"
+    titulo="Referencias personales (mínimo 2)"
     :columnas="TablaDinamica::columnasReferenciasPersonales()"
     :filas="$tablas['referencias_personales'] ?? []"
-    :min-filas="3"
+    :min-filas="2"
     texto-agregar="Agregar referencia personal"
 />
 
 <x-tabla-dinamica
     name="referencias_vecinales"
-    titulo="Referencias vecinales (mínimo 1)"
+    titulo="Referencias vecinales (opcional)"
     :columnas="TablaDinamica::columnasReferenciasVecinales()"
     :filas="$tablas['referencias_vecinales'] ?? []"
-    :min-filas="1"
+    :min-filas="0"
     texto-agregar="Agregar referencia vecinal"
 />
 
@@ -135,28 +135,11 @@
 </div>
 
 <div class="form-group">
-    <label for="viv_tipo_vivienda_detalle" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_TIPO_VIVIENDA }} <span class="required">*</span></label>
-    <input type="text" class="form-control @error('viv_tipo_vivienda_detalle') is-invalid @enderror"
-           id="viv_tipo_vivienda_detalle" name="viv_tipo_vivienda_detalle"
-           value="{{ old('viv_tipo_vivienda_detalle', $respuestas['viv_tipo_vivienda_detalle'] ?? $respuestas['viv_tipo_vivienda'] ?? '') }}" required>
-    @error('viv_tipo_vivienda_detalle')<div class="invalid-feedback">{{ $message }}</div>@enderror
-</div>
-
-<div class="row">
-    <div class="col-md-6 mb-3">
-        <label for="viv_monto_alquiler" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_MONTO_RENTA }}</label>
-        <input type="number" class="form-control @error('viv_monto_alquiler') is-invalid @enderror"
-               id="viv_monto_alquiler" name="viv_monto_alquiler" min="0" step="0.01"
-               value="{{ old('viv_monto_alquiler', $respuestas['viv_monto_alquiler'] ?? '') }}">
-        @error('viv_monto_alquiler')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-    <div class="col-md-6 mb-3">
-        <label for="viv_propietario" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_PROPIETARIO }}</label>
-        <input type="text" class="form-control @error('viv_propietario') is-invalid @enderror"
-               id="viv_propietario" name="viv_propietario"
-               value="{{ old('viv_propietario', $respuestas['viv_propietario'] ?? '') }}">
-        @error('viv_propietario')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
+    <label for="viv_propietario" class="form-label">{{ SocioeconomicoComplementariaCampos::LABEL_PROPIETARIO }}</label>
+    <input type="text" class="form-control @error('viv_propietario') is-invalid @enderror"
+           id="viv_propietario" name="viv_propietario"
+           value="{{ old('viv_propietario', $respuestas['viv_propietario'] ?? '') }}">
+    @error('viv_propietario')<div class="invalid-feedback">{{ $message }}</div>@enderror
 </div>
 
 <div class="form-group">

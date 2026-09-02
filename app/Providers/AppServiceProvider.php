@@ -5,8 +5,9 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\View;
 use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
@@ -35,35 +36,49 @@ class AppServiceProvider extends ServiceProvider
         // Blade::component('page-header', PageHeader::class);
         // Blade::component('stats-card', StatsCard::class);
 
-        // Aplicar layout según el rol del usuario
+        // Layout y datos de sidebar. No consultar BD en login/errores:
+        // si MySQL ya está en max_user_connections, Auth::check() vuelve a fallar y LiteSpeed tira 503.
         View::composer('*', function ($view) {
-            if (Auth::check()) {
-                $user = Auth::user();
-                $layout = 'layouts.admin'; // Valor por defecto
+            $nombreVista = (string) $view->name();
+            if ($nombreVista === 'auth.login' || str_starts_with($nombreVista, 'errors')) {
+                return;
+            }
 
-                // Determinar layout según el rol
-                if ($user->role_as == 0) {
-                    $layout = 'layouts.evaluado';
-                } elseif ($user->role_as == 1) {
-                    $layout = 'layouts.empresa';
+            try {
+                if (! Auth::check()) {
+                    return;
                 }
+            } catch (\Throwable $e) {
+                return;
+            }
 
-                // Si la vista tiene un layout específico definido, úsalo
-                if (!$view->offsetExists('layout')) {
-                    $view->with('layout', $layout);
-                }
+            $user = Auth::user();
+            $layout = 'layouts.admin';
 
-                // Compartir algunas variables globales útiles para todos los layouts
-                $view->with('currentUser', $user);
-                $view->with('userRole', $user->role_as);
-                $view->with('userRoleName', $user->getRoleName());
+            if ($user->role_as == 0) {
+                $layout = 'layouts.evaluado';
+            } elseif ($user->role_as == 1) {
+                $layout = 'layouts.empresa';
+            }
 
-                // Sedes con WhatsApp para el dropdown de contacto en sidebars
-                try {
-                    $view->with('sedesWhatsApp', \App\Models\Sede::activas()->whereNotNull('whatsapp')->where('whatsapp', '!=', '')->orderBy('nombre')->get());
-                } catch (\Exception $e) {
-                    $view->with('sedesWhatsApp', collect());
-                }
+            if (! $view->offsetExists('layout')) {
+                $view->with('layout', $layout);
+            }
+
+            $view->with('currentUser', $user);
+            $view->with('userRole', $user->role_as);
+            $view->with('userRoleName', $user->getRoleName());
+
+            try {
+                $view->with('sedesWhatsApp', Cache::remember(\App\Models\Sede::CACHE_WHATSAPP, 300, static function () {
+                    return \App\Models\Sede::activas()
+                        ->whereNotNull('whatsapp')
+                        ->where('whatsapp', '!=', '')
+                        ->orderBy('nombre')
+                        ->get();
+                }));
+            } catch (\Throwable $e) {
+                $view->with('sedesWhatsApp', collect());
             }
         });
 

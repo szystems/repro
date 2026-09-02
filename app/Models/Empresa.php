@@ -26,8 +26,22 @@ class Empresa extends Model
         'contacto_cargo',
         'contacto_telefono',
         'contacto_email',
-        'notas'
+        'notas',
+        'modo_visibilidad_reclutadores',
+        'created_by',
     ];
+
+    public function creador()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function nombreCreador(): string
+    {
+        $nombre = trim((string) ($this->creador?->name ?? ''));
+
+        return $nombre !== '' ? $nombre : 'Sin registro';
+    }
 
     /**
      * Relación con usuarios de la empresa

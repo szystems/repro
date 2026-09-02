@@ -113,6 +113,11 @@ class CuestionarioPresentacionDashboard
         if ($numeroSeccion === 5 && ! $soloEmpresa) {
             if (self::esSeccion5SoloJudicial($tipoFormulario)) {
                 $bloques[] = [
+                    'titulo' => SaludHabitosCampos::TITULO_SALUD,
+                    'badge' => 'Confidencial',
+                    'preguntas' => SaludHabitosCampos::preguntasAlergiasEmbarazo(),
+                ];
+                $bloques[] = [
                     'titulo' => AntecedentesJudiciales::TITULO_BLOQUE,
                     'badge' => 'Confidencial',
                     'preguntas' => AntecedentesJudiciales::PREGUNTAS,
@@ -173,6 +178,11 @@ class CuestionarioPresentacionDashboard
                 ];
                 if ($tipoFormulario === 'periodica') {
                     array_unshift($tablas, [
+                        'key' => 'estudios_actuales',
+                        'titulo' => 'Estudios actuales',
+                        'metodo' => 'columnasEstudiosActuales',
+                    ]);
+                    array_unshift($tablas, [
                         'key' => 'formacion_academica',
                         'titulo' => 'Formación académica',
                         'metodo' => 'columnasFormacionAcademica',
@@ -184,7 +194,8 @@ class CuestionarioPresentacionDashboard
 
             return [
                 ['key' => 'formacion_academica', 'titulo' => 'Formación académica', 'metodo' => 'columnasFormacionAcademica'],
-                ['key' => 'empleos', 'titulo' => 'Historial de empleos', 'metodo' => $tipoFormulario === 'preempleo' ? 'columnasEmpleosPreempleo' : 'columnasEmpleos'],
+                ['key' => 'estudios_actuales', 'titulo' => 'Estudios actuales', 'metodo' => 'columnasEstudiosActuales'],
+                ['key' => 'empleos', 'titulo' => 'Historial de empleos', 'metodo' => 'columnasEmpleosPreempleo'],
             ];
         }
 
@@ -331,6 +342,9 @@ class CuestionarioPresentacionDashboard
             ['key' => 'salud_detalle_hospitalizaciones', 'label' => 'Detalle hospitalizaciones'],
             ['key' => 'salud_ausencias_enfermedad', 'label' => SaludHabitosCampos::LABEL_AUSENCIAS_ENFERMEDAD],
             ['key' => 'salud_detalle_ausencias', 'label' => 'Detalle ausencias'],
+            ['key' => 'salud_alergias', 'label' => SaludHabitosCampos::LABEL_ALERGIAS],
+            ['key' => 'salud_detalle_alergias', 'label' => 'Detalle de alergias'],
+            ['key' => 'salud_embarazada', 'label' => SaludHabitosCampos::LABEL_EMBARAZADA],
             ['key' => 'salud_intento_suicidio', 'label' => SaludHabitosCampos::LABEL_SUICIDIO],
             ['key' => 'tiene_tatuajes', 'label' => '¿Tiene tatuajes?'],
             ['key' => 'tiene_perforaciones', 'label' => '¿Tiene perforaciones?'],
@@ -402,8 +416,6 @@ class CuestionarioPresentacionDashboard
             ['key' => 'pareja_edad', 'label' => 'Edad de la pareja'],
             ['key' => 'tiene_hijos', 'label' => '¿Tiene hijos?'],
             ['key' => 'numero_hijos', 'label' => 'Número de hijos'],
-            ['key' => 'personas_hogar', 'label' => 'Personas en el hogar'],
-            ['key' => 'dependientes_economicos', 'label' => 'Dependientes económicos'],
             ['key' => 'tipo_vivienda', 'label' => 'Tipo de vivienda'],
             ['key' => 'tuvo_matrimonio_union_hijos', 'label' => 'Matrimonio/unión previa con hijos'],
             ['key' => 'expareja_nombre', 'label' => 'Nombre expareja'],
@@ -440,6 +452,8 @@ class CuestionarioPresentacionDashboard
             ['key' => 'econ_detalle_es_fiador', 'label' => 'Detalle fiador'],
             ['key' => 'econ_problemas_bancarios', 'label' => SituacionEconomicaCampos::LABEL_PROBLEMAS_BANCARIOS],
             ['key' => 'econ_detalle_problemas_bancarios', 'label' => 'Detalle problemas bancarios'],
+            ['key' => 'personas_hogar', 'label' => 'Personas en el hogar'],
+            ['key' => 'dependientes_economicos', 'label' => 'Dependientes económicos'],
             ['key' => 'econ_tipo_vivienda_detalle', 'label' => SituacionEconomicaCampos::LABEL_VIVIENDA],
             ['key' => 'econ_dependientes_detalle', 'label' => SituacionEconomicaCampos::LABEL_DEPENDIENTES],
             ['key' => 'econ_ingresos_adicionales_detalle', 'label' => SituacionEconomicaCampos::LABEL_INGRESOS_ADICIONALES],

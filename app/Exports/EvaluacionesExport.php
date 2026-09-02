@@ -89,4 +89,26 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
             ],
         ];
     }
+
+    /**
+     * Tabla HTML que Excel abre como libro (iPage no tiene XMLWriter / XLSX).
+     */
+    public function toHtmlTable(): string
+    {
+        $html = '<html><head><meta charset="UTF-8"></head><body><table border="1"><thead><tr>';
+        foreach ($this->headings() as $heading) {
+            $html .= '<th>'.e((string) $heading).'</th>';
+        }
+        $html .= '</tr></thead><tbody>';
+        foreach ($this->collection() as $evaluado) {
+            $html .= '<tr>';
+            foreach ($this->map($evaluado) as $cell) {
+                $html .= '<td>'.e((string) $cell).'</td>';
+            }
+            $html .= '</tr>';
+        }
+        $html .= '</tbody></table></body></html>';
+
+        return $html;
+    }
 }

@@ -36,7 +36,6 @@ HTML,
 <p>Libero de responsabilidad a REPRO, a sus colaboradores, a la empresa solicitante :empresa: y a las personas o entidades que proporcionen información dentro del marco del presente proceso de evaluación.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
-<p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 HTML,
         ],
         'vsa_preempleo' => [
@@ -66,7 +65,6 @@ HTML,
 <p>Libero de responsabilidad a REPRO, a sus colaboradores, a la empresa solicitante :empresa: y a las personas o entidades que proporcionen información dentro del marco del presente proceso de evaluación.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
-<p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 HTML,
         ],
         'poligrafo_periodica' => [
@@ -86,7 +84,6 @@ HTML,
 <p>En virtud de la presente, absuelvo de toda responsabilidad legal, moral, laboral o administrativa a la empresa REPRO, así como a la empresa solicitante :empresa:, por la aplicación de la prueba de polígrafo/VSA y el uso de sus resultados dentro del marco descrito. Reconozco que la prueba es una herramienta de apoyo para la toma de decisiones.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
-<p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 HTML,
         ],
         'vsa_periodica' => [
@@ -104,15 +101,14 @@ HTML,
 <p>En virtud de la presente, absuelvo de toda responsabilidad legal, moral, laboral o administrativa a la empresa REPRO, así como a la empresa solicitante :empresa:, por la aplicación de la prueba de polígrafo/VSA y el uso de sus resultados dentro del marco descrito. Reconozco que la prueba es una herramienta de apoyo para la toma de decisiones.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
-<p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 HTML,
         ],
         'poligrafo_especifica' => [
             'titulo' => 'AUTORIZACIÓN PARA PRUEBA DE POLÍGRAFO ESPECÍFICA',
             'cuerpo' => <<<'HTML'
 <p>Yo, :nombre_completo:, identificado(a) con DPI número :dpi:, por medio de la presente autorizo libre y voluntariamente a REPRO para que realice la siguiente evaluación: Prueba de Polígrafo- Específica</p>
-<p>Como parte de una investigación interna específica solicitada por la empresa :empresa:. La cual tiene como objetivo apoyar el esclarecimiento de: _______________________________________________</p>
-<p>:motivo_hecho:</p>
+<p>Como parte de una investigación interna específica solicitada por la empresa :empresa:.</p>
+<p><strong>Por motivo de:</strong> :motivo_hecho:</p>
 <p><strong>Declaro que:</strong></p><ul>
 <li>Participo de forma libre y voluntaria, sin coacción alguna.</li>
 <li>Autorizo que el proceso pueda incluir: Una entrevista de seguridad donde abordarán temas relacionados exclusivamente con el caso que se investiga, así como información personal relevante para el análisis de confiabilidad y contexto del hecho.</li>
@@ -128,15 +124,14 @@ HTML,
 <p>Libero de toda responsabilidad legal y administrativa a REPRO, sus técnicos, a la empresa solicitante :empresa:, y a cualquier persona relacionada con la aplicación e interpretación de esta evaluación.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
-<p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 HTML,
         ],
         'vsa_especifica' => [
             'titulo' => 'AUTORIZACIÓN PARA VSA ESPECÍFICA',
             'cuerpo' => <<<'HTML'
 <p>Yo, :nombre_completo:, identificado(a) con DPI número :dpi:, por medio de la presente autorizo libre y voluntariamente a REPRO para que realice la siguiente evaluación: ANÁLISIS DE ESTRÉS DE VOZ- Específica</p>
-<p>Como parte de una investigación interna específica solicitada por la empresa :empresa:. La cual tiene como objetivo apoyar el esclarecimiento de: _____________________________________________________</p>
-<p>:motivo_hecho:_________</p>
+<p>Como parte de una investigación interna específica solicitada por la empresa :empresa:.</p>
+<p><strong>Por motivo de:</strong> :motivo_hecho:</p>
 <p><strong>Declaro que:</strong></p><ul>
 <li>Participo de forma libre y voluntaria, sin coacción alguna.</li>
 <li>Autorizo que el proceso pueda incluir: Una entrevista de seguridad donde abordarán temas relacionados exclusivamente con el caso que se investiga, así como información personal relevante para el análisis de confiabilidad y contexto del hecho, también toma de fotografías personales de perfil y de tatuajes visibles cuando corresponda.</li>
@@ -151,7 +146,6 @@ HTML,
 <p>Me comprometo a mantener una conducta respetuosa durante el proceso de evaluación. Entiendo que cualquier comportamiento inapropiado, así como la falsedad u omisión de información relevante, podrá afectar el desarrollo de la evaluación y resultado.</p>
 <p>Libero de toda responsabilidad legal y administrativa a REPRO, sus técnicos, a la empresa solicitante :empresa:, y a cualquier persona relacionada con la aplicación e interpretación de esta evaluación.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
-<p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 HTML,
         ],
@@ -181,7 +175,6 @@ HTML,
 </ul>
 <p>Libero de responsabilidad a REPRO, a sus colaboradores, a la empresa solicitante :empresa: y a las personas o entidades que proporcionen información dentro del marco del presente proceso de evaluación.</p>
 <p>Autorizo el uso de medios y firmas electrónicas como constancia de mi aceptación.</p>
-<p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 <p><strong>Fecha:</strong> :fecha: &nbsp; <strong>Lugar:</strong> :lugar:</p>
 HTML,
         ],

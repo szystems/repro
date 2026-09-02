@@ -33,8 +33,10 @@
                                 <div>
                                     Roles del Sistema
                                     <span class="badge bg-secondary">{{ $roles->count() }} roles</span>
+                                    <small class="d-block text-muted fw-normal mt-1">Los permisos individuales de un empleado no aparecen aquí; se editan en Usuarios.</small>
                                 </div>
-                                <div class="d-flex gap-2">
+                                <div class="d-flex gap-2 align-items-center">
+                                    @include('partials._ayuda_contextual')
                                     <a href="{{ url('admin/roles/permissions') }}" class="btn btn-info me-2">
                                         <i class="bi bi-key"></i> Ver Permisos
                                     </a>

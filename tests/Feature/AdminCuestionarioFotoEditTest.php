@@ -112,7 +112,7 @@ class AdminCuestionarioFotoEditTest extends TestCase
             ->put(route('admin.cuestionarios.update', $this->cuestionario->id), [
                 'foto_candidato' => $archivo,
             ])
-            ->assertRedirect(route('admin.cuestionarios.show', $this->cuestionario->id));
+            ->assertRedirect(route('admin.cuestionarios.edit', $this->cuestionario->id));
 
         $seccionSlug = CuestionarioSecciones::slug(1, 'preempleo');
         $ruta = CuestionarioFotoCandidato::obtenerRuta($this->cuestionario->id, $seccionSlug);

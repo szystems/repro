@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EmpresaPermisosSupport;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -108,14 +109,28 @@ class User extends Authenticatable
     }
 
     /**
-     * Verificar si el usuario tiene un permiso específico
+     * Verificar si el usuario tiene un permiso específico.
+     *
+     * Empresa principal: todos los permisos del portal cliente (MAPA).
+     * Empresa trabajador: solo permisos_empresa JSON (ignora rol Spatie).
+     * REPRO/admin: permisos del rol Spatie.
      */
     public function hasPermission(string $permissionName): bool
     {
+        if ($this->isEmpresa()) {
+            if ((int) $this->principal === 1) {
+                return EmpresaPermisosSupport::permisoSistemaPermitido($permissionName);
+            }
+
+            $permisosJson = is_array($this->permisos)
+                ? json_encode($this->permisos, JSON_UNESCAPED_UNICODE)
+                : (string) ($this->permisos ?? '');
+
+            return EmpresaPermisosSupport::empresaTienePermisoSistema($permisosJson, $permissionName);
+        }
+
         return $this->roles()
-            ->whereHas('permissions', function ($query) use ($permissionName) {
-                $query->where('name', $permissionName);
-            })
+            ->whereHas('permissions', fn ($query) => $query->where('name', $permissionName))
             ->exists();
     }
 
@@ -124,11 +139,13 @@ class User extends Authenticatable
      */
     public function hasAnyPermission(array $permissionNames): bool
     {
-        return $this->roles()
-            ->whereHas('permissions', function ($query) use ($permissionNames) {
-                $query->whereIn('name', $permissionNames);
-            })
-            ->exists();
+        foreach ($permissionNames as $permissionName) {
+            if ($this->hasPermission($permissionName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -175,20 +192,20 @@ class User extends Authenticatable
     }
 
     /**
-     * Verificar si el usuario empresa tiene un permiso específico.
-     * Usuarios principales siempre tienen todos los permisos.
+     * Permiso granular del checkbox en UI empresa (clave JSON, no permiso Spatie).
+     * Usuarios principales: siempre true. Trabajadores: según permisos_empresa.
      */
     public function tienePermisoEmpresa(string $permiso): bool
     {
-        if ($this->principal == 1) {
+        if ((int) $this->principal === 1) {
             return true;
         }
 
-        $permisos = $this->permisos
-            ? (is_array($this->permisos) ? $this->permisos : json_decode($this->permisos, true))
-            : [];
+        $permisosJson = is_array($this->permisos)
+            ? json_encode($this->permisos, JSON_UNESCAPED_UNICODE)
+            : (string) ($this->permisos ?? '');
 
-        return is_array($permisos) && in_array($permiso, $permisos);
+        return EmpresaPermisosSupport::trabajadorTienePermiso($permisosJson, $permiso);
     }
 
     // ==================== Scopes ====================

@@ -14,8 +14,9 @@
                 <h5>Usuarios de la Empresa</h5>
             </div>
         </div>
-        <div class="d-flex align-items-end d-none d-sm-block">
-            <h6 class="float-end text-light" id="reloj"></h6>
+        <div class="d-flex align-items-center gap-2">
+            @include('partials._ayuda_contextual')
+            <h6 class="float-end text-light d-none d-sm-block mb-0" id="reloj"></h6>
         </div>
     </div>
     <!-- Main header ends -->

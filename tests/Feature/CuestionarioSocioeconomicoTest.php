@@ -3,16 +3,20 @@
 namespace Tests\Feature;
 
 use App\Models\Cuestionario;
+use App\Models\CuestionarioRespuesta;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Support\CuestionarioSecciones;
 use App\Support\SocioeconomicoComplementariaCampos;
+use App\Support\TablaDinamica;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\CompletaFlujoCuestionario;
 use Tests\TestCase;
 
 class CuestionarioSocioeconomicoTest extends TestCase
 {
-    use RefreshDatabase;
+    use CompletaFlujoCuestionario, RefreshDatabase;
 
     public function test_socioeconomico_tiene_seis_secciones(): void
     {
@@ -103,15 +107,10 @@ class CuestionarioSocioeconomicoTest extends TestCase
             'referencias_familiares' => [
                 ['nombre' => 'Ana Pérez', 'parentesco' => 'Madre', 'telefono' => '50211111111', 'direccion' => 'Zona 1', 'lugar_trabajo' => 'N/A'],
                 ['nombre' => 'Luis Pérez', 'parentesco' => 'Padre', 'telefono' => '50222222222', 'direccion' => 'Zona 2', 'lugar_trabajo' => 'N/A'],
-                ['nombre' => 'Rosa Pérez', 'parentesco' => 'Hermana', 'telefono' => '50266666666', 'direccion' => 'Zona 3', 'lugar_trabajo' => 'N/A'],
             ],
             'referencias_personales' => [
                 ['nombre' => 'María López', 'relacion' => 'Amiga', 'telefono' => '50233333333', 'anos_conocerlo' => '5'],
                 ['nombre' => 'Carlos Ruiz', 'relacion' => 'Compañero', 'telefono' => '50244444444', 'anos_conocerlo' => '3'],
-                ['nombre' => 'Pedro Gómez', 'relacion' => 'Vecino', 'telefono' => '50277777777', 'anos_conocerlo' => '2'],
-            ],
-            'referencias_vecinales' => [
-                ['nombre' => 'Vecino Uno', 'telefono' => '50255555555', 'direccion' => 'Colonia X', 'tiempo_conocerlo' => '2 años'],
             ],
             'bienes' => [
                 ['descripcion' => 'Motocicleta', 'valor' => '15000'],
@@ -121,9 +120,7 @@ class CuestionarioSocioeconomicoTest extends TestCase
                 SocioeconomicoComplementariaCampos::filasPresupuestoIniciales()
             ),
             'viv_tiempo_residencia' => '4 años',
-            'viv_tipo_vivienda_detalle' => 'Alquilada',
             'viv_propietario' => 'Juan Dueño',
-            'viv_monto_alquiler' => '2500',
             'viv_habitantes_detalle' => 'Cuatro personas: padres y dos hijos',
             'viv_refs_ubicacion' => 'Frente al parque central',
             'viv_zona_riesgo' => 'no',
@@ -140,7 +137,7 @@ class CuestionarioSocioeconomicoTest extends TestCase
         $cuestionario->refresh();
 
         $tablas = $cuestionario->getTablasPorSeccion($slug);
-        $this->assertCount(3, $tablas['referencias_familiares'] ?? []);
+        $this->assertCount(2, $tablas['referencias_familiares'] ?? []);
         $this->assertCount(1, $tablas['bienes'] ?? []);
 
         $respuestas = $cuestionario->getRespuestasPorSeccion($slug);
@@ -185,23 +182,17 @@ class CuestionarioSocioeconomicoTest extends TestCase
             'referencias_familiares' => [
                 ['nombre' => 'Ana Pérez', 'parentesco' => 'Madre', 'telefono' => '50211111111', 'direccion' => 'Zona 1'],
                 ['nombre' => 'Luis Pérez', 'parentesco' => 'Padre', 'telefono' => '50222222222', 'direccion' => 'Zona 2'],
-                ['nombre' => 'Rosa Pérez', 'parentesco' => 'Hermana', 'telefono' => '50266666666', 'direccion' => 'Zona 3'],
                 ['nombre' => '', 'parentesco' => '', 'telefono' => '', 'direccion' => ''],
             ],
             'referencias_personales' => [
                 ['nombre' => 'María López', 'relacion' => 'Amiga', 'telefono' => '50233333333', 'anos_conocerlo' => '5'],
                 ['nombre' => 'Carlos Ruiz', 'relacion' => 'Compañero', 'telefono' => '50244444444', 'anos_conocerlo' => '3'],
-                ['nombre' => 'Pedro Gómez', 'relacion' => 'Vecino', 'telefono' => '50277777777', 'anos_conocerlo' => '2'],
-            ],
-            'referencias_vecinales' => [
-                ['nombre' => 'Vecino Uno', 'telefono' => '50255555555', 'direccion' => 'Colonia X', 'tiempo_conocerlo' => '2 años'],
             ],
             'presupuesto' => array_map(
                 fn (array $fila) => ['concepto' => $fila['concepto'], 'monto' => '50'],
                 SocioeconomicoComplementariaCampos::filasPresupuestoIniciales()
             ),
             'viv_tiempo_residencia' => '4 años',
-            'viv_tipo_vivienda_detalle' => 'Propia',
             'viv_habitantes_detalle' => 'Cuatro personas',
             'viv_refs_ubicacion' => 'Cerca del mercado',
             'viv_zona_riesgo' => 'no',
@@ -218,10 +209,79 @@ class CuestionarioSocioeconomicoTest extends TestCase
         $response->assertSessionHasNoErrors();
     }
 
+    public function test_socioeconomico_empleos_validan_fechas_laboradas_como_preempleo(): void
+    {
+        $columnas = TablaDinamica::camposPorSeccion(3, 'socioeconomico')['empleos'] ?? [];
+
+        $this->assertSame('fechas_laboradas', $columnas[2]['key'] ?? null);
+        $this->assertSame('date_range', $columnas[2]['type'] ?? null);
+    }
+
+    public function test_socioeconomico_guarda_fechas_laboradas_con_selectores_mes_anio(): void
+    {
+        Storage::fake('local');
+
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_servicio' => 'socioeconomico',
+            'tipo_formulario' => 'preempleo',
+            'token_unico' => 'testsociofechaslaboradastoken1',
+            'token_expira_at' => now()->addDays(7),
+            'cuestionario_completado' => false,
+            'dpi' => '1234567890101',
+        ]);
+
+        $this->verificarIdentidadYFlujoPreSeccion($evaluado->token_unico, '1234567890101');
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $evaluado->token_unico,
+            'numero' => 1,
+        ]), $this->datosSeccion1Preempleo());
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $evaluado->token_unico,
+            'numero' => 2,
+        ]), $this->datosSeccion2Preempleo());
+
+        $response = $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $evaluado->token_unico,
+            'numero' => 3,
+        ]), array_merge(
+            $this->datosSeccion3Preempleo(),
+            $this->datosFormacionAcademicaPreempleo(),
+            [
+                'experiencia_previa' => 'si',
+                'empleos' => [[
+                    'empresa' => 'Distribuidora Alinor',
+                    'puesto' => 'Ventas',
+                    'fechas_laboradas_inicio_mes' => '04',
+                    'fechas_laboradas_inicio_anio' => '2021',
+                    'fechas_laboradas_fin_mes' => '05',
+                    'fechas_laboradas_fin_anio' => '2026',
+                    'ultimo_salario' => '4500',
+                    'motivo_retiro' => 'Cambio de trabajo',
+                ]],
+            ]
+        ));
+
+        $response->assertSessionHasNoErrors();
+
+        $cuestionario = $evaluado->cuestionario()->firstOrFail();
+        $respuesta = CuestionarioRespuesta::where('cuestionario_id', $cuestionario->id)
+            ->where('campo', 'empleos')
+            ->first();
+
+        $this->assertNotNull($respuesta);
+        $this->assertSame('04/2021 al 05/2026', $respuesta->getTabla()[0]['fechas_laboradas'] ?? null);
+    }
+
     public function test_documentos_socio_incluyen_recibo_luz(): void
     {
         $tipos = \App\Models\DocumentoEvaluado::tiposDocumentoParaServicio('socioeconomico');
         $this->assertArrayHasKey('recibo_luz', $tipos);
         $this->assertArrayHasKey('constancia_laboral', $tipos);
+        $this->assertArrayHasKey('foto_tatuaje', $tipos);
+        $this->assertSame('Tatuajes', $tipos['foto_tatuaje']);
     }
 }

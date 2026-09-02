@@ -43,7 +43,7 @@ class CuestionarioPeriodicaTest extends TestCase
         $labels = array_column($columnas['empleo_actual'], 'label');
         $this->assertContains('Puesto Ocupado', $labels);
         $this->assertContains('Salario mensual', $labels);
-        $this->assertContains('Fechas Laboradas', $labels);
+        $this->assertContains('Fechas laboradas', $labels);
         $this->assertContains('Motivo de la prueba', $labels);
     }
 
@@ -145,7 +145,9 @@ class CuestionarioPeriodicaTest extends TestCase
             ->assertSee('Preguntas complementarias de su empleo actual', false)
             ->assertSee('Tabla de información laboral', false)
             ->assertSee('Formación académica', false)
-            ->assertSee('Detalle por nivel académico', false);
+            ->assertSee('Detalle por nivel académico', false)
+            ->assertSee('Complete solo el último grado que seleccionó arriba', false)
+            ->assertDontSee('desde primaria hasta el último nivel', false);
     }
 
     public function test_seccion_5_periodica_muestra_antecedentes_no_generica(): void
@@ -175,7 +177,11 @@ class CuestionarioPeriodicaTest extends TestCase
             ->assertOk()
             ->assertSee('Aspecto judicial', false)
             ->assertSee('Antecedentes recientes', false)
-            ->assertDontSee(SaludHabitosCampos::TITULO_SALUD, false)
+            ->assertSee(SaludHabitosCampos::LABEL_TATUAJES_PERFORACIONES, false)
+            ->assertSee(SaludHabitosCampos::TITULO_SALUD, false)
+            ->assertSee(SaludHabitosCampos::LABEL_ALERGIAS, false)
+            ->assertSee(SaludHabitosCampos::LABEL_EMBARAZADA, false)
+            ->assertDontSee(SaludHabitosCampos::LABEL_PREOCUPACIONES, false)
             ->assertDontSee(InformacionComplementaria::TITULO_BLOQUE, false)
             ->assertDontSee('Sección no disponible', false);
     }

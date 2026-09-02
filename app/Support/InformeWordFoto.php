@@ -2,13 +2,22 @@
 
 namespace App\Support;
 
-/** Inserta la foto del evaluado en el cuerpo del documento, encima de la tabla de encabezado. */
+/**
+ * Coloca la foto del evaluado en el informe. En las plantillas v2 la foto sustituye a la silueta
+ * flotante que ya viene maquetada a la izquierda de la tabla DATOS GENERALES; en las plantillas
+ * legacy, que no tienen ese marco, se inserta centrada encima de la tabla de encabezado.
+ */
 class InformeWordFoto
 {
-    /** Límites visibles para la foto del evaluado (encima de tabla Proceso). */
-    private const MAX_ANCHO_PX_FOTO = 420;
+    /** Resolución con la que se guarda el mapa de bits: cubre el marco de la plantilla (~3,1 × 4,6 pulg). */
+    private const MAX_ALMACEN_ANCHO_PX = 420;
 
-    private const MAX_ALTO_PX_FOTO = 230;
+    private const MAX_ALMACEN_ALTO_PX = 560;
+
+    /** Tamaño visible cuando se inserta centrada (plantillas legacy). Proporción ~3:4 tipo carnet. */
+    private const MAX_ANCHO_PX_FOTO = 240;
+
+    private const MAX_ALTO_PX_FOTO = 300;
 
     /** Límite genérico para otras imágenes (anexos). */
     private const MAX_ANCHO_PX = 480;
@@ -39,14 +48,23 @@ class InformeWordFoto
         $info = @getimagesize($rutaFotoCandidato);
         $widthPx = (int) ($info[0] ?? 0);
         $heightPx = (int) ($info[1] ?? 0);
+        $tamano = @filesize($rutaFotoCandidato);
 
-        if (function_exists('imagecreatetruecolor')) {
+        // Archivos >5 MB en el .docx saturan LiteSpeed (L0). Sí se aceptan JPEGs de celular
+        // de 8–12 MP si pesan poco: Word escala el marco y no hay que pasarlos por GD.
+        if (is_int($tamano) && $tamano > 5_000_000) {
+            return null;
+        }
+
+        $demasiadoGrandeParaGd = $widthPx > 0 && $heightPx > 0 && ($widthPx * $heightPx) > 8_000_000;
+
+        if (! $demasiadoGrandeParaGd && function_exists('imagecreatetruecolor')) {
             $foto = self::cargarImagen($rutaFotoCandidato);
             if ($foto !== null) {
                 $redimensionada = self::redimensionarProporcional(
                     $foto,
-                    self::MAX_ANCHO_PX_FOTO,
-                    self::MAX_ALTO_PX_FOTO
+                    self::MAX_ALMACEN_ANCHO_PX,
+                    self::MAX_ALMACEN_ALTO_PX
                 );
                 \imagedestroy($foto);
 
@@ -81,8 +99,8 @@ class InformeWordFoto
         }
 
         if ($widthPx <= 0 || $heightPx <= 0) {
-            $widthPx = self::MAX_ANCHO_PX_FOTO;
-            $heightPx = (int) round(self::MAX_ALTO_PX_FOTO * 0.75);
+            $widthPx = self::MAX_ALMACEN_ANCHO_PX;
+            $heightPx = (int) round(self::MAX_ALMACEN_ALTO_PX * 0.75);
         }
 
         return [
@@ -98,6 +116,11 @@ class InformeWordFoto
      */
     public static function insertarEnDocumento(string $documentXml, array $media, string $relId): string
     {
+        $enMarcoPlantilla = self::sustituirMarcoFoto($documentXml, $media, $relId);
+        if ($enMarcoPlantilla !== null) {
+            return $enMarcoPlantilla;
+        }
+
         ['cx' => $cx, 'cy' => $cy] = self::dimensionesEmu(
             $media['widthPx'],
             $media['heightPx'],
@@ -113,6 +136,79 @@ class InformeWordFoto
         );
 
         return self::prepararEspacioTablaProceso($documentXml, $parrafo);
+    }
+
+    /**
+     * Sustituye la silueta de la plantilla por la foto real conservando su anclaje, de modo que la
+     * foto queda al costado de DATOS GENERALES tal como en el formato entregado por el cliente.
+     * Se recalcula el tamaño para llenar el marco sin deformar la imagen.
+     *
+     * @param  array{bytes: string, extension: string, widthPx: int, heightPx: int}  $media
+     */
+    private static function sustituirMarcoFoto(string $documentXml, array $media, string $relId): ?string
+    {
+        $limitesDatos = InformeWordXml::limitesTablaPorMarcador($documentXml, 'DATOS GENERALES');
+        if ($limitesDatos === null) {
+            return null;
+        }
+
+        $marco = InformeWordXml::parrafoMarcoFoto($documentXml, $limitesDatos[0]);
+        if ($marco === null) {
+            return null;
+        }
+
+        if (preg_match('/<wp:extent cx="(\d+)" cy="(\d+)"\s*\/>/', $marco['xml'], $extent) !== 1) {
+            return null;
+        }
+
+        ['cx' => $cx, 'cy' => $cy] = self::dimensionesEmuEnMarco(
+            $media['widthPx'],
+            $media['heightPx'],
+            (int) $extent[1],
+            (int) $extent[2]
+        );
+
+        $parrafo = preg_replace('/r:embed="rId\d+"/', 'r:embed="' . $relId . '"', $marco['xml'], 1) ?? $marco['xml'];
+        // El recorte de la plantilla estaba calculado para la silueta y desencuadraría la foto.
+        $parrafo = preg_replace('/<a:srcRect\b[^>]*\/>/', '', $parrafo) ?? $parrafo;
+        $parrafo = preg_replace(
+            '/<wp:extent cx="\d+" cy="\d+"\s*\/>/',
+            '<wp:extent cx="' . $cx . '" cy="' . $cy . '"/>',
+            $parrafo,
+            1
+        ) ?? $parrafo;
+        $parrafo = preg_replace(
+            '/<a:ext cx="\d+" cy="\d+"\s*\/>/',
+            '<a:ext cx="' . $cx . '" cy="' . $cy . '"/>',
+            $parrafo,
+            1
+        ) ?? $parrafo;
+        $parrafo = preg_replace('/(<wp:docPr id="\d+" name=)"[^"]*"/', '$1"Foto evaluado"', $parrafo, 1) ?? $parrafo;
+
+        return substr($documentXml, 0, $marco['start'])
+            . $parrafo
+            . substr($documentXml, $marco['end']);
+    }
+
+    /**
+     * Escala la foto para ocupar el marco de la plantilla sin recortarla ni deformarla.
+     *
+     * @return array{cx: int, cy: int}
+     */
+    public static function dimensionesEmuEnMarco(int $widthPx, int $heightPx, int $marcoCx, int $marcoCy): array
+    {
+        if ($widthPx <= 0 || $heightPx <= 0 || $marcoCx <= 0 || $marcoCy <= 0) {
+            return ['cx' => $marcoCx, 'cy' => $marcoCy];
+        }
+
+        $anchoNatural = $widthPx * self::EMU_POR_PX;
+        $altoNatural = $heightPx * self::EMU_POR_PX;
+        $escala = min($marcoCx / $anchoNatural, $marcoCy / $altoNatural);
+
+        return [
+            'cx' => (int) round($anchoNatural * $escala),
+            'cy' => (int) round($altoNatural * $escala),
+        ];
     }
 
     public static function compactarEspacioSinFoto(string $documentXml): string
@@ -155,7 +251,10 @@ class InformeWordFoto
 
     private static function prepararEspacioTablaProceso(string $documentXml, ?string $parrafoFoto): string
     {
-        $limites = InformeWordXml::limitesTablaPorMarcador($documentXml, 'Proceso:');
+        // Legacy: Proceso: · v2 cliente: Agencia/Sede: / DATOS GENERALES
+        $limites = InformeWordXml::limitesTablaPorMarcador($documentXml, 'Proceso:')
+            ?? InformeWordXml::limitesTablaPorMarcador($documentXml, 'Agencia/Sede:')
+            ?? InformeWordXml::limitesTablaPorMarcador($documentXml, 'DATOS GENERALES');
         if ($limites === null) {
             return $documentXml;
         }
@@ -166,11 +265,17 @@ class InformeWordFoto
         $despues = substr($documentXml, $finTabla);
 
         $tabla = InformeWordXml::quitarAnclajeFlotanteTabla($tabla);
-        $antes = InformeWordXml::reemplazarParrafosAncladosPorTexto($antes);
+        $antes = InformeWordXml::quitarParrafosAnclados($antes);
+        if ($parrafoFoto === null) {
+            $antes = InformeWordXml::reemplazarParrafosAncladosPorTexto($antes);
+        }
         $antes = InformeWordXml::quitarParrafosVacios($antes);
+        $despues = InformeWordXml::limpiarZonaFotoPerfilV2($despues);
 
         if ($parrafoFoto !== null) {
             $antes .= $parrafoFoto;
+        } else {
+            $antes = InformeWordXml::quitarParrafosVaciosCola($antes);
         }
 
         return $antes . $tabla . $despues;

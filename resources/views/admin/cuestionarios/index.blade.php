@@ -1,6 +1,6 @@
-@extends('layouts.admin')
+@extends(session('layout', 'layouts.admin'))
 
-@section('title', 'Gestión de Cuestionario – Candidatos')
+@section('title', ($portal ?? 'admin') === 'empresa' ? 'Estado de Procesos' : 'Gestión de Cuestionario – Candidatos')
 
 @section('content')
 <div class="content-wrapper-scroll">
@@ -11,7 +11,7 @@
                 <i class="bi bi-clipboard-check"></i>
             </div>
             <div class="page-title">
-                <h5>Gestión de Cuestionario – Candidatos</h5>
+                <h5>{{ ($portal ?? 'admin') === 'empresa' ? 'Estado de Procesos' : 'Gestión de Cuestionario – Candidatos' }}</h5>
             </div>
         </div>
         <div class="d-flex align-items-end d-none d-sm-block">
@@ -35,22 +35,22 @@
                 <div class="card-body">
                     {{-- Accesos rápidos --}}
                     <div class="mb-3 d-flex gap-2 flex-wrap">
-                        <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-sm {{ !request()->hasAny(['estado','tipo_servicio','sede_id','asignacion_sede','empresa_id','fecha_desde','fecha_hasta','buscar']) ? 'btn-primary' : 'btn-outline-primary' }}">
+                        <a href="{{ route($indexRoute ?? 'admin.cuestionarios.index') }}" class="btn btn-sm {{ !request()->hasAny(['estado','tipo_servicio','sede_id','asignacion_sede','empresa_id','fecha_desde','fecha_hasta','buscar','orden_id']) ? 'btn-primary' : 'btn-outline-primary' }}">
                             <i class="bi bi-list-ul"></i> Todos
                         </a>
-                        <a href="{{ route('admin.cuestionarios.index', ['estado' => 'pendiente']) }}" class="btn btn-sm {{ request('estado') == 'pendiente' ? 'btn-warning' : 'btn-outline-warning' }}">
+                        <a href="{{ route($indexRoute ?? 'admin.cuestionarios.index', ['estado' => 'pendiente']) }}" class="btn btn-sm {{ request('estado') == 'pendiente' ? 'btn-warning' : 'btn-outline-warning' }}">
                             <i class="bi bi-hourglass"></i> Pendientes
                         </a>
-                        <a href="{{ route('admin.cuestionarios.index', ['estado' => 'en_progreso']) }}" class="btn btn-sm {{ request('estado') == 'en_progreso' ? 'btn-info' : 'btn-outline-info' }}">
+                        <a href="{{ route($indexRoute ?? 'admin.cuestionarios.index', ['estado' => 'en_progreso']) }}" class="btn btn-sm {{ request('estado') == 'en_progreso' ? 'btn-info' : 'btn-outline-info' }}">
                             <i class="bi bi-pencil-square"></i> En Progreso
                         </a>
-                        <a href="{{ route('admin.cuestionarios.index', ['estado' => 'completado']) }}" class="btn btn-sm {{ request('estado') == 'completado' ? 'btn-success' : 'btn-outline-success' }}">
+                        <a href="{{ route($indexRoute ?? 'admin.cuestionarios.index', ['estado' => 'completado']) }}" class="btn btn-sm {{ request('estado') == 'completado' ? 'btn-success' : 'btn-outline-success' }}">
                             <i class="bi bi-check-circle"></i> Completados
                         </a>
                     </div>
                     <div class="collapse" id="filtrosPanel">
                         <div class="card card-body mb-4 bg-light">
-                            <form method="GET" action="{{ route('admin.cuestionarios.index') }}" id="formFiltros">
+                            <form method="GET" action="{{ route($indexRoute ?? 'admin.cuestionarios.index') }}" id="formFiltros">
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="form-group">
@@ -64,6 +64,7 @@
                                         </div>
                                     </div>
 
+                                    @if(($portal ?? 'admin') === 'admin')
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="filtro_empresa" class="form-label">Empresa</label>
@@ -77,6 +78,21 @@
                                             </select>
                                         </div>
                                     </div>
+                                    @else
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filtro_orden_id" class="form-label">Orden</label>
+                                            <select class="form-control" id="filtro_orden_id" name="orden_id">
+                                                <option value="">Todas las órdenes</option>
+                                                @foreach($ordenesFiltro ?? [] as $ordenFiltro)
+                                                    <option value="{{ $ordenFiltro->id }}" {{ request('orden_id') == $ordenFiltro->id ? 'selected' : '' }}>
+                                                        {{ $ordenFiltro->codigo_orden ?? '#'.$ordenFiltro->id }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    @endif
 
                                     <div class="col-md-3">
                                         <div class="form-group">
@@ -106,6 +122,7 @@
                                         </div>
                                     </div>
 
+                                    @if(($portal ?? 'admin') === 'admin')
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="filtro_asignacion_sede" class="form-label">Asignación de sede</label>
@@ -130,6 +147,7 @@
                                             </select>
                                         </div>
                                     </div>
+                                    @endif
 
                                     <div class="col-md-4">
                                         <div class="form-group">
@@ -144,7 +162,7 @@
                                             <button type="submit" class="btn btn-primary">
                                                 <i class="bi bi-search"></i> Filtrar
                                             </button>
-                                            <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-outline-secondary">
+                                            <a href="{{ route($indexRoute ?? 'admin.cuestionarios.index') }}" class="btn btn-outline-secondary">
                                                 <i class="bi bi-x-lg"></i>
                                             </a>
                                         </div>
@@ -277,7 +295,9 @@
                                     <th>Orden</th>
                                     <th>Evaluado</th>
                                     <th>Contacto</th>
+                                    @if(($portal ?? 'admin') === 'admin')
                                     <th>Empresa</th>
+                                    @endif
                                     <th>Sede</th>
                                     <th>Servicio / Formulario</th>
                                     <th>Estado de Formulario</th>
@@ -341,9 +361,11 @@
                                                 @endif
                                             </div>
                                         </td>
+                                        @if(($portal ?? 'admin') === 'admin')
                                         <td>
                                             <span class="badge bg-info">{{ $empresa->nombre }}</span>
                                         </td>
+                                        @endif
                                         <td>
                                             <small class="text-muted">
                                                 @if($orden->sede)
@@ -411,6 +433,31 @@
                                             </div>
                                         </td>
                                         <td>
+                                            @if(($portal ?? 'admin') === 'empresa')
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}" class="btn btn-outline-success" title="Ver detalle">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                @if(!$evaluado->cuestionario_completado)
+                                                    <a href="{{ route('cuestionario.mostrar', $evaluado->token_unico) }}" class="btn btn-outline-primary" title="Enlace del evaluado" target="_blank">
+                                                        <i class="bi bi-link-45deg"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-outline-secondary" onclick="copiarEnlaceEvaluado('{{ route('cuestionario.mostrar', $evaluado->token_unico) }}')" title="Copiar enlace">
+                                                        <i class="bi bi-clipboard"></i>
+                                                    </button>
+                                                @endif
+                                                @if($evaluado->cuestionario_completado && $evaluado->resultadosDisponiblesParaEmpresa())
+                                                    @if(Auth::user()->hasPermission('ordenes.ver'))
+                                                    <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-outline-danger" title="PDF orden" target="_blank">
+                                                        <i class="bi bi-file-pdf"></i>
+                                                    </a>
+                                                    @endif
+                                                    <a href="{{ route('empresa.cuestionarios.pdf-autorizacion', $evaluado) }}" class="btn btn-outline-danger" title="PDF autorización" target="_blank">
+                                                        <i class="bi bi-file-earmark-check"></i>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                            @else
                                             <div class="btn-group">
                                                 <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"
                                                         data-bs-toggle="dropdown">
@@ -435,7 +482,12 @@
                                                     </li>
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('admin.cuestionarios.pdf', $cuestionario) }}" target="_blank">
-                                                            <i class="bi bi-file-earmark-pdf"></i> Generar PDF
+                                                            <i class="bi bi-file-earmark-pdf"></i> PDF cuestionario
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ route('admin.cuestionarios.pdf-autorizacion', $cuestionario) }}" target="_blank">
+                                                            <i class="bi bi-file-earmark-check"></i> PDF autorización
                                                         </a>
                                                     </li>
                                                     <li><hr class="dropdown-divider"></li>
@@ -487,11 +539,12 @@
                                                     @endif
                                                 </ul>
                                             </div>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="13" class="text-center py-4">
+                                        <td colspan="{{ ($portal ?? 'admin') === 'empresa' ? 12 : 13 }}" class="text-center py-4">
                                             <div class="text-muted">
                                                 <i class="bi bi-inbox fs-1 mb-3 d-block"></i>
                                                 <p class="mb-0">No se encontraron candidatos con los filtros aplicados</p>

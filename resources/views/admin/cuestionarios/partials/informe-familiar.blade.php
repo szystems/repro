@@ -1,8 +1,18 @@
 @php
     $datos = is_array($datos ?? null) ? $datos : [];
     $soloLectura = $soloLectura ?? false;
+    $tipoFormulario = $tipoFormulario ?? 'preempleo';
+    $incluyeHermanos = \App\Support\InformePreempleo::incluyeHermanos($tipoFormulario);
     $convive = $datos['convive_con'] ?? [];
     $conviveTexto = is_array($convive) ? implode(', ', $convive) : (string) $convive;
+    $camposProgenitor = [
+        'nombre' => 'Nombre',
+        'vive' => '¿Vive? (si/no)',
+        'edad' => 'Edad',
+        'telefono' => 'Teléfono',
+        'direccion' => 'Dirección',
+        'ocupacion' => 'Ocupación',
+    ];
 @endphp
 
 @if($soloLectura)
@@ -15,6 +25,9 @@
                     {{ $datos[$prefijo]['nombre'] }}
                     @if(isset($datos[$prefijo]['vive']))
                         ({{ ($datos[$prefijo]['vive'] ?? '') === 'si' ? 'vive' : 'fallecido' }})
+                    @endif
+                    @if(!empty($datos[$prefijo]['direccion'] ?? null))
+                        — {{ $datos[$prefijo]['direccion'] }}
                     @endif
                     @if(!empty($datos[$prefijo]['ocupacion'] ?? null))
                         — {{ $datos[$prefijo]['ocupacion'] }}
@@ -34,7 +47,7 @@
                 'columnas' => \App\Support\TablaDinamica::columnasHijos(),
             ])
         @endif
-        @if(!empty($datos['hermanos']))
+        @if($incluyeHermanos && !empty($datos['hermanos']))
             @include('admin.cuestionarios.partials.tabla-dinamica-resumen', [
                 'filas' => $datos['hermanos'],
                 'columnas' => \App\Support\TablaDinamica::columnasHermanos(),
@@ -56,7 +69,7 @@
         <fieldset class="border rounded p-2 mb-3">
             <legend class="float-none w-auto px-2 fs-6">{{ $etiqueta }}</legend>
             <div class="row g-2">
-                @foreach(['nombre' => 'Nombre', 'vive' => '¿Vive? (si/no)', 'edad' => 'Edad', 'ocupacion' => 'Ocupación', 'telefono' => 'Teléfono'] as $campo => $label)
+                @foreach($camposProgenitor as $campo => $label)
                     <div class="col-md-4">
                         <label class="form-label small">{{ $label }}</label>
                         <input type="text"
@@ -72,7 +85,7 @@
     <fieldset class="border rounded p-2 mb-3">
         <legend class="float-none w-auto px-2 fs-6">Pareja actual</legend>
         <div class="row g-2">
-            @foreach(['tipo' => 'Tipo relación', 'nombre' => 'Nombre', 'edad' => 'Edad', 'telefono' => 'Teléfono', 'ocupacion' => 'Ocupación'] as $campo => $label)
+            @foreach(['tipo' => 'Tipo relación', 'nombre' => 'Nombre', 'edad' => 'Edad', 'telefono' => 'Teléfono', 'direccion' => 'Dirección', 'ocupacion' => 'Ocupación', 'tiempo_relacion' => 'Tiempo de relación', 'calidad_relacion' => 'Estado de la relación'] as $campo => $label)
                 <div class="col-md-4">
                     <label class="form-label small">{{ $label }}</label>
                     <input type="text"
@@ -94,7 +107,7 @@
     <fieldset class="border rounded p-2 mb-3">
         <legend class="float-none w-auto px-2 fs-6">Expareja / unión anterior</legend>
         <div class="row g-2">
-            @foreach(['nombre' => 'Nombre', 'tipo' => 'Tipo', 'hijos_comun' => 'Hijos en común', 'problemas_legales' => 'Problemas legales'] as $campo => $label)
+            @foreach(['nombre' => 'Nombre', 'tipo' => 'Tipo', 'tiempo_relacion' => 'Tiempo de relación', 'hijos_comun' => 'Hijos en común', 'cantidad_hijos' => 'Cantidad de hijos', 'problemas_legales' => 'Problemas legales'] as $campo => $label)
                 <div class="col-md-6">
                     <label class="form-label small">{{ $label }}</label>
                     <input type="text"
@@ -113,16 +126,23 @@
         </div>
     </fieldset>
 
-    @foreach(['hijos' => \App\Support\TablaDinamica::columnasHijos(), 'hermanos' => \App\Support\TablaDinamica::columnasHermanos()] as $tablaClave => $columnasTabla)
-        @php $filasTabla = $datos[$tablaClave] ?? []; @endphp
-        @if(!empty($filasTabla))
-            <h6 class="mt-2">{{ $tablaClave === 'hijos' ? 'Hijos' : 'Hermanos' }}</h6>
-            @include('admin.cuestionarios.partials.informe-tabla-editable', [
-                'clave' => "familiar_{$tablaClave}",
-                'namePrefix' => "informe_tablas[familiar][{$tablaClave}]",
-                'filas' => $filasTabla,
-                'columnas' => $columnasTabla,
-            ])
-        @endif
+    @php
+        $tablasFamiliares = ['hijos' => \App\Support\TablaDinamica::columnasHijos()];
+        if ($incluyeHermanos) {
+            $tablasFamiliares['hermanos'] = \App\Support\TablaDinamica::columnasHermanos();
+        }
+    @endphp
+    @foreach($tablasFamiliares as $tablaClave => $columnasTabla)
+        <h6 class="mt-3">{{ $tablaClave === 'hijos' ? 'Hijos' : 'Hermanos' }}</h6>
+        <x-tabla-dinamica
+            :name="'informe_tablas[familiar]['.$tablaClave.']'"
+            :columnas="$columnasTabla"
+            :filas="$datos[$tablaClave] ?? []"
+            :minFilas="0"
+            :titulo="null"
+            :permitirAgregar="true"
+            :permitirEliminar="true"
+            :textoAgregar="$tablaClave === 'hijos' ? 'Agregar hijo' : 'Agregar hermano'"
+        />
     @endforeach
 @endif

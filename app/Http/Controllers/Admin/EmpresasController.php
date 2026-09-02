@@ -7,8 +7,11 @@ use Illuminate\Http\Request;
 use App\Models\Empresa;
 use App\Models\User;
 use App\Http\Requests\EmpresaFormRequest;
+use App\Exports\EmpresasExport;
+use App\Support\ExportacionesSupport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Config;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -23,7 +26,7 @@ class EmpresasController extends Controller
      */
     private function buildEmpresasQuery(array $filters): \Illuminate\Database\Eloquent\Builder
     {
-        $query = Empresa::query();
+        $query = Empresa::query()->with('creador');
 
         $searchTerm = $filters['search'] ?? null;
         $estado = $filters['estado'] ?? null;
@@ -93,6 +96,9 @@ class EmpresasController extends Controller
         $empresa->contacto_email = $request->input('contacto_email');
         $empresa->notas = $request->input('notas');
         $empresa->estado = 1; // Activa por defecto
+        if (Schema::hasColumn('empresas', 'created_by')) {
+            $empresa->created_by = Auth::id();
+        }
 
         // Subir logo si se proporciona
         if($request->hasFile('logo')) {
@@ -116,7 +122,7 @@ class EmpresasController extends Controller
      */
     public function show($id)
     {
-        $empresa = Empresa::findOrFail($id);
+        $empresa = Empresa::with('creador')->findOrFail($id);
 
         // Obtener usuarios relacionados con esta empresa
         $usuarios = User::where('empresa_id', $id)
@@ -227,6 +233,8 @@ class EmpresasController extends Controller
      */
     public function pdf(Request $request)
     {
+        ExportacionesSupport::asegurarPuedeExportarPadronEmpresas(Auth::user());
+
         $searchTerm = $request->input('search');
         $estado = $request->input('estado');
 
@@ -255,6 +263,17 @@ class EmpresasController extends Controller
 
         $pdf = Pdf::loadView('admin.empresa.pdf', compact('empresas', 'config', 'imagen', 'titulo', 'currency'));
         return $pdf->stream('Empresas_'.$nompdf.'.pdf');
+    }
+
+    public function excel(Request $request)
+    {
+        ExportacionesSupport::asegurarPuedeExportarPadronEmpresas(Auth::user());
+
+        $empresas = $this->buildEmpresasQuery($request->all())->withCount('ordenes')->get();
+        $export = new EmpresasExport($empresas);
+        $base = 'padron-empresas-' . now()->format('Y-m-d');
+
+        return ExportacionesSupport::descargarExcel($export, $base);
     }
 
     /**

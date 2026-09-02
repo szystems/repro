@@ -44,7 +44,7 @@
                         <form action="{{ route('calendario.index') }}" method="GET" class="row g-2 align-items-end">
                             <input type="hidden" name="mes" value="{{ $mes }}">
                             <input type="hidden" name="anio" value="{{ $anio }}">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label">Sede</label>
                                 <select name="sede_id" class="form-select form-select-sm">
                                     <option value="">Todas las sedes</option>
@@ -53,16 +53,16 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Poligrafista</label>
-                                <select name="poligrafista_id" class="form-select form-select-sm">
+                            <div class="col-md-2">
+                                <label class="form-label">Encargado</label>
+                                <select name="encargado_id" class="form-select form-select-sm">
                                     <option value="">Todos</option>
                                     @foreach($poligrafistas as $pol)
-                                        <option value="{{ $pol->id }}" {{ $poligrafistaId == $pol->id ? 'selected' : '' }}>{{ $pol->name }}</option>
+                                        <option value="{{ $pol->id }}" {{ ($encargadoId ?? null) == $pol->id ? 'selected' : '' }}>{{ $pol->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label">Tipo de servicio</label>
                                 <select name="tipo_servicio" class="form-select form-select-sm">
                                     <option value="">Todos</option>
@@ -71,9 +71,31 @@
                                     <option value="socioeconomico" {{ $tipoServicio == 'socioeconomico' ? 'selected' : '' }}>Socioeconómico</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <label class="form-label">Empresa</label>
+                                <select name="empresa_id" class="form-select form-select-sm">
+                                    <option value="">Todas</option>
+                                    @foreach($empresas as $empresa)
+                                        <option value="{{ $empresa->id }}" {{ ($empresaId ?? null) == $empresa->id ? 'selected' : '' }}>{{ $empresa->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Desde</label>
+                                <input type="date" name="fecha_desde" class="form-control form-control-sm" value="{{ $fechaDesde ?? '' }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Hasta</label>
+                                <input type="date" name="fecha_hasta" class="form-control form-control-sm" value="{{ $fechaHasta ?? '' }}">
+                            </div>
+                            <div class="col-12 d-flex flex-wrap gap-2">
                                 <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i> Filtrar</button>
                                 <a href="{{ route('calendario.index', ['mes' => $mes, 'anio' => $anio]) }}" class="btn btn-sm btn-outline-secondary">Limpiar</a>
+                                @if(Auth::user() && \App\Support\ExportacionesSupport::puedeExportarInformes(Auth::user()))
+                                    <button type="submit" formaction="{{ route('calendario.excel') }}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-file-earmark-excel"></i> Excel
+                                    </button>
+                                @endif
                             </div>
                         </form>
                     </div>
@@ -88,7 +110,9 @@
             $filtrosQuery = http_build_query(array_filter([
                 'sede_id' => $sedeId,
                 'poligrafista_id' => $poligrafistaId,
+                'encargado_id' => $encargadoId ?? null,
                 'tipo_servicio' => $tipoServicio,
+                'empresa_id' => $empresaId ?? null,
             ]));
         @endphp
 
@@ -153,7 +177,9 @@
                                             $filtrosDia = http_build_query(array_filter([
                                                 'sede_id' => $sedeId,
                                                 'poligrafista_id' => $poligrafistaId,
+                                                'encargado_id' => $encargadoId ?? null,
                                                 'tipo_servicio' => $tipoServicio,
+                                                'empresa_id' => $empresaId ?? null,
                                             ]));
                                         @endphp
                                         <td class="p-1 {{ !$esMesActual ? 'bg-light text-muted' : '' }} {{ $esHoy ? 'border-primary border-2' : '' }}"
@@ -193,16 +219,27 @@
     </div>
 </div>
 
-{{-- CO9-hist: Historial de candidatos del mes --}}
-@if($historial->isNotEmpty())
+{{-- Historial de candidatos del periodo (incluye procesos en curso) --}}
 <div class="content-wrapper pt-0">
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-clock-history me-2"></i>Historial de candidatos — {{ ucfirst($fecha->translatedFormat('F Y')) }}
-                        <span class="badge bg-secondary ms-2">{{ $historial->count() }}</span>
+                    <h5 class="card-title mb-0 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <span>
+                            <i class="bi bi-clock-history me-2"></i>Historial de candidatos —
+                            @if(!empty($fechaDesde) || !empty($fechaHasta))
+                                {{ \Carbon\Carbon::parse($inicioHist)->format('d/m/Y') }} – {{ \Carbon\Carbon::parse($finHist)->format('d/m/Y') }}
+                            @else
+                                {{ ucfirst($fecha->translatedFormat('F Y')) }}
+                            @endif
+                            <span class="badge bg-secondary ms-2">{{ $historial->count() }}</span>
+                        </span>
+                        @if(Auth::user() && \App\Support\ExportacionesSupport::puedeExportarInformes(Auth::user()))
+                            <a href="{{ route('calendario.excel', request()->query()) }}" class="btn btn-sm btn-success">
+                                <i class="bi bi-file-earmark-excel"></i> Excel
+                            </a>
+                        @endif
                     </h5>
                 </div>
                 <div class="card-body p-0">
@@ -213,17 +250,19 @@
                                     <th>Candidato</th>
                                     <th>Empresa</th>
                                     <th>Sede</th>
-                                    <th>Poligrafista</th>
+                                    <th>Programó</th>
+                                    <th>Encargado</th>
                                     <th>Tipo</th>
                                     <th>Fecha</th>
                                     <th>Estado de Evaluación</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($historial as $h)
+                                @forelse($historial as $h)
                                 @php
                                     $estadoColores = [
                                         'completado'  => 'success',
+                                        'informe_final_enviado' => 'dark',
                                         'inasistencia'=> 'warning',
                                         'desistio'    => 'secondary',
                                         'cancelado'   => 'danger',
@@ -235,11 +274,16 @@
                                     <td class="small">{{ $h->orden->empresa->nombre ?? '—' }}</td>
                                     <td class="small">{{ $h->sede->nombre ?? '—' }}</td>
                                     <td class="small">{{ $h->poligrafo ? $h->poligrafo->name : '—' }}</td>
+                                    <td class="small">{{ $h->responsable ? $h->responsable->name : 'Sin asignar' }}</td>
                                     <td><span class="badge bg-primary">{{ ucfirst($h->tipo_servicio ?? '—') }}</span></td>
-                                    <td class="small text-muted">{{ \Carbon\Carbon::parse($h->fecha_programada)->format('d/m/Y H:i') }}</td>
+                                    <td class="small text-muted">{{ $h->fecha_programada ? \Carbon\Carbon::parse($h->fecha_programada)->format('d/m/Y H:i') : '—' }}</td>
                                     <td><span class="badge bg-{{ $estadoColor }}">{{ ucfirst(str_replace('_', ' ', $h->estado_evaluacion)) }}</span></td>
                                 </tr>
-                                @endforeach
+                                @empty
+                                <tr>
+                                    <td colspan="8" class="text-muted text-center py-3">No hay candidatos con los filtros seleccionados.</td>
+                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -248,6 +292,5 @@
         </div>
     </div>
 </div>
-@endif
 
 @endsection

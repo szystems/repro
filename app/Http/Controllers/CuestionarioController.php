@@ -401,6 +401,15 @@ class CuestionarioController extends Controller
         // Obtener respuestas existentes para esta sección
         $seccionSlug = $this->getSlugSeccion($numero, $cuestionario->tipo_formulario);
         $respuestasExistentes = $cuestionario->getRespuestasPorSeccion($seccionSlug);
+        if ($numero === 4) {
+            $slugFamilia = $this->getSlugSeccion(2, $cuestionario->tipo_formulario);
+            $respuestasFamilia = $cuestionario->getRespuestasPorSeccion($slugFamilia);
+            foreach (['personas_hogar', 'dependientes_economicos'] as $campoHogar) {
+                if (($respuestasExistentes[$campoHogar] ?? '') === '' && ($respuestasFamilia[$campoHogar] ?? '') !== '') {
+                    $respuestasExistentes[$campoHogar] = $respuestasFamilia[$campoHogar];
+                }
+            }
+        }
         $tablasExistentes = $cuestionario->getTablasPorSeccion($seccionSlug);
 
         // Datos adicionales para la vista
@@ -1215,6 +1224,10 @@ class CuestionarioController extends Controller
             return $this->respuestaEnlaceInvalido($token, 'expirado', $evaluado);
         }
 
+        if ($evaluado->estado_formulario === 'vencido') {
+            return $this->respuestaEnlaceInvalido($token, 'vencido', $evaluado);
+        }
+
         return $evaluado;
     }
 
@@ -1237,6 +1250,11 @@ class CuestionarioController extends Controller
                 'Enlace expirado',
                 'El enlace para completar su formulario ya no está vigente.',
                 'Solicite a la empresa o a REPRO que le reenvíen un enlace nuevo. Si recibió el enlace por correo hace varios días, es posible que se haya generado uno más reciente.',
+            ],
+            'vencido' => [
+                'Enlace no disponible',
+                'El acceso a este formulario fue cerrado.',
+                'Contacte a la empresa o a REPRO para solicitar que habiliten nuevamente su enlace.',
             ],
             default => [
                 'Enlace no válido',

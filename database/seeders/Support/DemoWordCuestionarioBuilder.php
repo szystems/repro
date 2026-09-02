@@ -108,7 +108,10 @@ class DemoWordCuestionarioBuilder
             'departamento' => 'Quetzaltenango',
             'municipio' => 'Quetzaltenango',
             'telefono_personal' => '77654321',
+            'telefono_alternativo' => '55512345',
             'email_personal' => $evaluado->email,
+            'igss' => '1234567',
+            'nit' => '9876543',
             'licencia_conducir' => 'si',
             'edad' => '35',
         ]);
@@ -125,11 +128,13 @@ class DemoWordCuestionarioBuilder
             'padre_edad' => '62',
             'padre_ocupacion' => 'Agricultor',
             'padre_telefono' => '55511222',
+            'padre_direccion' => '9a avenida 2-15 zona 4, Quetzaltenango',
             'madre_nombre' => 'Rosa López',
             'madre_vive' => 'si',
             'madre_edad' => '58',
             'madre_ocupacion' => 'Comerciante',
             'madre_telefono' => '55533444',
+            'madre_direccion' => 'Cantón Chuisuc, Salcajá',
             'vive_con_pareja' => 'si',
             'pareja_tipo_relacion' => 'casado',
             'pareja_nombre' => 'Laura Méndez',
@@ -142,10 +147,12 @@ class DemoWordCuestionarioBuilder
             'pareja_calidad_relacion' => 'buena',
             'tiene_hijos' => 'si',
             'numero_hijos' => 2,
-            'tuvo_matrimonio_union_hijos' => 'no',
-            'personas_hogar' => 4,
-            'dependientes_economicos' => 2,
-            'tipo_vivienda' => 'propia',
+            'tuvo_matrimonio_union_hijos' => 'si',
+            'expareja_nombre' => 'Karla Ixcot',
+            'expareja_tipo_relacion' => 'noviazgo',
+            'expareja_tiempo_relacion' => '3 años',
+            'expareja_hijos_comun' => 'no',
+            'expareja_problemas_legales' => 'no',
         ];
 
         if (! in_array($tipoCuestionario, ['periodica', 'especifica'], true)) {
@@ -217,12 +224,21 @@ class DemoWordCuestionarioBuilder
 
         CuestionarioRespuesta::guardarRespuestas($cuestionario->id, $slug, [
             'ultimo_nivel_academico' => 'universitario',
+            'estudia_actualmente' => 'si',
             'experiencia_previa' => 'si',
             'situacion_laboral_actual' => 'empleado',
             'anos_experiencia_laboral' => 8,
             'empresa_actual' => 'Distribuidora La Central S.A.',
             'puesto_actual' => $evaluado->puesto_evaluar ?: 'Analista',
             'salario_actual' => 7500,
+        ]);
+
+        CuestionarioRespuesta::guardarTabla($cuestionario->id, $slug, 'estudios_actuales', [
+            [
+                'horario' => '18:30 a 21:30, martes y jueves',
+                'que_estudia' => 'Maestría en Administración Financiera',
+                'institucion' => 'Universidad Rafael Landívar',
+            ],
         ]);
 
         CuestionarioRespuesta::guardarTabla($cuestionario->id, $slug, 'formacion_academica', [
@@ -256,6 +272,10 @@ class DemoWordCuestionarioBuilder
 
         CuestionarioRespuesta::guardarRespuestas($cuestionario->id, $slug, array_merge([
             'tiene_deudas' => 'si',
+            'tipo_vivienda' => 'propia',
+            'personas_contribuyen_gastos' => 2,
+            'personas_hogar' => 4,
+            'dependientes_economicos' => 2,
             'econ_es_fiador' => 'no',
             'econ_tipo_vivienda_detalle' => 'Propio',
             'econ_dependientes_detalle' => '1, mi hija',
@@ -303,6 +323,8 @@ class DemoWordCuestionarioBuilder
             'salud_hospitalizaciones' => 'no',
             'salud_ausencias_enfermedad' => 'Ninguna',
             'salud_intento_suicidio' => 'No',
+            'salud_alergias' => 'no',
+            'salud_embarazada' => 'no',
             'habito_tiempo_libre' => 'Deportes y lectura',
             'habito_bares_frecuencia' => 'Ocasionalmente',
             'habito_alcohol_ultimo' => 'Hace un mes',

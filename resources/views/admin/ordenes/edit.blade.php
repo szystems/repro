@@ -146,6 +146,8 @@
                             </div>
                             @endif
 
+                            @include('admin.ordenes._campos_reclutador_confidencial', ['orden' => $orden])
+
                             <div class="mb-3">
                                 <label for="fecha_solicitud" class="form-label">Fecha de Solicitud</label>
                                 <input type="date" class="form-control @error('fecha_solicitud') is-invalid @enderror" 
@@ -198,12 +200,26 @@
                             <div class="card-title">Evaluados</div>
                         </div>
                         <div class="card-body">
+                            <p class="text-muted small mb-3">
+                                El botón rojo quita a esa persona de <strong>esta</strong> orden al guardar.
+                                No se puede dejar la orden vacía, ni quitar a alguien que ya llenó el formulario, tiene papelería o tiene informe.
+                            </p>
+                            <div id="evaluados-eliminar-inputs"></div>
                             <div id="evaluados-container">
                                 @foreach($orden->evaluados as $index => $evaluado)
-                                <div class="evaluado-item border rounded p-3 mb-3" data-index="{{ $index }}">
+                                @php
+                                    $puedeQuitarEvaluado = $evaluado->puedeEliminarseDeOrden();
+                                    $motivoNoQuitar = $evaluado->motivoNoEliminableDeOrden();
+                                @endphp
+                                <div class="evaluado-item border rounded p-3 mb-3" data-index="{{ $index }}" data-evaluado-id="{{ $evaluado->id }}">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h6 class="mb-0">Evaluado {{ $index + 1 }}</h6>
-                                        <button type="button" class="btn btn-outline-danger btn-sm remove-evaluado">
+                                        <button type="button"
+                                                class="btn btn-outline-danger btn-sm remove-evaluado"
+                                                data-evaluado-id="{{ $evaluado->id }}"
+                                                data-puede-quitar="{{ $puedeQuitarEvaluado ? '1' : '0' }}"
+                                                data-motivo="{{ $motivoNoQuitar }}"
+                                                @if(!$puedeQuitarEvaluado) disabled title="{{ $motivoNoQuitar }}" @endif>
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -606,20 +622,66 @@ document.addEventListener('DOMContentLoaded', function() {
         evaluadoIndex++;
         
         actualizarNumerosEvaluados();
+        actualizarBotonesQuitarEvaluado();
         if (window.MatrizFormularioServicioUI) {
             window.MatrizFormularioServicioUI.sincronizarFila(newEvaluado);
         }
     });
     
+    function actualizarBotonesQuitarEvaluado() {
+        const items = document.querySelectorAll('#evaluados-container .evaluado-item');
+        items.forEach((item) => {
+            const btn = item.querySelector('.remove-evaluado');
+            if (!btn) {
+                return;
+            }
+            const bloqueado = btn.dataset.puedeQuitar === '0';
+            if (items.length <= 1) {
+                btn.disabled = true;
+                btn.title = 'La orden debe quedar con al menos un evaluado.';
+                return;
+            }
+            if (bloqueado) {
+                btn.disabled = true;
+                btn.title = btn.dataset.motivo || 'No se puede quitar este evaluado.';
+                return;
+            }
+            btn.disabled = false;
+            btn.title = 'Quitar este evaluado de la orden';
+        });
+    }
+
     // Remover evaluado
     document.addEventListener('click', function(e) {
         if (e.target.closest('.remove-evaluado')) {
             e.preventDefault();
-            const evaluadoItem = e.target.closest('.evaluado-item');
-            
-            if (confirm('¿Está seguro de que desea eliminar este evaluado?')) {
+            const btn = e.target.closest('.remove-evaluado');
+            const evaluadoItem = btn.closest('.evaluado-item');
+            const restantes = document.querySelectorAll('#evaluados-container .evaluado-item').length;
+
+            if (restantes <= 1) {
+                alert('La orden debe quedar con al menos un evaluado.');
+                return;
+            }
+
+            if (btn.dataset.puedeQuitar === '0') {
+                alert(btn.dataset.motivo || 'No se puede quitar este evaluado.');
+                return;
+            }
+
+            if (confirm('¿Quitar a este evaluado de la orden? Los demás se mantienen.')) {
+                const evaluadoId = btn.dataset.evaluadoId || evaluadoItem.dataset.evaluadoId;
+                if (evaluadoId) {
+                    const holder = document.getElementById('evaluados-eliminar-inputs');
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'evaluados_eliminar[]';
+                    input.value = evaluadoId;
+                    holder.appendChild(input);
+                }
                 evaluadoItem.remove();
                 actualizarNumerosEvaluados();
+                actualizarBotonesQuitarEvaluado();
             }
         }
     });
@@ -712,6 +774,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    actualizarBotonesQuitarEvaluado();
 });
 </script>
 

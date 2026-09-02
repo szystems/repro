@@ -18,9 +18,11 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="card-title mb-0">Listado de Órdenes</span>
+                @if(Auth::user()->hasPermission('ordenes.crear'))
                 <a href="{{ route('ordenes.create') }}" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-circle"></i> Nueva Solicitud
                 </a>
+                @endif
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -58,18 +60,12 @@
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     @endif
-                                    @if(Auth::user()->hasPermission('ordenes.eliminar') && !in_array($orden->estado, ['en_proceso', 'entregado']))
-                                    <form action="{{ route('ordenes.destroy', $orden) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('¿Está seguro de eliminar esta orden?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                    @endif
+                                    {{-- Sprint F0: cliente no elimina órdenes (solo REPRO archiva). --}}
+                                    @if(Auth::user()->hasPermission('ordenes.ver'))
                                     <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-outline-danger btn-sm" title="Descargar PDF" target="_blank">
                                         <i class="bi bi-file-pdf"></i>
                                     </a>
+                                    @endif
                                 </td>
                             </tr>
                             @empty

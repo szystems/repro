@@ -429,6 +429,10 @@
                     <span>Sección {{ $currentSection }} de {{ $totalSections }}</span>
                 </div>
                 @endif
+
+                <a href="{{ route('cuestionario.ayuda') }}" class="btn btn-sm btn-outline-light ms-2" title="Ayuda">
+                    <i class="bi bi-question-circle"></i> <span class="d-none d-md-inline">Ayuda</span>
+                </a>
                 
                 @if(isset($evaluado))
                 <div class="evaluado-info d-none d-lg-block">

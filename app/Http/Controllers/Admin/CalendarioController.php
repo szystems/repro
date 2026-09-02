@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\CalendarioExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProgramarCitaRequest;
+use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Sede;
 use App\Models\User;
+use App\Support\ExportacionesSupport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CalendarioController extends Controller
 {
@@ -22,32 +26,34 @@ class CalendarioController extends Controller
      */
     public function index(Request $request)
     {
-        $mes  = $request->input('mes', now()->month);
-        $anio = $request->input('anio', now()->year);
+        $filtros = $this->filtrosDesdeRequest($request);
+        $fechaDesde = $filtros['fechaDesde'];
+        $fechaHasta = $filtros['fechaHasta'];
+        if ($fechaDesde) {
+            $diaElegido = Carbon::parse($fechaDesde);
+            $mes = $diaElegido->month;
+            $anio = $diaElegido->year;
+        } else {
+            $mes  = $request->input('mes', now()->month);
+            $anio = $request->input('anio', now()->year);
+        }
 
         $fecha = Carbon::createFromDate($anio, $mes, 1);
         $inicioMes = $fecha->copy()->startOfMonth();
         $finMes    = $fecha->copy()->endOfMonth();
 
-        // Filtros opcionales
-        $sedeId         = $request->input('sede_id');
-        $poligrafistaId = $request->input('poligrafista_id');
-        $tipoServicio   = $request->input('tipo_servicio');
+        $sedeId         = $filtros['sedeId'];
+        $poligrafistaId = $filtros['poligrafistaId'];
+        $encargadoId    = $filtros['encargadoId'];
+        $tipoServicio   = $filtros['tipoServicio'];
+        $empresaId      = $filtros['empresaId'];
 
         // Contar citas por día del mes
         $query = EvaluadoOrden::query()
+            ->deOrdenesActivas()
             ->programados()
             ->whereBetween('fecha_programada', [$inicioMes, $finMes->copy()->endOfDay()]);
-
-        if ($sedeId) {
-            $query->where('sede_id', $sedeId);
-        }
-        if ($poligrafistaId) {
-            $query->where('poligrafista_id', $poligrafistaId);
-        }
-        if ($tipoServicio) {
-            $query->where('tipo_servicio', $tipoServicio);
-        }
+        $this->aplicarFiltrosCitas($query, $filtros);
 
         $citas = $query->get();
 
@@ -64,18 +70,11 @@ class CalendarioController extends Controller
 
         // Contar también reprogramados por su fecha original (registro histórico)
         $reprogOriginalQuery = EvaluadoOrden::query()
+            ->deOrdenesActivas()
             ->where('estado_programacion', 'reprogramado')
             ->whereNotNull('fecha_programada_original')
             ->whereBetween('fecha_programada_original', [$inicioMes, $finMes->copy()->endOfDay()]);
-        if ($sedeId) {
-            $reprogOriginalQuery->where('sede_id', $sedeId);
-        }
-        if ($poligrafistaId) {
-            $reprogOriginalQuery->where('poligrafista_id', $poligrafistaId);
-        }
-        if ($tipoServicio) {
-            $reprogOriginalQuery->where('tipo_servicio', $tipoServicio);
-        }
+        $this->aplicarFiltrosCitas($reprogOriginalQuery, $filtros);
         foreach ($reprogOriginalQuery->get() as $cita) {
             $dia = Carbon::parse($cita->fecha_programada_original)->format('Y-m-d');
             if (!isset($citasPorDia[$dia])) {
@@ -88,55 +87,85 @@ class CalendarioController extends Controller
         // Datos para filtros
         $sedes         = Sede::activas()->orderBy('nombre')->get();
         $poligrafistas = User::poligrafistas()->get();
+        $empresas      = Empresa::query()->where('estado', 1)->orderBy('nombre')->get();
 
-        // CO9-hist: historial de candidatos completados/inasistencias/reprogramados en este mes
-        // Fase 18: 'completado' sigue en estado_evaluacion; 'inasistencia/desistio/cancelado' ahora en estado_programacion
+        // P-P2: el historial lista todos los programados del periodo (no solo informe final),
+        // para que el filtro encuentre la orden en proceso.
+        [$inicioHist, $finHist] = $this->periodoDesdeFiltros(
+            $filtros,
+            $inicioMes,
+            $finMes->copy()->endOfDay()
+        );
+
         $historialQuery = EvaluadoOrden::query()
-            ->where(function ($q) {
-                $q->where('estado_evaluacion', 'informe_final_enviado')
-                  ->orWhereIn('estado_programacion', ['inasistencia', 'desistio', 'cancelado']);
-            })
-            ->whereBetween('fecha_programada', [$inicioMes, $finMes->copy()->endOfDay()])
-            ->with(['poligrafo', 'sede', 'orden.empresa']);
+            ->deOrdenesActivas()
+            ->whereNotNull('fecha_programada')
+            ->whereBetween('fecha_programada', [$inicioHist, $finHist])
+            ->with(['poligrafo', 'responsable', 'sede', 'orden.empresa']);
+        $this->aplicarFiltrosCitas($historialQuery, $filtros);
 
-        if ($sedeId) {
-            $historialQuery->where('sede_id', $sedeId);
-        }
-        if ($poligrafistaId) {
-            $historialQuery->where('poligrafista_id', $poligrafistaId);
-        }
-        if ($tipoServicio) {
-            $historialQuery->where('tipo_servicio', $tipoServicio);
-        }
-
-        // Incluir reprogramados por fecha original en el historial
         $historialReprogQuery = EvaluadoOrden::query()
+            ->deOrdenesActivas()
             ->where('estado_programacion', 'reprogramado')
             ->whereNotNull('fecha_programada_original')
-            ->whereBetween('fecha_programada_original', [$inicioMes, $finMes->copy()->endOfDay()])
-            ->with(['poligrafo', 'sede', 'orden.empresa']);
-        if ($sedeId) {
-            $historialReprogQuery->where('sede_id', $sedeId);
-        }
-        if ($poligrafistaId) {
-            $historialReprogQuery->where('poligrafista_id', $poligrafistaId);
-        }
-        if ($tipoServicio) {
-            $historialReprogQuery->where('tipo_servicio', $tipoServicio);
-        }
+            ->whereBetween('fecha_programada_original', [$inicioHist, $finHist])
+            ->with(['poligrafo', 'responsable', 'sede', 'orden.empresa']);
+        $this->aplicarFiltrosCitas($historialReprogQuery, $filtros);
 
         $historial = $historialQuery->get()
             ->merge($historialReprogQuery->get())
+            ->unique('id')
             ->sortByDesc('fecha_programada')
             ->values();
 
         return view('admin.calendario.index', compact(
             'fecha', 'inicioMes', 'finMes', 'citasPorDia',
-            'sedes', 'poligrafistas',
-            'sedeId', 'poligrafistaId', 'tipoServicio',
+            'sedes', 'poligrafistas', 'empresas',
+            'sedeId', 'poligrafistaId', 'encargadoId', 'tipoServicio', 'empresaId',
+            'fechaDesde', 'fechaHasta', 'inicioHist', 'finHist',
             'mes', 'anio',
             'historial'
         ));
+    }
+
+    /** P-X1 / P-P1: Excel del mes (filtros) + total por poligrafista. */
+    public function excel(Request $request)
+    {
+        ExportacionesSupport::asegurarPuedeExportarInformes(Auth::user());
+
+        $filtros = $this->filtrosDesdeRequest($request);
+        $mes = (int) $request->input('mes', now()->month);
+        $anio = (int) $request->input('anio', now()->year);
+        $fecha = Carbon::createFromDate($anio, $mes, 1);
+        [$inicio, $fin] = $this->periodoDesdeFiltros(
+            $filtros,
+            $fecha->copy()->startOfMonth(),
+            $fecha->copy()->endOfMonth()
+        );
+        $citas = $this->queryCitasPeriodo($request, $inicio, $fin)
+            ->orderBy('fecha_programada')->get();
+
+        $export = new CalendarioExport($citas);
+        $base = ($filtros['fechaDesde'] || $filtros['fechaHasta'])
+            ? 'calendario-'.$inicio->format('Y-m-d').'_'.$fin->format('Y-m-d')
+            : 'calendario-'.$fecha->format('Y-m');
+
+        return ExportacionesSupport::descargarExcel($export, $base);
+    }
+
+    public function excelDia(Request $request, string $fecha)
+    {
+        ExportacionesSupport::asegurarPuedeExportarInformes(Auth::user());
+
+        $dia = Carbon::parse($fecha);
+        $citas = $this->queryCitasPeriodo($request, $dia->copy()->startOfDay(), $dia->copy()->endOfDay())
+            ->orderBy('fecha_programada')
+            ->get();
+
+        $export = new CalendarioExport($citas);
+        $base = 'calendario-'.$dia->format('Y-m-d');
+
+        return ExportacionesSupport::descargarExcel($export, $base);
     }
 
     /**
@@ -145,38 +174,32 @@ class CalendarioController extends Controller
     public function dia(Request $request, string $fecha)
     {
         $fechaCarbon = Carbon::parse($fecha);
+        $filtros = $this->filtrosDesdeRequest($request);
 
-        // Filtros opcionales
-        $sedeId         = $request->input('sede_id');
-        $poligrafistaId = $request->input('poligrafista_id');
-        $tipoServicio   = $request->input('tipo_servicio');
+        $sedeId         = $filtros['sedeId'];
+        $poligrafistaId = $filtros['poligrafistaId'];
+        $encargadoId    = $filtros['encargadoId'];
+        $tipoServicio   = $filtros['tipoServicio'];
+        $empresaId      = $filtros['empresaId'];
 
         $query = EvaluadoOrden::query()
+            ->deOrdenesActivas()
             ->programados()
             ->enDia($fecha)
-            ->with(['poligrafo', 'sede', 'orden.empresa']);
-
-        if ($sedeId) {
-            $query->where('sede_id', $sedeId);
-        }
-        if ($poligrafistaId) {
-            $query->where('poligrafista_id', $poligrafistaId);
-        }
-        if ($tipoServicio) {
-            $query->where('tipo_servicio', $tipoServicio);
-        }
+            ->with(['poligrafo', 'responsable', 'sede', 'orden.empresa']);
+        $this->aplicarFiltrosCitas($query, $filtros);
 
         $citas = $query->orderBy('fecha_programada')->get();
 
         // Citas históricas: reprogramados que tenían cita este día (por fecha original)
         $citasHistoricas = EvaluadoOrden::query()
+            ->deOrdenesActivas()
             ->where('estado_programacion', 'reprogramado')
             ->whereNotNull('fecha_programada_original')
             ->whereDate('fecha_programada_original', $fecha)
-            ->with(['poligrafo', 'sede', 'orden.empresa'])
-            ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
-            ->when($poligrafistaId, fn ($q) => $q->where('poligrafista_id', $poligrafistaId))
-            ->when($tipoServicio, fn ($q) => $q->where('tipo_servicio', $tipoServicio))
+            ->with(['poligrafo', 'responsable', 'sede', 'orden.empresa']);
+        $this->aplicarFiltrosCitas($citasHistoricas, $filtros);
+        $citasHistoricas = $citasHistoricas
             ->orderBy('fecha_programada_original')
             ->get();
 
@@ -186,11 +209,13 @@ class CalendarioController extends Controller
         // Datos para filtros y modal de programación
         $sedes         = Sede::activas()->orderBy('nombre')->get();
         $poligrafistas = User::poligrafistas()->get();
+        $empresas      = Empresa::query()->where('estado', 1)->orderBy('nombre')->get();
 
         // Evaluados disponibles para programar: excluye solo estados terminales (no filtra por fecha_programada,
         // ya que un evaluado puede reprogramarse o aún no tener fecha asignada)
         // Fase 18: excluir evaluados en estados terminales de evaluacion Y de programacion
         $evaluadosPendientes = EvaluadoOrden::query()
+            ->deOrdenesActivas()
             ->whereNotIn('estado_evaluacion', ['cancelado', 'desistio', 'informe_final_enviado'])
             ->whereNotIn('estado_programacion', ['cancelado', 'desistio'])
             ->with('orden.empresa')
@@ -200,8 +225,8 @@ class CalendarioController extends Controller
 
         return view('admin.calendario.dia', compact(
             'fechaCarbon', 'fecha', 'citas', 'slots',
-            'sedes', 'poligrafistas', 'evaluadosPendientes',
-            'sedeId', 'poligrafistaId', 'tipoServicio',
+            'sedes', 'poligrafistas', 'empresas', 'evaluadosPendientes',
+            'sedeId', 'poligrafistaId', 'encargadoId', 'tipoServicio', 'empresaId',
             'citasHistoricas'
         ));
     }
@@ -231,7 +256,7 @@ class CalendarioController extends Controller
         $evaluado->programarEvaluacion(
             $inicio,
             $fin,
-            $request->poligrafista_id,
+            $request->poligrafista_id ?: Auth::id(),
             $request->sede_id,
             $request->modalidad,
             $request->responsable_id
@@ -268,7 +293,8 @@ class CalendarioController extends Controller
             $request->poligrafista_id,
             $request->sede_id,
             $request->modalidad,
-            $request->responsable_id
+            $request->responsable_id,
+            $request->motivo_reprogramacion
         );
 
         return redirect()->back()
@@ -310,5 +336,83 @@ class CalendarioController extends Controller
         }
 
         return $slots;
+    }
+
+    private function queryCitasPeriodo(Request $request, Carbon $inicio, Carbon $fin)
+    {
+        $query = EvaluadoOrden::query()
+            ->deOrdenesActivas()
+            ->whereNotNull('fecha_programada')
+            ->whereBetween('fecha_programada', [$inicio, $fin->copy()->endOfDay()])
+            ->with(['poligrafo', 'responsable', 'sede', 'orden.empresa']);
+
+        $this->aplicarFiltrosCitas($query, $this->filtrosDesdeRequest($request));
+
+        return $query;
+    }
+
+    /**
+     * @return array{sedeId: ?string, poligrafistaId: ?string, encargadoId: ?string, tipoServicio: ?string, empresaId: ?string, fechaDesde: ?string, fechaHasta: ?string}
+     */
+    private function filtrosDesdeRequest(Request $request): array
+    {
+        $legacy = $request->input('fecha') ?: null;
+        $fechaDesde = $request->input('fecha_desde') ?: $legacy;
+        $fechaHasta = $request->input('fecha_hasta') ?: null;
+        if ($fechaHasta === null && $legacy && ! $request->filled('fecha_desde')) {
+            $fechaHasta = $legacy;
+        }
+
+        return [
+            'sedeId' => $request->input('sede_id') ?: null,
+            'poligrafistaId' => $request->input('poligrafista_id') ?: null,
+            'encargadoId' => $request->input('encargado_id') ?: null,
+            'tipoServicio' => $request->input('tipo_servicio') ?: null,
+            'empresaId' => $request->input('empresa_id') ?: null,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
+        ];
+    }
+
+    /** @return array{0: Carbon, 1: Carbon} */
+    private function periodoDesdeFiltros(array $filtros, Carbon $inicioDefault, Carbon $finDefault): array
+    {
+        $desde = $filtros['fechaDesde'] ?? null;
+        $hasta = $filtros['fechaHasta'] ?? null;
+        if ($desde === null && $hasta === null) {
+            return [$inicioDefault, $finDefault];
+        }
+
+        $inicio = $desde
+            ? Carbon::parse($desde)->startOfDay()
+            : $inicioDefault->copy()->startOfDay();
+        $fin = $hasta
+            ? Carbon::parse($hasta)->endOfDay()
+            : $finDefault->copy()->endOfDay();
+
+        if ($inicio->gt($fin)) {
+            [$inicio, $fin] = [$fin->copy()->startOfDay(), $inicio->copy()->endOfDay()];
+        }
+
+        return [$inicio, $fin];
+    }
+
+    private function aplicarFiltrosCitas($query, array $filtros): void
+    {
+        if (!empty($filtros['sedeId'])) {
+            $query->where('sede_id', $filtros['sedeId']);
+        }
+        if (!empty($filtros['poligrafistaId'])) {
+            $query->where('poligrafista_id', $filtros['poligrafistaId']);
+        }
+        if (!empty($filtros['encargadoId'])) {
+            $query->where('responsable_id', $filtros['encargadoId']);
+        }
+        if (!empty($filtros['tipoServicio'])) {
+            $query->where('tipo_servicio', $filtros['tipoServicio']);
+        }
+        if (!empty($filtros['empresaId'])) {
+            $query->whereHas('orden', fn ($q) => $q->where('empresa_id', $filtros['empresaId']));
+        }
     }
 }

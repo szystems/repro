@@ -139,10 +139,17 @@ trait CompletaFlujoCuestionario
             'tiene_hijos' => 'no',
             'tiene_hermanos' => 'no',
             'tuvo_matrimonio_union_hijos' => 'no',
-            'personas_hogar' => 4,
-            'dependientes_economicos' => 2,
+        ], $extra);
+    }
+
+    /** @return array<string, mixed> */
+    protected function datosViviendaEconomica(array $extra = []): array
+    {
+        return array_merge([
             'tipo_vivienda' => 'familiar',
             'personas_contribuyen_gastos' => 2,
+            'personas_hogar' => 4,
+            'dependientes_economicos' => 2,
         ], $extra);
     }
 
@@ -212,6 +219,8 @@ trait CompletaFlujoCuestionario
             'salud_hospitalizaciones' => 'no',
             'salud_ausencias_enfermedad' => 'Ninguna',
             'salud_intento_suicidio' => 'No',
+            'salud_alergias' => 'no',
+            'salud_embarazada' => 'no',
             'tiene_tatuajes' => 'no',
             'tiene_perforaciones' => 'no',
             'habito_tiempo_libre' => 'Lectura',
@@ -244,7 +253,6 @@ trait CompletaFlujoCuestionario
             'econ_problemas_bancarios' => 'no',
             'econ_demandas_deudas' => 'no',
             'econ_problemas_sat' => 'no',
-            'econ_tipo_vivienda_detalle' => 'Propio',
             'econ_dependientes_detalle' => 'Ninguna',
             'econ_ingresos_adicionales_detalle' => 'No',
             'econ_pretension_salarial' => 8500,
@@ -257,12 +265,8 @@ trait CompletaFlujoCuestionario
     {
         return array_merge([
             'ultimo_nivel_academico' => 'ninguno',
+            'estudia_actualmente' => 'no',
             'experiencia_previa' => 'no',
-            'situacion_laboral_actual' => 'empleado',
-            'anos_experiencia_laboral' => 5,
-            'empresa_actual' => 'Empresa Ejemplo S.A.',
-            'puesto_actual' => 'Analista',
-            'salario_actual' => 8000,
         ], $this->respuestasIntegridadLaboral(), $extra);
     }
 
@@ -271,7 +275,7 @@ trait CompletaFlujoCuestionario
     {
         return array_merge([
             'tiene_deudas' => 'no',
-        ], $this->datosEconomicosAmpliadosPreempleo(), $extra);
+        ], $this->datosViviendaEconomica(), $this->datosEconomicosAmpliadosPreempleo(), $extra);
     }
 
     /** @return array<string, mixed> */
@@ -292,19 +296,16 @@ trait CompletaFlujoCuestionario
     /** @return array<string, mixed> */
     protected function datosFormacionAcademicaPreempleo(array $extra = []): array
     {
-        $niveles = ['primaria', 'basico', 'diversificado', 'tecnico', 'universitario'];
-        $filas = [];
-
-        foreach ($niveles as $nivel) {
-            $filas[] = [
-                'nivel' => $nivel,
+        $filas = [
+            [
+                'nivel' => 'universitario',
                 'estado' => 'completo',
-                'carrera' => $nivel === 'universitario' ? 'Administración' : '',
-                'institucion' => $nivel === 'universitario' ? 'Universidad de San Carlos' : 'Colegio Ejemplo',
+                'carrera' => 'Administración',
+                'institucion' => 'Universidad de San Carlos',
                 'anio' => '2015',
                 'respaldo' => 'si',
-            ];
-        }
+            ],
+        ];
 
         return array_merge([
             'ultimo_nivel_academico' => 'universitario',
@@ -360,13 +361,18 @@ trait CompletaFlujoCuestionario
         );
     }
 
-    /** Periódica y específica §5: solo aspecto judicial + información adicional. */
+    /** Periódica y específica §5: judicial + alergias/embarazo + tatuajes + información adicional. */
     /** @return array<string, mixed> */
     protected function datosSeccion5PeriodicaEspecifica(array $extra = []): array
     {
         return array_merge(
             $this->respuestasJudiciales(),
-            ['informacion_adicional_final' => 'Sin información adicional.'],
+            [
+                'informacion_adicional_final' => 'Sin información adicional.',
+                'tiene_tatuajes' => 'no',
+                'salud_alergias' => 'no',
+                'salud_embarazada' => 'no',
+            ],
             $extra
         );
     }

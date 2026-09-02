@@ -83,12 +83,13 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
         $cuestionario = $this->evaluado->cuestionario()->first();
         $tablas = $cuestionario->getTablasPorNumeroSeccion(3);
 
-        $this->assertCount(5, $tablas['formacion_academica'] ?? []);
+        $this->assertCount(1, $tablas['formacion_academica'] ?? []);
         $this->assertCount(1, $tablas['empleos'] ?? []);
-        $this->assertSame('Universidad de San Carlos', $tablas['formacion_academica'][4]['institucion'] ?? null);
+        $this->assertSame('universitario', $tablas['formacion_academica'][0]['nivel'] ?? null);
+        $this->assertSame('Universidad de San Carlos', $tablas['formacion_academica'][0]['institucion'] ?? null);
     }
 
-    public function test_formacion_academica_requiere_todos_los_niveles_visibles(): void
+    public function test_formacion_academica_universitario_solo_pide_ese_grado(): void
     {
         $this->avanzarHastaSeccion(2);
 
@@ -109,7 +110,7 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
             ],
         ], $this->datosEmpleosPreempleo()));
 
-        $response->assertSessionHasErrors();
+        $response->assertSessionHasNoErrors();
     }
 
     public function test_integridad_laboral_marcada_como_interna(): void

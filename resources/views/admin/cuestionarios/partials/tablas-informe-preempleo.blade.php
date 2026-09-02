@@ -55,20 +55,32 @@
                                 @include('admin.cuestionarios.partials.informe-familiar', [
                                     'datos' => $datos,
                                     'soloLectura' => $soloLectura,
+                                    'tipoFormulario' => $cuestionario->tipo_formulario ?? 'preempleo',
                                 ])
-                            @elseif($clave === 'complementaria')
+                            @elseif(in_array($clave, ['complementaria', 'personal', 'labor_complementaria'], true))
                                 @include('admin.cuestionarios.partials.informe-complementaria', [
                                     'filas' => is_array($datos) ? $datos : [],
                                     'soloLectura' => $soloLectura,
+                                    'claveTabla' => $clave,
                                 ])
                             @else
                                 @php
+                                    $tipoForm = $cuestionario->tipo_formulario ?? 'preempleo';
                                     $columnasMap = [
                                         'academico' => \App\Support\TablaDinamica::columnasFormacionAcademica(),
-                                        'laboral' => \App\Support\TablaDinamica::columnasEmpleos(),
+                                        'estudios_actuales' => \App\Support\TablaDinamica::columnasEstudiosActuales(),
+                                        'laboral' => in_array($tipoForm, ['periodica', 'especifica'], true)
+                                            ? \App\Support\TablaDinamica::columnasLaboralInformePeriodica()
+                                            : (in_array($tipoForm, ['preempleo', 'socioeconomico'], true)
+                                                ? \App\Support\TablaDinamica::columnasEmpleosPreempleo()
+                                                : \App\Support\TablaDinamica::columnasEmpleos()),
                                         'deudas' => \App\Support\TablaDinamica::columnasDeudas(),
+                                        'tatuajes' => \App\Support\TablaDinamica::columnasTatuajes(),
                                         'referencias_familiares' => \App\Support\TablaDinamica::columnasReferenciasFamiliares(),
                                         'referencias_personales' => \App\Support\TablaDinamica::columnasReferenciasPersonales(),
+                                        'referencias_laborales' => \App\Support\TablaDinamica::columnasReferenciasLaborales(),
+                                        'bienes' => \App\Support\TablaDinamica::columnasBienes(),
+                                        'presupuesto' => \App\Support\TablaDinamica::columnasPresupuesto(),
                                     ];
                                     $columnas = $columnasMap[$clave] ?? [];
                                     $filas = is_array($datos) ? $datos : [];
@@ -83,11 +95,16 @@
                                         <p class="text-muted mb-0">Sin datos registrados.</p>
                                     @endif
                                 @else
-                                    @include('admin.cuestionarios.partials.informe-tabla-editable', [
-                                        'clave' => $clave,
-                                        'filas' => $filas,
-                                        'columnas' => $columnas,
-                                    ])
+                                    <x-tabla-dinamica
+                                        :name="'informe_tablas['.$clave.']'"
+                                        :columnas="$columnas"
+                                        :filas="$filas"
+                                        :minFilas="0"
+                                        :titulo="null"
+                                        :permitirAgregar="true"
+                                        :permitirEliminar="true"
+                                        :textoAgregar="'Agregar fila'"
+                                    />
                                 @endif
                             @endif
                         </div>

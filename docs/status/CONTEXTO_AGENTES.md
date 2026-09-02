@@ -1,9 +1,599 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 29 de julio de 2026  
-**Estado:** 🔴 **ALINEACIÓN FORMULARIOS REALES EN CURSO** · no pedir revisión cliente hasta cerrar plan A–J  
-**Repo:** https://github.com/szystems/repro · branch `master` · commit `1e86d7f7` (QA Fase G + UX)
+**Fecha de Contexto:** 31 de agosto de 2026  
+**Estado:** 🟢 Sprint P en prod · 📋 **MIGRACIÓN autorizada** (plan, aún no cutover) · iPage sigue vivo  
+
+**Plan migración (leer antes de tocar infra):** `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`  
+**Destino:** web `reprogt.com` (hoy reproxela.com) · app `portal.reprogt.com` · Coolify en Hetzner CPX31 `ubuntu-8gb-hil-1`  
+**No cortar** https://reproappv2.szystems.com hasta M6. **No** `migrate:fresh`. **Copiar el mismo `APP_KEY`.**
+
+**Evidencia 28-ago noche:** `docs/repro/cambios agosto/Observaciones 28-08-2026 noche/`  
+**Plan Sprint P (UAT Word, no bloquea migración):** `docs/repro/cambios agosto/PLAN_SPRINT_P_OBSERVACIONES_28-08-2026-NOCHE.md`  
+**Evidencia 28-ago mañana:** `docs/repro/cambios agosto/Observaciones 28-08-2026/`  
+**Plan Sprint O (cerrado UAT con correcciones):** `docs/repro/cambios agosto/PLAN_SPRINT_O_OBSERVACIONES_28-08-2026.md`  
+**Evidencia 27-ago:** `docs/repro/cambios agosto/Observaciones 27-08-2026/`  
+**Plan Sprint N (cerrado código; N-C4 revertido en O):** `docs/repro/cambios agosto/PLAN_SPRINT_N_OBSERVACIONES_27-08-2026.md`  
+**Evidencia 26-ago:** `docs/repro/cambios agosto/Observaciones 26-08-2026/`  
+**Plan Sprint M (cerrado código; UAT con correcciones):** `docs/repro/cambios agosto/PLAN_SPRINT_M_OBSERVACIONES_26-08-2026.md`  
+**Evidencia 24-ago:** `docs/repro/cambios agosto/Observaciones 24-08-2026/`  
+**Plan Sprint L (cerrado prod 25-ago):** `docs/repro/cambios agosto/PLAN_SPRINT_L_OBSERVACIONES_24-08-2026.md`  
+**Plan Sprint K (cerrado prod 21-ago):** `docs/repro/cambios agosto/PLAN_SPRINT_K_FEEDBACK_20-08-2026.md`  
+**Plan Sprint J (cerrado prod):** `docs/repro/cambios agosto/PLAN_SPRINT_J_OBSERVACIONES_19-08-2026.md`  
+**Plan Sprint I (residual):** `docs/repro/cambios agosto/ultimos cambios 14-08-2026/PLAN_SPRINT_I_FEEDBACK_14-08-2026.md`  
+**Evidencia 14-ago:** `docs/repro/cambios agosto/ultimos cambios 14-08-2026/`  
+**Plan Sprint H (cerrado):** `docs/repro/cambios agosto/PLAN_SPRINT_H_FEEDBACK_13-08-2026.md`  
+**Sprint G (cerrado prod):** `docs/repro/cambios agosto/PLAN_SPRINT_G_FEEDBACK_12-08-2026.md`  
+**Feedback 13-ago:** `docs/repro/cambios agosto/ultimos cambios 13-08-2026/`  
+**Sprint F (cerrado):** `docs/repro/cambios agosto/PLAN_SPRINT_F_ULTIMOS_CAMBIOS_2026-08-10.md`  
+**Plan A–E (cerrado):** `docs/repro/cambios agosto/PLAN_REVISION_AGOSTO_2026.md`  
+**Permisos empresa (OBLIGATORIO leer antes de tocar portal cliente):** `docs/repro/cambios agosto/PERMISOS_EMPRESA_CLIENTE.md`  
+**Feedback 12-ago:** `docs/repro/cambios agosto/ultimos cambios 12-08-2026/`  
+**Producción:** https://reproappv2.szystems.com  
+**Repo:** https://github.com/szystems/repro · branch `master`
+
+---
+
+## 📋 MIGRACIÓN — LEER PRIMERO (autorizada 31-ago-2026)
+
+**Plan:** `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`  
+**Siguiente paso:** commitear código prod a GitHub (master está atrás del FTP). Luego MySQL vacío + app en Coolify proyecto **REPRO**. **M5 dump = copia exacta: avisar a Otto antes.** No `portal` DNS aún. No dump/cutover ahora.
+
+| ID | Qué falta para EMPEZAR |
+|----|------------------------|
+| **C1** | Comprar **reprogt.com** | ✅ 1-sep-2026 |
+| **C2** | Zona Cloudflare `reprogt.com` **Active**. NS `casey` + `jewel`. Correo **iPage**: MX `mx.ipage.com` + SPF `ip4:66.96.128.0/18` + DMARC `p=none`. IMAP/SMTP iPage no van en CF. No Email Routing. No `portal` aún. |
+| **C3** | SSH desde este WSL: permission denied. Coolify Terminal sí. Clave a agregar: `szystems@gmail.com` ed25519. |
+| **C4** | ✅ Coolify **v4.1.2** en `http://5.78.235.235:8000/` (mismo CPX31). Proyecto **REPRO** creado (vacío). Otras apps: Asonata, ControClinic, Portal Szystems, Clínicas del Valle. |
+| **C5** | GitHub App **szystems** ya está en Coolify Sources. Falta conectar el repo `szystems/repro` al proyecto REPRO (después de pushear código actual). |
+| **C6** | Password MySQL iPage + `.env` prod (mismo `APP_KEY`) |
+| **C7** | `MAIL_*` actuales |
+| **C8** | Acceso sitio **reproxela.com** (no está en este repo) |
+| **C9** | ✅ Backups VPS ya estaban ON (Hetzner, 7 slots). |
+
+**Ya tenemos:** FTP iPage, host/user/BD `dbreprov2`, repo GitHub, identidad del VPS, UAT PRUEBA 1.  
+**No hacer aún:** dump prod (hasta freeze confirmado por Otto), cambiar DNS de la app, cutover.
+
+---
+
+## 🟡 SPRINT P — Word (28-ago noche / 29 ago 2026) · no bloquea migración
+
+**Origen:** WA 28-ago 20:04–20:51 + **29-ago 10:28–10:37** + **29-ago 11:46–12:51**.  
+**Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_P_OBSERVACIONES_28-08-2026-NOCHE.md`  
+**Siguiente paso:** no codear más. Esperar impresiones de Stephany (le pedimos re-descargar Word).
+
+**No restaurar** acordeón/Q&A `labor_complementaria` (N-C1). **Sí** volcar el párrafo `word_laboral` en socio (ella 12:11–12:16). **No** borrar Deudas ni Hábitos/Judicial. **No** mostrar Encargado ni quién programó a la empresa. **No** regenerar NEVERIA / CORALSA / PERCO.
+
+| ID | Qué | Estado |
+|----|-----|--------|
+| **P-S1** | Socio Word: EMPLEOS (Arium / Quick Box) | ✅ prod 29-ago · verificado #255 / #179 / #157. Ella: «pocos fallan» → override `-----` ya no pisa el formulario |
+| **P-S2** | Socio: párrafo Aspecto laboral bajo EMPLEOS (título INFORMACIÓN COMPLEMENTARIA LABORAL) | ✅ prod 13:20. M-P6 quitó el recuadro; ella lo quiere de vuelta **solo como párrafo**, no Q&A. UAT #255: texto «Indicó haber cumplido…» |
+| **P-A1** | Badge polígrafo/VSA: solo **Aprobado** (no «/ Sin Observaciones») | ✅ prod. Vista: Angeles ORD-2026-0108. Socio sigue Tipo A / observaciones |
+| **P-R1** | Quitar cuadro vacío tras preguntas DI en Conclusión | ✅ prod |
+| **P-E1** | Deudas fuente 11; observaciones económicas 12 | ✅ prod |
+| **P-T1** | Separar todas las tablas del Word | ✅ prod |
+| **P-F1** | Pegar foto candidato (como papelería) | ✅ prod |
+| **P-X1** | Excel del calendario (filtros; rango `fecha_desde`/`fecha_hasta`) | ✅ prod |
+| **P-P1** | Asignación interna (mal leído 20:48) | ↩ corregido por **P-P2** |
+| **P-P2** | **Programó** (`poligrafista_id`, no pisar) + **Encargado** (`responsable_id`, Autoasignarme) | ✅ prod 29-ago 11:05 |
+| **P-W1** | Word polígrafo «contenido no legible» | Endurecido (filas anidadas + PCLZip a disco, no EXTRACT_AS_STRING). Otto no lo reproduce. Socio abre bien. Ella UAT polígrafo pre-empleo |
+
+**UAT PRUEBA 1 (no tocar órdenes reales):** socio **#255** Carmen Fernanda Castillo · orden **264** / ORD-2026-0141 · cuestionario **148**. Poli badge: **#212** Angeles Villagrán · orden **231** / ORD-2026-0108.
+
+**Por qué fallaba (para el próximo agente):**  
+1. EMPLEOS: `filasTabla` depth-aware + override vacío/`-----` tapaba el formulario; a veces se llenaba la tabla mala.  
+2. Aspecto laboral socio: `quitarTablaLaborComplementaria` + socio **no** llamaba `rellenarAspectoLaboral*`. El texto sí estaba en `word_laboral`.  
+3. Aprobado: `getResultadoTextoAttribute` / opciones decían «Aprobado / Sin Observaciones».
+
+---
+
+## 🟢 SPRINT O — EN PROD (28 ago 2026) · UAT con correcciones en P
+
+**Origen:** WA 27-noche → 28-ago. Se confundió «información complementaria» con «información complementaria laboral». El 07:34 («quítala en socio») quedó anulado a las 07:37–07:38.
+
+**Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_O_OBSERVACIONES_28-08-2026.md`  
+**No restaurar** `labor_complementaria` (N-C1). Peri/espe **sin** Q&A complementaria.
+
+| ID | Qué | Estado |
+|----|-----|--------|
+| **O-C1** | Restaurar acordeón Información complementaria (preempleo + socio) | ✅ prod · ella OK |
+| **O-C2** | Word Q&A complementaria en preempleo + socio; `word_laboral` preempleo en ASPECTO LABORAL | ✅ prod · ella OK |
+| **O-S1** | Socio: trasladar INFORMACIÓN LABORAL (empleos) | → **P-S1** ✅ prod 29-ago · espera UAT ella |
+| **O-R1** | DI en rojo + auto a Conclusión | ✅ prod · ella: quitar el cuadro vacío → **P-R1** |
+| **O-E2** | Económico: mismo ancho, espacio, fuente 12 | ✅ prod · ella: deudas otra vez 11 → **P-E1** |
+| **O-U1** | Quién creó la empresa | ✅ prod · ella OK |
+| **O-W1** | Subir WhatsApp en portal cliente | ✅ prod · ella OK |
+
+---
+
+## 🟢 SPRINT N — EN PROD (27 ago 2026)
+
+**Origen:** UAT WhatsApp 26-noche → 27-ago + `Observaciones 27-08-2026/` + `FIRMAS PARA POLIGRAFO.docx`. Ella: malentendimos sitios; cambiamos cosas que ya estaban bien.
+
+**Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_N_OBSERVACIONES_27-08-2026.md`  
+**No implementar** un ítem sin re-leer código/plantilla de ese ítem. Socio económico / amistades / salud / estado civil: **no retocar**.
+
+### Lote A en prod 27-ago noche
+
+| ID | Qué | Causa / fix |
+|----|-----|-------------|
+| **N-R1** | Word: solo la fila del resultado/clasificación elegida (1ª y última hoja) | `rellenarCuadroResultado` / `marcarOpcionesTabla` ahora filtran las otras opciones. UI select no se toca. Pendiente = cuadro completo |
+| **N-R2** | Poli/VSA/socio sin `[ X ]`; poli/VSA conclusión según aprobado / no aprobado / excepción | Excepción = misma frase que aprobado (negro, negrita, sin tabla). Motivo en ASPECTO QUE ORIGINA. Socio: solo la fila de clasificación con color. Firmas OK (ella 21:21). |
+| **N-P1** | PDF y Auth se abren en el visor del navegador (no descarga automática) | `$pdf->stream` (inline). Descargar queda en el visor del browser. |
+| **N-V1** | Nombre del candidato debajo de «Bienvenido/a» en verificación de identidad | `verificar-identidad.blade.php` · `$evaluado->nombre_completo` |
+| **N-C4** | Preempleo y socio: sin acordeón Información complementaria en Tablas para informe | `clavesTablas` sin `complementaria` |
+| **N-L2** | Preempleo: `word_laboral` debajo de Información laboral | Recuadro INFORMACIÓN COMPLEMENTARIA; se quitan filas de licencia/metas |
+| **N-E1** | Poli/VSA: narrativa económica a todo el ancho (sin franja a la derecha) | `extenderFilasDeUnaCeldaAlGrid`. Socio no se toca |
+| **N-C1** | Quitar acordeón «Información complementaria laboral» | `InformePreempleo::clavesTablas` ya no incluye `labor_complementaria`. Se conserva «Información complementaria» (licencia/metas) e historial |
+| **N-C3** | Quitar **Hermanos** de tablas REPRO para Word en peri/espe (WA 20:28) | Candidato y Word ya lo omitían. Quedaba `informe-familiar` con «Agregar hermano». Preempleo/socio no se tocan |
+| **N-C2** | Word sin Q&A complementaria laboral | Preempleo/socio: M-P6. Peri/espe: N-L1 reusa el recuadro INFORMACIÓN COMPLEMENTARIA para `word_laboral` |
+| **N-A1** | Firmas poli = Stefanie / Rodrigo / Narda de plantilla | `rellenarApa` **ya no sustituye** por el poligrafista de la orden (Elizabeth). Las firmas están en WordArt, no en `w:tbl` |
+| **N-A2** | VSA no reescribir Aldin | Mismo: no se reemplaza `Aldin Tobar Certified Examiner VSA` |
+
+PHPUnit 59 OK (Export jpeg GD excluido: `imagejpeg` ausente en contenedor). FTP 3 PHP + caché. Manifiesto: `docs/deployment/SprintN_LoteA_2026-08-27_deploy_manifest.txt`. Login prod HTTP 200.
+
+### Aún no en prod / no implementar aún
+
+- **N-R3** ✅ **prod** 27-ago noche: poli/VSA «se clasifica al evaluado(a):» fijo (ya no «a la … como»). Socio no usa esa frase.
+- **N-F0** peri vacío: Jaquelin Xiomara Castillo Díaz · CORALSA `ORD-2026-0179` · VSA periódica · c#191 · 5/5 100%. Las 5 secciones peri tienen filas. Además hay slugs de preempleo (`datos_personales`, `informacion_familiar`, `historial_laboral`, `antecedentes` con salud completa). No es pérdida de datos. **No** ampliar salud (N-F1) hasta ver por qué la UI/Word no arma 1–4. Ella va a llenar otro; es segunda prueba, no bloquea.
+- **N-F1** salud peri/espe: **plan B** (20:05, lo más fácil) — ampliar última pestaña y llamarla **«Salud y antecedentes recientes»**. No sección nueva.
+- **N-F2** ✅ prod 27-ago noche (ajustado): candidato llena **solo el último grado** (el Word peri ya mostraba uno). Recargar F5.
+- **N-C3** ✅ prod 27-ago noche. Tablas REPRO peri/espe sin Hermanos.
+- **N-L1** ✅ **prod** 27-ago noche: peri/espe Word — aspecto laboral debajo de Información laboral; recomendaciones en Observaciones adicionales. Preempleo: **N-L2** sí vuelca `word_laboral`. Socio sigue sin volcarse.
+- **N-E1** ✅ **prod** 27-ago noche: poli/VSA narrativa económica con gridSpan = todas las columnas. Socio no se tocó.
+
+**Siguiente paso:** ella regenera el Word peri de la prueba (20:55). Luego N-F0 UI/Word. **No migrar** Hetzner. Tests por archivo.
+
+### Malentendidos Sprint M (no repetir)
+
+| M | Qué hizo M | Qué quiere ella ahora |
+|---|------------|------------------------|
+| M-P3/S3 | `[ X ]` dejando **todas** las filas Tipo A–C / Aprobado–Excepción | Word: **solo la opción elegida**. El select de la UI está bien |
+| M-P2 | Texto APA = poligrafista de la orden (Elizabeth bajo 3 firmas) | Bloque fijo Stefanie / Rodrigo / Narda, **sin bordes**. VSA no se tocaba y se rompió |
+| M-P6 | Tabla fuera del Word; acordeón UI sigue | Quitar de **Tablas para informe** (`labor_complementaria`) |
+| M-F3 | 2 preguntas en peri §5 | Salud+hábitos **como preempleo**; plan B: renombrar pestaña §5 |
+| M-P7 | Hueco socio OK | Poli/VSA siguen mal |
+
+---
+
+## 🟢 SPRINT M — CERRADO CÓDIGO / UAT CON CORRECCIONES (26 ago 2026 noche)
+
+**Origen:** WA 26-ago 17:11–17:40 + 3 .docx en `Observaciones 26-08-2026/`. Ella confirma que **varios cambios del sábado sí quedaron**; faltan ajustes chicos + foto en algunos Word + pregunta si un **solo campo de resultado** puede ir a 1ª y última hoja.
+
+**Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_M_OBSERVACIONES_26-08-2026.md`
+
+### P0 foto (WA, informes reales)
+
+**M-F0 ✅ prod 26-ago.** Ya no se tira la foto solo por ser >8 MP: si pesa ≤5 MB se embebe (JPEG de celular). >5 MB sigue omitida (anti-503). HEIC sigue sin soporte (iPage sin Imagick). UAT PRUEBA 1 #113/#114/#148: `foto_evaluado.png` en el Word. Ligorria/Getzer: que ella regenere; no tocamos esas órdenes.
+
+### Lote A en prod 26-ago
+
+| ID | Qué | Causa real / fix |
+|----|-----|------------------|
+| **M-E1** | Estado civil en el **título** ESTADO CIVIL | ✅ prod. UAT: Casado(a) / Viudo(a) en r0 |
+| **M-P1** | Nombre en conclusión | ✅ prod. Plantilla = `NOMBRE DEL CANDIDATO` no `XXXXXXXX` |
+| **M-P2** | Firma/APA de plantilla | ✅ prod. Se quita Stefanie/Rodrigo/Narda y Aldin; si hay poligrafista se pone su nombre. UAT sin poligrafista = WordArt vacío (mejor que nombres ajenos) |
+| **M-P5** | Totales deudas en blanco | ✅ prod. `Q.40,000.00` no sumaba (la coma). UAT #113 `Q. 5,500.00` |
+| **M-S1** | Recomendaciones socio | ✅ prod. Van a GENERALIDADES última fila, no a Referencia Laboral 1 |
+| **M-S2** | No volcar refs laborales | ✅ prod. Ya no copia empresa/tel del candidato a esos huecos |
+
+### Lote B en prod 26-ago (noche)
+
+| ID | Qué | Causa real / fix |
+|----|-----|------------------|
+| **M-P3** | Un resultado → 1ª y última hoja (poli/VSA) | ✅ prod. Campo único en redacción Word. Marca `[ X ]` en 1ª hoja y NDI/DI/excepción de última. NO APROBADO pega mentira; EXCEPCIÓN pega aspecto; APROBADO cambia a «SÍ RESPONDIÓ CON VERACIDAD». UI oculta textareas según opción. |
+| **M-S3** | Socio Tipo A/B/C en 1ª y CONCLUSIONES | ✅ prod. Combo propio (no APROBADO). «Tipo A observaciones» usa `aprobado_con_obs` (ENUM ya existía). |
+
+UAT prod PRUEBA 1 (resultado restaurado a null): #114 VSA peri 2 marcas + mentira; #113 poli espe SÍ VERACIDAD; #148 socio Tipo C en CLASIFICACIÓN y conclusiones. UI: select 3 opciones poli / 5 socio.
+
+### Lote C — M-F2/F3 (formulario, 26-ago noche)
+
+| ID | Qué | Causa real / fix |
+|----|-----|------------------|
+| **M-F2** | ¿Padece alergias? + ¿Está embarazada? en **todos** los formularios | ✅ prod 26-ago. No hay campo sexo (se quitó a propósito). Embarazo Sí/No para todos; ayuda «Si no aplica, seleccione No.» Detalle de alergias solo si Sí. |
+| **M-F3** | Peri/espe §5 pedía «sección de salud» | ✅ prod 26-ago. Bloque corto **Aspectos de salud** (solo esas dos) antes de tatuajes. No se volcó el cuestionario de salud completo de preempleo. |
+
+Campos: `salud_alergias`, `salud_detalle_alergias`, `salud_embarazada`. Internos (no van al PDF empresa). Word: entran a la narrativa `word_salud` si REPRO no la reescribe.
+
+UAT prod: smoke 9/9; admin socio #60 (cuestionario 60) ve las 3 preguntas en Aspectos de salud; admin peri #114 (cuestionario 34) ve bloque corto (alergias/embarazo, sin preocupaciones). Enlace candidato #114 vencido — no se reactivó.
+
+### Lote D — M-P6 (Word, 26-ago noche)
+
+| ID | Qué | Causa real / fix |
+|----|-----|------------------|
+| **M-P6** | Quitar tabla **información complementaria laboral**; solo historial | ✅ prod 26-ago. Preempleo: se elimina `INFORMACIÓN LABORAL COMPLEMENTARIA`. Socio: `INFORMACIÓN COMPLEMENTARIA LABORAL`. Peri/espe: `INFORMACIÓN COMPLEMENTARIA` (era el Q&A laboral). Se conserva la complementaria de licencia/metas en preempleo. `word_laboral` sigue en la UI como borrador y **ya no se vuelca** al Word. |
+
+UAT prod smoke 12/12: #113 espe y #114 peri sin complementaria y con historial; #148 socio sin complementaria laboral y con EMPLEOS.
+
+### Lote E — M-P4 (Word, 26-ago noche)
+
+| ID | Qué | Causa real / fix |
+|----|-----|------------------|
+| **M-P4** | Columna **Respuesta** (No / Sí) no se trasladaba | ✅ prod 26-ago. La plantilla Word ya trae `No`; el relleno la vaciaba o ponía `—` porque la UI arrancaba vacía. Ahora default `No`, select No/Sí, `SI`/`NO` se normalizan, vacío → `No` (nunca guión). No hay otra fuente (no jala del formulario candidato). |
+
+UAT prod smoke 11/11: #114 VSA peri y #113 poli espe `["No","Sí","No"]`. UI cuestionario 34: 5 selects No/Sí. Notas de prueba restauradas.
+
+### Lote F — cosmético (26-ago noche)
+
+| ID | Qué | Causa real / fix |
+|----|-----|------------------|
+| **M-P7** | Pequeña diferencia de espacio en económico | ✅ prod. La col. grid de 22 dxa absorbía el resto al expandir (`expandirTablaAnchoPagina`). Ahora las cols. &lt;50 dxa se quedan; se compacta el hueco ECONÓMICO→SALUD. `numeroMoneda` acepta `Q.40,000.00`. |
+| **M-S4** | Salud socio: fila combinada como en económico | ✅ prod. Narrativa `word_salud` en fila `gridSpan` (Observaciones:), no en 4 celdas sueltas. |
+| **M-S5** | Primera línea de amistades ya no iba en negrita | ✅ prod. `establecerTextoCelda` quitaba `w:b`; el encabezado se re-aplica con `aplicarNegritaFila`. |
+
+UAT prod smoke 9/9: #114/#113 col. fantasma=22 dxa; #148 salud combinada + amistades negrita. Notas de prueba restauradas.
+
+### Pendiente (pasó a Sprint N)
+
+UAT 27-ago: resultado solo fila marcada · firmas poli/VSA · acordeón complementaria laboral · espacio económico poli/VSA · salud peri completa · **P0 peri vacío**.
+
+**Esto NO es H16** (PDF final automático). Sigue: Word → ella sube PDF.
+
+**Siguiente paso:** Sprint N (plan; sin código hasta verificar ítem). **No migrar** Hetzner. **No re-descargar #111.** Tests por archivo.
+
+**UAT:** PRUEBA 1. No regenerar Word de PERCO / NEVERIA / CORALSA. Admin `uat.g1.browser@repro.local`. **No resetear passwords de Stephany.**
+
+**No tocar:** fechas formulario; cutover; órdenes reales; comprimir papelería; embeber PDF.
+
+---
+
+## 🟢 SPRINT L — CERRADO PROD (25 ago 2026 noche)
+
+**Origen:** WA sáb–lun + `OBSERVACIONES DEL SISTEMA.docx` + `CORRECCIONES DE SOCIOECONÓMICOS.docx` + `CORRECCIONES POLIGRAFO ESPECIFICO.docx` (periódica = mismas notas que específico).  
+**Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_L_OBSERVACIONES_24-08-2026.md`  
+**Prioridad ella:** sistema + socioeconómico primero; polígrafo específico/periódica después. **Los tres lotes ya están en iPage.**
+
+### Cerrado en prod
+
+| Lote | IDs | UAT (PRUEBA 1, no órdenes reales) |
+|------|-----|-----------------------------------|
+| **A sistema** 24-ago | L0, L-S1…S14 | Login OK · #148 rojo + banner + tablas antes de redacción · Excel `.xls` (iPage sin XMLWriter) · título **INFORMES DE EMPRESAS** · cámara/Ctrl+V/tipo Tatuajes en ORD-2026-0141 · preview doc **261** = 13 KB |
+| **B socio** 25-ago | L-E1…E8 | Carmen **#148** / evaluado **#255** / orden **264** ORD-2026-0141. Pareja Mario. Patrimonio N bienes + total. Word ~418 KB |
+| **C poli** 25-ago | L-P1…P6 | Específica Angeles **#114** / **#212**. Periódica Alesandra Gramajo **#113** / **#211**. Estado civil, último grado combinado, laboral/complementaria (sin `Xxxx`), tatuajes, tablas informe + anexos en UI |
+
+**Re-smoke 25-ago noche:** login UAT HTTP 200 → dashboard. Edit 114/148/113 = 200, `bg-danger`, tablas, anexos. Word ZIP: #114 492 KB / 3.2 s · #148 418 KB / 4.3 s · #113 474 KB / 2.9 s. Reportes título INFORMES DE EMPRESAS. Archivos lote C **byte-a-byte iguales** local vs FTP (nada pendiente de subir).
+
+**L-P1…P6 causas (no reabrir):** estado civil no corría en peri/espe · específica solo `ultimo_nivel_academico` (fila sintética + `combinarCeldasFila`) · complementaria buscaba `… LABORAL` · anexos UI solo si había papelería · tatuajes fuera de §5 peri/espe · `InformePreempleo::aplicaATipo` no incluía periodica/especifica. `InformeWordXml.php` **hay que subirlo** con el relleno (el primer smoke C falló en prod porque faltaba).
+
+**Si no marcan checkboxes de anexos, `InformeWordAnexosPapeleria::documentosParaWord` no procesa papelería.** Fotos `foto_tatuaje` sí se intentan embeber (tope 8 MP / 5 MB). No volver a embeber PDF en el Word.
+
+### WA 24-ago noche — Poou / papelería / servidor (diagnóstico, sin fix nuevo)
+
+Stephany: Word 503 en Poou, “no adjunté nada”, no deja eliminar papelería; borró caché y **ya no entra**.  
+**Juan Bernardo Poou Caal** · cuestionario **#111** · evaluado **#203** · ORD-2026-0104 · CORPORACIÓN ARIUM. 6 JPEG ~15 MB. Selección anexos Word vacía. Word **OK** sin anexos. Causa: preview cargaba el JPEG entero → satura LiteSpeed (también login). `memory_limit` iPage **no** arregla workers. **L-S13 miniaturas ✅ prod.** **No re-descargar ni abrir papelería de #111.**
+
+### Hetzner (migración **autorizada** 31-ago — ejecutar según plan)
+
+Consola Otto · proyecto **szystems** · `ubuntu-8gb-hil-1` **CPX31** · **4 vCPU / 8 GB / 160 GB SSD** · Hillsboro. Backups VPS **siguen apagados** (C9). SSH root desde este WSL: permission denied (C3). Capacidad 600–700/mes OK. Plan: `PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`.
+
+### Fuera de Sprint L (Stephany/Otto)
+
+- Cutover Hetzner / dominio.  
+- Comprimir papelería al subir.  
+- Embeber PDF otra vez en Word.  
+- **H16** PDF final automático (hoy: Word → ella sube PDF).  
+- I8 empresa móvil; I9/I10 foto/formato fino Word solo si lo vuelve a marcar.  
+- Validación de **Stephany con órdenes reales** (nosotros solo PRUEBA 1).
+
+**UAT:** admin `uat.g1.browser@repro.local` / `UAT.G1Word2026!` (user 223) · cliente PRUEBA 1 `uat.cliente.prueba1@repro.local` / `UAT.Cliente2026!` (user 224, empresa_id 99). **No resetear passwords de Stephany.**
+
+**Cerrado.** El lote nuevo es Sprint M (26-ago). No reabrir L0/L-S13 ni Poou #111. PHPUnit: tests por **archivo**, no `--filter` amplio.
+
+**No tocar:** fechas del formulario; cutover BD/dominio; órdenes reales; usuarios reales de Stephany; comprimir papelería al subir. Empresa de pruebas: **PRUEBA 1**.
+
+---
+
+## Sprint K — cerrado prod (20–21 ago 2026)
+
+**Origen:** WA + `Cambios de socioeconomico.docx` + capturas en `Ultimos cambios 20-08-2026/`. UAT ella: archivo OK, pudo borrar algunos usuarios.
+
+**Cerrado prod 21-ago.** Excel del listado + quitar evaluado en prod y UAT (PRUEBA 1). El lote nuevo es Sprint L (24-ago).
+
+**WA 21-ago noche (listado — ✅ prod + UAT navegador):**
+- **Excel:** botón en Lista de Órdenes (cliente y REPRO). Misma query que los filtros; todas las filas, no la página de 15. iPage **sin XMLWriter** → baja `.xls` (Excel lo abre). No usar Maatwebsite XLSX en prod.
+- **Quitar evaluado:** el tachito ahora manda `evaluados_eliminar[]` y el update sí borra. Sin ese campo, se sigue **preservando** (no borrar por accidente). Mínimo 1. Bloquea si hay cuestionario/papelería/informe. Cliente solo edita en **Orden Recibida**. Dos órdenes del mismo DPI ≠ dos filas: la extra la archiva solo admin.
+- UAT: filtro PRUEBA 1 → 18 filas Excel. Orden de prueba **ORD-2026-0140** (#263): se quitó “UAT Quitar Duplicado”, quedó “UAT Quitar Uno”. Se puede archivar (no es orden real de Stephany).
+
+**Explicar (no es código de portal cliente):** desactivar titular en **REPRO → Usuarios**, no en Usuarios de la empresa.
+
+**No tocar:** fechas del formulario; cutover BD/dominio; órdenes reales de Stephany; usuarios reales. Empresa de pruebas: **PRUEBA 1**.
+
+---
+
+## Sprint J — cerrado prod (19–20 ago 2026)
+
+**Origen:** WA Stephany 18–19 ago · Word socio Rebeca + polígrafo/VSA Reyna · `Observaciones 19-08-2026/`  
+**Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_J_OBSERVACIONES_19-08-2026.md`  
+**No tocar:** fechas del formulario (cerradas por ella). Reset BD + dominio al final.
+
+### WA 19-ago noche — usuarios / roles / archivo (✅ prod + UAT navegador)
+
+Stephany: no puede editar roles, al editar usuario “se genera un rol”, no elimina algunos usuarios, órdenes archivadas siguen en evaluados, empleados con permiso de editar órdenes no podían.
+
+**Causas:** al guardar un empleado REPRO se crea `user_{id}` (aparece en Roles) y se le quita el rol `repro`; `usuarioPuedeEditarOrden` exigía `hasAnyRole(['repro'])`. Archivo sí ocultaba órdenes, no evaluados/historial/calendario/reportes. Eliminar usuarios: no se borra el historial (se desactiva); antes tampoco se podía borrar un titular de empresa.
+
+**Fix:** editar orden por `role_as >= 2` · ocultar roles `user_*` · filtrar `deOrdenesActivas()` en listados · admin puede desactivar titular (no el último admin ni a sí mismo). Tests: `UsuariosRolesArchivoTest`. **Deploy FTP 19-ago noche** · UAT: Roles = 5 del sistema (sin `Permisos de…`) · checkboxes de empleado con `ordenes.editar` marcados · titular tiene botón Eliminar (no se confirmó borrar usuarios reales) · candidato UAT desapareció de cuestionarios e historial DPI al archivar · empleado solo-rol-personal abrió `/ordenes/222/edit` (antes 403). Durante UAT se archivó por error **ORD-2026-0099** (#221 DECORABAÑOS) y se **desarchivó de inmediato**. Datos UAT (users 215/216, orden 222) eliminados.
+
+**Centro de Ayuda (✅ actualizado 19-ago):** `ayuda/seguridad-usuarios` — crear/editar, permisos individuales, editar roles, eliminar (desactivar, titular, último admin, no a sí mismo). Artículo nuevo `ayuda/archivar-ordenes`. FAQ (4) + glosario. Notas en historial DPI, cuestionarios, calendario, reportes y detalle de orden. Botón **Ayuda** en Usuarios, editar usuario, Roles y historial DPI.
+
+### Borradores WA 19-ago (enviar en dos mensajes)
+
+**1 — Word + servidor/dominio** (ya no dice que roles queda para después; eso va en el 2)
+
+```
+Hola Stephany buenas noches
+
+Ya quedaron subidos los cambios de las pruebas que nos mandaste del Word (el socioeconómico y el de polígrafo/VSA).
+
+Si podés, revisá en el de pruebas que ya esté así:
+- el encabezado del Word con Empresa, Agencia/Sede, Puesto y Fecha, como en la foto que nos enviaste
+- el botón para descargar el borrador Word directo en la pantalla de edición, sin salir
+- empleos, referencias, agregar hijos/hermanos, presupuesto y lo de recomendaciones
+
+Ojalá puedas volver a generar el Word de Rebeca y el de Reyna (o el último que hayas llenado) y nos digás si ya quedó como lo necesitan.
+
+Y lo del servidor nuevo y el dominio nuevo: eso lo hacemos hasta que ya veamos que no hay más cambios por hacer. Cuando estemos seguros de eso, se sube al servidor real para que hagan las pruebas allá. Por ahora seguimos en este de pruebas para no perder lo que ya está.
+
+Cualquier cosa me avisás
+```
+
+**2 — Usuarios / roles / archivo**
+
+```
+Stephany, sobre lo de usuarios, roles y las órdenes archivadas: ya quedó en el mismo de pruebas.
+
+- Ya se pueden editar los roles del sistema (Administrador, Personal Repro, etc.). Lo que salía como un rol nuevo al editar un empleado ya no aparece ahí; esos permisos se marcan en Usuarios.
+- Eliminar un usuario no borra el historial: se desactiva y deja de poder entrar. Ahora también se puede desactivar al titular de una empresa; si era el principal, hay que asignar otro. No se puede borrar el último administrador ni a uno mismo.
+- Si un empleado tiene permiso de editar órdenes, ya lo deja entrar a editar (antes a veces no, aunque el permiso estuviera marcado).
+- Al archivar una orden, el evaluado ya no debe salir en candidatos ni en historial por DPI.
+
+Si algo no te cuadra al probarlo, me avisás.
+```
+
+### UAT producción 20-ago (navegador + Word generado)
+
+| Prueba | Resultado |
+|--------|-----------|
+| Edición socio #90 (Yengxi Licema) | ✅ presupuesto/bienes editables · dirección padre/madre · Agregar hijo/hermano · casilla Recomendaciones (J8) · **Descargar borrador Word** (J12) |
+| Edición polígrafo #101 (Juan Francisco Cañiz) | ✅ mismo botón Word · labor_complementaria / complementaria por separado · recomendaciones opcionales |
+| Word socio #90 (tras hotfix J5) | ✅ EMPLEOS: Súper Efectivo + Comercial Pérez · refs personales #1/#2 **sin** esos empleos |
+| Word polígrafo #101 | ✅ Pinkys / Universo en INFORMACIÓN LABORAL · RECOMENDACIONES = — (no copia notas internas) |
+| J13 Puesto en encabezado | ✅ 7 plantillas v2 con `Puesto:` + etiquetas celeste · desplegado prod |
+| J16 Estudios extra | ✅ Override académico no se filtra (H10 intacto sin override) |
+| J11 Vista previa | ✅ prod 21-ago — modal no esperaba el PUT (socio 677 campos se colgaba). Ahora abre al clic; Word + PDF OK en #86 Rebeca |
+| Ops reset BD / dominio | ⏸️ Al final, sin borrar código |
+
+**Hotfix J5 (20-ago):** `InformeWordXml::limitesTablaPorMarcador` — si el título está *entre* tablas (p. ej. «INFORMACIÓN LABORAL» antes de EMPLEOS), rellena la tabla **siguiente**, no la de arriba.
+
+---
+
+## 🔴 SPRINT I — (14 ago 2026, residual)
+
+**Origen:** WA Stephany — pruebas coordinador + candidatos reales (Darwin/Novocolor, Franklin)  
+**Plan completo:** `ultimos cambios 14-08-2026/PLAN_SPRINT_I_FEEDBACK_14-08-2026.md`  
+**Estado deploy:** Fases 1–4 en prod (I1–I3, I5–I7, I11–I12 UI) · smoke Word PASS
+
+### WA 14-ago ~6:26 PM — vencimiento enlace (nuevo **I13**)
+
+Stephany reporta: un candidato de **hoy** no pudo llenar el formulario porque el enlace apareció **expirado**; ella misma ha visto el mismo error; **no ocurre con todos, solo algunos**; no sabe cuánto dura la vigencia del enlace. Relaciona esto con su pedido de botones **habilitar/deshabilitar** (I11/I12 — UI ya desplegada, investigación pendiente).
+
+**Vigencia en sistema:** `configs.dias_vigencia_token` (default **30 días**, Admin → Configuración). Bloqueo por `token_expira_at` pasado o `estado_formulario = vencido`. Renovar: botón «Habilitar enlace» en orden.
+
+**Pendiente I13:** ~~identificar evaluado~~ → **3 candidatos:** Walter ORD-0040 (#134), Carla ORD-0041 (#135), Gerson ORD-0044 (#138). Enlace expiró a las **2 horas** (no 31 días). Bug código I13b pendiente. Acción: Habilitar enlace mañana sin molestar a Stephany.
+
+### Hecho en prod (14-ago noche)
+
+I1 papelería → DOCUMENTOS ADJUNTOS · I2 económico podado · I3 preview · I6/I7 formulario · I11/I12 botones enlace
+
+### Pendiente Sprint I
+
+I4 (H16 PDF) · I8 (empresa móvil) · I9/I10 (Word fino) · **I13/I13b (vencimiento — Walter/Carla/Gerson identificados)** · UAT recorrido completo
+
+---
+
+## ✅ SPRINT H — CERRADO EN PROD (13 ago 2026)
+
+**Cliente:** Stephany Castro / REPRO · **pruebas reales con candidatos** (13-ago)  
+**Timeline:** Stephany revisa → reunión **sábado** → **go-live lunes**  
+**Mensaje WA enviado:** 13-ago noche (foto, parejas, económico, preview-first; limitación PDF papelería iPage)  
+**Fuentes:** WA 13-ago · `ultimos cambios 13-08-2026/ULTIMOS CAMBIOS FORMULARIO.pdf` · `ULTIMOS CAMBIOS3.pdf`
+
+### UAT producción confirmado (13-ago noche)
+
+| Prueba | Resultado |
+|--------|-----------|
+| Login navegador + dashboard | ✅ usuario temp `uat.g1.browser@repro.local` |
+| Word #128 Aldin · #131 Edgar · #132 Franklin | ✅ HTTP 200 · 413–594 KB · nombre, expareja, sin `xxxx` |
+| H13 preview-first (cuestionario #47 Edgar) | ✅ mammoth.js · botón descarga tras preview |
+| Órdenes 155 / 158 / 159 | ✅ botón «Descargar informe Word» visible |
+| Franklin ORD-2026-0038 | ✅ PDF final en disco · `resultadosDisponiblesParaEmpresa()` OK |
+| Probe servidor | ✅ 27 OK / 5 FAIL (solo infra PDF: Imagick, pdftoppm, gs ausentes en iPage) |
+| Probe HTTP autenticado | ✅ 24/24 OK (script auto-eliminado) |
+
+**Casos referencia prod:**
+
+| Evaluado | Orden | Código |
+|----------|-------|--------|
+| Aldin #128 | 155 | ORD-2026-0034 |
+| Edgar #131 | 158 | ORD-2026-0037 |
+| Franklin #132 | 159 | ORD-2026-0038 |
+
+### ✅ Sprint H completo en prod
+
+| ID | Estado | Archivos clave |
+|----|--------|----------------|
+| **H1–H4, H6, H7, H10** | ✅ prod | ver manifiesto parcial |
+| **H5** | ✅ prod | `FechasLaboradasCampo` — `type="month"` · « al » en informe |
+| **H8** | ✅ prod | `InformeWordFoto.php` — ratio ~3:4, quita `wp:anchor` |
+| **H9** | ✅ prod | `InformeWordRelleno.php` — expareja/pareja, académico, montos Q |
+| **H11–H14** | ✅ prod | deploy A–E 13-ago |
+| **H13** | ✅ prod | `edit.blade.php` — preview-first + mammoth |
+| **Batch Stephany WA** | ✅ prod | `InformeWordPdfPaginas.php`, `InformeWordAnexos.php`, `InformeWordXml.php` |
+
+**Manifiestos:** `SprintH_parcial_*` · `SprintH_H8_*` · `SprintH_H9-H13_*` · `SprintH_Stephany_WA_*`  
+**Scripts deploy:** `scripts/deploy_sprint_h_*.sh`
+
+### ⚠️ Limitación conocida (no bloquea go-live)
+
+**PDF papelería embebido en anexos Word:** iPage no tiene Imagick / `pdftoppm` / Ghostscript → fallback texto `[PDF] …` (sin crash). Imágenes de papelería sí se embeben. Fix crítico desplegado: `\shell_exec` en namespace `App\Support`.
+
+### Pendiente post-Sprint H
+
+| ID | Tema |
+|----|------|
+| **H16** | Generación PDF final automático — acordado: Word manual → subir PDF (esperar Stephany) |
+| **H0** | Migración servidor — borrador `H0_MIGRACION_SERVIDOR_2026-08-13.md` · reunión sábado |
+
+**Usuario UAT temp activo:** `uat.g1.browser@repro.local` / `UAT.G1Word2026!` — eliminar cuando Stephany termine de validar.
+
+---
+
+## ✅ SPRINT G — EN PROD (13 ago 2026)
+
+**Estado:** Código desplegado · smoke prod 27/27 · **UAT 13-ago reabre G1.3, G2.1, G3.2**
+
+---
+
+## 🔴 SPRINT G — referencia (12 ago 2026)
+
+**Cliente:** Stephany Castro / REPRO · pruebas 12-ago bloqueadas por informes  
+**Prioridad acordada:** informes finales primero; ayuda/tutorial + videollamada **después**.  
+**Primer paso:** G0 — reproducir Word en blanco. Stephany (12-ago noche): descarga **desde la orden**; **vista previa nunca funcionó**; **todos los evaluados creados hoy** fallan (no un caso aislado).
+
+### Reportes críticos (12-ago)
+
+| # | Problema | Causa probable en código |
+|---|----------|--------------------------|
+| 1 | Word preempleo polígrafo vacío + silueta negra (foto) | Relleno v2 / foto / datos no vinculados al evaluado del caso |
+| 2 | “Informe” = PDF formulario candidato; debe ser final/preliminar subido | ✅ **G2.1** — partial `_informes_evaluado_empresa`, formulario en `<details>` referencia |
+| 3 | Vista previa no genera informe tras editar tablas | Modal `edit.blade.php` solo enlaza PDF cuestionario + Word |
+| 4 | Empresa sin historial ni observaciones REPRO | Historial en vista unificada solo `role_as >= 2`; config `historial_visible_empresa` no aplicada a empresa |
+
+### Sprints G (resumen)
+
+| Bloque | Alcance | Prioridad |
+|--------|---------|-----------|
+| **G0** | Diagnóstico caso real Stephany | ✅ P0 — causa PCLZip confirmada |
+| **G1** | Word relleno + tablas faltantes + vista previa / generar final | G1.1 ✅ prod · G1.2/G1.3 pendiente |
+| **G2** | UX informe empresa + historial + observaciones | G2.1 ✅ código · G2.2/G2.3 pendiente |
+| **G3** | Motivo reprogramación visible, rehabilitar vencido, estado evaluación | P1 |
+| **G4** | Select Seleccione, firma Infornet en PDF | P2 |
+| **G5** | Unificación datos formulario → informe (`InformeDatos`) | ✅ prod 13-ago |
+
+**Archivos Word clave:** `app/Support/InformeWord*.php` · `resources/templates/informe-*-v2.docx` · tablas REPRO en `InformePreempleo` + `tablas-informe-preempleo.blade.php`.
+
+---
+
+## ✅ SPRINT F — EN PROD (11 ago 2026)
+
+**Cliente:** Stephany Castro / REPRO · post-UAT + formatos Word finales  
+**Smoke prod:** Word polígrafo/VSA/socio OK (~441/408/471 KB) con evaluados demo — **no cubrió el caso del 12-ago**.  
+**Dudas:** (1) ✅ «Son las mismas» · (2) ⏸️ dominio/servidor · (3) ✅ ayuda al final.  
+
+
+ 
+ 
+**Audios (transcritos):** Word no volcaba datos; 1 informe por servicio como autorizaciones; cambios casi solo diseño.  
+**Fuentes:** `docs/repro/cambios agosto/` — `ULTIMOS CAMBIOS.pdf`, `FORMATOS.pdf`, 7× docx.
+
+| Sprint | Estado |
+|--------|--------|
+| **F0** Fixes seguros | ✅ |
+| **F1** Word relleno celdas / datos editados | ✅ |
+| **F2** Formulario/ops (académico 2 niveles, motivo reprogramación, ocultar poligrafista, PDF estudios) | ✅ |
+| **F3** Siete plantillas Word + FORMATOS (VSA/socio/foto/preguntas) | ✅ |
+| **Deploy** iPage + `motivo_reprogramacion` | ✅ 11-ago |
+
+**Word activo:** matriz `InformeWordPlantillas` → `informe-*-v2.docx` (7 archivos). Layout `DATOS GENERALES` + marcadores por texto concatenado.  
+**Tests:** `SprintF0*`, `SprintF2*`, `InformeWordSprintF1*`, `InformeWordPlantillasV2*`, `InformeWordFormatosF3*`, foto v2 en `InformeWordExportTest`.  
+**No improvisar:** no reescribir motor formularios; Word solo REPRO; permisos empresa → `PERMISOS_EMPRESA_CLIENTE.md`.
+
+---
+
+## ✅ REVISIÓN CLIENTE AGOSTO 2026 — CERRADA (A–E)
+
+**Cliente:** Stephany Castro / REPRO · feedback UAT ago 2026  
+**Prioridad cliente (5 ago):** (1) formulario · (2) informe Word  
+**Fuentes oficiales:** `docs/repro/cambios agosto/` — PDFs `correcciones.pdf`, `CAMBIOS PARA LOS REPORTES.pdf`, `USUARIO DE CLIENTE (2).pdf`
+
+### Sprint A — ✅ cerrado y desplegado (6 ago 2026)
+
+| Área | Qué quedó en prod | Verificado |
+|------|-------------------|------------|
+| **Word** | Bloques 1→6 (Laboral→Judicial); descarga `.docx` | HTTP 200 `/ordenes/135/evaluados/115/informe-word` |
+| **Word hosting** | `InformeWordZip.php` — fallback PCLZip si falta `ZipArchive` (iPage) | ✅ |
+| **Word bug 404** | Cast `(int)` en `OrdenesController`; `EvaluadoOrden.orden_id` → integer | ✅ |
+| **Admin cuestionario** | Guardado borrador, vista previa PDF + enlace Word, minFilas condicional | ✅ |
+| **Formulario E1** | Labels jefe/RRHH; selects «Seleccione…»; date_range Fechas laboradas | ✅ |
+| **Aviso legal** | Formulario solo aplicante (empresa + admin) | ✅ |
+| **Permisos trabajador** | `hasPermission()` solo JSON; UI oculta sin permiso; defaults sin crear orden/reportes | ✅ FTP 6-ago |
+
+### Sprint C — ✅ cerrado y desplegado (6 ago 2026)
+
+| Área | Qué quedó en prod | Verificado |
+|------|-------------------|------------|
+| **PDF autorización** | Documento aparte del cuestionario (admin + empresa) | ✅ HTTP 200 admin cuestionario #32 |
+| **Anexos papelería Word** | Checkboxes en edit/show admin | ✅ cuestionario #15 |
+| **Preguntas poligráficas** | Tabla editable + relleno última hoja Word | ✅ 6 filas en evaluado #112 |
+| **Fix Word 500** | `InformeWordXml::establecerTextoCelda` — `preg_replace_callback` evita `$11` | ✅ `.docx` ~390 KB evaluado #112 |
+| **UAT pendiente empresa** | PDF autorización vista empresa | ⏳ requiere `resultados_visibles_empresa` + contenido liberado (evaluado #112 aún NO) |
+
+**Archivos clave Sprint C:**
+
+```
+app/Support/InformeWordPreguntasPoligraficas.php
+app/Support/InformeWordAnexosPapeleria.php
+app/Support/InformeWordRelleno.php          ← rellenarPoligraficaTabla
+app/Support/InformeWordXml.php              ← fix establecerTextoCelda (ago 2026)
+resources/views/admin/cuestionarios/partials/preguntas-poligraficas-word.blade.php
+resources/views/admin/cuestionarios/partials/anexos-word-papeleria.blade.php
+resources/views/admin/cuestionarios/pdf-autorizacion.blade.php
+tests/Unit/InformeWordSprintCTest.php
+```
+
+### Sprint D — 🔄 en curso (3.1 Mis Órdenes)
+
+| Cambio | Archivos | Estado |
+|--------|----------|--------|
+| Mis Órdenes = vista REPRO (`admin/ordenes/index`) | `EmpresaController`, sidebar, `admin/ordenes/*` | ✅ prod |
+| Estado de Procesos = vista REPRO cuestionarios | `CuestionariosIndexSupport`, `admin/cuestionarios/index` | ✅ prod |
+
+**No tocar sin leer spec:** permisos portal empresa → `PERMISOS_EMPRESA_CLIENTE.md`
+
+### Resumen sprints B–E
+
+| Sprint | Alcance | Estado |
+|--------|---------|--------|
+| **B** | Formulario completo (estudia actualmente, socio refs, vivienda→económica, periódica/específica) | ✅ **Prod 6-ago-2026** |
+| **C** | Informe avanzado (autorización aparte, anexos papelería, tabla preguntas poligráficas) | ✅ **Prod 6-ago-2026** (fix `$11` en `InformeWordXml`) |
+| **D** | Mis Órdenes + Estado de Procesos = misma vista REPRO (§3.1–3.2) | ✅ **Prod 6-ago-2026** |
+| **E** | Confidencialidad reclutadores (§3.10), WhatsApp 77637811 (§3.8) | ✅ **UAT cerrado 10-ago** |
+
+### ⚠️ Bug corregido en UAT Sprint E (10-ago-2026)
+
+`EmpresaVisibilidadReclutadoresSupport::filtrarQueryOrdenesEmpresa/filtrarQueryEvaluadosEmpresa` comparaban `$user->role_as !== 1` con **comparación estricta**. Como `role_as` llega como `string "1"` desde MySQL, el filtro de confidencialidad **nunca se aplicaba en los listados** `/ordenes` y `/cuestionarios` (el detalle sí bloqueaba con 403 correctamente vía `puedeVerOrden()`, que ya casteaba a int). Fix desplegado: cast `(int) $user->role_as` en ambos métodos. **Lección para agentes:** siempre castear `role_as`/`principal`/ids a `(int)` antes de comparaciones estrictas — Eloquent no garantiza el tipo nativo en todos los contextos de query builder.
+
+### Reglas para agentes (no improvisar)
+
+1. **Portal empresa / permisos:** principal (`principal=1`) = MAPA completo; trabajador (`principal=0`) = **solo** `permisos_empresa` JSON — **ignora rol Spatie**.
+2. **REPRO-only:** informe Word, edición cuestionario admin — nunca exponer a empresa aunque conozcan URL.
+3. **Formularios:** alinear con PDFs en `docs/repro/cambios agosto/` y `docs/ejemplos de formularios reales/` — checklist en `PLAN_REVISION_AGOSTO_2026.md`.
+4. **Deploy prod:** FTP iPage → `app/`, `resources/`; limpiar caché vía `public/clear_cache.php?key=REPRO_DEPLOY_2026_SECURE_KEY`.
+5. **Tests locales:** `docker compose exec app php -d memory_limit=512M vendor/bin/phpunit` — permisos: `EmpresaPermisosTrabajadorTest`, `RevisionAgosto2026SupportTest`.
+
+### Archivos clave Sprint A + permisos
+
+```
+app/Support/EmpresaPermisosSupport.php      ← MAPA permisos + defaults trabajador
+app/Support/InformeWordZip.php              ← ZipArchive / PCLZip iPage
+app/Models/User.php                         ← hasPermission(), tienePermisoEmpresa()
+app/Http/Controllers/Admin/OrdenesController.php  ← informeWord (cast int)
+app/Models/EvaluadoOrden.php                ← cast orden_id integer
+app/Support/InformeWordBloquesEvaluador.php ← orden bloques cliente
+resources/views/layouts/incempresa/sidebar.blade.php
+resources/views/empresa/ordenes/*.blade.php
+resources/views/shared/partials/aviso-formulario-solo-candidato.blade.php
+```
 
 ---
 
@@ -43,7 +633,9 @@ REPRO Guatemala es un sistema web para gestionar evaluaciones poligráficas, VSA
 | Documento | Uso |
 |-----------|-----|
 | `PROGRESS.md` | Seguimiento activo por fase |
-| `docs/business/PLAN_ALINEACION_FORMULARIOS_REALES_2026-07-29.md` | **🔴 PLAN ACTIVO** — alineación literal A→J, checklist entrega cliente |
+| `docs/repro/cambios agosto/PLAN_REVISION_AGOSTO_2026.md` | **🔴 PLAN ACTIVO** — revisión cliente ago-2026, checklist sprints A–E |
+| `docs/repro/cambios agosto/PERMISOS_EMPRESA_CLIENTE.md` | **Spec permisos** principal vs trabajador — no improvisar |
+| `docs/business/PLAN_ALINEACION_FORMULARIOS_REALES_2026-07-29.md` | Plan alineación literal A→J (fase anterior) |
 | `docs/ejemplos de formularios reales/` | Formularios reales ago-2025 (POLIGRAFO PRESENCIAL, SOCIO, etc.) |
 | `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` | Plan histórico E1–E7 punto por punto |
 | `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` | Spec formularios + informe Word + decisiones comerciales |
@@ -725,7 +1317,7 @@ app/, database/, resources/, routes/  (+ vendor/ en deploy completo)
 | **Informe Word empresa** | ✅ Bloqueado en backend (`role_as >= 2`) aunque conozcan la URL | `OrdenesController::informeWord()` |
 | **Informe preliminar HTML** | ¿Debe ocultarse hasta `entregado`? Hoy puede verse antes que los archivos | `empresa/ordenes/show.blade.php` |
 | **Enlaces admin en vistas empresa** | Algunas rutas apuntan a `ordenes.show` (admin) en lugar de `empresa.ordenes.show` | `empresa/cuestionarios/show.blade.php` · `admin/reportes/evaluaciones.blade.php` |
-| **Permisos sub-usuario** | `permisos_empresa` definidos pero no aplicados en `EmpresaController` | `User::tienePermisoEmpresa()` |
+| **Permisos sub-usuario** | ✅ `User::hasPermission()` — trabajador solo JSON; principal todo MAPA. Spec: `docs/repro/cambios agosto/PERMISOS_EMPRESA_CLIENTE.md` | `EmpresaPermisosSupport.php` |
 | **Campos internos PDF empresa** | Confirmar que salud/judicial/notas no filtran al PDF — tests en `InformePreempleoVisibilidadTest` | `CuestionarioPresentacionEmpresa.php` |
 | **Word vs cliente** | ✅ Sin botón Word en portal empresa; ruta bloqueada para `role_as < 2` | `OrdenesController::informeWord()` |
 
@@ -738,5 +1330,5 @@ app/, database/, resources/, routes/  (+ vendor/ en deploy completo)
 
 ---
 
-**Última actualización:** 21 de julio de 2026  
-**Estado:** ✅ **F7 Word completo (7.1–7.6)** · suite **810/810** · deploy Fase F + A + E7 pendiente · plan: `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md`
+**Última actualización:** 27 de agosto de 2026 (noche)  
+**Estado:** 🟡 **Sprint N lote A en prod** · N-F0/N-F1 esperan Stephany · no migrar Hetzner

@@ -87,7 +87,46 @@ class CuestionarioEvaluadorNotasTest extends TestCase
         $this->actingAs($repro)
             ->get(route('admin.cuestionarios.edit', $this->cuestionario->id))
             ->assertOk()
-            ->assertSee('name="evaluador_notas[datos_personales]"', false);
+            ->assertSee('name="evaluador_notas[datos_personales]"', false)
+            ->assertSee('Descargar borrador Word')
+            ->assertSee('Recomendaciones del informe')
+            ->assertSee('name="evaluador_notas[word_recomendaciones]"', false);
+    }
+
+    public function test_edit_separa_cuestionario_rojo_de_redaccion_word(): void
+    {
+        $repro = $this->crearRepro();
+
+        $this->actingAs($repro)
+            ->get(route('admin.cuestionarios.edit', $this->cuestionario->id))
+            ->assertOk()
+            ->assertSee('Editar contenido de cuestionario')
+            ->assertSee('PDF de lo que llenó el candidato')
+            ->assertSee('seccion-editar-cuestionario', false)
+            ->assertSee('bg-danger', false)
+            ->assertSee('Inicio de redacción de informe en Word')
+            ->assertSeeInOrder([
+                'Editar contenido de cuestionario',
+                'Inicio de redacción de informe en Word',
+                'Resultado de evaluación (primera hoja del informe)',
+                'Tablas para informe',
+                'Redacción del informe Word',
+            ]);
+    }
+
+    public function test_show_pone_tablas_informe_antes_de_redaccion_word(): void
+    {
+        $repro = $this->crearRepro();
+
+        $this->actingAs($repro)
+            ->get(route('admin.cuestionarios.show', $this->cuestionario->id))
+            ->assertOk()
+            ->assertSeeInOrder([
+                'Inicio de redacción de informe en Word',
+                'Resultado de evaluación (primera hoja del informe)',
+                'Tablas para informe',
+                'Redacción del informe Word',
+            ]);
     }
 
     public function test_repro_guarda_notas_por_seccion(): void
@@ -101,7 +140,7 @@ class CuestionarioEvaluadorNotasTest extends TestCase
                     'informacion_familiar' => 'Familia estable, sin alertas.',
                 ],
             ])
-            ->assertRedirect(route('admin.cuestionarios.show', $this->cuestionario->id));
+            ->assertRedirect(route('admin.cuestionarios.edit', $this->cuestionario->id));
 
         $this->assertDatabaseHas('evaluador_notas', [
             'evaluado_orden_id' => $this->cuestionario->evaluado_orden_id,

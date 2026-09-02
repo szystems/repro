@@ -186,6 +186,7 @@ class RecorridoCompletoFormulariosDemoTest extends TestCase
                 'ultimo_nivel_academico' => 'universitario',
                 'tiene_empleo_actual' => 'si',
                 'formacion_academica' => $this->datosFormacionAcademicaPreempleo()['formacion_academica'],
+                'estudia_actualmente' => 'no',
                 'empleo_actual' => [
                     [
                         'empresa' => 'Empresa Demo S.A.',
@@ -239,24 +240,17 @@ class RecorridoCompletoFormulariosDemoTest extends TestCase
             'referencias_familiares' => [
                 ['nombre' => 'Ana Pérez', 'parentesco' => 'Madre', 'telefono' => '50211111111', 'direccion' => 'Zona 1', 'lugar_trabajo' => 'N/A'],
                 ['nombre' => 'Luis Pérez', 'parentesco' => 'Padre', 'telefono' => '50222222222', 'direccion' => 'Zona 2', 'lugar_trabajo' => 'N/A'],
-                ['nombre' => 'Rosa Pérez', 'parentesco' => 'Hermana', 'telefono' => '50266666666', 'direccion' => 'Zona 3', 'lugar_trabajo' => 'N/A'],
             ],
             'referencias_personales' => [
                 ['nombre' => 'María López', 'relacion' => 'Amiga', 'telefono' => '50233333333', 'anos_conocerlo' => '5'],
                 ['nombre' => 'Carlos Ruiz', 'relacion' => 'Compañero', 'telefono' => '50244444444', 'anos_conocerlo' => '3'],
-                ['nombre' => 'Pedro Gómez', 'relacion' => 'Vecino', 'telefono' => '50277777777', 'anos_conocerlo' => '2'],
-            ],
-            'referencias_vecinales' => [
-                ['nombre' => 'Vecino Uno', 'telefono' => '50255555555', 'direccion' => 'Colonia X', 'tiempo_conocerlo' => '2 años'],
             ],
             'presupuesto' => array_map(
                 fn (array $fila) => ['concepto' => $fila['concepto'], 'monto' => '100'],
                 SocioeconomicoComplementariaCampos::filasPresupuestoIniciales()
             ),
             'viv_tiempo_residencia' => '4 años',
-            'viv_tipo_vivienda_detalle' => 'Alquilada',
             'viv_propietario' => 'Juan Dueño',
-            'viv_monto_alquiler' => '2500',
             'viv_habitantes_detalle' => 'Cuatro personas: padres y dos hijos',
             'viv_refs_ubicacion' => 'Frente al parque central',
             'viv_zona_riesgo' => 'no',
@@ -268,7 +262,7 @@ class RecorridoCompletoFormulariosDemoTest extends TestCase
     private function respuestasPeriodicas(string $respuesta = 'N/A', ?string $respuestaPrimera = null): array
     {
         $datos = [];
-        foreach (HistorialLaboralPeriodico::PREGUNTAS as $i => $pregunta) {
+        foreach (HistorialLaboralPeriodico::preguntasVisibles() as $i => $pregunta) {
             $datos[$pregunta['key']] = ($i === 0 && $respuestaPrimera !== null)
                 ? $respuestaPrimera
                 : $respuesta;

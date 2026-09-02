@@ -30,6 +30,7 @@
                         @endif
                     </div>
                     <div class="btn-group">
+                        @include('partials._ayuda_contextual', ['class' => 'me-2'])
                         <a href="{{ route('admin.cuestionarios.show', $cuestionario) }}" class="btn btn-outline-secondary">
                             <i class="bi bi-eye"></i> Ver Detalle
                         </a>
@@ -43,7 +44,8 @@
             <form action="{{ route('admin.cuestionarios.update', $cuestionario) }}" 
                   method="POST" 
                   id="formEditarCuestionario"
-                  enctype="multipart/form-data">
+                  enctype="multipart/form-data"
+                  novalidate>
                 @csrf
                 @method('PUT')
                 
@@ -92,6 +94,27 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                @if(Auth::user()->role_as >= 2)
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="sede_region_empresa" class="form-label">Agencia / región empresa</label>
+                                            <input type="text"
+                                                   class="form-control @error('sede_region_empresa') is-invalid @enderror"
+                                                   id="sede_region_empresa"
+                                                   name="sede_region_empresa"
+                                                   value="{{ old('sede_region_empresa', $cuestionario->evaluadoOrden->sede_region_empresa) }}"
+                                                   maxlength="100"
+                                                   placeholder="Ej: Regional Norte, Quetzaltenango">
+                                            @error('sede_region_empresa')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <small class="text-muted">Se refleja en el formulario del candidato y en el informe Word.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
                                 
                                 {{-- Progreso por secciones --}}
                                 <div class="row mt-3">
@@ -139,13 +162,16 @@
                     </div>
                 </div>
                 
-                {{-- Navegación por secciones para editar --}}
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="bi bi-list-ul"></i> Editar Contenido del Cuestionario
-                            <span class="badge bg-info ms-2">{{ ucfirst($cuestionario->tipo_formulario) }}</span>
+                {{-- Navegación por secciones para editar (PDF del candidato, no el Word) --}}
+                <div class="card seccion-editar-cuestionario border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0 text-uppercase">
+                            <i class="bi bi-list-ul"></i> Editar contenido de cuestionario
+                            <span class="badge bg-light text-danger ms-2">{{ ucfirst($cuestionario->tipo_formulario) }}</span>
                         </h5>
+                        <small class="d-block mt-1">
+                            PDF de lo que llenó el candidato. No es la redacción del informe Word.
+                        </small>
                     </div>
                     <div class="card-body">
                         @php $seccionesConfig = $cuestionario->getSeccionesConfig(); @endphp
@@ -216,9 +242,13 @@
                 </div>
                 
                 @include('admin.cuestionarios.partials.notas-evaluador')
-                @include('admin.cuestionarios.partials.narrativas-word-evaluador')
+                @include('admin.cuestionarios.partials.inicio-redaccion-word')
+                @include('admin.cuestionarios.partials.resultado-word-detalle')
 
                 @include('admin.cuestionarios.partials.tablas-informe-preempleo', ['soloLectura' => false])
+                @include('admin.cuestionarios.partials.narrativas-word-evaluador')
+                @include('admin.cuestionarios.partials.anexos-word-papeleria', ['soloLectura' => false])
+                @include('admin.cuestionarios.partials.preguntas-poligraficas-word', ['soloLectura' => false])
                 
                 {{-- Botones de acción --}}
                 <div class="card mt-4">
@@ -231,6 +261,14 @@
                                 <button type="button" class="btn btn-outline-info" id="btnVistaPrevia">
                                     <i class="bi bi-eye"></i> Vista Previa
                                 </button>
+                                @if(Auth::user()->role_as >= 2)
+                                <a href="{{ route('admin.cuestionarios.informe-word-borrador', $cuestionario) }}"
+                                   class="btn btn-outline-primary"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    <i class="bi bi-download"></i> Descargar borrador Word
+                                </a>
+                                @endif
                             </div>
                             
                             <div>
@@ -258,18 +296,91 @@
     </div>
 </div>
 
-{{-- Modal de Vista Previa --}}
+{{-- Modal de Vista Previa — G1.3 informe REPRO --}}
+@php
+    $evaluadoOrden = $cuestionario->evaluadoOrden;
+@endphp
 <div class="modal fade" id="modalVistaPrevia" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Vista Previa del Cuestionario</h5>
+                <h5 class="modal-title">Vista previa — Informe de evaluación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="contenidoVistaPrevia">
-                {{-- Contenido cargado dinámicamente --}}
+                <p class="text-muted mb-3">
+                    Se guardó un borrador antes de abrir esta vista. Revise el informe aquí en pantalla; si está correcto, use los botones al pie para descargar o generar el documento.
+                </p>
+
+                @if($bloquesWordCompletos ?? false)
+                    <div class="alert alert-success py-2">
+                        <i class="bi bi-check-circle"></i> Los seis bloques de redacción del informe Word están completos.
+                    </div>
+                @else
+                    <div class="alert alert-warning py-2">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Faltan bloques de redacción para el informe Word final:
+                        <strong>{{ implode(', ', $bloquesWordFaltantes ?? []) }}</strong>
+                    </div>
+                @endif
+
+                @if($evaluadoOrden && Auth::user()->role_as >= 2)
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnRecargarVistaWord">
+                        <i class="bi bi-arrow-clockwise"></i> Regenerar vista previa
+                    </button>
+                </div>
+                <div class="border rounded mb-3 bg-light">
+                    <div class="px-3 py-2 border-bottom bg-white">
+                        <strong><i class="bi bi-file-earmark-word"></i> Vista previa del borrador Word</strong>
+                    </div>
+                    <div id="wordPreviewLoading" class="p-4 text-center text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        Generando vista previa del informe…
+                    </div>
+                    <div id="wordPreviewHtml" class="p-3 bg-white d-none" style="max-height: 480px; overflow: auto;"></div>
+                    <div id="wordPreviewError" class="p-3 text-danger d-none"></div>
+                </div>
+                @endif
+
+                @if(($informeFinalEsPdf ?? false) && ($tieneInformeFinal ?? false))
+                <div class="mb-2"><strong>Informe final subido (PDF)</strong></div>
+                <div class="border rounded overflow-hidden" style="height: 360px;">
+                    <iframe data-src="{{ route('admin.cuestionarios.informe-final-preview', $cuestionario) }}"
+                            title="Vista previa informe final PDF"
+                            class="w-100 h-100 border-0"
+                            loading="lazy"></iframe>
+                </div>
+                @elseif($tieneInformeFinal ?? false)
+                    <p class="text-muted small mb-0">
+                        El informe final subido no es PDF; use «Descargar informe final» para abrirlo.
+                    </p>
+                @endif
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer flex-wrap">
+                @if($evaluadoOrden && Auth::user()->role_as >= 2)
+                <a href="{{ route('admin.cuestionarios.informe-word-borrador', $cuestionario) }}"
+                   class="btn btn-primary"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   id="btnDescargarWordBorrador">
+                    <i class="bi bi-download"></i> Descargar borrador Word
+                </a>
+                @endif
+                @if(($tieneInformeFinal ?? false) && $evaluadoOrden)
+                <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluadoOrden, 'final']) }}"
+                   class="btn btn-success"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    <i class="bi bi-download"></i> Descargar informe final (PDF)
+                </a>
+                @endif
+                @if($evaluadoOrden)
+                <a href="{{ route('ordenes.show', $evaluadoOrden->orden_id) }}#heading-evaluado-{{ $evaluadoOrden->id }}"
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-box-arrow-up-right"></i> Ir a la orden (subir final)
+                </a>
+                @endif
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
@@ -278,13 +389,19 @@
 @endsection
 
 @push('scripts')
+{{-- Servido desde el propio dominio: con el CDN la vista previa quedaba cargando indefinidamente
+     cuando la red del cliente lo bloqueaba. --}}
+<script src="{{ asset('js/mammoth.browser.min.js') }}?v={{ is_file(public_path('js/mammoth.browser.min.js')) ? filemtime(public_path('js/mammoth.browser.min.js')) : time() }}"></script>
 <script src="{{ asset('js/foto-candidato.js') }}?v={{ filemtime(public_path('js/foto-candidato.js')) }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formEditarCuestionario');
     const btnGuardarBorrador = document.getElementById('btnGuardarBorrador');
     const btnVistaPrevia = document.getElementById('btnVistaPrevia');
-    const btnGuardarCambios = document.getElementById('btnGuardarCambios');
+    
+    @if(session('success'))
+        mostrarNotificacion(@json(session('success')), 'success');
+    @endif
     
     // Activar modo corrección si el cuestionario está completado
     @if($cuestionario->estado == 'completado')
@@ -307,41 +424,69 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function guardarBorrador() {
+        if (window.TablaDinamica && typeof window.TablaDinamica.syncAll === 'function') {
+            window.TablaDinamica.syncAll();
+        }
+
         const formData = new FormData(form);
+        formData.append('_method', 'PUT');
         formData.append('guardar_borrador', '1');
-        
-        fetch('{{ route("admin.cuestionarios.update", $cuestionario) }}', {
+        const abortBorrador = new AbortController();
+        const timeoutBorrador = setTimeout(function() {
+            abortBorrador.abort();
+        }, 12000);
+
+        return fetch('{{ route("admin.cuestionarios.update", $cuestionario) }}', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: formData
+            body: formData,
+            signal: abortBorrador.signal
         })
-        .then(response => response.json())
+        .finally(function() {
+            clearTimeout(timeoutBorrador);
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                mostrarNotificacion('Borrador guardado automáticamente', 'success');
+                formaCambiada = false;
+                mostrarNotificacion('Borrador guardado correctamente', 'success');
             }
+            return data;
         })
         .catch(error => {
             console.error('Error al guardar borrador:', error);
+            mostrarNotificacion('No se pudo guardar el borrador', 'error');
+            throw error;
         });
     }
     
     function mostrarNotificacion(mensaje, tipo = 'info') {
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-        });
-        
-        Toast.fire({
-            icon: tipo,
-            title: mensaje
-        });
+        if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            Toast.fire({
+                icon: tipo,
+                title: mensaje
+            });
+            return;
+        }
+
+        console.log('[REPRO]', tipo, mensaje);
     }
     
     // Eventos
@@ -350,11 +495,119 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     btnVistaPrevia.addEventListener('click', function() {
-        // Aquí implementarías la vista previa
-        const modal = new bootstrap.Modal(document.getElementById('modalVistaPrevia'));
-        document.getElementById('contenidoVistaPrevia').innerHTML = '<p>Cargando vista previa...</p>';
-        modal.show();
+        const modalEl = document.getElementById('modalVistaPrevia');
+        if (! modalEl || typeof bootstrap === 'undefined') {
+            return;
+        }
+        // Abrir ya: el PUT del socio (cientos de campos) en iPage puede no terminar
+        // y el cliente veía que «no se abre» la vista previa.
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        guardarBorrador().catch(function() {});
     });
+
+    const modalVistaPrevia = document.getElementById('modalVistaPrevia');
+    const wordPreviewUrl = @json(route('admin.cuestionarios.informe-word-preview', $cuestionario));
+    let cargandoVistaPrevia = false;
+    let abortVistaPrevia = null;
+
+    function cargarVistaPreviaWord() {
+        if (cargandoVistaPrevia) {
+            return;
+        }
+
+        const loading = document.getElementById('wordPreviewLoading');
+        const htmlDiv = document.getElementById('wordPreviewHtml');
+        const errorDiv = document.getElementById('wordPreviewError');
+        if (!loading || !htmlDiv) {
+            return;
+        }
+
+        if (typeof mammoth === 'undefined') {
+            loading.classList.add('d-none');
+            if (errorDiv) {
+                errorDiv.textContent = 'No se pudo cargar el visor de documentos. Recargue la página o use «Descargar borrador Word».';
+                errorDiv.classList.remove('d-none');
+            }
+            document.getElementById('btnDescargarWordBorrador')?.classList.remove('d-none');
+            return;
+        }
+
+        if (abortVistaPrevia) {
+            abortVistaPrevia.abort();
+        }
+        abortVistaPrevia = new AbortController();
+        const timeoutId = setTimeout(function() {
+            abortVistaPrevia?.abort();
+        }, 90000);
+
+        cargandoVistaPrevia = true;
+        loading.classList.remove('d-none');
+        htmlDiv.classList.add('d-none');
+        errorDiv?.classList.add('d-none');
+        htmlDiv.innerHTML = '';
+
+        fetch(wordPreviewUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            },
+            credentials: 'same-origin',
+            signal: abortVistaPrevia.signal
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('No se pudo generar la vista previa (HTTP ' + response.status + ').');
+            }
+            return response.arrayBuffer();
+        })
+        .then(function(buffer) {
+            return new Promise(function(resolve, reject) {
+                window.setTimeout(function() {
+                    mammoth.convertToHtml({ arrayBuffer: buffer }).then(resolve).catch(reject);
+                }, 0);
+            });
+        })
+        .then(function(result) {
+            htmlDiv.innerHTML = result.value;
+            htmlDiv.classList.remove('d-none');
+            loading.classList.add('d-none');
+            const btnDescargar = document.getElementById('btnDescargarWordBorrador');
+            if (btnDescargar) {
+                btnDescargar.classList.remove('d-none');
+            }
+        })
+        .catch(function(error) {
+            if (error.name === 'AbortError') {
+                if (errorDiv) {
+                    errorDiv.textContent = 'La vista previa tardó demasiado. Use «Regenerar vista previa» o descargue el borrador Word.';
+                    errorDiv.classList.remove('d-none');
+                }
+                loading.classList.add('d-none');
+                return;
+            }
+            loading.classList.add('d-none');
+            if (errorDiv) {
+                errorDiv.textContent = error.message || 'Error al cargar la vista previa.';
+                errorDiv.classList.remove('d-none');
+            }
+        })
+        .finally(function() {
+            clearTimeout(timeoutId);
+            cargandoVistaPrevia = false;
+        });
+    }
+
+    if (modalVistaPrevia) {
+        modalVistaPrevia.addEventListener('shown.bs.modal', function() {
+            cargarVistaPreviaWord();
+            modalVistaPrevia.querySelector('iframe[data-src]')?.setAttribute(
+                'src',
+                modalVistaPrevia.querySelector('iframe[data-src]')?.getAttribute('data-src') || ''
+            );
+        });
+    }
+
+    document.getElementById('btnRecargarVistaWord')?.addEventListener('click', cargarVistaPreviaWord);
     
     // Actualizar estado automáticamente según progreso
     const checkboxesSecciones = document.querySelectorAll('input[name^="progreso_secciones"]');
@@ -413,6 +666,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     form.addEventListener('submit', function() {
+        if (window.TablaDinamica && typeof window.TablaDinamica.removeEmptyRowsAll === 'function') {
+            window.TablaDinamica.removeEmptyRowsAll();
+        } else if (window.TablaDinamica && typeof window.TablaDinamica.syncAll === 'function') {
+            window.TablaDinamica.syncAll();
+        }
         formaCambiada = false;
         detenerAutoGuardado();
     });
@@ -480,6 +738,15 @@ body.modo-correccion .form-control {
 
 body.modo-correccion .card {
     border-left: 4px solid #ffc107;
+}
+
+/* El cuestionario del candidato queda en rojo (pedido Stephany 24-ago), no amarillo. */
+body.modo-correccion .seccion-editar-cuestionario {
+    border-left: 4px solid #dc3545;
+}
+
+body.modo-correccion .seccion-editar-cuestionario .form-control {
+    border-left: 3px solid #dc3545;
 }
 </style>
 @endpush

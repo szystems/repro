@@ -72,8 +72,6 @@ class CuestionarioCamposCondicionalesTest extends TestCase
             'token' => $this->evaluado->token_unico,
             'numero' => 2,
         ]), array_merge($this->datosSeccion2Preempleo(), [
-            'personas_hogar' => 3,
-            'dependientes_economicos' => 1,
             'action' => 'siguiente',
         ]));
 

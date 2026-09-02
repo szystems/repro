@@ -33,7 +33,8 @@
                                 <div>
                                     <h5 class="mb-0"><i class="bi bi-shield-exclamation"></i> Editando: {{ $role->display_name }}</h5>
                                 </div>
-                                <div>
+                                <div class="d-flex gap-2 align-items-center">
+                                    @include('partials._ayuda_contextual')
                                     <a href="{{ url('admin/roles') }}" class="btn btn-outline-secondary">
                                         <i class="bi bi-arrow-left"></i> Volver al listado
                                     </a>

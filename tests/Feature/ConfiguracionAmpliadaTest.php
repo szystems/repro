@@ -48,10 +48,15 @@ class ConfiguracionAmpliadaTest extends TestCase
         $this->assertEquals(60, $config->dias_vigencia_token);
     }
 
-    public function test_r3_dias_vigencia_token_debe_ser_entero_entre_1_y_365(): void
+    public function test_r3_dias_vigencia_token_debe_ser_entero_entre_30_y_365(): void
     {
         Config::create(['currency' => 'GTQ Q']);
         $admin = $this->admin();
+
+        $this->actingAs($admin)->put(route('config.update'), [
+            'currency'            => 'GTQ Q',
+            'dias_vigencia_token' => 29,
+        ])->assertSessionHasErrors('dias_vigencia_token');
 
         $this->actingAs($admin)->put(route('config.update'), [
             'currency'            => 'GTQ Q',

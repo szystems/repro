@@ -136,7 +136,8 @@ class ResultadosVisibilidadTest extends TestCase
             ->get(route('empresa.cuestionarios.show', $evaluado));
 
         $response->assertStatus(200);
-        $response->assertSee('Cuestionario Completado');
+        $response->assertSee('Informe de Evaluación');
+        $response->assertSee('Informe liberado al cliente', false);
         $response->assertDontSee('Resultados en Proceso de Validación');
     }
 
@@ -149,6 +150,7 @@ class ResultadosVisibilidadTest extends TestCase
         $usuarioEmpresa = User::factory()->create([
             'role_as' => 1,
             'empresa_id' => $empresa->id,
+            'principal' => 1,
         ]);
         $orden = Orden::factory()->create([
             'empresa_id' => $empresa->id,
@@ -157,13 +159,15 @@ class ResultadosVisibilidadTest extends TestCase
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
             'cuestionario_completado' => true,
+            'nombre' => 'CandidatoEnProceso',
         ]);
 
         $response = $this->actingAs($usuarioEmpresa)
             ->get(route('empresa.cuestionarios'));
 
         $response->assertStatus(200);
-        $response->assertSee('En proceso');
+        $response->assertSee('CandidatoEnProceso');
+        $response->assertDontSee(route('empresa.cuestionarios.pdf-autorizacion', $evaluado), false);
     }
 
     /**
@@ -177,6 +181,7 @@ class ResultadosVisibilidadTest extends TestCase
         $usuarioEmpresa = User::factory()->create([
             'role_as' => 1,
             'empresa_id' => $empresa->id,
+            'principal' => 1,
         ]);
         $usuarioEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
         $orden = Orden::factory()->create([
@@ -200,6 +205,7 @@ class ResultadosVisibilidadTest extends TestCase
         $usuarioEmpresa = User::factory()->create([
             'role_as' => 1,
             'empresa_id' => $empresa->id,
+            'principal' => 1,
         ]);
         $usuarioEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
         $orden = Orden::factory()->create([
@@ -312,10 +318,71 @@ class ResultadosVisibilidadTest extends TestCase
             ->get(route('reportes.evaluaciones'));
 
         $response->assertStatus(200);
-        // Botón PDF debe estar presente para el evaluado con resultados disponibles
-        $response->assertSee(route('empresa.cuestionarios.pdf', $evaluadoDisponible), false);
+        // Botón de informe (no PDF cuestionario) para el evaluado con resultados disponibles
+        $response->assertSee(route('empresa.cuestionarios.show', $evaluadoDisponible), false);
+        $response->assertDontSee(route('empresa.cuestionarios.pdf', $evaluadoDisponible), false);
         // Indicador "En proceso" para el otro evaluado
         $response->assertSee('En proceso');
+    }
+
+    public function test_empresa_cuestionario_show_prioriza_informe_sobre_formulario(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $usuarioEmpresa = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+        ]);
+        $usuarioEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'resultados_visibles_empresa' => true,
+            'estado' => 'entregado',
+        ]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'cuestionario_completado' => true,
+            'texto_informe_preliminar' => '<p>Informe REPRO visible</p>',
+            'archivo_resultado_final' => 'resultados/final-test.pdf',
+        ]);
+
+        $response = $this->actingAs($usuarioEmpresa)
+            ->get(route('empresa.cuestionarios.show', $evaluado));
+
+        $response->assertStatus(200);
+        $response->assertSee('Informe de Evaluación', false);
+        $response->assertSee('Informe REPRO visible', false);
+        $response->assertSee('Descargar Informe Final', false);
+        $response->assertSeeInOrder([
+            'Los resultados de REPRO están disponibles',
+            'Informe Final',
+        ]);
+    }
+
+    public function test_reportes_empresa_enlaza_informe_final_no_pdf_cuestionario(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $usuarioEmpresa = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+        ]);
+
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'resultados_visibles_empresa' => true,
+            'estado' => 'entregado',
+        ]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'archivo_resultado_final' => 'resultados/final-reporte.pdf',
+        ]);
+
+        $response = $this->actingAs($usuarioEmpresa)
+            ->get(route('reportes.evaluaciones'));
+
+        $response->assertStatus(200);
+        $response->assertSee(route('evaluados.descargar-resultado-archivo', [$evaluado, 'final']), false);
+        $response->assertDontSee(route('empresa.cuestionarios.pdf', $evaluado), false);
     }
 
     public function test_empresa_orden_show_oculta_resultados_sin_liberacion_repro(): void

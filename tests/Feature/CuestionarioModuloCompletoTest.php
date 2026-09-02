@@ -91,6 +91,9 @@ class CuestionarioModuloCompletoTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Verificación de Identidad');
         $response->assertSee('DPI');
+        $response->assertSee('Juan Carlos');
+        $response->assertSee('Pérez García');
+        $response->assertSee('Bienvenido/a');
     }
 
     /**

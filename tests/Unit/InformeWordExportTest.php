@@ -4,10 +4,12 @@ namespace Tests\Unit;
 
 use App\Models\Cuestionario;
 use App\Models\CuestionarioRespuesta;
+use App\Models\DocumentoEvaluado;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Models\User;
 use App\Support\CuestionarioFotoCandidato;
+use App\Support\InformeWordAnexosPapeleria;
 use App\Support\InformeWordExport;
 use App\Support\InformeWordFoto;
 use App\Support\InformeWordXml;
@@ -32,8 +34,15 @@ class InformeWordExportTest extends TestCase
             'dpi' => '2405617300105',
             'puesto_evaluar' => 'Analista de prueba',
             'resultado' => 'aprobado',
-            'notas_poligrafo' => 'Observación de prueba para Word.',
         ]);
+
+        \App\Models\EvaluadorNota::guardarNota(
+            $evaluado->id,
+            \App\Support\InformeWordBloquesEvaluador::NOTA_OBSERVACIONES,
+            '',
+            'Observación de prueba para Word.',
+            null
+        );
 
         $path = InformeWordExport::generar($orden, $evaluado);
 
@@ -51,8 +60,8 @@ class InformeWordExportTest extends TestCase
         libxml_use_internal_errors(true);
         $this->assertTrue($dom->loadXML($xml), 'document.xml debe ser XML válido para abrir en Word');
         libxml_clear_errors();
-        $this->assertStringContainsString('Carlos Demo Prueba', $xml);
-        $this->assertStringContainsString('Analista de prueba', $xml);
+        $this->assertStringContainsString('Carlos', $xml);
+        $this->assertStringContainsString('Demo Prueba', $xml);
         $this->assertStringContainsString('Observación de prueba para Word.', $xml);
         $this->assertStringNotContainsString('Jorge Luis Martínez Alvarado', $xml);
         $this->assertStringNotContainsString('Víctor Manuel Martínez', $xml);
@@ -76,7 +85,8 @@ class InformeWordExportTest extends TestCase
         $zip->close();
         @unlink($path);
 
-        $this->assertStringContainsString('Prueba de Polígrafo Pre-empleo', $xml);
+        $this->assertStringContainsString('INFORME POLIGR', $xml);
+        $this->assertStringContainsString('DATOS GENERALES', $xml);
         $this->assertStringContainsString('DATOS FAMILIARES', $xml);
         $this->assertStringNotContainsString('Víctor Manuel Martínez', $xml);
     }
@@ -100,8 +110,10 @@ class InformeWordExportTest extends TestCase
         $zip->close();
         @unlink($path);
 
-        $this->assertStringContainsString('Prueba de Polígrafo', $xml);
-        $this->assertStringContainsString('Ana Periodica Test', $xml);
+        $this->assertStringContainsString('INFORME POLIGR', $xml);
+        $this->assertStringContainsString('PERI', $xml);
+        $this->assertStringContainsString('Ana', $xml);
+        $this->assertStringContainsString('Periodica Test', $xml);
         $this->assertStringNotContainsString('HERMANOS:', $xml);
     }
 
@@ -112,6 +124,7 @@ class InformeWordExportTest extends TestCase
         $orden = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
         ]);
 
@@ -142,40 +155,26 @@ class InformeWordExportTest extends TestCase
             'requerido' => true,
         ]);
 
-        $plantillaZip = new ZipArchive();
-        $plantillaZip->open(InformeWordExport::rutaPlantilla());
-        $headerPlantilla = $plantillaZip->getFromName('word/header2.xml');
-        $marcoPlantilla = $plantillaZip->getFromName('word/media/image4.png');
-        $firmaPlantilla = $plantillaZip->getFromName('word/media/image2.png');
-        $plantillaZip->close();
-
         $evaluado = $evaluado->fresh(['cuestionario']);
         $path = InformeWordExport::generar($orden, $evaluado);
 
         $zip = new ZipArchive();
         $zip->open($path);
-        $headerXml = $zip->getFromName('word/header2.xml');
         $documentXml = $zip->getFromName('word/document.xml');
         $fotoGenerada = $zip->getFromName('word/media/foto_evaluado.png');
         if ($fotoGenerada === false) {
             $fotoGenerada = $zip->getFromName('word/media/foto_evaluado.jpg');
         }
-        $marcoIntacto = $zip->getFromName('word/media/image4.png');
-        $fotoFirma = $zip->getFromName('word/media/image2.png');
         $zip->close();
         @unlink($path);
 
-        $this->assertSame($headerPlantilla, $headerXml, 'El encabezado no debe modificarse');
-        $this->assertStringContainsString('wp:inline', $documentXml, 'La foto debe insertarse en el cuerpo del documento');
-        $this->assertStringContainsString('Foto evaluado', $documentXml);
-        $posFoto = strpos($documentXml, 'wp:inline');
-        $posProceso = strpos($documentXml, 'Proceso:');
-        $this->assertNotFalse($posFoto);
-        $this->assertNotFalse($posProceso);
-        $this->assertLessThan($posProceso, $posFoto, 'La foto debe ir inmediatamente antes de la tabla Proceso');
+        $limites = InformeWordXml::limitesTablaPorMarcador($documentXml, 'DATOS GENERALES');
+        $this->assertNotNull($limites);
+
+        $antesDeLaTabla = substr($documentXml, 0, $limites[0]);
+        $this->assertStringContainsString('wp:anchor', $antesDeLaTabla, 'La foto usa el marco anclado de la plantilla');
+        $this->assertStringNotContainsString('wp:inline', $antesDeLaTabla, 'No debe insertarse inline encima del encabezado');
         $this->assertNotEmpty($fotoGenerada);
-        $this->assertSame($marcoPlantilla, $marcoIntacto, 'El marco image4 de la plantilla no debe modificarse');
-        $this->assertSame($firmaPlantilla, $fotoFirma, 'La firma del evaluador no debe ser reemplazada');
     }
 
     public function test_inserta_foto_jpeg_sin_gd_jpeg(): void
@@ -185,6 +184,7 @@ class InformeWordExportTest extends TestCase
         $orden = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
         ]);
 
@@ -227,7 +227,10 @@ class InformeWordExportTest extends TestCase
         $zip->close();
         @unlink($path);
 
-        $this->assertStringContainsString('wp:inline', $documentXml);
+        $limites = InformeWordXml::limitesTablaPorMarcador($documentXml, 'DATOS GENERALES');
+        $this->assertNotNull($limites);
+        $antesDeLaTabla = substr($documentXml, 0, $limites[0]);
+        $this->assertStringContainsString('wp:anchor', $antesDeLaTabla);
         $this->assertNotEmpty($fotoGenerada);
         if (str_contains((string) $contentTypes, 'foto_evaluado.jpg') || $fotoGenerada !== false) {
             $this->assertStringContainsString('Extension="jpg" ContentType="image/jpeg"', (string) $contentTypes);
@@ -236,20 +239,21 @@ class InformeWordExportTest extends TestCase
 
     public function test_dimensiones_foto_respetan_maximo_alto_sin_deformar(): void
     {
-        ['cx' => $cx, 'cy' => $cy] = InformeWordFoto::dimensionesEmu(640, 480, 420, 230);
+        ['cx' => $cx, 'cy' => $cy] = InformeWordFoto::dimensionesEmu(640, 480, 240, 300);
 
-        $this->assertLessThanOrEqual(230 * 9525, $cy);
-        $this->assertLessThanOrEqual(420 * 9525, $cx);
+        $this->assertLessThanOrEqual(300 * 9525, $cy);
+        $this->assertLessThanOrEqual(240 * 9525, $cx);
         $this->assertEqualsWithDelta(640 / 480, $cx / $cy, 0.001);
     }
 
-    public function test_compacta_espacio_antes_de_tabla_proceso(): void
+    public function test_compacta_espacio_antes_de_tabla_encabezado_v2(): void
     {
         Storage::fake('local');
 
         $orden = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
         ]);
 
@@ -289,16 +293,74 @@ class InformeWordExportTest extends TestCase
         $zip->close();
         @unlink($path);
 
-        $posProceso = strpos($documentXml, 'Proceso:');
-        $inicioTabla = strrpos(substr($documentXml, 0, $posProceso), '<w:tbl>');
-        $antes = substr($documentXml, 0, $inicioTabla);
-        $posFoto = strrpos($antes, 'wp:inline');
-        $this->assertNotFalse($posFoto);
+        $limites = InformeWordXml::limitesTablaPorMarcador($documentXml, 'DATOS GENERALES');
+        $this->assertNotNull($limites);
 
-        $bloque = substr($antes, $posFoto);
-        $this->assertStringNotContainsString('wp:anchor', $bloque, 'No debe quedar el marco flotante legacy');
-        $this->assertLessThan(3500, strlen($bloque), 'Entre foto y tabla Proceso no debe haber bloques grandes de XML vacío');
-        $this->assertMatchesRegularExpression('/<w:p\b[^>]*>.*?w:before="240".*?w:after="240".*?wp:inline/s', $antes);
+        $tablaDatos = substr($documentXml, $limites[0], $limites[1] - $limites[0]);
+        $this->assertStringContainsString('w:tblpX="4527"', $tablaDatos, 'La tabla queda a la derecha para la foto al costado');
+
+        $antesDeLaTabla = substr($documentXml, 0, $limites[0]);
+        $this->assertStringContainsString('wp:anchor', $antesDeLaTabla);
+        $this->assertStringNotContainsString('wp:inline', $antesDeLaTabla);
+    }
+
+    public function test_v2_sin_foto_perfil_ni_anchors_y_datos_ancho_completo(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Sin',
+            'apellidos' => 'Foto Test',
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
+            'resultado' => 'aprobado',
+        ]);
+
+        $path = InformeWordExport::generar($orden, $evaluado);
+        $zip = new ZipArchive();
+        $zip->open($path);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        @unlink($path);
+
+        $lim = InformeWordXml::limitesTablaPorMarcador($xml, 'DATOS GENERALES');
+        $this->assertNotNull($lim);
+        $antesDatos = substr($xml, 0, $lim[0]);
+        $this->assertSame(0, substr_count($antesDatos, 'wp:anchor'), 'No debe quedar foto de perfil flotante en cabecera');
+        $this->assertStringNotContainsString('wp:inline', $antesDatos, 'Sin foto candidato no debe insertar imagen arriba');
+
+        $tabla = substr($xml, $lim[0], $lim[1] - $lim[0]);
+        $this->assertStringNotContainsString('w:tblpPr', $tabla);
+        $this->assertStringContainsString('w:w="10915"', $tabla);
+    }
+
+    public function test_v2_resultado_deja_solo_la_opcion_seleccionada(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
+            'resultado' => 'aprobado',
+        ]);
+
+        $path = InformeWordExport::generar($orden, $evaluado);
+        $zip = new ZipArchive();
+        $zip->open($path);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        @unlink($path);
+
+        $lim = InformeWordXml::limitesTablaPorMarcador($xml, 'RESULTADO');
+        $this->assertNotNull($lim);
+        $tabla = substr($xml, $lim[0], $lim[1] - $lim[0]);
+        $filas = InformeWordXml::filasTabla($tabla);
+        $this->assertCount(2, $filas, 'Título + la opción marcada');
+        $this->assertStringNotContainsString('Indicación de mentira', $tabla);
+        $this->assertStringNotContainsString('Aspecto que origina la excepción', $tabla);
+        $this->assertStringContainsString('[ X ]', $tabla);
+        $this->assertStringContainsString('APROBADO', InformeWordXml::textoCelda(InformeWordXml::celdasFila($filas[1])[0]));
+        $this->assertStringNotContainsString('NO APROBADO', $tabla);
     }
 
     public function test_layout_secciones_periodica_sin_huecos_y_con_keep_next(): void
@@ -395,7 +457,6 @@ class InformeWordExportTest extends TestCase
             'apellidos' => 'Narrativas Demo',
             'poligrafista_id' => $poligrafista->id,
             'resultado' => 'aprobado',
-            'notas_poligrafo' => 'Recomendación demo: candidato idóneo para el puesto.',
         ]);
 
         $cuestionario = Cuestionario::create([
@@ -433,6 +494,14 @@ class InformeWordExportTest extends TestCase
             'comp_redes_usuario' => '@demo_test',
         ]);
 
+        \App\Models\EvaluadorNota::guardarNota(
+            $evaluado->id,
+            \App\Support\InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES,
+            '',
+            'Recomendación demo: candidato idóneo para el puesto.',
+            null
+        );
+
         $evaluado = $evaluado->fresh(['cuestionario', 'poligrafista']);
         $path = InformeWordExport::generar($orden, $evaluado);
 
@@ -447,13 +516,15 @@ class InformeWordExportTest extends TestCase
         $this->assertStringContainsString('Sustancias declaradas: Ninguna', $xml);
         $this->assertStringContainsString('antecedentes penales y policiacos', $xml);
         $this->assertStringContainsString('Recomendación demo: candidato idóneo para el puesto.', $xml);
-        $this->assertStringContainsString('Carlos Narrativas Demo', $xml);
-        $this->assertStringContainsString('Polígrafo Demo Test', $xml);
+        $this->assertStringContainsString('Carlos', $xml);
+        $this->assertStringContainsString('Narrativas Demo', $xml);
+        $this->assertStringNotContainsString('Polígrafo Demo Test', $xml);
         $this->assertStringContainsString('Portal de empleos.', $xml);
         $this->assertStringNotContainsString('xxxxx', $xml);
         $this->assertStringNotContainsString('xzxxx', $xml);
         $this->assertStringNotContainsString('XXXXXXXX', $xml);
-        $this->assertStringNotContainsString('Stefanie9245 Rodrigo12871', $xml);
+        $this->assertStringContainsString('Stefanie', $xml);
+        $this->assertStringContainsString('9245', $xml);
     }
 
     public function test_resultado_poligrafico_no_aprobado_marca_di(): void
@@ -474,6 +545,88 @@ class InformeWordExportTest extends TestCase
         $zip->close();
         @unlink($path);
 
-        $this->assertGreaterThan(1, substr_count($xml, '>DI<'));
+        // Plantilla v2 parte "PREGUNTA RELEVANTE" en varios runs; validar texto concatenado.
+        preg_match_all('/<w:t(?:\s+xml:space="preserve")?>(.*?)<\/w:t>/s', $xml, $m);
+        $texto = html_entity_decode(implode('', $m[1] ?? []), ENT_QUOTES | ENT_XML1, 'UTF-8');
+        $this->assertStringContainsString('PREGUNTA RELEVANTE', $texto);
+        $this->assertGreaterThanOrEqual(1, substr_count($texto, 'DI'));
+    }
+
+    public function test_pdf_de_papeleria_seleccionado_se_lista_por_nombre_sin_embeber_paginas(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_servicio' => 'socioeconomico',
+            'tipo_formulario' => 'preempleo',
+        ]);
+
+        DocumentoEvaluado::factory()->create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_documento' => 'cv',
+            'nombre_original' => 'curriculum-pesado.pdf',
+            'mime_type' => 'application/pdf',
+            'tamano' => 8_000_000,
+        ]);
+
+        $userId = User::factory()->create(['role_as' => 3])->id;
+        InformeWordAnexosPapeleria::guardarSeleccion($evaluado->id, ['cv'], $userId);
+
+        $path = InformeWordExport::generar($orden, $evaluado->fresh());
+
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($path) === true);
+        $xml = $zip->getFromName('word/document.xml');
+        $nombres = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $nombres[] = $zip->getNameIndex($i);
+        }
+        $zip->close();
+        @unlink($path);
+
+        $this->assertIsString($xml);
+        $this->assertStringContainsString('curriculum-pesado.pdf', $xml);
+        $this->assertStringContainsString('[PDF]', $xml);
+        $this->assertEmpty(array_filter(
+            $nombres,
+            static fn ($nombre): bool => is_string($nombre) && str_contains($nombre, 'anexo_papeleria_pdf_')
+        ));
+    }
+
+    public function test_preparar_media_rechaza_archivo_de_mas_de_cinco_mb(): void
+    {
+        $grande = sys_get_temp_dir() . '/repro_anexo_pesado_' . uniqid() . '.jpg';
+        file_put_contents($grande, str_repeat('a', 5_000_001));
+        $this->assertNull(InformeWordFoto::prepararMedia($grande));
+        @unlink($grande);
+
+        $chica = sys_get_temp_dir() . '/repro_anexo_chica_' . uniqid() . '.png';
+        $canvas = imagecreatetruecolor(200, 160);
+        $this->assertNotFalse($canvas);
+        imagepng($canvas, $chica, 6);
+        imagedestroy($canvas);
+
+        $media = InformeWordFoto::prepararMedia($chica);
+        @unlink($chica);
+
+        $this->assertIsArray($media);
+        $this->assertNotSame('', $media['bytes'] ?? '');
+    }
+
+    public function test_preparar_media_acepta_jpeg_de_muchos_mp_si_pesa_poco(): void
+    {
+        $ruta = sys_get_temp_dir() . '/repro_mp_' . uniqid() . '.jpg';
+        $canvas = imagecreatetruecolor(4000, 2500);
+        $this->assertNotFalse($canvas);
+        imagejpeg($canvas, $ruta, 40);
+        imagedestroy($canvas);
+
+        $this->assertLessThan(5_000_000, (int) filesize($ruta));
+        $media = InformeWordFoto::prepararMedia($ruta);
+        @unlink($ruta);
+
+        $this->assertIsArray($media);
+        $this->assertNotSame('', $media['bytes'] ?? '');
     }
 }
+

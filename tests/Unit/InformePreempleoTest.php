@@ -210,6 +210,11 @@ class InformePreempleoTest extends TestCase
         $claves = InformePreempleo::clavesTablas('socioeconomico');
         $this->assertArrayHasKey('referencias_familiares', $claves);
         $this->assertArrayHasKey('referencias_personales', $claves);
+        $this->assertArrayHasKey('referencias_laborales', $claves);
+        $this->assertArrayHasKey('presupuesto', $claves);
+        $this->assertArrayHasKey('bienes', $claves);
+        $this->assertArrayNotHasKey('labor_complementaria', $claves);
+        $this->assertArrayHasKey('complementaria', $claves);
 
         $tablas = InformePreempleo::compilarTablas($cuestionario);
         $this->assertSame('Ana Pérez', $tablas['referencias_familiares'][0]['nombre'] ?? null);
@@ -231,5 +236,51 @@ class InformePreempleoTest extends TestCase
 
         $this->assertContains('referencias_familiares', InformePreempleo::clavesConOverride($evaluado->id));
         $this->assertSame('Ana Editada', InformePreempleo::tablasParaAdmin($cuestionario)['referencias_familiares'][0]['nombre'] ?? null);
+    }
+
+    public function test_periodica_no_compila_hermanos_en_tablas_informe(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_formulario' => 'periodica',
+            'tipo_servicio' => 'poligrafo',
+        ]);
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'periodica',
+            'seccion_actual' => 5,
+            'total_secciones' => 5,
+            'progreso_porcentaje' => 100,
+            'estado' => 'completado',
+            'completado' => true,
+        ]);
+
+        CuestionarioRespuesta::guardarTabla($cuestionario->id, 'cambios_familiares', 'hermanos', [
+            ['nombre' => 'Hermano que no va', 'edad' => '30'],
+        ]);
+        CuestionarioRespuesta::guardarTabla($cuestionario->id, 'cambios_familiares', 'hijos', [
+            ['nombre' => 'Hijo peri', 'edad' => '5'],
+        ]);
+
+        $tablas = InformePreempleo::compilarTablas($cuestionario);
+        $this->assertArrayNotHasKey('hermanos', $tablas['familiar']);
+        $this->assertSame('Hijo peri', $tablas['familiar']['hijos'][0]['nombre'] ?? null);
+
+        InformePreempleo::guardarDesdeRequest(
+            $evaluado->id,
+            [
+                'familiar' => [
+                    'hijos' => [['nombre' => 'Hijo peri', 'edad' => '5']],
+                    'hermanos' => [['nombre' => 'No debe guardarse', 'edad' => '40']],
+                ],
+            ],
+            [],
+            null
+        );
+
+        $admin = InformePreempleo::tablasParaAdmin($cuestionario);
+        $this->assertArrayNotHasKey('hermanos', $admin['familiar']);
     }
 }

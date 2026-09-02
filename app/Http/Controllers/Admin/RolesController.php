@@ -33,7 +33,7 @@ class RolesController extends Controller
             return redirect()->back()->with('error', 'No tiene permisos para acceder a este módulo');
         }
 
-        $roles = Role::with('permissions')->orderBy('name')->get();
+        $roles = Role::with('permissions')->sinPersonales()->orderBy('name')->get();
         return view('admin.roles.index', compact('roles'));
     }
 
@@ -119,6 +119,10 @@ class RolesController extends Controller
 
         $role = Role::with('permissions')->findOrFail($id);
 
+        if ($role->esPersonal()) {
+            return redirect('admin/roles')->with('error', 'Ese registro no es un rol del sistema: son los permisos individuales de un usuario. Edítelos en Usuarios.');
+        }
+
         $allPermissions = Permission::all();
         // Para roles empresa (level 1) solo mostramos los módulos que les aplican.
         // Para repro/admin se muestran todos.
@@ -142,6 +146,10 @@ class RolesController extends Controller
         }
 
         $role = Role::findOrFail($id);
+
+        if ($role->esPersonal()) {
+            return redirect('admin/roles')->with('error', 'No se editan los permisos individuales desde aquí. Ábralos en el usuario.');
+        }
 
         $request->validate([
             'name' => 'required|string|max:255|unique:roles,name,' . $id,
@@ -190,6 +198,10 @@ class RolesController extends Controller
         }
 
         $role = Role::findOrFail($id);
+
+        if ($role->esPersonal()) {
+            return redirect('admin/roles')->with('error', 'Ese registro no es un rol del sistema. Si ya no se usa, elimínelo desde el usuario o deje de asignarle permisos.');
+        }
 
         // Verificar que no sea un rol del sistema (admin, repro, empresa)
         $systemRoles = ['admin', 'repro', 'empresa', 'evaluado'];

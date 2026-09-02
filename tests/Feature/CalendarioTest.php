@@ -289,6 +289,32 @@ class CalendarioTest extends TestCase
         $this->assertEquals($poligrafista->id, $evaluado->poligrafista_id);
     }
 
+    public function test_programar_sin_poligrafista_guarda_quien_programo_y_no_asigna_encargado(): void
+    {
+        $sede = Sede::factory()->create(['estado' => 1]);
+        $quienPrograma = $this->usuarioRepro();
+        $evaluado = $this->crearEvaluado([
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
+            'fecha_programada' => null,
+            'poligrafista_id' => null,
+            'responsable_id' => null,
+        ]);
+
+        $this->actingAs($quienPrograma)
+            ->post('/calendario/programar', [
+                'evaluado_orden_id' => $evaluado->id,
+                'fecha' => '2026-03-20',
+                'hora_inicio' => '09:00',
+                'hora_fin' => '11:00',
+                'sede_id' => $sede->id,
+            ])
+            ->assertRedirect();
+
+        $evaluado->refresh();
+        $this->assertEquals($quienPrograma->id, $evaluado->poligrafista_id);
+        $this->assertNull($evaluado->responsable_id);
+    }
+
     public function test_programar_requiere_rol_repro(): void
     {
         $sede = Sede::factory()->create(['estado' => 1]);
@@ -895,5 +921,173 @@ class CalendarioTest extends TestCase
         $poligrafistas = User::poligrafistas()->get();
         // Solo los 2 activos con role_as >= 2
         $this->assertCount(2, $poligrafistas);
+    }
+
+    public function test_calendario_muestra_excel_y_filtros_encargado_empresa_fecha(): void
+    {
+        $this->actingAs($this->usuarioAdmin())
+            ->get('/calendario')
+            ->assertOk()
+            ->assertSee(route('calendario.excel'), false)
+            ->assertSee('Excel')
+            ->assertSee('Encargado')
+            ->assertSee('Empresa')
+            ->assertSee('Desde')
+            ->assertSee('Hasta')
+            ->assertSee('Programó');
+
+        $this->actingAs($this->usuarioAdmin())
+            ->get('/calendario/dia/2026-03-19')
+            ->assertOk()
+            ->assertSee('Encargado')
+            ->assertSee('Empresa')
+            ->assertDontSee('solo interno')
+            ->assertSee(route('calendario.dia.excel', ['fecha' => '2026-03-19']), false);
+    }
+
+    public function test_excel_calendario_respeta_filtros_y_totales(): void
+    {
+        $polA = $this->usuarioRepro();
+        $polB = $this->usuarioRepro();
+        $sede = Sede::factory()->create();
+
+        $this->crearEvaluado([
+            'sede_id' => $sede->id,
+            'poligrafista_id' => $polA->id,
+            'tipo_servicio' => 'poligrafo',
+            'fecha_programada' => '2026-03-19 09:00:00',
+            'nombre' => 'Reyna',
+            'apellidos' => 'Ixac',
+        ]);
+        $this->crearEvaluado([
+            'sede_id' => $sede->id,
+            'poligrafista_id' => $polB->id,
+            'tipo_servicio' => 'vsa',
+            'fecha_programada' => '2026-03-19 10:00:00',
+            'nombre' => 'Iris',
+            'apellidos' => 'Velasquez',
+        ]);
+
+        $admin = $this->usuarioAdmin();
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $mes = $this->actingAs($admin)
+            ->get('/calendario/excel?mes=3&anio=2026')
+            ->assertOk();
+        $this->assertStringContainsString('Reyna', $mes->getContent());
+        $this->assertStringContainsString('Iris', $mes->getContent());
+        $this->assertStringContainsString('Total por encargado', $mes->getContent());
+        $this->assertStringContainsString('Programó', $mes->getContent());
+        $this->assertStringContainsString('Encargado', $mes->getContent());
+
+        $filtrado = $this->actingAs($admin)
+            ->get('/calendario/excel?mes=3&anio=2026&poligrafista_id='.$polA->id)
+            ->assertOk();
+        $this->assertStringContainsString('Reyna', $filtrado->getContent());
+        $this->assertStringNotContainsString('Iris', $filtrado->getContent());
+
+        $this->crearEvaluado([
+            'sede_id' => $sede->id,
+            'poligrafista_id' => $polA->id,
+            'tipo_servicio' => 'poligrafo',
+            'fecha_programada' => '2026-03-26 09:00:00',
+            'nombre' => 'Fuera',
+            'apellidos' => 'Rango',
+        ]);
+
+        $rango = $this->actingAs($admin)
+            ->get('/calendario/excel?fecha_desde=2026-03-19&fecha_hasta=2026-03-25&mes=3&anio=2026')
+            ->assertOk();
+        $this->assertStringContainsString('Reyna', $rango->getContent());
+        $this->assertStringContainsString('Iris', $rango->getContent());
+        $this->assertStringNotContainsString('Fuera', $rango->getContent());
+        $this->assertStringContainsString('calendario-2026-03-19_2026-03-25', $rango->headers->get('content-disposition') ?? '');
+    }
+
+    public function test_historial_incluye_procesos_en_curso_y_filtra_empresa_fecha(): void
+    {
+        $empresaA = \App\Models\Empresa::factory()->create(['nombre' => 'ABC Center', 'estado' => 1]);
+        $empresaB = \App\Models\Empresa::factory()->create(['nombre' => 'OTRA SA', 'estado' => 1]);
+        $ordenA = Orden::factory()->create(['empresa_id' => $empresaA->id]);
+        $ordenB = Orden::factory()->create(['empresa_id' => $empresaB->id]);
+
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $ordenA->id,
+            'nombre' => 'Juan',
+            'apellidos' => 'Cumes',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
+            'estado_programacion' => 'programado',
+            'fecha_programada' => '2026-03-19 09:00:00',
+        ]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $ordenB->id,
+            'nombre' => 'Maria',
+            'apellidos' => 'Lopez',
+            'estado_evaluacion' => 'informe_final_enviado',
+            'estado_programacion' => 'programado',
+            'fecha_programada' => '2026-03-21 10:00:00',
+        ]);
+
+        $this->actingAs($this->usuarioAdmin())
+            ->get('/calendario?mes=3&anio=2026')
+            ->assertOk()
+            ->assertSee('Juan')
+            ->assertSee('Cumes')
+            ->assertSee('Maria');
+
+        $this->actingAs($this->usuarioAdmin())
+            ->get('/calendario?empresa_id='.$empresaA->id.'&mes=3&anio=2026')
+            ->assertOk()
+            ->assertSee('Juan')
+            ->assertSee('ABC Center')
+            ->assertDontSee('Maria');
+
+        $this->actingAs($this->usuarioAdmin())
+            ->get('/calendario?fecha=2026-03-19')
+            ->assertOk()
+            ->assertSee('Juan')
+            ->assertDontSee('Maria');
+
+        $this->actingAs($this->usuarioAdmin())
+            ->get('/calendario?fecha_desde=2026-03-19&fecha_hasta=2026-03-25&mes=3&anio=2026')
+            ->assertOk()
+            ->assertSee('Juan')
+            ->assertSee('Maria');
+    }
+
+    public function test_filtro_encargado_usa_responsable_id(): void
+    {
+        $encargado = $this->usuarioRepro();
+        $otro = $this->usuarioRepro();
+
+        $this->crearEvaluado([
+            'nombre' => 'Ana',
+            'apellidos' => 'Encargada',
+            'responsable_id' => $encargado->id,
+            'poligrafista_id' => $otro->id,
+            'estado_programacion' => 'programado',
+            'fecha_programada' => '2026-03-19 09:00:00',
+        ]);
+        $this->crearEvaluado([
+            'nombre' => 'Luis',
+            'apellidos' => 'Otro',
+            'responsable_id' => $otro->id,
+            'poligrafista_id' => $encargado->id,
+            'estado_programacion' => 'programado',
+            'fecha_programada' => '2026-03-19 10:00:00',
+        ]);
+
+        $this->actingAs($this->usuarioAdmin())
+            ->get('/calendario?encargado_id='.$encargado->id.'&mes=3&anio=2026')
+            ->assertOk()
+            ->assertSee('Ana')
+            ->assertDontSee('Luis');
+    }
+
+    public function test_empresa_no_descarga_excel_calendario(): void
+    {
+        $this->actingAs($this->usuarioEmpresa())
+            ->get('/calendario/excel')
+            ->assertForbidden();
     }
 }

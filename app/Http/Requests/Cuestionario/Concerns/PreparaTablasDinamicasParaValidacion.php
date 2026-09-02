@@ -4,6 +4,7 @@ namespace App\Http\Requests\Cuestionario\Concerns;
 
 use App\Models\EvaluadoOrden;
 use App\Support\TablaDinamica;
+use Illuminate\Contracts\Validation\Validator;
 
 /**
  * Elimina filas vacías de tablas dinámicas antes de validar (todas las secciones con tablas).
@@ -31,6 +32,24 @@ trait PreparaTablasDinamicasParaValidacion
                 $tipo
             )
         );
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $numero = $this->numeroSeccionTablasDinamicas();
+
+        if ($numero < 1) {
+            return;
+        }
+
+        $validator->after(function (Validator $validator) use ($numero): void {
+            TablaDinamica::afinarErroresRangosFechas(
+                $validator,
+                $this->all(),
+                $numero,
+                $this->resolverTipoFormularioCuestionario()
+            );
+        });
     }
 
     protected function resolverTipoFormularioCuestionario(): string

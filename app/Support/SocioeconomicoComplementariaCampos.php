@@ -80,17 +80,15 @@ class SocioeconomicoComplementariaCampos
     {
         return array_merge(
             [
-                'referencias_familiares' => 'required|array|min:3',
-                'referencias_personales' => 'required|array|min:3',
-                'referencias_vecinales' => 'required|array|min:1',
+                'referencias_familiares' => 'required|array|min:2',
+                'referencias_personales' => 'required|array|min:2',
+                'referencias_vecinales' => 'nullable|array',
                 'referencias_laborales' => 'nullable|array',
                 'bienes' => 'nullable|array',
                 'presupuesto' => 'required|array|min:10',
                 'bienes_total' => 'nullable|numeric|min:0',
                 'presupuesto_total' => 'nullable|numeric|min:0',
                 'viv_tiempo_residencia' => 'required|string|max:100',
-                'viv_tipo_vivienda_detalle' => 'required|string|max:500',
-                'viv_monto_alquiler' => 'nullable|numeric|min:0',
                 'viv_propietario' => 'nullable|string|max:150',
                 'viv_habitantes_detalle' => 'required|string|max:2000',
                 'viv_refs_ubicacion' => 'required|string|max:2000',
@@ -98,6 +96,8 @@ class SocioeconomicoComplementariaCampos
                 'viv_direcciones_anteriores' => 'nullable|string|max:3000',
                 'comp_ha_laborado_empresa' => 'required|string|max:2000',
                 // Legacy
+                'viv_tipo_vivienda_detalle' => 'nullable|string|max:500',
+                'viv_monto_alquiler' => 'nullable|numeric|min:0',
                 'viv_tipo_vivienda' => 'nullable|in:propia,alquilada,familiar,prestada,otro',
                 'viv_num_habitantes' => 'nullable|integer|min:1|max:50',
                 'viv_detalle_zona_riesgo' => 'nullable|string|max:2000',
@@ -119,16 +119,13 @@ class SocioeconomicoComplementariaCampos
     public static function mensajesValidacion(): array
     {
         return array_merge(TablaDinamica::mensajesValidacion(), [
-            'referencias_familiares.required' => 'Debe registrar al menos 3 referencias familiares.',
-            'referencias_familiares.min' => 'Debe registrar al menos 3 referencias familiares.',
-            'referencias_personales.required' => 'Debe registrar al menos 3 referencias personales.',
-            'referencias_personales.min' => 'Debe registrar al menos 3 referencias personales.',
-            'referencias_vecinales.required' => 'Debe registrar al menos 1 referencia vecinal.',
-            'referencias_vecinales.min' => 'Debe registrar al menos 1 referencia vecinal.',
+            'referencias_familiares.required' => 'Debe registrar al menos 2 referencias familiares.',
+            'referencias_familiares.min' => 'Debe registrar al menos 2 referencias familiares.',
+            'referencias_personales.required' => 'Debe registrar al menos 2 referencias personales.',
+            'referencias_personales.min' => 'Debe registrar al menos 2 referencias personales.',
             'presupuesto.required' => 'Complete el detalle de gastos mensuales.',
             'presupuesto.min' => 'Complete todos los rubros de gastos mensuales.',
             'viv_tiempo_residencia.required' => 'Indique el tiempo de residencia en su domicilio actual.',
-            'viv_tipo_vivienda_detalle.required' => 'Indique si su vivienda es propia o alquilada.',
             'viv_habitantes_detalle.required' => 'Indique cuántas personas viven en la residencia y su parentesco.',
             'viv_refs_ubicacion.required' => 'Indique referencias de la ubicación de su vivienda.',
             'viv_zona_riesgo.required' => 'Indique si la zona donde vive es considerada zona roja.',

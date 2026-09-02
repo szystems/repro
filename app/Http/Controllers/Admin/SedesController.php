@@ -68,7 +68,7 @@ class SedesController extends Controller
         $estadosPendientes = ['orden_recibida'];
 
         // Candidatos de esta sede (a través de evaluados_orden.sede_id)
-        $baseQuery = EvaluadoOrden::where('sede_id', $sede->id)
+        $baseQuery = EvaluadoOrden::deOrdenesActivas()->where('sede_id', $sede->id)
             ->with(['orden.empresa']);
 
         if ($search) {

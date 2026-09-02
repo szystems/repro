@@ -55,9 +55,9 @@
     <label class="form-label">
         Fotografía del candidato @if($requerido)<span class="required">*</span>@endif
     </label>
-    <p class="form-text mb-3">Tome una fotografía de medio cuerpo con la cámara web o del celular, o suba una imagen reciente (JPG, PNG o WEBP, máx. 5 MB).</p>
+    <p class="form-text mb-3">Tome una fotografía de medio cuerpo con la cámara web o del celular, suba una imagen reciente (JPG, PNG o WEBP, máx. 5 MB) o péguela con Ctrl+V, igual que en papelería.</p>
 
-    <div class="foto-candidato-box" data-foto-box>
+    <div class="foto-candidato-box zona-pegar-foto" data-foto-box tabindex="0">
         <div class="foto-candidato-preview-wrap mb-3 {{ ($fotoUrl ?? null) ? '' : 'd-none' }}" data-foto-preview-wrap>
             <img src="{{ $fotoUrl ?? '' }}"
                  alt="Vista previa foto candidato"
@@ -77,6 +77,7 @@
             <button type="button" class="btn btn-outline-secondary btn-sm" data-foto-trigger="upload">
                 <i class="bi bi-upload"></i> Subir archivo
             </button>
+            <span class="small text-muted align-self-center">También puede pegar (Ctrl+V)</span>
         </div>
     </div>
 

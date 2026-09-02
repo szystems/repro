@@ -106,7 +106,10 @@
                                 <i class="fas fa-user-check text-primary" style="font-size: 3rem;"></i>
                             </div>
                             
-                            <h4 class="text-primary mb-3">Bienvenido/a</h4>
+                            <h4 class="text-primary mb-1">Bienvenido/a</h4>
+                            @if(filled($evaluado->nombre_completo))
+                                <p class="fw-semibold text-primary fs-5 mb-3">{{ $evaluado->nombre_completo }}</p>
+                            @endif
                             
                             @php
                                 $etiquetaTipoCuestionario = \App\Support\CuestionarioPresentacionCandidato::etiquetaTipo(

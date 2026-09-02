@@ -13,6 +13,13 @@
            name="{{ $inputName }}"
            value="{{ $valor }}">
     <span class="form-control-plaintext form-control-sm py-0">{{ $etiquetaNivel }}</span>
+@elseif(($col['type'] ?? 'text') === 'date_range')
+    @include('components.partials.tabla-dinamica-campo-date-range', [
+        'name' => $name,
+        'index' => $index,
+        'col' => $col,
+        'valor' => $valor,
+    ])
 @elseif(($col['type'] ?? 'text') === 'select')
     <select class="form-control form-control-sm @error($errorKey) is-invalid @enderror"
             id="{{ $inputId }}"
@@ -31,6 +38,15 @@
            id="{{ $inputId }}"
            name="{{ $inputName }}"
            value="{{ $valor }}"
+           @if(isset($col['max'])) maxlength="{{ $col['max'] }}" @endif
+           {{ $required }}>
+@elseif(($col['type'] ?? 'text') === 'currency')
+    <input type="text"
+           class="form-control form-control-sm @error($errorKey) is-invalid @enderror"
+           id="{{ $inputId }}"
+           name="{{ $inputName }}"
+           value="{{ $valor }}"
+           placeholder="Ej: Q3500"
            @if(isset($col['max'])) maxlength="{{ $col['max'] }}" @endif
            {{ $required }}>
 @else

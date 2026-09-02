@@ -56,13 +56,20 @@
                             'presupuesto' => [TablaDinamica::class, 'columnasPresupuesto', 'Presupuesto personal'],
                         ];
                     } else {
-                        $camposEnTabla = ['hijos', 'hermanos', 'formacion_academica', 'empleos', 'empleo_actual', 'deudas', 'tatuajes', 'perforaciones'];
+                        $camposEnTabla = ['hijos', 'hermanos', 'formacion_academica', 'estudios_actuales', 'empleos', 'empleo_actual', 'deudas', 'tatuajes', 'perforaciones'];
                         $compKeys = array_column(InformacionComplementaria::PREGUNTAS, 'key');
                         $tablasPdf = [
                             'hijos' => [TablaDinamica::class, 'columnasHijos', 'Detalle de hijos'],
                             'hermanos' => [TablaDinamica::class, 'columnasHermanos', 'Hermanos'],
                             'formacion_academica' => [TablaDinamica::class, 'columnasFormacionAcademica', 'Formación académica'],
-                            'empleos' => [TablaDinamica::class, 'columnasEmpleos', 'Historial de empleos'],
+                            'estudios_actuales' => [TablaDinamica::class, 'columnasEstudiosActuales', 'Estudios actuales'],
+                            'empleos' => [
+                                TablaDinamica::class,
+                                in_array($cuestionario->tipo_formulario, ['preempleo', 'socioeconomico'], true)
+                                    ? 'columnasEmpleosPreempleo'
+                                    : 'columnasEmpleos',
+                                'Historial de empleos',
+                            ],
                             'empleo_actual' => [TablaDinamica::class, 'columnasEmpleoActualPeriodico', 'Empleo actual'],
                             'deudas' => [TablaDinamica::class, 'columnasDeudas', 'Detalle de deudas'],
                             'tatuajes' => [TablaDinamica::class, 'columnasTatuajes', 'Tatuajes'],

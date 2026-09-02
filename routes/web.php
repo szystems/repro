@@ -9,9 +9,11 @@ use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Admin\ConfigController;
 use App\Http\Controllers\Admin\OrdenesController;
 use App\Http\Controllers\Admin\RolesController;
+use App\Http\Controllers\AyudaController;
 
 //cuestionarios
 use App\Http\Controllers\CuestionarioController;
+use App\Http\Controllers\CuestionarioAyudaController;
 
 //empresa
 use App\Http\Controllers\Empresa\EmpresaController;
@@ -57,6 +59,15 @@ Route::post('/password/email', [\App\Http\Controllers\Auth\ForgotPasswordControl
 Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
+    // Centro de Ayuda (todos los usuarios autenticados)
+    Route::prefix('ayuda')->name('ayuda.')->group(function () {
+        Route::get('/', [AyudaController::class, 'index'])->name('index');
+        Route::get('/buscar', [AyudaController::class, 'buscar'])->name('buscar');
+        Route::get('/faq', [AyudaController::class, 'faq'])->name('faq');
+        Route::get('/glosario', [AyudaController::class, 'glosario'])->name('glosario');
+        Route::get('/{slug}', [AyudaController::class, 'show'])->name('show');
+    });
+
     // Gestión de usuarios: lectura con permiso usuarios.ver, escritura solo Admin
     Route::middleware(['permission:usuarios.ver'])->group(function () {
         Route::get('users', [UsersController::class, 'users'])->name('users.index');
@@ -98,7 +109,10 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::middleware(['role:admin,repro', 'permission:empresas.ver'])->group(function () {
         Route::get('empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'index'])->name('empresas.index');
         Route::get('show-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'show'])->name('empresas.show');
+    });
+    Route::middleware(['role:admin,repro', 'permission:empresas.exportar'])->group(function () {
         Route::get('pdf-empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'pdf'])->name('empresas.pdf');
+        Route::get('excel-empresas', [App\Http\Controllers\Admin\EmpresasController::class, 'excel'])->name('empresas.excel');
         Route::get('pdf-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'pdfEmpresa'])->name('empresas.pdf.show');
     });
     Route::middleware(['role:admin,repro', 'permission:empresas.crear'])->group(function () {
@@ -119,7 +133,9 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     });
     Route::middleware(['permission:calendario.ver'])->group(function () {
         Route::get('calendario', [App\Http\Controllers\Admin\CalendarioController::class, 'index'])->name('calendario.index');
+        Route::get('calendario/excel', [App\Http\Controllers\Admin\CalendarioController::class, 'excel'])->name('calendario.excel');
         Route::get('calendario/dia/{fecha}', [App\Http\Controllers\Admin\CalendarioController::class, 'dia'])->name('calendario.dia');
+        Route::get('calendario/dia/{fecha}/excel', [App\Http\Controllers\Admin\CalendarioController::class, 'excelDia'])->name('calendario.dia.excel');
     });
     Route::middleware(['permission:calendario.editar'])->group(function () {
         Route::post('calendario/programar', [App\Http\Controllers\Admin\CalendarioController::class, 'programar'])->name('calendario.programar');
@@ -157,6 +173,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     });
     // Ver
     Route::middleware(['permission:ordenes.ver'])->group(function () {
+        Route::get('ordenes/excel', [OrdenesController::class, 'excel'])->name('ordenes.excel');
         Route::get('ordenes', [OrdenesController::class, 'index'])->name('ordenes.index');
         Route::get('ordenes/{orden}', [OrdenesController::class, 'show'])->name('ordenes.show');
         Route::get('ordenes/{orden}/pdf', [OrdenesController::class, 'pdf'])->name('ordenes.pdf');
@@ -173,7 +190,10 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         Route::patch('evaluados/{evaluado}/cambiar-estado', [OrdenesController::class, 'cambiarEstadoEvaluado'])->name('evaluados.cambiar-estado');
         Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');
         Route::post('evaluados/{evaluado}/deshabilitar-cuestionario', [OrdenesController::class, 'deshabilitarCuestionario'])->name('evaluados.deshabilitar-cuestionario');
+        Route::post('evaluados/{evaluado}/habilitar-enlace-formulario', [OrdenesController::class, 'habilitarEnlaceFormulario'])->name('evaluados.habilitar-enlace-formulario');
+        Route::post('evaluados/{evaluado}/invalidar-enlace-formulario', [OrdenesController::class, 'invalidarEnlaceFormulario'])->name('evaluados.invalidar-enlace-formulario');
         Route::patch('evaluados/{evaluado}/motivo-hecho', [OrdenesController::class, 'actualizarMotivoHecho'])->name('evaluados.actualizar-motivo-hecho');
+        Route::post('evaluados/{evaluado}/autoasignar-encargado', [OrdenesController::class, 'autoasignarEncargado'])->name('evaluados.autoasignar-encargado');
     });
     // Eliminar
     Route::middleware(['permission:ordenes.eliminar'])->group(function () {
@@ -262,12 +282,16 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
             Route::get('/', [App\Http\Controllers\Admin\CuestionariosController::class, 'index'])->name('index');
             Route::get('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'show'])->name('show');
             Route::get('/{cuestionario}/pdf', [App\Http\Controllers\Admin\CuestionariosController::class, 'generarPDF'])->name('pdf');
+            Route::get('/{cuestionario}/pdf-autorizacion', [App\Http\Controllers\Admin\CuestionariosController::class, 'generarPdfAutorizacion'])->name('pdf-autorizacion');
             Route::get('/{cuestionario}/foto-candidato', [App\Http\Controllers\Admin\CuestionariosController::class, 'fotoCandidato'])->name('foto-candidato');
         });
         Route::middleware(['permission:evaluaciones.editar'])->group(function () {
             Route::get('/{cuestionario}/editar', [App\Http\Controllers\Admin\CuestionariosController::class, 'edit'])->name('edit');
             Route::put('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'update'])->name('update');
             Route::post('/{cuestionario}/completar', [App\Http\Controllers\Admin\CuestionariosController::class, 'marcarCompleto'])->name('completar');
+            Route::get('/{cuestionario}/informe-word-borrador', [App\Http\Controllers\Admin\CuestionariosController::class, 'informeWordBorrador'])->name('informe-word-borrador');
+            Route::get('/{cuestionario}/informe-word-preview', [App\Http\Controllers\Admin\CuestionariosController::class, 'informeWordPreview'])->name('informe-word-preview');
+            Route::get('/{cuestionario}/informe-final-preview', [App\Http\Controllers\Admin\CuestionariosController::class, 'informeFinalPreview'])->name('informe-final-preview');
         });
     });
 
@@ -298,6 +322,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
             Route::get('cuestionarios', [EmpresaController::class, 'cuestionarios'])->name('cuestionarios');
             Route::get('cuestionarios/{evaluado}', [EmpresaController::class, 'verCuestionario'])->name('cuestionarios.show');
             Route::get('cuestionarios/{evaluado}/pdf', [EmpresaController::class, 'generarPDFCuestionarioEmpresa'])->name('cuestionarios.pdf');
+            Route::get('cuestionarios/{evaluado}/pdf-autorizacion', [EmpresaController::class, 'generarPdfAutorizacionEmpresa'])->name('cuestionarios.pdf-autorizacion');
     });
 });
 
@@ -318,6 +343,8 @@ Route::post('/logout', function () {
 // ========================================
 
 Route::prefix('cuestionario')->name('cuestionario.')->middleware('throttle:60,1')->group(function () {
+    Route::get('/ayuda', [CuestionarioAyudaController::class, 'index'])->name('ayuda');
+
     // Acceso inicial con token
     Route::get('/{token}', [CuestionarioController::class, 'mostrar'])->name('mostrar');
 

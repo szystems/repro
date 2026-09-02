@@ -56,9 +56,11 @@
                                     <a href="{{ url('edit-empresa/'.$empresa->id) }}" class="btn btn-primary">
                                         <i class="bi bi-pencil"></i> Editar
                                     </a>
+                                    @if(\App\Support\ExportacionesSupport::puedeExportarPadronEmpresas(Auth::user()))
                                     <a href="{{ url('pdf-empresa/'.$empresa->id) }}" target="_blank" class="btn btn-danger">
                                         <i class="bi bi-file-earmark-pdf"></i> PDF
                                     </a>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -121,6 +123,10 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted">Fecha de Registro:</label>
                                 <div class="fw-medium">{{ $empresa->getCreatedAtFormateada() }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Creada por:</label>
+                                <div class="fw-medium">{{ $empresa->nombreCreador() }}</div>
                             </div>
                             @if($empresa->descripcion)
                             <div class="col-md-12 mb-3">

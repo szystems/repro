@@ -13,7 +13,12 @@ use App\Models\User;
 use App\Notifications\EvaluadoAsignadoNotification;
 use App\Notifications\OrdenCreadaNotification;
 use App\Notifications\ResultadoPreliminarNotification;
+use App\Support\RedirectFichaOrden;
 use App\Notifications\ResultadosDisponiblesNotification;
+use App\Exports\OrdenesExport;
+use App\Support\EmpresaVisibilidadReclutadoresSupport;
+use App\Support\ExportacionesSupport;
+use App\Support\FormularioAutoTransiciones;
 use App\Support\InformeWordBloquesEvaluador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +28,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class OrdenesController extends Controller
 {
@@ -31,59 +37,9 @@ class OrdenesController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Orden::with(['empresa', 'creador', 'poligrafista']);
+        FormularioAutoTransiciones::aplicarAlAcceder();
 
-        if ($request->boolean('archivadas') && Auth::user()->role_as >= 3) {
-            $query->archivadas();
-        } else {
-            $query->activas();
-        }
-
-        // Filtros por rol
-        if (Auth::user()->role_as == 1) {
-            // Usuario empresa: solo ve sus órdenes
-            $query->where('empresa_id', Auth::user()->empresa_id);
-        } elseif ($request->filled('empresa_id') && Auth::user()->role_as >= 2) {
-            $query->where('empresa_id', $request->empresa_id);
-        }
-
-        // Filtros adicionales
-        if ($request->filled('estado')) {
-            $query->where('estado', $request->estado);
-        }
-
-        if ($request->filled('tipo_servicio')) {
-            $query->whereHas('evaluados', function($q) use ($request) {
-                $q->where('tipo_servicio', $request->tipo_servicio);
-            });
-        }
-
-        if ($request->filled('sede_id')) {
-            $query->where('sede_id', $request->sede_id);
-        }
-
-        if ($request->filled('fecha_desde')) {
-            $query->whereDate('fecha_solicitud', '>=', $request->fecha_desde);
-        }
-
-        if ($request->filled('fecha_hasta')) {
-            $query->whereDate('fecha_solicitud', '<=', $request->fecha_hasta);
-        }
-
-        // Búsqueda por código o empresa
-        if ($request->filled('buscar')) {
-            $buscar = $request->buscar;
-            $query->where(function($q) use ($buscar) {
-                $q->where('codigo_orden', 'LIKE', "%{$buscar}%")
-                  ->orWhereHas('empresa', function($eq) use ($buscar) {
-                      $eq->where('nombre', 'LIKE', "%{$buscar}%");
-                  });
-            });
-        }
-
-        $ordenes = $query->with(['empresa', 'creador', 'sede', 'evaluados'])
-                        ->withCount('evaluados')
-                        ->orderBy('fecha_solicitud', 'desc')
+        $ordenes = $this->queryOrdenesListado($request)
                         ->paginate(15);
 
         // Datos para filtros
@@ -107,6 +63,76 @@ class OrdenesController extends Controller
     }
 
     /**
+     * Excel del listado de órdenes con los mismos filtros (cliente y REPRO).
+     */
+    public function excel(Request $request)
+    {
+        ExportacionesSupport::asegurarPuedeExportarInformes(Auth::user());
+
+        $ordenes = $this->queryOrdenesListado($request)->get();
+        $export = new OrdenesExport($ordenes);
+        $base = 'listado-ordenes-' . now()->format('Y-m-d');
+
+        return ExportacionesSupport::descargarExcel($export, $base);
+    }
+
+    /**
+     * Query del listado de órdenes (pantalla y Excel).
+     */
+    private function queryOrdenesListado(Request $request)
+    {
+        $query = Orden::with(['empresa', 'creador', 'poligrafista']);
+
+        if ($request->boolean('archivadas') && Auth::user()->role_as >= 3) {
+            $query->archivadas();
+        } else {
+            $query->activas();
+        }
+
+        if (Auth::user()->role_as == 1) {
+            EmpresaVisibilidadReclutadoresSupport::filtrarQueryOrdenesEmpresa($query, Auth::user());
+        } elseif ($request->filled('empresa_id') && Auth::user()->role_as >= 2) {
+            $query->where('empresa_id', $request->empresa_id);
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->estado);
+        }
+
+        if ($request->filled('tipo_servicio')) {
+            $query->whereHas('evaluados', function ($q) use ($request) {
+                $q->where('tipo_servicio', $request->tipo_servicio);
+            });
+        }
+
+        if ($request->filled('sede_id')) {
+            $query->where('sede_id', $request->sede_id);
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha_solicitud', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha_solicitud', '<=', $request->fecha_hasta);
+        }
+
+        if ($request->filled('buscar')) {
+            $buscar = $request->buscar;
+            $query->where(function ($q) use ($buscar) {
+                $q->where('codigo_orden', 'LIKE', "%{$buscar}%")
+                  ->orWhereHas('empresa', function ($eq) use ($buscar) {
+                      $eq->where('nombre', 'LIKE', "%{$buscar}%");
+                  });
+            });
+        }
+
+        return $query->with(['empresa', 'creador', 'sede', 'evaluados'])
+            ->withCount('evaluados')
+            ->orderBy('fecha_solicitud', 'desc');
+    }
+
+    /**
      * Resumen estadístico de órdenes para admin/repro
      */
     public function resumen(): \Illuminate\View\View
@@ -116,8 +142,8 @@ class OrdenesController extends Controller
         $ordenesCompletadas = Orden::activas()->where('estado', 'entregado')->count();
         $ordenesPendientes = Orden::activas()->where('estado', 'orden_recibida')->count();
 
-        $totalEvaluados = EvaluadoOrden::count();
-        $evaluadosCompletados = EvaluadoOrden::where('estado_evaluacion', 'informe_final_enviado')->count();
+        $totalEvaluados = EvaluadoOrden::deOrdenesActivas()->count();
+        $evaluadosCompletados = EvaluadoOrden::deOrdenesActivas()->where('estado_evaluacion', 'informe_final_enviado')->count();
 
         $porEmpresa = Orden::activas()->select('empresa_id', DB::raw('COUNT(*) as total'))
             ->with('empresa:id,nombre')
@@ -165,7 +191,11 @@ class OrdenesController extends Controller
 
         $sedes = Sede::where('estado', 1)->orderBy('nombre')->get();
 
-        return view('admin.ordenes.create', compact('empresas', 'poligrafistas', 'sedes'));
+        $reclutadores = $this->reclutadoresParaFormulario(
+            Auth::user()->role_as == 1 ? Auth::user()->empresa_id : null
+        );
+
+        return view('admin.ordenes.create', compact('empresas', 'poligrafistas', 'sedes', 'reclutadores'));
     }
 
     /**
@@ -197,6 +227,8 @@ class OrdenesController extends Controller
             'evaluados.*.sede_region_empresa' => 'nullable|string|max:100',
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
+            'reclutador_id' => 'nullable|exists:users,id',
+            'confidencial' => 'nullable|boolean',
         ]);
 
         // Validar que no haya DPI+servicio duplicados en la misma orden
@@ -250,6 +282,15 @@ class OrdenesController extends Controller
                 $datosOrden['empresa_id'] = $validated['empresa_id'];
             }
 
+            $empresaIdOrden = (int) $datosOrden['empresa_id'];
+            if ($this->puedeGestionarConfidencialidadOrden()) {
+                $datosOrden['reclutador_id'] = $this->resolverReclutadorId($request, $empresaIdOrden);
+                $datosOrden['confidencial'] = $request->boolean('confidencial');
+            } else {
+                $datosOrden['reclutador_id'] = EmpresaVisibilidadReclutadoresSupport::reclutadorIdPorDefecto(Auth::user());
+                $datosOrden['confidencial'] = false;
+            }
+
             $orden = Orden::create($datosOrden);
 
             if ($request->has('evaluados')) {
@@ -288,7 +329,7 @@ class OrdenesController extends Controller
             // Redirigir según el rol del usuario
             if (Auth::user()->role_as == 1) {
                 // Usuario empresa: redirigir a módulo empresa
-                return redirect()->route('empresa.ordenes.show', $orden)
+                return redirect()->route('ordenes.show', $orden)
                     ->with('success', 'Orden creada exitosamente.')
                     ->with('mostrar_papeleria', true);
             }
@@ -318,9 +359,12 @@ class OrdenesController extends Controller
             abort(403);
         }
 
+        FormularioAutoTransiciones::aplicarAlAcceder();
+
         $orden->load([
             'empresa',
             'creador',
+            'reclutador',
             'sede',
             'archivadaPor',
             'evaluados' => function($query) {
@@ -334,7 +378,9 @@ class OrdenesController extends Controller
         $sedes = Sede::activas()->orderBy('nombre')->get();
         $poligrafistas = User::poligrafistas()->get();
 
-        return view('admin.ordenes.show', compact('orden', 'estados', 'sedes', 'poligrafistas'));
+        return view('admin.ordenes.show', compact('orden', 'estados', 'sedes', 'poligrafistas') + [
+            'historialVisibleEmpresa' => \App\Models\Config::historialVisibleParaEmpresa(),
+        ]);
     }
 
     /**
@@ -350,7 +396,7 @@ class OrdenesController extends Controller
 
         $empresas = collect();
 
-        if (Auth::user()->hasAnyRole(['admin', 'repro'])) {
+        if (Auth::user()->role_as >= 2) {
             $empresas = Empresa::where('estado', 1)->orderBy('nombre')->get();
         }
 
@@ -362,7 +408,9 @@ class OrdenesController extends Controller
 
         $sedes = Sede::where('estado', 1)->orderBy('nombre')->get();
 
-        return view('admin.ordenes.edit', compact('orden', 'empresas', 'poligrafistas', 'estados', 'sedes'));
+        $reclutadores = $this->reclutadoresParaFormulario($orden->empresa_id);
+
+        return view('admin.ordenes.edit', compact('orden', 'empresas', 'poligrafistas', 'estados', 'sedes', 'reclutadores'));
     }
 
     /**
@@ -406,6 +454,10 @@ class OrdenesController extends Controller
             'evaluados.*.sede_region_empresa' => 'nullable|string|max:100',
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
+            'evaluados_eliminar' => 'nullable|array',
+            'evaluados_eliminar.*' => 'integer|exists:evaluados_orden,id',
+            'reclutador_id' => 'nullable|exists:users,id',
+            'confidencial' => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
@@ -437,14 +489,24 @@ class OrdenesController extends Controller
                 $datosOrden['sede_id'] = $validated['sede_id'];
             }
 
-            if (Auth::user()->hasAnyRole(['admin', 'repro'])) {
+            if (Auth::user()->role_as >= 2) {
                 $datosOrden['empresa_id'] = $validated['empresa_id'];
+            }
+
+            if ($this->puedeGestionarConfidencialidadOrden($orden)) {
+                $datosOrden['reclutador_id'] = $this->resolverReclutadorId($request, (int) $orden->empresa_id);
+                $datosOrden['confidencial'] = $request->boolean('confidencial');
             }
 
             $orden->update($datosOrden);
 
             if ($request->has('evaluados')) {
-                $this->procesarEvaluados($orden, $request->evaluados, true);
+                $this->procesarEvaluados(
+                    $orden,
+                    $request->evaluados,
+                    true,
+                    $request->input('evaluados_eliminar', [])
+                );
             }
 
             DB::commit();
@@ -452,7 +514,7 @@ class OrdenesController extends Controller
             // Redirigir según el rol del usuario
             if (Auth::user()->role_as == 1) {
                 // Usuario empresa: redirigir a módulo empresa
-                return redirect()->route('empresa.ordenes.show', $orden)
+                return redirect()->route('ordenes.show', $orden)
                     ->with('success', 'Orden actualizada exitosamente.');
             }
 
@@ -536,7 +598,7 @@ class OrdenesController extends Controller
 
         if (!$orden->puedeTransicionarA($request->nuevo_estado)) {
             $estadoActualTexto = $orden->estado_human;
-            return back()->with('error', "No se puede cambiar de '{$estadoActualTexto}' a '{$request->nuevo_estado}'. Transición no permitida.");
+            return RedirectFichaOrden::orden($orden, "No se puede cambiar de '{$estadoActualTexto}' a '{$request->nuevo_estado}'. Transición no permitida.", 'error');
         }
 
         $estadoAnterior = $orden->estado;
@@ -546,10 +608,10 @@ class OrdenesController extends Controller
                 $orden->update(['observaciones' => $request->observaciones]);
             }
 
-            return back()->with('success', "Estado cambiado de '{$estadoAnterior}' a '{$request->nuevo_estado}'.");
+            return RedirectFichaOrden::orden($orden, "Estado cambiado de '{$estadoAnterior}' a '{$request->nuevo_estado}'.");
         }
 
-        return back()->with('error', 'No se pudo cambiar el estado de la orden.');
+        return RedirectFichaOrden::orden($orden, 'No se pudo cambiar el estado de la orden.', 'error');
     }
 
     /**
@@ -558,7 +620,7 @@ class OrdenesController extends Controller
     public function cambiarEstadoEvaluado(Request $request, EvaluadoOrden $evaluado): \Illuminate\Http\RedirectResponse
     {
         if (Auth::user()->role_as < 2) {
-            return back()->with('error', 'No tiene permisos para realizar esta acción.');
+            return RedirectFichaOrden::evaluado($evaluado, 'No tiene permisos para realizar esta acción.', 'error');
         }
 
         $request->validate([
@@ -575,42 +637,42 @@ class OrdenesController extends Controller
         if ($tipo === 'evaluacion') {
             if (!$evaluado->puedeTransicionarEstadoEvaluacion($nuevoEstado)) {
                 $estadoActual = $evaluado->estado_evaluacion_texto;
-                return back()->with('error', "No se puede cambiar evaluación de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.");
+                return RedirectFichaOrden::evaluado($evaluado, "No se puede cambiar evaluación de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.", 'error');
             }
             $estadoAnterior = $evaluado->estado_evaluacion_texto;
             try {
                 $evaluado->cambiarEstadoEvaluacion($nuevoEstado, $observacion);
             } catch (\Illuminate\Validation\ValidationException $e) {
                 $mensajes = collect($e->errors())->flatten()->implode(' ');
-                return back()->with('error', "No se puede iniciar la evaluación para {$nombre}: {$mensajes}");
+                return RedirectFichaOrden::evaluado($evaluado, "No se puede iniciar la evaluación para {$nombre}: {$mensajes}", 'error');
             }
             $estadoNuevoTexto = $evaluado->fresh()->estado_evaluacion_texto;
-            return back()->with('success', "Estado evaluación de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
+            return RedirectFichaOrden::evaluado($evaluado, "Estado evaluación de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
         }
 
         if ($tipo === 'formulario') {
             if (!$evaluado->puedeTransicionarEstadoFormulario($nuevoEstado)) {
                 $estadoActual = EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->estado_formulario] ?? $evaluado->estado_formulario;
-                return back()->with('error', "No se puede cambiar formulario de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.");
+                return RedirectFichaOrden::evaluado($evaluado, "No se puede cambiar formulario de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.", 'error');
             }
             $estadoAnterior = EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->estado_formulario] ?? $evaluado->estado_formulario;
             $evaluado->cambiarEstadoFormulario($nuevoEstado, $observacion);
             $estadoNuevoTexto = EvaluadoOrden::estadosFormularioDisponibles()[$evaluado->fresh()->estado_formulario] ?? $nuevoEstado;
-            return back()->with('success', "Estado formulario de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
+            return RedirectFichaOrden::evaluado($evaluado, "Estado formulario de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
         }
 
         if ($tipo === 'programacion') {
             if (!$evaluado->puedeTransicionarEstadoProgramacion($nuevoEstado)) {
                 $estadoActual = EvaluadoOrden::estadosProgramacionDisponibles()[$evaluado->estado_programacion] ?? $evaluado->estado_programacion;
-                return back()->with('error', "No se puede cambiar programación de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.");
+                return RedirectFichaOrden::evaluado($evaluado, "No se puede cambiar programación de '{$estadoActual}' a '{$nuevoEstado}' para {$nombre}.", 'error');
             }
             $estadoAnterior = EvaluadoOrden::estadosProgramacionDisponibles()[$evaluado->estado_programacion] ?? $evaluado->estado_programacion;
             $evaluado->cambiarEstadoProgramacion($nuevoEstado, $observacion);
             $estadoNuevoTexto = EvaluadoOrden::estadosProgramacionDisponibles()[$evaluado->fresh()->estado_programacion] ?? $nuevoEstado;
-            return back()->with('success', "Estado programación de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
+            return RedirectFichaOrden::evaluado($evaluado, "Estado programación de {$nombre}: '{$estadoAnterior}' → '{$estadoNuevoTexto}'.");
         }
 
-        return back()->with('error', 'Tipo de estado no válido.');
+        return RedirectFichaOrden::evaluado($evaluado, 'Tipo de estado no válido.', 'error');
     }
 
     /**
@@ -747,12 +809,14 @@ class OrdenesController extends Controller
     /**
      * Procesar evaluados asociados a la orden
      */
-    private function procesarEvaluados(Orden $orden, array $evaluados, bool $esActualizacion = false): void
+    private function procesarEvaluados(Orden $orden, array $evaluados, bool $esActualizacion = false, array $idsAEliminar = []): void
     {
         $evaluadosExistentes = [];
         $evaluadosPorIndice = collect();
 
         if ($esActualizacion) {
+            $this->quitarEvaluadosMarcados($orden, $idsAEliminar, $evaluados);
+            $orden->unsetRelation('evaluados');
             $evaluadosExistentes = $orden->evaluados->pluck('id')->toArray();
             $evaluadosPorIndice = $orden->evaluados()->orderBy('id')->get()->values();
         }
@@ -793,7 +857,7 @@ class OrdenesController extends Controller
 
                 if (!empty($evaluadoData['id'])) {
                     $evaluado = EvaluadoOrden::find($evaluadoData['id']);
-                    if ($evaluado && $evaluado->orden_id !== $orden->id) {
+                    if ($evaluado && (int) $evaluado->orden_id !== (int) $orden->id) {
                         $evaluado = null;
                     }
                 }
@@ -857,6 +921,60 @@ class OrdenesController extends Controller
                 'evaluados_omitidos' => array_values($evaluadosExistentes),
                 'user_id' => Auth::id(),
             ]);
+        }
+    }
+
+    /**
+     * Quita evaluados marcados explícitamente en el formulario de edición.
+     * Quien solo "falta" del POST (sin evaluados_eliminar) se sigue preservando.
+     *
+     * @param  array<int, mixed>  $idsAEliminar
+     * @param  array<int, array<string, mixed>>  $evaluadosFormulario
+     */
+    private function quitarEvaluadosMarcados(Orden $orden, array $idsAEliminar, array $evaluadosFormulario): void
+    {
+        $idsAEliminar = collect($idsAEliminar)
+            ->filter(fn ($id) => $id !== null && $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        $idsEnFormulario = collect($evaluadosFormulario)
+            ->pluck('id')
+            ->filter(fn ($id) => $id !== null && $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $idsAEliminar = $idsAEliminar->reject(fn ($id) => in_array($id, $idsEnFormulario, true))->values();
+
+        if ($idsAEliminar->isEmpty()) {
+            return;
+        }
+
+        $aQuitar = $orden->evaluados()->whereIn('id', $idsAEliminar->all())->get();
+        $restantes = $orden->evaluados()->whereNotIn('id', $aQuitar->pluck('id'))->count();
+
+        if ($restantes < 1) {
+            throw new \RuntimeException('La orden debe quedar con al menos un evaluado.');
+        }
+
+        foreach ($aQuitar as $evaluado) {
+            $motivo = $evaluado->motivoNoEliminableDeOrden();
+            if ($motivo) {
+                throw new \RuntimeException(
+                    "No se puede quitar a {$evaluado->nombre} {$evaluado->apellidos}: {$motivo}"
+                );
+            }
+        }
+
+        foreach ($aQuitar as $evaluado) {
+            Log::info('Evaluado quitado de orden', [
+                'orden_id' => $orden->id,
+                'evaluado_id' => $evaluado->id,
+                'dpi' => $evaluado->dpi,
+                'user_id' => Auth::id(),
+            ]);
+            $evaluado->delete();
         }
     }
 
@@ -1031,17 +1149,7 @@ class OrdenesController extends Controller
      */
     private function usuarioPuedeVerOrden(Orden $orden): bool
     {
-        // Admin y repro pueden ver cualquier orden
-        if (Auth::user()->role_as >= 2) {
-            return true;
-        }
-
-        // Usuarios empresa solo pueden ver órdenes de su empresa
-        if (Auth::user()->role_as == 1) {
-            return $orden->empresa_id === Auth::user()->empresa_id;
-        }
-
-        return false;
+        return EmpresaVisibilidadReclutadoresSupport::puedeVerOrden(Auth::user(), $orden);
     }
 
     /**
@@ -1054,14 +1162,16 @@ class OrdenesController extends Controller
             return false;
         }
 
-        // Admin y repro pueden editar cualquier orden
-        if (Auth::user()->hasAnyRole(['admin', 'repro'])) {
+        // Staff REPRO (admin o empleado): role_as, no el nombre del rol Spatie.
+        // Al guardar permisos individuales se crea user_{id} y se desasocia 'repro';
+        // hasAnyRole(['repro']) fallaba aunque el permiso ordenes.editar estuviera marcado.
+        if (Auth::user()->role_as >= 2) {
             return true;
         }
 
         // Las empresas pueden editar sus propias órdenes solo si están en estado inicial
         if (Auth::user()->role_as == 1) {
-            return (int) $orden->empresa_id === (int) Auth::user()->empresa_id
+            return EmpresaVisibilidadReclutadoresSupport::puedeVerOrden(Auth::user(), $orden)
                 && $orden->estado === 'orden_recibida';
         }
 
@@ -1119,7 +1229,7 @@ class OrdenesController extends Controller
      */
     public function informeWord(Orden $orden, EvaluadoOrden $evaluado)
     {
-        if ($evaluado->orden_id !== $orden->id) {
+        if ((int) $evaluado->orden_id !== (int) $orden->id) {
             abort(404);
         }
 
@@ -1134,9 +1244,15 @@ class OrdenesController extends Controller
         $evaluado->load(['poligrafista', 'responsable', 'sede', 'orden.empresa', 'orden.sede']);
 
         $path = \App\Support\InformeWordExport::generar($orden, $evaluado);
-        $filename = 'Informe_' . $evaluado->dpi . '_' . ($orden->codigo_orden ?? 'orden') . '.docx';
+        $filename = \App\Support\InformeWordNombresArchivo::generar($evaluado, $orden);
+        $ascii = preg_replace('/[^\x20-\x7E]/', '_', $filename) ?: 'informe.docx';
 
-        return response()->download($path, $filename)->deleteFileAfterSend(true);
+        return response()->download($path, $filename, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+            'Content-Disposition' => 'attachment; filename="'.$ascii.'"; filename*=UTF-8\'\''.rawurlencode($filename),
+        ])->deleteFileAfterSend(true);
     }
 
     /**
@@ -1163,6 +1279,29 @@ class OrdenesController extends Controller
         ]);
 
         return back()->with('success', 'Motivo/hecho de evaluación actualizado.');
+    }
+
+    /**
+     * P-P2: el evaluador se asigna como Encargado sin pisar quién programó.
+     */
+    public function autoasignarEncargado(EvaluadoOrden $evaluado)
+    {
+        if ((int) Auth::user()->role_as < 2) {
+            abort(403, 'Solo personal REPRO puede autoasignarse como encargado.');
+        }
+        if (!$this->usuarioPuedeVerOrden($evaluado->orden)) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        $programoId = $evaluado->poligrafista_id;
+        $evaluado->autoasignarEncargado((int) Auth::id());
+
+        return back()->with(
+            'success',
+            $programoId
+                ? 'Te asignaste como encargado. Quien programó el proceso se mantiene.'
+                : 'Te asignaste como encargado de este proceso.'
+        );
     }
 
     /**
@@ -1249,13 +1388,13 @@ class OrdenesController extends Controller
         $tipo = $request->tipo_resultado;
 
         if ($tipo === 'final' && ! InformeWordBloquesEvaluador::completos($evaluado->id)) {
-            return back()->with('error', InformeWordBloquesEvaluador::mensajeBloqueo($evaluado));
+            return RedirectFichaOrden::evaluado($evaluado, InformeWordBloquesEvaluador::mensajeBloqueo($evaluado), 'error');
         }
 
         // CO3: bloquear subida de informe final si la orden ya fue entregada
         // Solo admins pueden reemplazarlo
         if ($tipo === 'final' && $evaluado->orden->estado === 'entregado' && Auth::user()->role_as < 3) {
-            return back()->with('error', 'No se puede reemplazar el informe final de una orden ya entregada. Solo los administradores pueden hacerlo.');
+            return RedirectFichaOrden::evaluado($evaluado, 'No se puede reemplazar el informe final de una orden ya entregada. Solo los administradores pueden hacerlo.', 'error');
         }
 
         $campo = $tipo === 'preliminar' ? 'archivo_resultado_preliminar' : 'archivo_resultado_final';
@@ -1300,7 +1439,7 @@ class OrdenesController extends Controller
             $orden->refresh();
             $this->notificarResultadosDisponibles($orden);
 
-            return back()->with('success', 'Archivo de resultado final subido. Los resultados han sido liberados automáticamente al cliente.');
+            return RedirectFichaOrden::evaluado($evaluado, 'Archivo de resultado final subido. Los resultados han sido liberados automáticamente al cliente.');
         }
 
         // Subir preliminar → liberar resultados al cliente (Fase 18: sin auto-cambio de estado)
@@ -1316,7 +1455,7 @@ class OrdenesController extends Controller
             $this->notificarPreliminarSubido($evaluado);
         }
 
-        return back()->with('success', "Archivo de resultado {$tipo} subido correctamente. Los resultados han sido liberados al cliente.");
+        return RedirectFichaOrden::evaluado($evaluado, "Archivo de resultado {$tipo} subido correctamente. Los resultados han sido liberados al cliente.");
     }
 
     /**
@@ -1366,7 +1505,7 @@ class OrdenesController extends Controller
         // CO3: no se puede eliminar el informe final de una orden ya entregada
         // Solo admins pueden hacerlo
         if ($tipo === 'final' && $evaluado->orden->estado === 'entregado' && Auth::user()->role_as < 3) {
-            return back()->with('error', 'No se puede eliminar el informe final de una orden ya entregada. Solo los administradores pueden hacerlo.');
+            return RedirectFichaOrden::evaluado($evaluado, 'No se puede eliminar el informe final de una orden ya entregada. Solo los administradores pueden hacerlo.', 'error');
         }
 
         $campo = $tipo === 'preliminar' ? 'archivo_resultado_preliminar' : 'archivo_resultado_final';
@@ -1381,7 +1520,7 @@ class OrdenesController extends Controller
             $campoFecha => null,
         ]);
 
-        return back()->with('success', "Archivo de resultado {$tipo} eliminado correctamente.");
+        return RedirectFichaOrden::evaluado($evaluado, "Archivo de resultado {$tipo} eliminado correctamente.");
     }
 
     /**
@@ -1395,7 +1534,7 @@ class OrdenesController extends Controller
             abort(403, 'No tiene permisos para esta acción.');
         }
 
-        if (!$evaluado->cuestionario_completado) {
+        if (!$evaluado->cuestionario_completado && $evaluado->estado_formulario !== 'vencido') {
             return back()->with('warning', 'El cuestionario de este evaluado no está completado.');
         }
 
@@ -1507,6 +1646,155 @@ class OrdenesController extends Controller
 
             return back()->with('error', 'Error al deshabilitar el cuestionario. Intente nuevamente.');
         }
+    }
+
+    /**
+     * H11/H12 — Rehabilitar enlace del formulario sin borrar progreso (vencido o invalidado manualmente).
+     */
+    public function habilitarEnlaceFormulario(EvaluadoOrden $evaluado): \Illuminate\Http\RedirectResponse
+    {
+        if (Auth::user()->role_as < 2) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        if ($evaluado->cuestionario_completado) {
+            return back()->with('warning', 'El formulario ya está completado. Use «Rehabilitar» si necesita reiniciarlo desde cero.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $cuestionario = $evaluado->cuestionario;
+            $enProgreso = $cuestionario
+                && (
+                    (int) ($cuestionario->progreso_porcentaje ?? 0) > 0
+                    || (int) ($cuestionario->seccion_actual ?? 1) > 1
+                    || $evaluado->estado_formulario === 'pendiente_de_llenar'
+                );
+
+            if ($cuestionario) {
+                $cuestionario->update(['bloqueado' => false]);
+            }
+
+            $evaluado->update([
+                'estado_formulario' => $enProgreso ? 'pendiente_de_llenar' : 'link_pendiente',
+                'token_unico' => $evaluado->token_unico ?: EvaluadoOrden::generarToken(),
+                'token_expira_at' => EvaluadoOrden::calcularExpiracionToken(),
+                'cuestionario_completado' => false,
+            ]);
+
+            DB::commit();
+
+            Log::info('Enlace de formulario habilitado', [
+                'evaluado_id' => $evaluado->id,
+                'evaluado' => $evaluado->nombre . ' ' . $evaluado->apellidos,
+                'usuario' => Auth::user()->name,
+            ]);
+
+            $diasVigencia = \App\Models\Config::diasVigenciaTokenEnlace();
+
+            return back()->with('success', "Enlace habilitado para {$evaluado->nombre} {$evaluado->apellidos}. Vigencia: {$diasVigencia} días.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error habilitando enlace de formulario', [
+                'evaluado_id' => $evaluado->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Error al habilitar el enlace. Intente nuevamente.');
+        }
+    }
+
+    /**
+     * H11/H12 — Invalidar enlace manualmente (marca vencido sin borrar respuestas parciales).
+     */
+    public function invalidarEnlaceFormulario(EvaluadoOrden $evaluado): \Illuminate\Http\RedirectResponse
+    {
+        if (Auth::user()->role_as < 2) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        if ($evaluado->cuestionario_completado) {
+            return back()->with('warning', 'El formulario ya está completado.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $evaluado->update([
+                'estado_formulario' => 'vencido',
+                'token_expira_at' => now(),
+            ]);
+
+            DB::commit();
+
+            Log::info('Enlace de formulario invalidado manualmente', [
+                'evaluado_id' => $evaluado->id,
+                'evaluado' => $evaluado->nombre . ' ' . $evaluado->apellidos,
+                'usuario' => Auth::user()->name,
+            ]);
+
+            return back()->with('success', "Enlace invalidado para {$evaluado->nombre} {$evaluado->apellidos}.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error invalidando enlace de formulario', [
+                'evaluado_id' => $evaluado->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Error al invalidar el enlace. Intente nuevamente.');
+        }
+    }
+
+    /**
+     * Reclutadores (trabajadores) de una empresa para asignación de procesos.
+     */
+    private function reclutadoresParaFormulario(?int $empresaId): \Illuminate\Support\Collection
+    {
+        if (! $empresaId) {
+            return collect();
+        }
+
+        return User::where('empresa_id', $empresaId)
+            ->where('principal', 0)
+            ->where('estado', 1)
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function resolverReclutadorId(Request $request, int $empresaId): ?int
+    {
+        if ($request->filled('reclutador_id')) {
+            $reclutadorId = (int) $request->input('reclutador_id');
+            $valido = User::where('id', $reclutadorId)
+                ->where('empresa_id', $empresaId)
+                ->where('principal', 0)
+                ->where('estado', 1)
+                ->exists();
+
+            return $valido ? $reclutadorId : null;
+        }
+
+        return EmpresaVisibilidadReclutadoresSupport::reclutadorIdPorDefecto(Auth::user());
+    }
+
+    private function puedeGestionarConfidencialidadOrden(?Orden $orden = null): bool
+    {
+        $user = Auth::user();
+
+        if ($user->role_as >= 2) {
+            return true;
+        }
+
+        if ((int) $user->principal === 1) {
+            return true;
+        }
+
+        if ($orden && (int) $orden->creado_por === (int) $user->id) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

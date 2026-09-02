@@ -151,6 +151,31 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0"><i class="bi bi-people text-success"></i> Visibilidad entre reclutadores</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="modo_visibilidad_reclutadores" class="form-label">Modo de acceso para trabajadores</label>
+                                <select class="form-select @error('modo_visibilidad_reclutadores') is-invalid @enderror"
+                                        id="modo_visibilidad_reclutadores" name="modo_visibilidad_reclutadores">
+                                    @foreach(\App\Support\EmpresaVisibilidadReclutadoresSupport::modosDisponibles() as $valor => $etiqueta)
+                                    <option value="{{ $valor }}" {{ old('modo_visibilidad_reclutadores', $empresa->modo_visibilidad_reclutadores ?? 'compartido') === $valor ? 'selected' : '' }}>
+                                        {{ $etiqueta }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                @error('modo_visibilidad_reclutadores')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted d-block mt-2">
+                                    En procesos marcados como <strong>confidenciales</strong>, solo el gerente RRHH y el reclutador asignado pueden ver la orden.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Logo y acciones -->

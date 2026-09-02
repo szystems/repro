@@ -285,5 +285,7 @@
         setInterval(actualizarReloj, 1000);
         actualizarReloj(); // Iniciar inmediatamente
     </script>
+
+    @include('ayuda.partials.tour-dashboard')
 </body>
 </html>

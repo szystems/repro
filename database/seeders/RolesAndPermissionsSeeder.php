@@ -71,6 +71,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'empresas.crear', 'display_name' => 'Crear Empresas', 'module' => 'empresas'],
             ['name' => 'empresas.editar', 'display_name' => 'Editar Empresas', 'module' => 'empresas'],
             ['name' => 'empresas.eliminar', 'display_name' => 'Eliminar Empresas', 'module' => 'empresas'],
+            ['name' => 'empresas.exportar', 'display_name' => 'Descargar padrón de empresas (PDF/Excel)', 'module' => 'empresas'],
             
             // Módulo: Usuarios
             ['name' => 'usuarios.ver', 'display_name' => 'Ver Usuarios', 'module' => 'usuarios'],
@@ -80,7 +81,7 @@ class RolesAndPermissionsSeeder extends Seeder
             
             // Módulo: Reportes
             ['name' => 'reportes.ver', 'display_name' => 'Ver Reportes', 'module' => 'reportes'],
-            ['name' => 'reportes.generar', 'display_name' => 'Generar Reportes', 'module' => 'reportes'],
+            ['name' => 'reportes.generar', 'display_name' => 'Descargar Excel de informes y órdenes', 'module' => 'reportes'],
             
             // Módulo: Configuración
             ['name' => 'config.ver', 'display_name' => 'Ver Configuración', 'module' => 'config'],
@@ -186,7 +187,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Empresa: crear órdenes, ver resultados propios
         $empresaRole = DB::table('roles')->where('name', 'empresa')->first();
         $empresaPermissions = [
-            'ordenes.ver', 'ordenes.crear',
+            'ordenes.ver', 'ordenes.crear', 'ordenes.editar',
             'evaluaciones.ver',
             'resultados.ver', 'resultados.descargar',
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', // Sus propios usuarios

@@ -22,6 +22,10 @@ class ProgramarCitaRequest extends FormRequest
             ? ['nullable', 'integer', 'exists:evaluados_orden,id']
             : ['required', 'integer', 'exists:evaluados_orden,id'];
 
+        $motivoRules = $this->isMethod('PATCH')
+            ? ['required', 'string', 'min:3', 'max:500']
+            : ['nullable', 'string', 'max:500'];
+
         return [
             'evaluado_orden_id' => $evaluadoRules,
             'fecha'             => ['required', 'date', 'after_or_equal:today'],
@@ -31,6 +35,7 @@ class ProgramarCitaRequest extends FormRequest
             'sede_id'           => ['required', 'integer', 'exists:sedes,id'],
             'modalidad'         => ['nullable', 'in:presencial,virtual'],
             'responsable_id'    => ['nullable', 'integer', 'exists:users,id'],
+            'motivo_reprogramacion' => $motivoRules,
         ];
     }
 
@@ -50,6 +55,9 @@ class ProgramarCitaRequest extends FormRequest
             'poligrafista_id.exists'     => 'El poligrafista seleccionado no existe.',
             'sede_id.required'           => 'Debe seleccionar una sede.',
             'sede_id.exists'             => 'La sede seleccionada no existe.',
+            'motivo_reprogramacion.required' => 'Indique el motivo de la reprogramación.',
+            'motivo_reprogramacion.min'      => 'El motivo de reprogramación es demasiado corto.',
+            'motivo_reprogramacion.max'      => 'El motivo de reprogramación no puede exceder 500 caracteres.',
         ];
     }
 

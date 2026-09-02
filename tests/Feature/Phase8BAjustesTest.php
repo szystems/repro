@@ -78,6 +78,8 @@ class Phase8BAjustesTest extends TestCase
 
         $response->assertStatus(200);
         $contentDisposition = $response->headers->get('content-disposition');
+        $this->assertStringContainsString('inline', strtolower((string) $contentDisposition));
+        $this->assertStringNotContainsString('attachment', strtolower((string) $contentDisposition));
         $this->assertStringContainsString('Juan', $contentDisposition);
         $this->assertStringContainsString('rez', $contentDisposition); // Pérez (encoded)
         $this->assertStringContainsString('ORD-TEST-001', $contentDisposition);

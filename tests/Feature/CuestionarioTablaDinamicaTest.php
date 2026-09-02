@@ -212,6 +212,70 @@ class CuestionarioTablaDinamicaTest extends TestCase
         $response->assertSee('overflow-x: auto', false);
     }
 
+    public function test_guarda_empleos_con_selectores_de_fecha(): void
+    {
+        $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 1,
+        ]), $this->datosSeccion1Preempleo());
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 2,
+        ]), $this->datosSeccion2Preempleo());
+
+        $datos = array_merge(
+            $this->datosSeccion3Preempleo(),
+            $this->datosFormacionAcademicaPreempleo(),
+            [
+                'experiencia_previa' => 'si',
+                'empleos' => [
+                    [
+                        'empresa' => 'Empresa Anterior S.A.',
+                        'puesto' => 'Asistente',
+                        'fechas_laboradas_inicio' => '2018-01',
+                        'fechas_laboradas_fin' => '2022-06',
+                        'ultimo_salario' => '4500',
+                        'motivo_retiro' => 'Mejor oportunidad',
+                    ],
+                ],
+            ]
+        );
+
+        $response = $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 3,
+        ]), $datos);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+
+        $cuestionario = $this->evaluado->cuestionario()->first();
+        $respuesta = CuestionarioRespuesta::where('cuestionario_id', $cuestionario->id)
+            ->where('campo', 'empleos')
+            ->first();
+
+        $this->assertNotNull($respuesta);
+        $this->assertSame('01/2018 al 06/2022', $respuesta->getTabla()[0]['fechas_laboradas']);
+    }
+
+    public function test_seccion_3_muestra_selectores_fechas_laboradas(): void
+    {
+        $this->avanzarHastaSeccionLaboral();
+
+        $response = $this->get(route('cuestionario.seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 3,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('name="empleos[0][fechas_laboradas_inicio_mes]"', false);
+        $response->assertSee('name="empleos[0][fechas_laboradas_inicio_anio]"', false);
+        $response->assertSee('Sigue laborando');
+    }
+
     private function avanzarHastaSeccionEconomica(): void
     {
         $this->verificarIdentidadYFlujoPreSeccion($this->evaluado->token_unico, '1234567890101');
@@ -252,10 +316,6 @@ class CuestionarioTablaDinamicaTest extends TestCase
     {
         return array_merge($this->datosSeccion2Preempleo(), $this->datosParejaPreempleo(), $this->datosHijosPreempleo([
             'estado_civil_detalle' => 'casado',
-            'personas_hogar' => 4,
-            'dependientes_economicos' => 2,
-            'tipo_vivienda' => 'propia_pagada',
-            'personas_contribuyen_gastos' => 2,
         ]));
     }
 

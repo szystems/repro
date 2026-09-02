@@ -52,6 +52,14 @@ class CuestionarioFotoCandidatoTest extends TestCase
         return collect($this->datosSeccion1Preempleo())->except('foto_candidato')->all();
     }
 
+    public function test_formulario_ofrece_pegar_foto_como_papeleria(): void
+    {
+        $html = view('components.foto-candidato', ['fotoUrl' => null])->render();
+
+        $this->assertStringContainsString('Ctrl+V', $html);
+        $this->assertStringContainsString('zona-pegar-foto', $html);
+    }
+
     public function test_rechaza_seccion_1_sin_foto(): void
     {
         $evaluado = $this->crearEvaluadoConCuestionario();

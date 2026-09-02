@@ -65,6 +65,7 @@ trait CreatesRolesAndPermissions
             'empresas.ver', 'empresas.crear', 'empresas.editar', 'empresas.eliminar',
             'sedes.ver', 'sedes.crear', 'sedes.editar', 'sedes.eliminar',
             'ordenes.ver', 'ordenes.crear', 'ordenes.editar', 'ordenes.eliminar',
+            'empresas.exportar',
         ]));
 
         foreach ($reproPermisos as $nombre) {

@@ -89,8 +89,8 @@ class CuestionarioEspecificaTest extends TestCase
         ]))
             ->assertOk()
             ->assertSee('Circunstancias, fechas, personas involucradas', false)
-            ->assertSee('solo se solicita el último grado académico', false)
             ->assertDontSee('Detalle por nivel académico', false)
+            ->assertDontSee('solo se solicita el último grado académico', false)
             ->assertDontSee('Sección no disponible', false);
     }
 
@@ -121,7 +121,11 @@ class CuestionarioEspecificaTest extends TestCase
             ->assertOk()
             ->assertSee('Aspecto judicial', false)
             ->assertSee('Antecedentes recientes', false)
-            ->assertDontSee(SaludHabitosCampos::TITULO_SALUD, false)
+            ->assertSee(SaludHabitosCampos::LABEL_TATUAJES_PERFORACIONES, false)
+            ->assertSee(SaludHabitosCampos::TITULO_SALUD, false)
+            ->assertSee(SaludHabitosCampos::LABEL_ALERGIAS, false)
+            ->assertSee(SaludHabitosCampos::LABEL_EMBARAZADA, false)
+            ->assertDontSee(SaludHabitosCampos::LABEL_PREOCUPACIONES, false)
             ->assertDontSee(InformacionComplementaria::TITULO_BLOQUE, false)
             ->assertDontSee('Sección no disponible', false);
     }

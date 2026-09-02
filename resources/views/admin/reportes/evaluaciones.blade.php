@@ -7,12 +7,12 @@
         <div class="col-12">
             <div class="page-header">
                 <h3 class="page-title">
-                    <i class="bi bi-file-bar-graph me-2"></i>Reporte de Evaluaciones
+                    <i class="bi bi-file-bar-graph me-2"></i>INFORMES DE EMPRESAS
                 </h3>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="{{ url('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Reporte de Evaluaciones</li>
+                        <li class="breadcrumb-item active">INFORMES DE EMPRESAS</li>
                     </ol>
                 </nav>
             </div>
@@ -180,10 +180,12 @@
                            class="btn btn-danger btn-sm" target="_blank">
                             <i class="bi bi-file-pdf me-1"></i>Exportar PDF
                         </a>
+                        @if(\App\Support\ExportacionesSupport::puedeExportarInformes(Auth::user()))
                         <a href="{{ route('reportes.evaluaciones.excel', request()->query()) }}"
                            class="btn btn-success btn-sm">
                             <i class="bi bi-file-excel me-1"></i>Exportar Excel
                         </a>
+                        @endif
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -254,19 +256,62 @@
                                         <td class="text-center">
                                             @php $disponible = $evaluado->resultadosDisponiblesParaEmpresa(); @endphp
                                             @if($disponible && Auth::user()->role_as == 1)
-                                                <a href="{{ route('empresa.cuestionarios.pdf', $evaluado) }}"
-                                                   class="btn btn-sm btn-danger"
-                                                   title="Descargar informe PDF del evaluado"
-                                                   target="_blank">
-                                                    <i class="bi bi-file-earmark-pdf"></i>
-                                                </a>
-                                            @elseif($disponible && Auth::user()->role_as >= 2 && $evaluado->cuestionario)
-                                                <a href="{{ route('admin.cuestionarios.pdf', $evaluado->cuestionario) }}"
-                                                   class="btn btn-sm btn-danger"
-                                                   title="Descargar informe PDF del evaluado"
-                                                   target="_blank">
-                                                    <i class="bi bi-file-earmark-pdf"></i>
-                                                </a>
+                                                @if($evaluado->archivo_resultado_final)
+                                                    <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'final']) }}"
+                                                       class="btn btn-sm btn-success"
+                                                       title="Descargar Informe Final"
+                                                       target="_blank">
+                                                        <i class="bi bi-file-earmark-arrow-down"></i>
+                                                    </a>
+                                                @elseif($evaluado->archivo_resultado_preliminar)
+                                                    <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'preliminar']) }}"
+                                                       class="btn btn-sm btn-outline-info"
+                                                       title="Descargar Informe Preliminar"
+                                                       target="_blank">
+                                                        <i class="bi bi-file-earmark-arrow-down"></i>
+                                                    </a>
+                                                @elseif(filled($evaluado->texto_informe_preliminar))
+                                                    <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}"
+                                                       class="btn btn-sm btn-primary"
+                                                       title="Ver informe de evaluación">
+                                                        <i class="bi bi-file-earmark-text"></i>
+                                                    </a>
+                                                @else
+                                                    <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}"
+                                                       class="btn btn-sm btn-primary"
+                                                       title="Ver informe de evaluación">
+                                                        <i class="bi bi-file-earmark-text"></i>
+                                                    </a>
+                                                @endif
+                                            @elseif($disponible && Auth::user()->role_as >= 2)
+                                                @if($evaluado->archivo_resultado_final)
+                                                    <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'final']) }}"
+                                                       class="btn btn-sm btn-success"
+                                                       title="Descargar Informe Final"
+                                                       target="_blank">
+                                                        <i class="bi bi-file-earmark-arrow-down"></i>
+                                                    </a>
+                                                @elseif($evaluado->archivo_resultado_preliminar)
+                                                    <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'preliminar']) }}"
+                                                       class="btn btn-sm btn-outline-info"
+                                                       title="Descargar Informe Preliminar"
+                                                       target="_blank">
+                                                        <i class="bi bi-file-earmark-arrow-down"></i>
+                                                    </a>
+                                                @elseif($evaluado->cuestionario)
+                                                    <a href="{{ route('admin.cuestionarios.pdf', $evaluado->cuestionario) }}"
+                                                       class="btn btn-sm btn-outline-secondary"
+                                                       title="PDF formulario candidato (referencia)"
+                                                       target="_blank">
+                                                        <i class="bi bi-ui-checks"></i>
+                                                    </a>
+                                                @else
+                                                    <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}"
+                                                       class="btn btn-sm btn-primary"
+                                                       title="Ver informe de evaluación">
+                                                        <i class="bi bi-file-earmark-text"></i>
+                                                    </a>
+                                                @endif
                                             @else
                                                 <span class="badge bg-light text-muted border" title="El informe se habilitará cuando REPRO marque los resultados como disponibles">
                                                     <i class="bi bi-clock-history"></i> En proceso

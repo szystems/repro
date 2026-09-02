@@ -154,37 +154,7 @@
         </div>
     @endif
 
-    {{-- Autorización y Términos --}}
-    @if($cuestionario && $cuestionario->acepta_terminos)
-        <div class="seccion">
-            <div class="seccion-titulo">Autorización y Términos</div>
-            <div style="padding: 10px; font-size: 9px; line-height: 1.6;">
-                <h3 style="text-align: center; font-size: 11px; color: #000555; margin-bottom: 10px;">AUTORIZACIÓN PARA EVALUACIÓN</h3>
-                <p>Yo, <strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong>, identificado(a) con DPI número <strong>{{ $evaluado->dpi }}</strong>, por medio de la presente autorizo libre y voluntariamente a <strong>REPRO Guatemala</strong> para que realice la siguiente evaluación.</p>
-                <p>Declaro que participo de manera voluntaria, he sido informado(a) sobre el procedimiento, y autorizo la recopilación y procesamiento de mis datos personales exclusivamente para los fines de esta evaluación.</p>
-            </div>
-            @if($cuestionario->firma_digital)
-                <div class="firma-container">
-                    <img src="{{ $cuestionario->firma_digital }}" alt="Firma Digital" class="firma-imagen">
-                    <div class="firma-texto">
-                        <strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong><br>
-                        Firmado digitalmente el {{ $cuestionario->completado_at ? $cuestionario->completado_at->format('d/m/Y \a \l\a\s H:i:s') : 'N/A' }}
-                    </div>
-                </div>
-            @endif
-            @if($evaluado->responsable)
-                <div style="margin-top: 30px; text-align: center;">
-                    <div style="display: inline-block; width: 250px; border-top: 2px solid #000555; padding-top: 8px;">
-                        <div style="font-size: 10px; font-weight: bold; color: #000555;">{{ $evaluado->responsable->name }}</div>
-                        @if($evaluado->responsable->cargo)
-                            <div style="font-size: 9px; color: #666;">{{ $evaluado->responsable->cargo }}</div>
-                        @endif
-                        <div style="font-size: 8px; color: #999; margin-top: 2px;">Responsable del Proceso — REPRO Guatemala</div>
-                    </div>
-                </div>
-            @endif
-        </div>
-    @endif
+    {{-- Autorización: PDF aparte (revisión cliente ago 2026) --}}
 
     <div class="footer">
         <p><strong>REPRO Guatemala</strong></p>

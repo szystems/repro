@@ -93,17 +93,28 @@
     </div>
 </div>
 
+@php
+    $fechaNacValor = \App\Support\DatosPersonalesCampos::formatoFormulario(
+        old('fecha_nacimiento', $resp['fecha_nacimiento'] ?? '')
+    );
+@endphp
+
 <div class="row">
     <div class="col-lg-4">
         <div class="form-group">
             <label for="fecha_nacimiento" class="form-label">Fecha de nacimiento <span class="required">*</span></label>
-            <input type="date"
+            <input type="text"
                    class="form-control @error('fecha_nacimiento') is-invalid @enderror"
                    id="fecha_nacimiento"
                    name="fecha_nacimiento"
-                   value="{{ old('fecha_nacimiento', $resp['fecha_nacimiento'] ?? '') }}"
-                   required
-                   max="{{ date('Y-m-d', strtotime('-18 years')) }}">
+                   data-fecha-nacimiento
+                   value="{{ $fechaNacValor }}"
+                   placeholder="dd/mm/aaaa"
+                   maxlength="10"
+                   inputmode="numeric"
+                   autocomplete="bday"
+                   required>
+            <div class="form-text">Escriba día, mes y año (ej. 10/12/1987). Las diagonales se colocan solas.</div>
             @error('fecha_nacimiento')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
     </div>
@@ -280,6 +291,7 @@
 @push('scripts')
 <script src="{{ asset('js/depto-municipio-select.js') }}"></script>
 <script src="{{ asset('js/foto-candidato.js') }}?v={{ filemtime(public_path('js/foto-candidato.js')) }}"></script>
+<script src="{{ asset('js/fecha-nacimiento-mask.js') }}?v={{ filemtime(public_path('js/fecha-nacimiento-mask.js')) }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const fechaNacimiento = document.getElementById('fecha_nacimiento');
@@ -289,12 +301,38 @@ document.addEventListener('DOMContentLoaded', function() {
     const dpiAyuda = document.getElementById('dpi_ayuda');
     const dpiOrden = @json($evaluado->dpi ?? '');
 
+    function parseFechaNacimiento(valor) {
+        if (!valor) {
+            return null;
+        }
+
+        const formatoLocal = valor.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (formatoLocal) {
+            return new Date(+formatoLocal[3], +formatoLocal[2] - 1, +formatoLocal[1]);
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+            return new Date(valor + 'T12:00:00');
+        }
+
+        const soloDigitos = valor.match(/^(\d{2})(\d{2})(\d{4})$/);
+        if (soloDigitos) {
+            return new Date(+soloDigitos[3], +soloDigitos[2] - 1, +soloDigitos[1]);
+        }
+
+        return null;
+    }
+
     function calcularEdad() {
         if (!fechaNacimiento.value) {
             edad.value = '';
             return;
         }
-        const nacimiento = new Date(fechaNacimiento.value);
+        const nacimiento = parseFechaNacimiento(fechaNacimiento.value);
+        if (!nacimiento || Number.isNaN(nacimiento.getTime())) {
+            edad.value = '';
+            return;
+        }
         const hoy = new Date();
         let edadCalculada = hoy.getFullYear() - nacimiento.getFullYear();
         const mes = hoy.getMonth() - nacimiento.getMonth();
@@ -317,10 +355,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     fechaNacimiento.addEventListener('change', function() {
-        const nacimiento = new Date(this.value);
+        const nacimiento = parseFechaNacimiento(this.value);
         const hace18Anos = new Date();
         hace18Anos.setFullYear(hace18Anos.getFullYear() - 18);
-        if (this.value && nacimiento > hace18Anos) {
+        if (this.value && nacimiento && !Number.isNaN(nacimiento.getTime()) && nacimiento > hace18Anos) {
             alert('Debe ser mayor de 18 años para completar este formulario.');
             this.value = '';
             edad.value = '';

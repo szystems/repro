@@ -49,6 +49,9 @@ class HistorialLaboralPeriodico
         'label' => 'Desea agregar alguna información laboral:',
     ];
 
+    /** Duplica el cuadro de empleo actual — omitir en periódica/específica (revisión cliente ago 2026). */
+    public const CLAVES_OMITIDAS_EMPLEO_ACTUAL = ['periodico_02'];
+
     public const LABEL_PREGUNTA_1_ESPECIFICA = 'Describa de forma detallada el motivo por el cual se está realizando esta prueba. Circunstancias, fechas, personas involucradas y cualquier información que considere relevante:';
 
     /** @return list<string> */
@@ -61,9 +64,18 @@ class HistorialLaboralPeriodico
     }
 
     /** @return list<array{key: string, label: string}> */
+    public static function preguntasVisibles(): array
+    {
+        return array_values(array_filter(
+            self::PREGUNTAS,
+            fn (array $pregunta): bool => ! in_array($pregunta['key'], self::CLAVES_OMITIDAS_EMPLEO_ACTUAL, true)
+        ));
+    }
+
+    /** @return list<array{key: string, label: string}> */
     public static function preguntasDesdeLaSegunda(): array
     {
-        return array_values(array_slice(self::PREGUNTAS, 1));
+        return array_values(array_slice(self::preguntasVisibles(), 1));
     }
 
     public static function labelPregunta1(bool $esEspecifica = false): string
@@ -75,7 +87,7 @@ class HistorialLaboralPeriodico
     public static function reglasValidacion(bool $esEspecifica = false): array
     {
         $reglas = [];
-        foreach (self::PREGUNTAS as $pregunta) {
+        foreach (self::preguntasVisibles() as $pregunta) {
             $reglas[$pregunta['key']] = 'required|string|max:2000';
         }
 
@@ -92,7 +104,7 @@ class HistorialLaboralPeriodico
     public static function mensajesValidacion(): array
     {
         $mensajes = [];
-        foreach (self::PREGUNTAS as $i => $pregunta) {
+        foreach (self::preguntasVisibles() as $i => $pregunta) {
             $mensajes[$pregunta['key'].'.required'] = 'Debe responder la pregunta laboral #'.($i + 1).'.';
         }
         $mensajes[self::CAMPO_INFORMACION_ADICIONAL['key'].'.required'] =

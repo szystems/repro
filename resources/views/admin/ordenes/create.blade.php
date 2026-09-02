@@ -29,6 +29,7 @@
                     <div class="card-header">
                         <div class="card-title">Datos de la Orden</div>
                         <div class="card-options">
+                            @include('partials._ayuda_contextual')
                             <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="bi bi-arrow-left"></i> Volver
                             </a>
@@ -150,6 +151,8 @@
                                 @endif
                             </div>
 
+                            @include('admin.ordenes._campos_reclutador_confidencial')
+
                             <!-- Sección de Evaluados (Opcional) -->
                             <div class="card mt-4">
                                 <div class="card-header">
@@ -175,7 +178,7 @@
 
                             <!-- Botones -->
                             <div class="d-flex justify-content-end mt-4">
-                                <a href="{{ Auth::user()->role_as == 1 ? route('empresa.ordenes.index') : route('ordenes.index') }}"
+                                <a href="{{ route('ordenes.index') }}"
                                    class="btn btn-outline-secondary me-2" id="btn-cancelar">
                                     <i class="bi bi-x-circle"></i> Cancelar
                                 </a>

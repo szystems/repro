@@ -1,6 +1,6 @@
 # Plan de implementación — Formularios REPRO (cierre del proyecto)
 
-**Fecha:** 22 de junio de 2026
+**Fecha:** 22 de junio de 2026 · **Seguimiento:** 27 ago 2026 — Sprint N lote A en prod; M A–F en prod; L cerrado (ver `PROGRESS.md`)
 **Objetivo:** completar el motor de formularios y los 4 formularios (Pre-empleo matriz, Socioeconómico, Periódica, Específica) según la especificación del cliente, de forma **ordenada, por etapas y controlada** para minimizar errores.
 **Spec base:** `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` + `CREACIÓN FORMULARIOS DE SISTEMA.pdf` (46 pág.) + formularios originales ago-2025.
 **Naturaleza:** cierre del proyecto (saldo Q 10,000), sin cobro aparte. Word es track paralelo (Q 1,600).

@@ -37,13 +37,10 @@
 </div>
 
 @if($esEspecifica)
-    <p class="text-muted small mb-3">
-        En evaluación específica solo se solicita el último grado académico (sin historial completo por nivel).
-    </p>
 @else
     <x-campo-condicional trigger="ultimo_nivel_academico" hide-when="ninguno" id="seccion_formacion_academica">
         <p class="text-muted small mb-2">
-            Complete una fila por cada nivel académico desde primaria hasta el último nivel que seleccionó arriba.
+            {{ HistorialAcademico::textoAyudaFilas() }}
         </p>
         <x-tabla-dinamica
             name="formacion_academica"
@@ -56,9 +53,15 @@
         />
     </x-campo-condicional>
 
+    @include('cuestionario.secciones.partials.estudia-actualmente', [
+        'respuestasExistentes' => $resp,
+        'tablasExistentes' => $tablasExistentes ?? [],
+    ])
+
     @push('scripts')
     <script>
         window.formacionAcademicaNiveles = @json(HistorialAcademico::NIVELES);
+        window.formacionAcademicaVisibles = @json(HistorialAcademico::mapaNivelesVisibles());
     </script>
     <script src="{{ asset('js/formacion-academica.js') }}?v={{ filemtime(public_path('js/formacion-academica.js')) }}"></script>
     @endpush

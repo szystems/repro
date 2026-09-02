@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Reporte de Evaluaciones</title>
+    <title>INFORMES DE EMPRESAS</title>
     <style>
         @page {
             size: letter landscape;
@@ -247,7 +247,7 @@
                 </div>
             </div>
             <div class="repro-title-cell">
-                <h1>Reporte de Evaluaciones</h1>
+                <h1>INFORMES DE EMPRESAS</h1>
                 <h2>Sistema de Evaluaciones REPRO Guatemala</h2>
             </div>
             <div class="repro-info-cell">
@@ -348,7 +348,7 @@
     <div class="footer">
         <div class="footer-content">
             <div class="footer-left">
-                REPRO Guatemala - Reporte de Evaluaciones
+                REPRO Guatemala - INFORMES DE EMPRESAS
             </div>
             <div class="footer-right">
                 Generado: {{ now()->format('d/m/Y H:i') }}

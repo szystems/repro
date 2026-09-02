@@ -49,11 +49,12 @@ class InformacionFamiliarPadres
 
             $reglas[$prefijo.'_nombre'] = 'required|string|max:100';
             $reglas[$prefijo.'_vive'] = 'required|in:si,no';
-            $reglas[$prefijo.'_edad'] = 'nullable|required_if:'.$prefijo.'_vive,si|integer|min:1|max:120';
-            $reglas[$prefijo.'_direccion'] = 'nullable|required_if:'.$prefijo.'_vive,si|string|max:500';
-            $reglas[$prefijo.'_ocupacion'] = 'nullable|required_if:'.$prefijo.'_vive,si|string|max:100';
+            $reglas[$prefijo.'_edad'] = 'nullable|integer|min:0|max:120';
+            $reglas[$prefijo.'_direccion'] = 'nullable|string|max:500';
+            $reglas[$prefijo.'_ocupacion'] = 'nullable|string|max:100';
             $reglas[$prefijo.'_lugar_trabajo'] = 'nullable|string|max:150';
-            $reglas[$prefijo.'_telefono'] = 'nullable|required_if:'.$prefijo.'_vive,si|string|max:15|regex:/^[0-9\-\+\(\)\s]+$/';
+            // Sprint F0/H2: teléfonos y demás datos de padres no bloquean el avance.
+            $reglas[$prefijo.'_telefono'] = 'nullable|string|max:15|regex:/^[0-9\-\+\(\)\s]+$/';
         }
 
         return $reglas;
@@ -70,10 +71,7 @@ class InformacionFamiliarPadres
             $nombre = $prefijo === 'padre' ? 'El nombre del padre' : 'El nombre de la madre';
             $mensajes[$prefijo.'_nombre.required'] = $nombre.' es obligatorio.';
             $mensajes[$prefijo.'_vive.required'] = 'Indique si su '.$prefijo.' vive.';
-            $mensajes[$prefijo.'_edad.required_if'] = 'La edad del '.$prefijo.' es obligatoria si vive.';
-            $mensajes[$prefijo.'_direccion.required_if'] = 'La dirección del '.$prefijo.' es obligatoria si vive.';
-            $mensajes[$prefijo.'_ocupacion.required_if'] = 'La ocupación del '.$prefijo.' es obligatoria si vive.';
-            $mensajes[$prefijo.'_telefono.required_if'] = 'El teléfono del '.$prefijo.' es obligatorio si vive.';
+            $mensajes[$prefijo.'_telefono.regex'] = 'El teléfono del '.$prefijo.' solo debe contener números y símbolos válidos.';
         }
 
         return $mensajes;

@@ -91,12 +91,19 @@
                             </div>
                             <div class="col-4 text-end">
                                 <div class="btn-group">
+                                    @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('empresas.crear'))
                                     <a href="{{ url('add-empresa') }}" class="btn btn-success">
                                         <i class="bi bi-building-add"></i> Nueva Empresa
                                     </a>
+                                    @endif
+                                    @if(\App\Support\ExportacionesSupport::puedeExportarPadronEmpresas(Auth::user()))
                                     <a href="{{ url('pdf-empresas') }}?search={{ $searchTerm ?? '' }}&estado={{ $estado ?? '' }}" target="_blank" class="btn btn-danger">
                                         <i class="bi bi-file-earmark-pdf"></i> PDF
                                     </a>
+                                    <a href="{{ route('empresas.excel', request()->query()) }}" class="btn btn-success">
+                                        <i class="bi bi-file-earmark-excel"></i> Excel
+                                    </a>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -111,6 +118,7 @@
                                         <th>NIT</th>
                                         <th>Contacto</th>
                                         <th>Usuarios</th>
+                                        <th>Creada por</th>
                                         <th>Estado de Empresa</th>
                                         <th width="150">Acciones</th>
                                     </tr>
@@ -145,6 +153,9 @@
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-primary">{{ $empresa->getTotalUsuarios() }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="small">{{ $empresa->nombreCreador() }}</div>
                                             </td>
                                             <td>
                                                 <span class="badge {{ $empresa->estado ? 'bg-success' : 'bg-danger' }}">

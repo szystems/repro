@@ -67,15 +67,13 @@
                 </div>
                 <div class="col-md-8">
                     <div class="form-group">
-                        <label for="{{ $prefijo }}_telefono" class="form-label">Teléfono <span class="required">*</span></label>
+                        <label for="{{ $prefijo }}_telefono" class="form-label">Teléfono</label>
                         <input type="tel"
                                class="form-control @error($prefijo.'_telefono') is-invalid @enderror"
                                id="{{ $prefijo }}_telefono"
                                name="{{ $prefijo }}_telefono"
                                value="{{ $val($prefijo.'_telefono') }}"
-                               maxlength="15"
-                               data-condicional-required-trigger="{{ $prefijo }}_vive"
-                               data-condicional-required-when="si">
+                               maxlength="15">
                         @error($prefijo.'_telefono')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>

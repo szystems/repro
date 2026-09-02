@@ -4,10 +4,11 @@ namespace App\Support;
 
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Shared\ZipArchive as PhpWordZipArchive;
 use PhpOffice\PhpWord\SimpleType\Jc;
-use ZipArchive;
 
 /**
  * E7 / F7 — Exportación de informe editable (.docx) por candidato.
@@ -17,6 +18,8 @@ class InformeWordExport
 {
     public static function generar(Orden $orden, EvaluadoOrden $evaluado): string
     {
+        InformeWordZip::boot();
+
         $evaluado->loadMissing(['sede', 'cuestionario', 'poligrafista', 'orden.empresa', 'orden.sede']);
 
         $config = InformeWordPlantillas::resolver($evaluado);
@@ -47,7 +50,7 @@ class InformeWordExport
             return self::generarBasico($orden, $evaluado);
         }
 
-        $zip = new ZipArchive();
+        $zip = InformeWordZip::create();
         if ($zip->open($destino) !== true) {
             @unlink($destino);
 
@@ -56,7 +59,7 @@ class InformeWordExport
 
         $xml = $zip->getFromName('word/document.xml');
         if ($xml === false) {
-            $zip->close();
+            InformeWordZip::cerrar($zip);
             @unlink($destino);
 
             return self::generarBasico($orden, $evaluado);
@@ -65,22 +68,90 @@ class InformeWordExport
         $xml = InformeWordRelleno::aplicar($xml, $orden, $evaluado, $config);
         $xml = self::aplicarFotoEvaluadoEnDocumento($xml, $evaluado, $zip);
 
-        if (! InformeWordXml::esValido($xml)) {
-            $zip->close();
+        $problemas = InformeWordXml::problemasEstructura($xml);
+        if ($problemas !== []) {
+            Log::warning('Informe Word: plantilla descartada por XML inválido.', [
+                'evaluado_id' => $evaluado->id,
+                'problemas' => $problemas,
+            ]);
+            InformeWordZip::cerrar($zip);
             @unlink($destino);
 
             return self::generarBasico($orden, $evaluado);
         }
 
-        $zip->deleteName('word/document.xml');
-        $zip->addFromString('word/document.xml', $xml);
+        InformeWordZip::reemplazarEntrada($zip, 'word/document.xml', $xml);
+        $coreXml = InformeWordZip::leerEntrada($zip, 'docProps/core.xml');
+        if (is_string($coreXml) && $coreXml !== '') {
+            InformeWordZip::reemplazarEntrada(
+                $zip,
+                'docProps/core.xml',
+                InformeWordXml::actualizarTituloCore($coreXml, self::tituloDocumento($orden, $evaluado))
+            );
+        }
         InformeWordAnexos::aplicar($zip, $evaluado);
-        $zip->close();
+
+        if (! InformeWordZip::cerrar($zip)) {
+            @unlink($destino);
+
+            return self::generarBasico($orden, $evaluado);
+        }
+
+        if (! self::archivoAbribleEnWord($destino)) {
+            Log::warning('Informe Word: el .docx generado no pasó la verificación final.', [
+                'evaluado_id' => $evaluado->id,
+            ]);
+            @unlink($destino);
+
+            return self::generarBasico($orden, $evaluado);
+        }
 
         return $destino;
     }
 
-    private static function aplicarFotoEvaluadoEnDocumento(string $documentXml, EvaluadoOrden $evaluado, ZipArchive $zip): string
+    /**
+     * Verificación final sobre el .docx ya cerrado: si el archivo quedó corrupto (ZIP
+     * reconstruido, XML fuera de esquema o imagen sin relación) se entrega el informe básico
+     * en lugar de un archivo que Word rechace al abrir.
+     */
+    private static function archivoAbribleEnWord(string $ruta): bool
+    {
+        if (! is_file($ruta) || filesize($ruta) === 0) {
+            return false;
+        }
+
+        $zip = InformeWordZip::create();
+        if ($zip->open($ruta) !== true) {
+            return false;
+        }
+
+        $documentXml = $zip->getFromName('word/document.xml');
+        $relsXml = $zip->getFromName('word/_rels/document.xml.rels');
+        $contentTypes = $zip->getFromName('[Content_Types].xml');
+        $mediaFaltante = [];
+
+        if (is_string($relsXml) && $relsXml !== '') {
+            preg_match_all('/Target="(media\/[^"]+)"/', $relsXml, $destinos);
+            foreach (array_unique($destinos[1] ?? []) as $destino) {
+                if ($zip->getFromName('word/' . $destino) === false) {
+                    $mediaFaltante[] = $destino;
+                }
+            }
+        }
+
+        $zip->close();
+
+        if (! is_string($documentXml) || $documentXml === '' || ! is_string($relsXml) || ! is_string($contentTypes)) {
+            return false;
+        }
+
+        return $mediaFaltante === []
+            && InformeWordXml::problemasEstructura($documentXml) === []
+            && InformeWordXml::relacionesFaltantes($documentXml, $relsXml) === []
+            && InformeWordXml::esValido($contentTypes);
+    }
+
+    private static function aplicarFotoEvaluadoEnDocumento(string $documentXml, EvaluadoOrden $evaluado, PhpWordZipArchive $zip): string
     {
         $rutaFoto = InformeWordDatos::fotoEvaluadoRuta($evaluado);
         $media = $rutaFoto !== null ? InformeWordFoto::prepararMedia($rutaFoto) : null;
@@ -100,10 +171,21 @@ class InformeWordExport
 
         $zip->addFromString('word/media/' . $nombreArchivo, $media['bytes']);
         InformeWordXml::registrarExtensionMedia($zip, $media['extension']);
-        $zip->deleteName('word/_rels/document.xml.rels');
-        $zip->addFromString('word/_rels/document.xml.rels', $relsXml);
+        InformeWordZip::reemplazarEntrada($zip, 'word/_rels/document.xml.rels', $relsXml);
 
         return InformeWordFoto::insertarEnDocumento($documentXml, $media, $relId);
+    }
+
+    private static function tituloDocumento(Orden $orden, EvaluadoOrden $evaluado): string
+    {
+        $nombre = trim(($evaluado->nombre ?? '').' '.($evaluado->apellidos ?? ''));
+        $empresa = trim((string) ($orden->empresa?->nombre ?? ''));
+        $titulo = $nombre !== '' ? $nombre : 'Informe REPRO';
+        if ($empresa !== '') {
+            $titulo .= ' - '.$empresa;
+        }
+
+        return $titulo;
     }
 
     private static function generarBasico(Orden $orden, EvaluadoOrden $evaluado): string

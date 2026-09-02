@@ -170,6 +170,29 @@ class Fase19Sprint3Test extends TestCase
         $response->assertSee('López');
     }
 
+    public function test_orden_archivada_no_aparece_en_historial_dpi(): void
+    {
+        $admin = $this->crearAdmin();
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id,
+            'archivada' => true,
+        ]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'CandidatoArchivado',
+            'apellidos' => 'Prueba',
+            'dpi' => '1111222233334',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.cuestionarios.historial-dpi', ['buscar' => '1111222233334']));
+
+        $response->assertOk();
+        $response->assertDontSee('CandidatoArchivado');
+    }
+
     public function test_admin_puede_archivar_orden_en_proceso(): void
     {
         $admin = $this->crearAdmin();

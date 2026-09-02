@@ -241,7 +241,7 @@
                                                                 <label for="dias_vigencia_token" class="form-label">Vigencia del Link de Formulario (días)</label>
                                                                 <div class="input-group">
                                                                     <span class="input-group-text"><i class="bi bi-clock-history"></i></span>
-                                                                    <input name="dias_vigencia_token" id="dias_vigencia_token" type="number" class="form-control" min="1" max="365" placeholder="30" value="{{ $config->dias_vigencia_token ?? 30 }}">
+                                                                    <input name="dias_vigencia_token" id="dias_vigencia_token" type="number" class="form-control" min="30" max="365" placeholder="30" value="{{ $config->dias_vigencia_token ?? 30 }}">
                                                                     <span class="input-group-text bg-light">días</span>
                                                                 </div>
                                                                 <div class="form-text">Días que tiene el candidato para completar el formulario antes de que el link expire.</div>

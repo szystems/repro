@@ -45,10 +45,8 @@
         </p>
     @endif
 
+    {{-- Los errores por fila se muestran junto a su campo; aquí solo el error de la tabla. --}}
     @error($name)
-        <div class="alert alert-danger py-2">{{ $message }}</div>
-    @enderror
-    @error($name.'.*')
         <div class="alert alert-danger py-2">{{ $message }}</div>
     @enderror
 
@@ -116,6 +114,26 @@
             .tabla-dinamica-remove:disabled {
                 opacity: 0.45;
                 cursor: not-allowed;
+            }
+
+            /* Selectores mes/año: mismo comportamiento en Android, iOS y escritorio. */
+            .fechas-laboradas-selects {
+                display: flex;
+                gap: 0.35rem;
+            }
+
+            .fechas-laboradas-selects select {
+                min-width: 0;
+                flex: 1 1 50%;
+            }
+
+            .fechas-laboradas-range select:disabled {
+                background-color: #e9ecef;
+                cursor: not-allowed;
+            }
+
+            .fechas-laboradas-range {
+                min-width: 13rem;
             }
 
             /* Móvil: misma fila/campos del DOM, presentación tipo tarjeta (un solo guardado) */

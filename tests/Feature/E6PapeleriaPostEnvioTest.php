@@ -54,6 +54,7 @@ class E6PapeleriaPostEnvioTest extends TestCase
         $response->assertSee('Documentación adicional');
         $response->assertSee('Subir documento');
         $response->assertSee('Recibo de Luz');
+        $response->assertSee('Tatuajes');
     }
 
     public function test_evaluado_puede_subir_documento_despues_de_completar(): void

@@ -38,21 +38,85 @@ class CuestionarioEnlaceInvalidoTest extends TestCase
         $response->assertSee('ya no está vigente');
     }
 
-    public function test_dias_vigencia_cero_usa_minimo_un_dia(): void
+    public function test_dias_vigencia_cero_usa_minimo_treinta_dias(): void
     {
         Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 0]);
 
         $this->assertSame(30, Config::diasVigenciaTokenEnlace());
     }
 
-    public function test_calcular_expiracion_token_respeta_configuracion(): void
+    public function test_dias_vigencia_menor_a_treinta_usa_piso_de_treinta(): void
     {
         Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 15]);
 
+        $this->assertSame(30, Config::diasVigenciaTokenEnlace());
+    }
+
+    public function test_calcular_expiracion_token_respeta_configuracion(): void
+    {
+        Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 45]);
+
         $expira = EvaluadoOrden::calcularExpiracionToken();
 
-        $this->assertTrue($expira->greaterThan(now()->addDays(14)));
-        $this->assertTrue($expira->lessThanOrEqualTo(now()->addDays(15)->addMinute()));
+        $this->assertTrue($expira->greaterThan(now()->addDays(44)));
+        $this->assertTrue($expira->lessThanOrEqualTo(now()->addDays(45)->addMinute()));
+    }
+
+    public function test_saving_extiende_token_expira_at_menor_a_un_dia(): void
+    {
+        Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 31]);
+
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->make([
+            'orden_id' => $orden->id,
+            'token_unico' => 'token-corto-test',
+            'token_expira_at' => now()->addHours(2),
+        ]);
+        $evaluado->save();
+
+        $evaluado->refresh();
+
+        $this->assertTrue($evaluado->token_expira_at->greaterThan(now()->addDays(29)));
+    }
+
+    public function test_saving_preserva_vigencias_cortas_legitimas_en_dias(): void
+    {
+        Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 31]);
+
+        $orden = Orden::factory()->create();
+
+        foreach ([3, 7, 20] as $dias) {
+            $evaluado = EvaluadoOrden::factory()->create([
+                'orden_id' => $orden->id,
+                'token_unico' => 'token-legit-'.$dias.'d',
+                'token_expira_at' => now()->addDays($dias),
+            ]);
+
+            $diferenciaDias = (int) round(now()->diffInDays($evaluado->token_expira_at, false));
+
+            $this->assertEqualsWithDelta(
+                $dias,
+                $diferenciaDias,
+                1,
+                "Vigencia legítima de {$dias} días fue alterada por el hook (quedó en {$diferenciaDias})"
+            );
+        }
+    }
+
+    public function test_saving_ignora_invalidacion_manual(): void
+    {
+        Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 31]);
+
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'token_unico' => 'token-invalidar-test',
+        ]);
+
+        $evaluado->update(['token_expira_at' => now()]);
+        $evaluado->refresh();
+
+        $this->assertFalse($evaluado->enlaceCuestionarioVigente());
     }
 
     public function test_get_url_cuestionario_usa_ruta_publica_correcta(): void

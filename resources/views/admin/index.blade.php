@@ -104,6 +104,8 @@
     ======================================== --}}
     @if(Auth::user()->role_as >= 2)
 
+    @include('ayuda.partials.dashboard-card')
+
     <!-- Tarjetas de estadísticas principales -->
     <div class="row mb-4">
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
@@ -480,6 +482,8 @@
     ======================================== --}}
     @if(Auth::user()->role_as == 1)
 
+    @include('ayuda.partials.dashboard-card')
+
     <!-- Búsqueda de candidatos -->
     <div class="row mb-4">
         <div class="col-12">
@@ -690,9 +694,11 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-3">
+                        @if(Auth::user()->hasPermission('ordenes.crear'))
                         <a href="{{ route('ordenes.create') }}" class="btn btn-primary btn-lg">
                             <i class="bi bi-plus-circle me-2"></i>Nueva Orden de Evaluación
                         </a>
+                        @endif
                         <a href="{{ route('empresa.ordenes.index') }}" class="btn btn-outline-primary">
                             <i class="bi bi-list-ul me-2"></i>Ver Mis Órdenes
                         </a>

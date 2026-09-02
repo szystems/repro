@@ -10,7 +10,10 @@
               </h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">¿Está seguro de eliminar este usuario?</div>
+          <div class="modal-body">
+              <p>¿Está seguro de eliminar a <strong>{{ $user->name }}</strong>?</p>
+              <p class="small text-muted mb-0">No se borra el historial: el usuario deja de poder entrar. Si era titular de una empresa, asigne otro usuario principal.</p>
+          </div>
           <div class="modal-footer">
               <button type="button" class="btn btn-info" data-bs-dismiss="modal">
                 <i class="bi bi-x-circle"></i> Cancelar

@@ -81,14 +81,19 @@
                         <label for="fecha_nacimiento" class="form-label">
                             <i class="fas fa-calendar"></i> Fecha de Nacimiento <span class="required">*</span>
                         </label>
-                        <input type="date" 
-                               class="form-control @error('fecha_nacimiento') is-invalid @enderror" 
-                               id="fecha_nacimiento" 
-                               name="fecha_nacimiento" 
+                        <input type="text"
+                               class="form-control @error('fecha_nacimiento') is-invalid @enderror"
+                               id="fecha_nacimiento"
+                               name="fecha_nacimiento"
+                               data-fecha-nacimiento
                                value="{{ old('fecha_nacimiento') }}"
+                               placeholder="dd/mm/aaaa"
+                               maxlength="10"
+                               inputmode="numeric"
+                               autocomplete="bday"
                                required>
                         <div class="form-text">
-                            Como medida de seguridad adicional
+                            Escriba día, mes y año (ej. 10/12/1987)
                         </div>
                         @error('fecha_nacimiento')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -123,6 +128,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/fecha-nacimiento-mask.js') }}?v={{ filemtime(public_path('js/fecha-nacimiento-mask.js')) }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const dpiInput = document.getElementById('dpi');

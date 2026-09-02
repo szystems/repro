@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use Illuminate\Contracts\Validation\Validator;
+
 /**
  * Motor de tablas dinámicas (E1.1 + E2) — columnas, normalización y validación.
  */
@@ -44,6 +46,7 @@ class TablaDinamica
         if ($tipoFormulario === 'periodica') {
             return [
                 'formacion_academica' => self::columnasFormacionAcademica(),
+                'estudios_actuales' => self::columnasEstudiosActuales(),
                 'empleo_actual' => self::columnasEmpleoActualPeriodico(),
             ];
         }
@@ -59,9 +62,8 @@ class TablaDinamica
 
         return [
             'formacion_academica' => self::columnasFormacionAcademica(),
-            'empleos' => $tipoFormulario === 'preempleo'
-                ? self::columnasEmpleosPreempleo()
-                : self::columnasEmpleos(),
+            'estudios_actuales' => self::columnasEstudiosActuales(),
+            'empleos' => self::columnasEmpleosPreempleo(),
         ];
     }
 
@@ -78,6 +80,10 @@ class TablaDinamica
     /** @return array<string, list<array<string, mixed>>> */
     private static function tablasSeccion5(string $tipoFormulario): array
     {
+        if (in_array($tipoFormulario, ['periodica', 'especifica'], true)) {
+            return ['tatuajes' => self::columnasTatuajes()];
+        }
+
         if (! in_array($tipoFormulario, ['preempleo', 'socioeconomico'], true)) {
             return [];
         }
@@ -93,11 +99,29 @@ class TablaDinamica
     {
         return [
             ['key' => 'nombre', 'label' => 'Nombre completo', 'type' => 'text', 'required' => true, 'max' => 100],
-            ['key' => 'edad', 'label' => 'Edad', 'type' => 'number', 'required' => true, 'min' => 0, 'max' => 120],
+            ['key' => 'edad', 'label' => 'Edad', 'type' => 'select', 'required' => true, 'options' => self::opcionesEdadHijos()],
             ['key' => 'vive_con_candidato', 'label' => '¿Vive con usted?', 'type' => 'select', 'required' => true, 'options' => ['si' => 'Sí', 'no' => 'No']],
             ['key' => 'ocupacion', 'label' => 'Ocupación / lugar de trabajo', 'type' => 'text', 'required' => false, 'max' => 150],
             ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => false, 'max' => 15],
         ];
+    }
+
+    /** @return array<string, string> */
+    public static function opcionesEdadHijos(): array
+    {
+        $opciones = ['menor_1' => 'Menor de 1 año'];
+        for ($i = 1; $i <= 120; $i++) {
+            $opciones[(string) $i] = (string) $i;
+        }
+
+        return $opciones;
+    }
+
+    public static function etiquetaEdadHijo(mixed $valor): string
+    {
+        $clave = trim((string) $valor);
+
+        return self::opcionesEdadHijos()[$clave] ?? $clave;
     }
 
     /** @return list<array<string, mixed>> */
@@ -105,8 +129,8 @@ class TablaDinamica
     {
         return [
             ['key' => 'nombre', 'label' => 'Nombre completo', 'type' => 'text', 'required' => true, 'max' => 100],
-            ['key' => 'edad', 'label' => 'Edad', 'type' => 'number', 'required' => true, 'min' => 0, 'max' => 120],
-            ['key' => 'direccion', 'label' => 'Dirección', 'type' => 'text', 'required' => true, 'max' => 500],
+            ['key' => 'edad', 'label' => 'Edad', 'type' => 'number', 'required' => false, 'min' => 0, 'max' => 120],
+            ['key' => 'direccion', 'label' => 'Dirección', 'type' => 'text', 'required' => false, 'max' => 500],
             ['key' => 'ocupacion', 'label' => 'Ocupación / lugar de trabajo', 'type' => 'text', 'required' => false, 'max' => 150],
             ['key' => 'telefono', 'label' => 'Teléfono', 'type' => 'digits', 'required' => false, 'max' => 15],
         ];
@@ -125,15 +149,27 @@ class TablaDinamica
         ];
     }
 
+    /** @return list<array<string, mixed>> */
+    public static function columnasEstudiosActuales(): array
+    {
+        return [
+            ['key' => 'horario', 'label' => 'Horario', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'que_estudia', 'label' => '¿Qué está estudiando?', 'type' => 'text', 'required' => true, 'max' => 200],
+            ['key' => 'institucion', 'label' => 'Institución', 'type' => 'text', 'required' => true, 'max' => 150],
+        ];
+    }
+
     /** Tabla empleos pre-empleo — POLIGRAFO PRESENCIAL (2).pdf. */
     public static function columnasEmpleosPreempleo(): array
     {
         return [
             ['key' => 'empresa', 'label' => 'Empresa', 'type' => 'text', 'required' => true, 'max' => 150],
             ['key' => 'puesto', 'label' => 'Puesto Ocupado', 'type' => 'text', 'required' => true, 'max' => 100],
-            ['key' => 'fechas_laboradas', 'label' => 'Fechas Laboradas', 'type' => 'text', 'required' => true, 'max' => 150],
-            ['key' => 'ultimo_salario', 'label' => 'Salario mensual', 'type' => 'number', 'required' => false, 'min' => 0],
+            ['key' => 'fechas_laboradas', 'label' => 'Fechas laboradas', 'type' => 'date_range', 'required' => true],
+            ['key' => 'ultimo_salario', 'label' => 'Salario mensual', 'type' => 'currency', 'required' => false],
             ['key' => 'motivo_retiro', 'label' => 'Motivo de retiro', 'type' => 'text', 'required' => true, 'max' => 200],
+            ['key' => 'jefe_inmediato', 'label' => 'Nombre y teléfono de jefe inmediato', 'type' => 'text', 'required' => false, 'max' => 150],
+            ['key' => 'contacto_rrhh', 'label' => 'Nombre y teléfono de Recursos Humanos', 'type' => 'text', 'required' => false, 'max' => 150],
         ];
     }
 
@@ -145,10 +181,10 @@ class TablaDinamica
             ['key' => 'puesto', 'label' => 'Puesto ocupado', 'type' => 'text', 'required' => true, 'max' => 100],
             ['key' => 'fecha_ingreso', 'label' => 'Fecha ingreso', 'type' => 'date', 'required' => true],
             ['key' => 'fecha_salida', 'label' => 'Fecha salida', 'type' => 'date', 'required' => false],
-            ['key' => 'ultimo_salario', 'label' => 'Salario mensual (Q.)', 'type' => 'number', 'required' => false, 'min' => 0],
+            ['key' => 'ultimo_salario', 'label' => 'Salario mensual (Q.)', 'type' => 'currency', 'required' => false],
             ['key' => 'motivo_retiro', 'label' => 'Motivo de retiro', 'type' => 'text', 'required' => true, 'max' => 200],
-            ['key' => 'jefe_inmediato', 'label' => 'Jefe inmediato', 'type' => 'text', 'required' => false, 'max' => 100],
-            ['key' => 'contacto_rrhh', 'label' => 'Contacto RRHH', 'type' => 'digits', 'required' => false, 'max' => 15],
+            ['key' => 'jefe_inmediato', 'label' => 'Nombre y teléfono de jefe inmediato', 'type' => 'text', 'required' => false, 'max' => 150],
+            ['key' => 'contacto_rrhh', 'label' => 'Nombre y teléfono de Recursos Humanos', 'type' => 'text', 'required' => false, 'max' => 150],
             ['key' => 'tiene_constancia', 'label' => '¿Constancia?', 'type' => 'select', 'required' => true, 'options' => ['si' => 'Sí', 'no' => 'No']],
         ];
     }
@@ -158,9 +194,21 @@ class TablaDinamica
         return [
             ['key' => 'empresa', 'label' => 'Empresa', 'type' => 'text', 'required' => true, 'max' => 150],
             ['key' => 'puesto', 'label' => 'Puesto Ocupado', 'type' => 'text', 'required' => true, 'max' => 100],
-            ['key' => 'fechas_laboradas', 'label' => 'Fechas Laboradas', 'type' => 'text', 'required' => true, 'max' => 150],
+            ['key' => 'fechas_laboradas', 'label' => 'Fechas laboradas', 'type' => 'date_range', 'required' => true],
             ['key' => 'salario_actual', 'label' => 'Salario mensual', 'type' => 'number', 'required' => false, 'min' => 0],
             ['key' => 'motivo_prueba', 'label' => 'Motivo de la prueba', 'type' => 'text', 'required' => false, 'max' => 500],
+        ];
+    }
+
+    /** Columnas del laboral ya compilado para Word (periódica/específica). */
+    public static function columnasLaboralInformePeriodica(): array
+    {
+        return [
+            ['key' => 'empresa', 'label' => 'Empresa', 'type' => 'text', 'required' => true, 'max' => 150],
+            ['key' => 'puesto', 'label' => 'Puesto ocupado', 'type' => 'text', 'required' => true, 'max' => 100],
+            ['key' => 'fechas', 'label' => 'Fechas laboradas', 'type' => 'text', 'required' => false, 'max' => 80],
+            ['key' => 'salario', 'label' => 'Salario mensual', 'type' => 'text', 'required' => false, 'max' => 40],
+            ['key' => 'motivo', 'label' => 'Motivo de la prueba', 'type' => 'text', 'required' => false, 'max' => 500],
         ];
     }
 
@@ -169,9 +217,9 @@ class TablaDinamica
     {
         return [
             ['key' => 'entidad', 'label' => 'Entidad financiera', 'type' => 'text', 'required' => true, 'max' => 150],
-            ['key' => 'monto', 'label' => 'Monto solicitado', 'type' => 'number', 'required' => true, 'min' => 0],
-            ['key' => 'saldo', 'label' => 'Saldo pendiente', 'type' => 'number', 'required' => true, 'min' => 0],
-            ['key' => 'cuota', 'label' => 'Cuota mensual', 'type' => 'number', 'required' => true, 'min' => 0],
+            ['key' => 'monto', 'label' => 'Monto solicitado', 'type' => 'currency', 'required' => true],
+            ['key' => 'saldo', 'label' => 'Saldo pendiente', 'type' => 'currency', 'required' => true],
+            ['key' => 'cuota', 'label' => 'Cuota mensual', 'type' => 'currency', 'required' => true],
             ['key' => 'motivo', 'label' => 'Motivo del prestamo', 'type' => 'text', 'required' => true, 'max' => 200],
             ['key' => 'antiguedad', 'label' => 'Antiguedad', 'type' => 'text', 'required' => false, 'max' => 50],
             ['key' => 'estatus', 'label' => 'Estatus actual (al dia o en mora)', 'type' => 'select', 'required' => true, 'options' => ['al_dia' => 'Al día', 'en_mora' => 'En mora', 'atrasado' => 'Atrasado', 'pagado' => 'Pagado']],
@@ -246,7 +294,7 @@ class TablaDinamica
     {
         return [
             ['key' => 'descripcion', 'label' => 'Descripción del bien', 'type' => 'text', 'required' => true, 'max' => 200],
-            ['key' => 'valor', 'label' => 'Valor estimado (Q.)', 'type' => 'number', 'required' => true, 'min' => 0],
+            ['key' => 'valor', 'label' => 'Valor estimado (Q.)', 'type' => 'currency', 'required' => true],
         ];
     }
 
@@ -255,7 +303,7 @@ class TablaDinamica
     {
         return [
             ['key' => 'concepto', 'label' => 'Concepto de gasto', 'type' => 'text', 'required' => true, 'max' => 150],
-            ['key' => 'monto', 'label' => 'Monto mensual (Q.)', 'type' => 'number', 'required' => true, 'min' => 0],
+            ['key' => 'monto', 'label' => 'Monto mensual (Q.)', 'type' => 'currency', 'required' => true],
         ];
     }
 
@@ -304,9 +352,12 @@ class TablaDinamica
     /**
      * @param  mixed  $input
      * @param  list<array<string, mixed>>  $columnas
+     * @param  bool  $conservarAuxiliares  mantiene los sub-campos mes/año para repoblar el
+     *                                     formulario cuando la validación falla (evita que el
+     *                                     candidato pierda lo que ya había escrito)
      * @return list<array<string, string>>
      */
-    public static function normalizarFilas(mixed $input, array $columnas): array
+    public static function normalizarFilas(mixed $input, array $columnas, bool $conservarAuxiliares = false): array
     {
         if (! is_array($input)) {
             return [];
@@ -325,6 +376,25 @@ class TablaDinamica
             foreach ($columnas as $col) {
                 $key = $col['key'];
                 $valor = isset($fila[$key]) ? trim((string) $fila[$key]) : '';
+
+                if (($col['type'] ?? '') === 'date_range') {
+                    $valor = FechasLaboradasCampo::combinarDesdeFormulario($fila, $key);
+
+                    if ($conservarAuxiliares) {
+                        foreach (FechasLaboradasCampo::clavesAuxiliares($key) as $auxiliar) {
+                            if (! array_key_exists($auxiliar, $fila)) {
+                                continue;
+                            }
+
+                            $auxValor = trim((string) $fila[$auxiliar]);
+                            $normalizada[$auxiliar] = $auxValor;
+
+                            if ($auxValor !== '') {
+                                $vacia = false;
+                            }
+                        }
+                    }
+                }
 
                 if ($valor !== '') {
                     $vacia = false;
@@ -354,7 +424,7 @@ class TablaDinamica
                 continue;
             }
 
-            $input[$campo] = self::normalizarFilas($input[$campo], $columnas);
+            $input[$campo] = self::normalizarFilas($input[$campo], $columnas, conservarAuxiliares: true);
         }
 
         return $input;
@@ -372,6 +442,15 @@ class TablaDinamica
             }
 
             foreach ($columnas as $col) {
+                if (($col['type'] ?? '') === 'date_range') {
+                    $key = $col['key'];
+                    $reglas["{$campo}.*.{$key}"] = ($col['required'] ?? false)
+                        ? ['required', 'string', 'max:150']
+                        : ['nullable', 'string', 'max:150'];
+
+                    continue;
+                }
+
                 $field = "{$campo}.*.{$col['key']}";
                 $fieldRules = [];
 
@@ -383,11 +462,16 @@ class TablaDinamica
 
                 $fieldRules[] = match ($col['type']) {
                     'number' => 'numeric',
+                    'currency' => 'string',
                     'date' => 'date',
                     'select' => 'string',
                     'digits' => 'regex:/^[0-9]+$/',
                     default => 'string',
                 };
+
+                if (($col['type'] ?? '') === 'currency') {
+                    $fieldRules[] = 'regex:/^[Qq]?\s*[\d.,]+$/';
+                }
 
                 if (isset($col['max'])) {
                     $fieldRules[] = 'max:'.$col['max'];
@@ -425,11 +509,56 @@ class TablaDinamica
             'hermanos' => 'exclude_unless:tiene_hermanos,si|required|array|min:1',
             'empleos' => 'exclude_unless:experiencia_previa,si|required|array|min:1',
             'empleo_actual' => 'exclude_unless:tiene_empleo_actual,si|required|array|min:1',
+            'estudios_actuales' => 'exclude_unless:estudia_actualmente,si|required|array|min:1',
             'deudas' => 'exclude_unless:tiene_deudas,si|required|array|min:1',
             'tatuajes' => 'exclude_unless:tiene_tatuajes,si|required|array|min:1',
             'perforaciones' => 'exclude_unless:tiene_perforaciones,si|required|array|min:1',
             default => null,
         };
+    }
+
+    /**
+     * Reemplaza el mensaje genérico de un rango de fechas por la causa concreta.
+     * Solo afina errores ya existentes: nunca agrega errores nuevos.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    public static function afinarErroresRangosFechas(Validator $validator, array $input, int $numero, string $tipoFormulario): void
+    {
+        foreach (self::camposPorSeccion($numero, $tipoFormulario) as $campo => $columnas) {
+            $filas = $input[$campo] ?? null;
+
+            if (! is_array($filas)) {
+                continue;
+            }
+
+            foreach ($columnas as $col) {
+                if (($col['type'] ?? '') !== 'date_range') {
+                    continue;
+                }
+
+                foreach ($filas as $index => $fila) {
+                    if (! is_array($fila)) {
+                        continue;
+                    }
+
+                    $clave = "{$campo}.{$index}.{$col['key']}";
+
+                    if (! $validator->errors()->has($clave)) {
+                        continue;
+                    }
+
+                    $motivo = FechasLaboradasCampo::motivoRangoInvalido($fila, $col['key']);
+
+                    if ($motivo === null) {
+                        continue;
+                    }
+
+                    $validator->errors()->forget($clave);
+                    $validator->errors()->add($clave, $motivo);
+                }
+            }
+        }
     }
 
     /** @return array<string, string> */
@@ -445,11 +574,18 @@ class TablaDinamica
             'hermanos.required' => 'Debe agregar al menos un hermano en la tabla.',
             'hermanos.min' => 'Debe agregar al menos un hermano en la tabla.',
             'hermanos.*.nombre.required' => 'El nombre del hermano es obligatorio.',
-            'hermanos.*.direccion.required' => 'La dirección del hermano es obligatoria.',
             'formacion_academica.required' => 'Complete la tabla de formación académica.',
             'empleos.required' => 'Debe agregar al menos un empleo en la tabla.',
+            'empleos.*.fechas_laboradas.required' => 'Seleccione el mes y año de inicio. Si todavía trabaja ahí, marque «Sigue laborando».',
+            'empleos.*.fechas_laboradas_inicio.required' => 'El mes/año de inicio del empleo es obligatorio.',
+            'empleos.*.fechas_laboradas_inicio.date' => 'La fecha de inicio no es válida.',
+            'empleos.*.fechas_laboradas_fin.date' => 'La fecha de fin no es válida.',
+            'empleo_actual.*.fechas_laboradas.required' => 'Seleccione el mes y año de inicio. Si todavía trabaja ahí, marque «Sigue laborando».',
+            'empleo_actual.*.fechas_laboradas_inicio.required' => 'El mes/año de inicio del empleo es obligatorio.',
             'empleo_actual.required' => 'Debe completar al menos una fila de empleo actual.',
             'empleo_actual.min' => 'Debe completar al menos una fila de empleo actual.',
+            'estudios_actuales.required' => 'Debe completar al menos una fila de estudios actuales.',
+            'estudios_actuales.min' => 'Debe completar al menos una fila de estudios actuales.',
             'deudas.required' => 'Debe agregar al menos una deuda en la tabla.',
             'tatuajes.required' => 'Debe agregar al menos un tatuaje en la tabla.',
             'perforaciones.required' => 'Debe agregar al menos una perforación en la tabla.',

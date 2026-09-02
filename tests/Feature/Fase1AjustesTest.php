@@ -186,7 +186,7 @@ class Fase1AjustesTest extends TestCase
             'resultado' => 'aprobado',
         ]);
         $this->assertEquals('success', $evaluado->resultado_color);
-        $this->assertEquals('Aprobado / Sin Observaciones', $evaluado->resultado_texto);
+        $this->assertEquals('Aprobado', $evaluado->resultado_texto);
 
         $evaluado->resultado = 'aprobado_con_obs';
         $this->assertEquals('warning', $evaluado->resultado_color);

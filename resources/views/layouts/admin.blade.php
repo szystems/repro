@@ -264,6 +264,8 @@
             // Actualiza la hora y la fecha cada segundo
             setInterval(actualizarReloj, 1000);
         </script>
+
+        @include('ayuda.partials.tour-dashboard')
 	</body>
 
 </html>

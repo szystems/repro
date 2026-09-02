@@ -11,7 +11,13 @@
                 <i class="bi bi-clipboard-data"></i>
             </div>
             <div class="page-title">
-                <h5>Detalle de Cuestionario</h5>
+                <h5>
+                    @if($evaluado->cuestionario_completado && $evaluado->resultadosDisponiblesParaEmpresa())
+                        Informe de Evaluación
+                    @else
+                        Detalle de Cuestionario
+                    @endif
+                </h5>
             </div>
         </div>
         <div class="d-flex align-items-end d-none d-sm-block">
@@ -62,6 +68,12 @@
                             <div class="col-12 mb-3">
                                 <label class="form-label text-muted small">Puesto al que aplica:</label>
                                 <div class="fw-medium">{{ $evaluado->puesto_aplicar }}</div>
+                            </div>
+                            @endif
+                            @if($evaluado->observaciones)
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-muted small">Observación REPRO:</label>
+                                <div class="border rounded p-2 bg-light">{{ $evaluado->observaciones }}</div>
                             </div>
                             @endif
                         </div>
@@ -141,53 +153,29 @@
                 <div class="col-12">
                     <div class="card mb-3">
                         <div class="card-header bg-success-subtle">
-                            <h6 class="card-title mb-0 text-success"><i class="bi bi-check-circle"></i> Cuestionario Completado - Resultados Disponibles</h6>
+                            <h6 class="card-title mb-0 text-success"><i class="bi bi-file-earmark-check"></i> Informe de Evaluación</h6>
                         </div>
                         <div class="card-body">
                             <div class="alert alert-success mb-3">
                                 <i class="bi bi-check-circle-fill"></i>
-                                <strong>¡Los resultados están disponibles!</strong><br>
-                                El evaluado ha completado exitosamente el cuestionario y los resultados han sido aprobados para su visualización.
+                                <strong>Los resultados de REPRO están disponibles.</strong>
+                                Descargue el informe final o preliminar abajo. El formulario del candidato queda como referencia al final de esta página.
                             </div>
                             <div class="d-flex gap-2 flex-wrap mb-3">
-                                <a href="{{ route('empresa.ordenes.show', $evaluado->orden) }}" class="btn btn-primary">
+                                <a href="{{ route('empresa.ordenes.show', $evaluado->orden) }}" class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-eye"></i> Ver Orden Completa
                                 </a>
-                                <a href="{{ route('ordenes.pdf', $evaluado->orden) }}" class="btn btn-danger" target="_blank">
-                                    <i class="bi bi-file-pdf"></i> Descargar PDF de la Orden
-                                </a>
-                                @if($evaluado->cuestionario)
-                                <a href="{{ route('empresa.cuestionarios.pdf', $evaluado) }}" class="btn btn-danger" target="_blank">
-                                    <i class="bi bi-file-earmark-pdf"></i> Descargar PDF del Cuestionario
+                                @if(Auth::user()->hasPermission('ordenes.ver'))
+                                <a href="{{ route('ordenes.pdf', $evaluado->orden) }}" class="btn btn-outline-danger btn-sm" target="_blank">
+                                    <i class="bi bi-file-pdf"></i> PDF orden de servicio
                                 </a>
                                 @endif
                             </div>
 
-                            @php
-                                $cuestionario = $evaluado->cuestionario;
-                                $secciones = $cuestionario && method_exists($cuestionario, 'getSeccionesConfig') ? $cuestionario->getSeccionesConfig() : [];
-                            @endphp
-                            @if($cuestionario && $secciones)
-                            <ul class="nav nav-tabs" id="seccionesTabs" role="tablist">
-                                @foreach($secciones as $i => $nombreSeccion)
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link {{ $loop->first ? 'active' : '' }}" id="seccion{{ $i }}-tab" data-bs-toggle="tab" data-bs-target="#seccion{{ $i }}" type="button" role="tab" title="{{ $nombreSeccion }}">
-                                            {{ $i }}. {{ $nombreSeccion }}
-                                        </button>
-                                    </li>
-                                @endforeach
-                            </ul>
-                            <div class="tab-content mt-3" id="seccionesTabContent">
-                                @foreach($secciones as $i => $nombreSeccion)
-                                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="seccion{{ $i }}" role="tabpanel">
-                                        @include('shared.cuestionario.seccion-lectura', [
-                                            'cuestionario' => $cuestionario,
-                                            'numeroSeccion' => $i,
-                                            'nombreSeccion' => $nombreSeccion,
-                                        ])
-                                    </div>
-                                @endforeach
-                            </div>
+                            @include('shared.partials._informes_evaluado_empresa', ['evaluado' => $evaluado])
+
+                            @if($evaluado->cuestionario)
+                                @include('shared.partials._formulario_candidato_empresa', ['evaluado' => $evaluado])
                             @endif
                         </div>
                     </div>

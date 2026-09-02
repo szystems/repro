@@ -34,14 +34,11 @@
     ])
 
     @if(count($tablasConfig) > 0)
-        <div class="alert alert-light border small">
-            <i class="bi bi-info-circle"></i>
-            Las tablas dinámicas (empleos, referencias, deudas, etc.) se muestran en modo lectura.
-            Para corregirlas, use el flujo del candidato o contacte soporte técnico.
-        </div>
-        @include('shared.cuestionario.bloques.tablas-seccion', [
+        @include('shared.cuestionario.bloques.tablas-seccion-edicion', [
             'configs' => $tablasConfig,
             'tablas' => $tablas,
+            'slug' => $slug,
+            'respuestas' => $respuestas,
         ])
     @endif
 </div>

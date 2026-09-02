@@ -7,6 +7,8 @@ use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Models\Sede;
+use App\Support\EmpresaVisibilidadReclutadoresSupport;
+use App\Support\ExportacionesSupport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -24,15 +26,13 @@ class ReportesController extends Controller
      */
     private function buildEvaluacionesQuery(array $filters): \Illuminate\Database\Eloquent\Builder
     {
-        $query = EvaluadoOrden::with(['orden.empresa', 'cuestionario']);
+        $query = EvaluadoOrden::with(['orden.empresa', 'cuestionario'])->deOrdenesActivas();
 
         // Cliente (empresa): ver todos los evaluados de sus órdenes, independiente del estado.
         // La vista/columnas de resultados se condicionan por separado usando
         // `$orden->resultadosDisponiblesParaEmpresa()`.
         if (Auth::user()->role_as == 1) {
-            $query->whereHas('orden', function ($q) {
-                $q->where('empresa_id', Auth::user()->empresa_id);
-            });
+            EmpresaVisibilidadReclutadoresSupport::filtrarQueryEvaluadosEmpresa($query, Auth::user());
         }
 
         if (!empty($filters['fecha_inicio'])) {
@@ -148,8 +148,8 @@ class ReportesController extends Controller
         $stats = [
             'total_empresas'   => $statsQuery->count(),
             'empresas_activas' => (clone $statsQuery)->where('estado', 1)->count(),
-            'total_ordenes'    => Orden::count(),
-            'total_evaluados'  => EvaluadoOrden::count(),
+            'total_ordenes'    => Orden::activas()->count(),
+            'total_evaluados'  => EvaluadoOrden::deOrdenesActivas()->count(),
         ];
 
         // A7: ranking top 5 empresas por órdenes entregadas
@@ -266,14 +266,16 @@ class ReportesController extends Controller
      */
     public function evaluacionesExcel(Request $request)
     {
+        ExportacionesSupport::asegurarPuedeExportarInformes(Auth::user());
+
         $evaluados = $this->buildEvaluacionesQuery($request->all())
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return Excel::download(
-            new \App\Exports\EvaluacionesExport($evaluados),
-            'reporte-evaluaciones-' . now()->format('Y-m-d') . '.xlsx'
-        );
+        $export = new \App\Exports\EvaluacionesExport($evaluados);
+        $base = 'reporte-evaluaciones-' . now()->format('Y-m-d');
+
+        return ExportacionesSupport::descargarExcel($export, $base);
     }
 
     /**
@@ -281,11 +283,12 @@ class ReportesController extends Controller
      */
     public function empresasExcel(Request $request)
     {
-        $empresas = $this->buildEmpresasReportQuery($request)->get();
+        ExportacionesSupport::asegurarPuedeExportarInformes(Auth::user());
 
-        return Excel::download(
-            new \App\Exports\EmpresasExport($empresas),
-            'reporte-empresas-' . now()->format('Y-m-d') . '.xlsx'
-        );
+        $empresas = $this->buildEmpresasReportQuery($request)->get();
+        $export = new \App\Exports\EmpresasExport($empresas);
+        $base = 'reporte-empresas-' . now()->format('Y-m-d');
+
+        return ExportacionesSupport::descargarExcel($export, $base);
     }
 }

@@ -1,6 +1,11 @@
 {{-- Sección de documentos para empresa (subir papelería, descargar, ver estado) --}}
 {{-- Variables: $evaluado (EvaluadoOrden con documentos cargados) --}}
+@php
+    $puedeSubir = Auth::user()->hasPermission('documentos.subir');
+    $puedeVerDocs = Auth::user()->hasPermission('documentos.ver');
+@endphp
 
+@if($puedeSubir || $puedeVerDocs)
 <div class="card mt-2 border" id="docs-empresa-{{ $evaluado->id }}">
     <div class="card-header py-2 d-flex justify-content-between align-items-center">
         <small class="fw-bold">
@@ -9,16 +14,19 @@
                 <span class="badge bg-primary ms-1">{{ $evaluado->documentos->count() }}</span>
             @endif
         </small>
+        @if($puedeSubir)
         <button class="btn btn-primary btn-sm py-0" type="button" data-bs-toggle="collapse"
                 data-bs-target="#upload-empresa-{{ $evaluado->id }}">
             <i class="bi bi-cloud-upload"></i> Subir
         </button>
+        @endif
     </div>
 
-    {{-- Formulario de subida --}}
+    @if($puedeSubir)
     <div class="collapse" id="upload-empresa-{{ $evaluado->id }}">
         <div class="card-body border-bottom bg-light py-2">
-            <form action="{{ route('documentos-evaluado.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('documentos-evaluado.store') }}" method="POST" enctype="multipart/form-data"
+                  class="zona-pegar-papeleria" tabindex="0" data-file-input="archivo-papeleria-{{ $evaluado->id }}">
                 @csrf
                 <input type="hidden" name="evaluado_orden_id" value="{{ $evaluado->id }}">
                 <div class="row g-2 align-items-end">
@@ -33,8 +41,14 @@
                     </div>
                     <div class="col-md-5">
                         <label class="form-label mb-0"><small>Archivo (máx. 10 MB)</small></label>
-                        <input type="file" name="archivo" class="form-control form-control-sm"
-                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" capture="environment" required>
+                        <input type="file" name="archivo" id="archivo-papeleria-{{ $evaluado->id }}"
+                               class="form-control form-control-sm"
+                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,image/*" capture="environment" required>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-1 btn-tomar-foto"
+                                data-target="archivo-papeleria-{{ $evaluado->id }}">
+                            <i class="bi bi-camera"></i> Tomar foto
+                        </button>
+                        <small class="text-muted d-block">En tablet o celular puede tomar la fotografía. También puede pegar una imagen (Ctrl+V).</small>
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-success btn-sm w-100">
@@ -45,9 +59,9 @@
             </form>
         </div>
     </div>
+    @endif
 
-    {{-- Lista de documentos --}}
-    @if($evaluado->documentos->count() > 0)
+    @if($puedeVerDocs && $evaluado->documentos->count() > 0)
         <div class="table-responsive">
             <table class="table table-sm table-hover mb-0">
                 <thead class="table-light">
@@ -93,7 +107,7 @@
                                class="btn btn-outline-primary btn-sm py-0" title="Descargar">
                                 <i class="bi bi-download"></i>
                             </a>
-                            @if($documento->subido_por_user_id === Auth::id() && $documento->estado_verificacion === 'pendiente')
+                            @if($puedeSubir && $documento->subido_por_user_id === Auth::id() && $documento->estado_verificacion === 'pendiente')
                                 <form action="{{ route('documentos-evaluado.destroy', $documento) }}"
                                       method="POST" class="d-inline"
                                       onsubmit="return confirm('¿Eliminar este documento?');">
@@ -109,12 +123,17 @@
                 </tbody>
             </table>
         </div>
-    @else
+    @elseif($puedeVerDocs)
         <div class="card-body py-2">
             <small class="text-muted"><i class="bi bi-info-circle"></i> No hay documentos subidos.</small>
         </div>
+    @elseif($puedeSubir)
+        <div class="card-body py-2">
+            <small class="text-muted"><i class="bi bi-info-circle"></i> Puede subir papelería con el botón Subir.</small>
+        </div>
     @endif
 </div>
+@endif
 
 @once
 <div class="modal fade" id="modalPreviewDoc" tabindex="-1" aria-hidden="true">
@@ -180,3 +199,4 @@ document.addEventListener('click', function (e) {
 </script>
 @endpush
 @endonce
+@include('shared.papeleria-captura-js')

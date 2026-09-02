@@ -20,6 +20,7 @@ class CamposInternosPreempleo
                 'salud_practica_deporte', 'salud_detalle_deporte', 'salud_tratamiento_medico',
                 'salud_detalle_tratamiento', 'salud_hospitalizaciones', 'salud_detalle_hospitalizaciones',
                 'salud_ausencias_enfermedad', 'salud_detalle_ausencias', 'salud_intento_suicidio',
+                'salud_alergias', 'salud_detalle_alergias', 'salud_embarazada',
                 'habito_tiempo_libre', 'habito_bares_frecuencia', 'habito_alcohol_ultimo',
                 'habito_alcohol_mensual', 'habito_alcohol_detenido', 'habito_alcohol_laboral',
                 'habito_alcohol_despido', 'habito_tabaco', 'habito_juegos_azar',

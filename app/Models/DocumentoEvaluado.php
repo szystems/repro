@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Support\DocumentoEvaluadoPreview;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -58,11 +59,11 @@ class DocumentoEvaluado extends Model
             'licencia_auto'          => 'Licencia de Conducir (Auto)',
             'licencia_moto'          => 'Licencia de Conducir (Moto)',
             'dpi_archivo'            => 'DPI (Documento)',
+            'foto_tatuaje'           => 'Tatuajes',
             'pasaporte'              => 'Pasaporte',
             'carta_laboral'          => 'Carta Laboral',
             'constancia_laboral'     => 'Constancia Laboral',
             'recibo_luz'             => 'Recibo de Luz',
-            'foto_tatuaje'           => 'Fotografía de Tatuaje',
             'autorizacion_firmada'   => 'Autorización Firmada',
             'seguimiento'            => 'Seguimiento REPRO',
             'otro'                   => 'Otro',
@@ -114,7 +115,7 @@ class DocumentoEvaluado extends Model
         if ($tipoServicio === 'socioeconomico') {
             return array_merge(
                 array_intersect_key($tipos, array_flip([
-                    'dpi_archivo', 'constancia_laboral', 'carta_laboral', 'recibo_luz',
+                    'dpi_archivo', 'foto_tatuaje', 'constancia_laboral', 'carta_laboral', 'recibo_luz',
                     'constancia_estudios', 'cv', 'otro',
                 ])),
                 ['otro' => $tipos['otro']]
@@ -226,6 +227,7 @@ class DocumentoEvaluado extends Model
      */
     public function eliminarConArchivo(): bool
     {
+        DocumentoEvaluadoPreview::borrarMiniatura($this);
         if (Storage::disk('local')->exists($this->ruta_archivo)) {
             Storage::disk('local')->delete($this->ruta_archivo);
         }

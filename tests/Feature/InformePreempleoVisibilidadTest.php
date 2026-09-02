@@ -105,7 +105,8 @@ class InformePreempleoVisibilidadTest extends TestCase
         $this->actingAs($repro)
             ->get(route('admin.cuestionarios.edit', $this->cuestionario->id))
             ->assertOk()
-            ->assertSee('name="informe_tablas[complementaria]', false);
+            ->assertSee('name="informe_tablas[complementaria]', false)
+            ->assertSee('name="informe_tablas[laboral]', false);
     }
 
     public function test_repro_guarda_override_tabla_informe(): void
@@ -115,21 +116,28 @@ class InformePreempleoVisibilidadTest extends TestCase
         $this->actingAs($repro)
             ->put(route('admin.cuestionarios.update', $this->cuestionario->id), [
                 'informe_tablas' => [
-                    'complementaria' => [
-                        ['pregunta' => '¿Metas?', 'respuesta' => 'Editado por evaluador'],
-                    ],
+                    'deudas' => [[
+                        'entidad' => 'Banco Editado',
+                        'monto' => '1000',
+                        'saldo' => '500',
+                        'cuota' => '100',
+                        'motivo' => 'Prueba',
+                        'antiguedad' => '1',
+                        'estatus' => 'al_dia',
+                        'meses_atraso' => '0',
+                    ]],
                 ],
             ])
-            ->assertRedirect(route('admin.cuestionarios.show', $this->cuestionario->id));
+            ->assertRedirect(route('admin.cuestionarios.edit', $this->cuestionario->id));
 
         $this->assertDatabaseHas('evaluador_notas', [
             'evaluado_orden_id' => $this->cuestionario->evaluado_orden_id,
             'seccion' => InformePreempleo::SECCION_NOTAS,
-            'campo' => 'complementaria',
+            'campo' => 'deudas',
         ]);
 
         $tablas = InformePreempleo::tablasParaAdmin($this->cuestionario);
-        $this->assertSame('Editado por evaluador', $tablas['complementaria'][0]['respuesta'] ?? null);
+        $this->assertSame('Banco Editado', $tablas['deudas'][0]['entidad'] ?? null);
     }
 
     public function test_empresa_no_ve_campos_internos_ni_tablas_informe(): void
@@ -209,6 +217,33 @@ class InformePreempleoVisibilidadTest extends TestCase
         $this->assertStringContainsString('Fam PDF', $html);
         $this->assertStringNotContainsString('Vecino Oculto', $html);
         $this->assertStringNotContainsString('viv_tiempo_residencia', $html);
+    }
+
+    public function test_periodica_no_muestra_hermanos_en_tablas_informe(): void
+    {
+        $repro = $this->crearRepro();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->evaluado->orden_id,
+            'tipo_formulario' => 'periodica',
+            'tipo_servicio' => 'poligrafo',
+            'cuestionario_completado' => true,
+        ]);
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'periodica',
+            'seccion_actual' => 5,
+            'total_secciones' => 5,
+            'progreso_porcentaje' => 100,
+            'estado' => 'completado',
+            'completado' => true,
+        ]);
+
+        $this->actingAs($repro)
+            ->get(route('admin.cuestionarios.edit', $cuestionario->id))
+            ->assertOk()
+            ->assertSee('Tablas para informe')
+            ->assertSee('Agregar hijo')
+            ->assertDontSee('Agregar hermano');
     }
 
     public function test_empresa_no_puede_guardar_tablas_informe(): void

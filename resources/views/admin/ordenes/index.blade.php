@@ -11,7 +11,7 @@
                 <i class="bi bi-file-earmark-text"></i>
             </div>
             <div class="page-title">
-                <h5>Órdenes de Evaluación</h5>
+                <h5>{{ Auth::user()->role_as == 1 ? 'Mis Órdenes' : 'Órdenes de Evaluación' }}</h5>
             </div>
         </div>
         <div class="d-flex align-items-end d-none d-sm-block">
@@ -29,6 +29,9 @@
                 <div class="card card-background-mask-info">
                     <div class="card-header">
                         <div class="card-title"><i class="bi bi-search"></i> Filtrar Órdenes</div>
+                        <div class="card-options">
+                            @include('partials._ayuda_contextual')
+                        </div>
                     </div>
                     <div class="card-body">
                         <form action="{{ route('ordenes.index') }}" method="GET">
@@ -139,10 +142,17 @@
                                 <span class="badge bg-secondary ms-2">Archivadas</span>
                             @endif
                         </div>
-                        <div class="card-options">
+                        <div class="card-options d-flex gap-1">
+                            @if(\App\Support\ExportacionesSupport::puedeExportarInformes(Auth::user()))
+                            <a href="{{ route('ordenes.excel', request()->query()) }}" class="btn btn-success btn-sm">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </a>
+                            @endif
+                            @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('ordenes.crear'))
                             <a href="{{ route('ordenes.create') }}" class="btn btn-primary btn-sm">
                                 <i class="bi bi-plus-circle"></i> Nueva Orden
                             </a>
+                            @endif
                         </div>
                     </div>
                     <div class="card-body">
@@ -270,11 +280,13 @@
                                                     <i class="bi bi-file-pdf"></i>
                                                 </a>
                                                 
-                                                @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->hasAnyRole(['admin', 'repro']) || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && $orden->estado === 'orden_recibida')))
+                                                @if(!in_array($orden->estado, ['entregado', 'cancelado']) && (Auth::user()->role_as >= 2 || (Auth::user()->role_as == 1 && $orden->empresa_id == Auth::user()->empresa_id && $orden->estado === 'orden_recibida')))
                                                 <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-outline-warning" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
                                                 @endif
+
+                                                {{-- Sprint F0: el admin cliente NO elimina órdenes; solo REPRO archiva. --}}
 
                                                 @if(Auth::user()->role_as >= 3 && !$orden->archivada)
                                                 <form action="{{ route('ordenes.archivar', $orden) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('¿Archivar la orden {{ $orden->codigo_orden }}? El expediente se conserva pero dejará de aparecer en los listados.')">

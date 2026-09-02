@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-07-29 — **Alineación formularios reales cliente 🔴 EN CURSO** · plan maestro abajo · deploy pendiente post-alineación
+**Ultima actualizacion:** 2026-08-31 — **Plan migración** Hetzner/Coolify/`reprogt.com` · iPage sigue. Doc: `PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`
 
 > **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
@@ -12,20 +12,160 @@
 
 ---
 
-## 🔴 FASE EN DESARROLLO AHORA
+## 🟡 FASE EN DESARROLLO AHORA
 
 | Qué | Detalle |
 |-----|---------|
-| **Fase** | **F — Formularios (cierre del proyecto)** |
-| **Etapa activa** | **Alineación literal con formularios reales del cliente (Etapa A→J)** |
-| **Plan maestro (CHECKLIST ÚNICO)** | `docs/business/PLAN_ALINEACION_FORMULARIOS_REALES_2026-07-29.md` ← **usar este hasta cerrar entrega cliente** |
-| **Fuentes cliente** | `docs/ejemplos de formularios reales/` + `docs/repro/CREACIÓN FORMULARIOS DE SISTEMA.pdf` |
-| **Etapa anterior** | QA manual Fase G cerrado · UX fixes · push GitHub `1e86d7f7` |
-| **Deploy** | **Bloqueado** hasta cerrar alineación A–J + QA pre-entrega |
-| **Plan detallado (checklists)** | `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` ← histórico E1–E7 |
-| **Análisis / spec / decisiones comerciales** | `docs/business/ANALISIS_FORMULARIOS_E_INFORME_2026-06-22.md` |
-| **Contexto para agentes IA** | `docs/status/CONTEXTO_AGENTES.md` |
-| **Cotización extras (Word, 1B, WhatsApp)** | `docs/business/COTIZACION_EXTRAS_JUNIO_2026_CLIENTE.md` |
+| **Fase** | **Migración** — plan listo, faltan accesos C1–C9 |
+| **Plan** | `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md` |
+| **Esta sesión** | Inventario H0 + VPS + Coolify/dominio. Destino: `reprogt.com` + `portal.reprogt.com`. |
+| **Siguiente paso** | Otto: comprar dominio, SSH, Coolify, `.env` iPage, backups VPS, acceso reproxela. |
+| **Diferido** | Cutover (M5–M6) hasta que M0–M3 estén verdes. |
+
+### Feedback cliente 20-ago-2026 (WhatsApp + `Ultimos cambios 20-08-2026`)
+
+| Pedido | Estado |
+|--------|--------|
+| K-A PDF cuestionario oculto al cliente (403 ruta) | ✅ prod 20-ago |
+| K-B Alta empresa desde REPRO sin titular = trabajador | ✅ prod 20-ago |
+| K-C Nueva Orden en menú REPRO | ✅ prod 20-ago |
+| Titular no se quita en portal cliente | ✅ confirmado UAT: titular ve Usuarios; trabajador no |
+| Cliente edita orden solo en Orden Recibida | ✅ confirmado UAT listado PRUEBA 1 |
+| Word socio P0 académico extra (fila con nivel, no Otros) | ✅ prod 20-ago |
+| Word socio P0 CONFIDENCIAL / padres / complementaria | ✅ prod + UAT 21-ago |
+| Word socio P1 expareja / domicilio / presupuesto / deudas / salud | ✅ prod 21-ago (suite InformeWord 91 OK) |
+| J11 Vista previa Word no abre | ✅ prod 21-ago: modal abre al clic (ya no espera el PUT) |
+| Excel del listado de órdenes (filtros, cliente y REPRO) | ✅ prod 21-ago · UAT filtro PRUEBA 1 → 18 filas .xls (iPage sin XMLWriter) |
+| Quitar evaluado duplicado de una orden con varios | ✅ prod 21-ago · UAT ORD-2026-0140: se quitó Duplicado, quedó Uno |
+
+### Feedback cliente 12-ago-2026 (WhatsApp + ULTIMOS CAMBIOS2)
+
+| Reporte | Estado | Sprint |
+|---------|--------|--------|
+| Word polígrafo preempleo en blanco + foto negra | ✅ **G1.1 deploy prod 13-ago** — Aldin/Prueba 2 + DPI en Word #128 | G1.1 |
+| Vista previa informe nunca funcionó (Stephany) | ✅ **G1.3 deploy prod** — modal guarda borrador + Generar borrador Word | G1.3 |
+| “Informe” muestra formulario candidato vs final/preliminar subido | ✅ **G2.1 deploy prod 13-ago** — evaluado #128 verificado HTTP | G2.1 |
+| Vista previa / Generar informe final | ✅ **G1.3** — borrador Word + descarga final en modal | G1.3 |
+| Tablas informe: personal, tatuajes, estudia actualmente | ✅ **G1.2 deploy prod** | G1.2 |
+| Motivo reprogramación no visible después | ✅ **G3.1 deploy prod** | G3.1 |
+| REPRO habilitar/deshabilitar + rehabilitar vencido | ✅ **G3.2** — botón rehabilitar vencido | G3.2 |
+| Cliente sin historial / observaciones REPRO | ✅ **G2.2 historial** + **G2.3 observaciones** | G2.2/G2.3 |
+| Estado evaluación no cambia | ✅ **G3.3** — hints S4/S5 + filtro dropdown | G3.3 |
+| Select “excelente” preseleccionado | ✅ **G4.1** — Seleccione en salud_estado_general | G4.1 |
+| Infornet: firma en PDF (sin re-firmar) | ✅ **G4.2** — imagen firma en sección Infornet | G4.2 |
+| Formularios validados «todos coinciden» | ✅ Cerrado | — |
+| Unificación info formularios → informe | ✅ **G5 deploy prod** — `InformeDatos` | G5 |
+
+### Feedback cliente 13-ago-2026 (UAT real — WhatsApp + 2 PDFs)
+
+| Reporte | Estado | Sprint |
+|---------|--------|--------|
+| Sede/Región empresa se autocompleta (Quetzaltenango) | ✅ **H1 deploy prod 13-ago** | H1 |
+| Padres: edad/tel/dirección no obligatorios | ✅ **H2 deploy prod 13-ago** | H2 |
+| Hijos menores de 1 año | ✅ **H3 deploy prod 13-ago** — «Menor de 1 año» | H3 |
+| Hermanos: solo nombre obligatorio | ✅ **H4 deploy prod 13-ago** | H4 |
+| Foto Word ubicación/proporción | ✅ **H8 deploy + UAT navegador** | H8 |
+| Fechas laborales mes/año | ✅ Deploy H5 | H5 |
+| Peso/estatura etiquetas separadas | ✅ **H6 deploy prod 13-ago** | H6 |
+| Word: nombre archivo | ✅ **H7 deploy prod 13-ago** — `Nombre_Empresa.docx` | H7 |
+| **H9** | Correcciones Word (expareja, pareja, académico, Q, fechas « al ») | ✅ **Deploy + UAT Edgar #131** | H9 |
+| **H13** | Vista previa Word inline post-edición (mammoth.js, preview-first) | ✅ **UAT navegador cuestionario #47** | H13 |
+| Académico solo 2 niveles en informe | ✅ **H10 deploy prod 13-ago** | H10 |
+| Habilitar/deshabilitar formulario REPRO | ✅ Deploy A–E | H11 |
+| Rehabilitar vencido | ✅ Deploy A–E | H12 |
+| Empresa: informe vs formulario candidato | ✅ Deploy A–E | H14 |
+| PDF papelería en anexos Word | ✅ Fallback texto (iPage sin conversor) | batch WA |
+| Espacio económico Word | ✅ Sin placeholders | batch WA |
+| Generación informe final (cierre) | ⏸️ Flujo manual Word→PDF · esperar Stephany | H16 |
+| Migración servidor/dominio | ⏸️ Reunión sábado | H0 |
+
+### Sprint F — ✅ código cerrado (10 ago 2026) · ⏳ deploy
+
+| Ítem | Estado |
+|------|--------|
+| F0.1 Una sola Fecha en autorización | ✅ |
+| F0.2 Quitar línea esclarecimiento (específica polígrafo/VSA) | ✅ |
+| F0.3 Tel. padres opcional | ✅ |
+| F0.4 Título → ASPECTOS VARIOS | ✅ |
+| F0.5 Cliente no elimina órdenes (UI) | ✅ |
+| F1 Word relleno celdas + encabezado/datos editados | ✅ |
+| F2 Académico 2 niveles · motivo reprogramación · ocultar poligrafista · PDF estudios actuales | ✅ |
+| F3 Matriz 7 plantillas v2 + encabezado DATOS GENERALES | ✅ |
+| F3 FORMATOS: motivo + omitir pareja + último grado + VSA sin score + socio refs/económica + foto v2 | ✅ |
+| Deploy iPage + migrate `motivo_reprogramacion` | ✅ 11-ago · 95 archivos FTP · columna OK · login 200 |
+
+### Sprint C — ✅ cerrado (6 ago 2026)
+
+| Ítem | Estado |
+|------|--------|
+| 2.2 PDF autorización separado (admin + empresa) | ✅ prod |
+| 2.3 Checkboxes anexos papelería Word | ✅ prod |
+| 2.4 Tabla preguntas poligráficas editable + Word | ✅ prod |
+| 2.7 Fix Word 500 (`preg_replace_callback` en `establecerTextoCelda`) | ✅ prod |
+| UAT empresa PDF autorización | ⏳ evaluado #112 sin resultados liberados a empresa |
+
+### Sprint E — ✅ cerrado y verificado en UAT (10 ago 2026)
+
+| Ítem | Estado |
+|------|--------|
+| 3.8 WhatsApp PROCESO VIRTUAL → 50277637811 | ✅ prod, verificado en `/empresa/sedes-repro` |
+| 3.10 Confidencialidad reclutadores (A+B) | ✅ prod, verificado con escenario UAT (principal + 2 reclutadores) |
+| Modo empresa compartido / solo propios | ✅ mi-empresa/edit, ambos modos probados en navegador |
+| Asignación reclutador + flag confidencial en orden | ✅ create/edit/show |
+| Tests `EmpresaConfidencialidadReclutadoresTest` | ✅ código + test nuevo `role_as` string |
+
+**Bug encontrado y corregido durante UAT (10-ago):** `EmpresaVisibilidadReclutadoresSupport::filtrarQueryOrdenesEmpresa/filtrarQueryEvaluadosEmpresa` comparaban `$user->role_as !== 1` (estricto). Como `role_as` llega como string `"1"` desde MySQL, el filtro nunca se aplicaba en los **listados** `/ordenes` y `/cuestionarios` (aunque el detalle sí bloqueaba con 403 correctamente). Fix: cast `(int) $user->role_as`. Desplegado a prod + OPcache limpiado + verificado con curl (reclutador B ya no ve la orden confidencial en el listado).
+
+**UAT ejecutado (prod, vía curl con sesiones autenticadas + navegador):**
+- Reclutador B (modo compartido): ve orden pública, NO ve confidencial en listado, `/ordenes/{id}` confidencial → 403, pública → 200.
+- Reclutador A: ve ambas (pública + confidencial, es el asignado).
+- Principal: ve ambas + badge "Confidencial" en `show`.
+- Modo `solo_propios`: B deja de ver incluso la orden pública de A; A conserva las suyas.
+- `/cuestionarios`: mismo filtro aplicado correctamente a evaluados.
+- Datos y usuarios UAT (empresa 99) **limpiados** de prod tras el cierre (órdenes `ORD-UAT-*` + usuarios `uat.reclutador.*@repro.local` eliminados). Scripts temporales (`uat_sprint_e_*.php`) removidos del servidor.
+- **Pendiente de verificar con el cliente:** password del usuario principal real `admon.repro@yahoo.com` fue reseteada durante el UAT a `UAT.SprintE2026!` — si el cliente tenía otra, coordinar restablecimiento o que el cliente use "¿Olvidaste tu contraseña?".
+
+### Sprint D — ✅ cerrado (6 ago 2026)
+
+| Ítem | Estado |
+|------|--------|
+| 3.1 Mis Órdenes = vista REPRO (`/ordenes`) | ✅ prod |
+| 3.2 Estado de Procesos = vista REPRO cuestionarios | ✅ prod |
+
+### Sprint B — ✅ cerrado (6 ago 2026)
+
+| Ítem | Estado |
+|------|--------|
+| 1.1 Quitar cuadro laboral obsoleto (situación/empleo actual legacy) | ✅ |
+| 1.4 ¿Estudia actualmente? + tabla condicional | ✅ |
+| 1.6 Vivienda familiar → sección económica | ✅ |
+| 1.7 Socio: min 2 refs, vecino opcional, sin duplicar renta/tipo vivienda | ✅ |
+| 1.8 Específica: quitar nota auxiliar académica | ✅ |
+| 1.9 Sin exparejas en periódica/específica | ✅ |
+| 1.10 Periódica: omitir periodico_02 (experiencia empleo actual) | ✅ |
+
+### Sprint A — ✅ cerrado (6 ago 2026)
+
+| Ítem | Estado |
+|------|--------|
+| 2.1 Reorden bloques Word (cliente) | ✅ prod |
+| 2.5 Vista previa PDF + enlace Word | ✅ prod |
+| 2.6 Guardado borrador/correcciones (estado, progreso, PUT, redirect edit) | ✅ prod |
+| 2.7 Descarga Word (cast int + PCLZip iPage) | ✅ prod |
+| 2.8 minFilas condicional admin + novalidate | ✅ prod |
+| 1.2–1.3 Labels jefe/RRHH en tabla empleos | ✅ prod |
+| 1.5 Selects «Seleccione…» económico/salud | ✅ prod |
+| 3.4–3.7 Puente permisos trabajador + UI + defaults | ✅ prod |
+| 3.9 Aviso formulario solo candidato | ✅ prod |
+| Spec permisos empresa (`PERMISOS_EMPRESA_CLIENTE.md`) | ✅ |
+
+### Pendiente Sprint B–E
+
+Ver checklist completo en `docs/repro/cambios agosto/PLAN_REVISION_AGOSTO_2026.md`.
+
+---
+
+## Fase anterior (formularios alineación jul–ago 2026)
 
 ### Progreso E1 (motor base)
 

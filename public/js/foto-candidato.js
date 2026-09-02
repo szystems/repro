@@ -348,15 +348,45 @@
             if (!hasFile && !hasExistente) {
                 e.preventDefault();
                 group.classList.add('is-invalid');
-                setFotoErrorVisible(true, 'Debe tomar o subir su fotografía para continuar.');
+                setFotoErrorVisible(true, 'Debe tomar, subir o pegar su fotografía para continuar.');
                 if (window.cuestionarioHelpers) {
                     cuestionarioHelpers.hideLoading();
-                    cuestionarioHelpers.showAlert('Debe tomar o subir su fotografía para continuar.', 'warning');
+                    cuestionarioHelpers.showAlert('Debe tomar, subir o pegar su fotografía para continuar.', 'warning');
                 }
                 group.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
     }
+
+    document.addEventListener('paste', function (e) {
+        const zona = e.target.closest('[data-foto-candidato], .zona-pegar-foto, .foto-candidato-box');
+        if (!zona) {
+            return;
+        }
+        if (e.target.matches && e.target.matches('input[type="text"], textarea')) {
+            return;
+        }
+
+        const group = zona.closest('[data-foto-candidato]') || document.querySelector('[data-foto-candidato]');
+        const input = group ? group.querySelector('[data-foto-input]') : null;
+        if (!input) {
+            return;
+        }
+
+        const items = e.clipboardData && e.clipboardData.items ? Array.from(e.clipboardData.items) : [];
+        const imagen = items.find(function (item) { return item.type && item.type.indexOf('image/') === 0; });
+        if (!imagen) {
+            return;
+        }
+
+        const file = imagen.getAsFile();
+        if (!file) {
+            return;
+        }
+
+        e.preventDefault();
+        assignFileToInput(input, file);
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
         initWebcamModalControls();

@@ -9,7 +9,7 @@ class SaludHabitosCampos
 
     public const TITULO_HABITOS = 'Hábitos personales';
 
-    public const TITULO_SUSTANCIAS = 'Vínculo con actividades delictivas y drogas ilegales';
+    public const TITULO_SUSTANCIAS = 'ASPECTOS VARIOS';
 
     public const LABEL_PREOCUPACIONES = '¿Cual es el problema personal mas serio que tiene actualmente?';
 
@@ -20,6 +20,10 @@ class SaludHabitosCampos
     public const LABEL_TIPO_SANGRE = '¿Cuál es su tipo de sangre?';
 
     public const LABEL_PESO_ESTATURA = 'Cuál es su peso y estatura';
+
+    public const LABEL_PESO = 'Peso (libras)';
+
+    public const LABEL_ESTATURA = 'Estatura (metros)';
 
     public const LABEL_DEPORTE = '¿Practica algún deporte?';
 
@@ -32,6 +36,10 @@ class SaludHabitosCampos
     public const LABEL_SUICIDIO = '¿Ha intentado suicidarse alguna vez? ¿Por qué motivo?';
 
     public const LABEL_AUSENCIAS_ENFERMEDAD = 'En el último año ¿cuantas veces faltó al trabajo por enfermedad?';
+
+    public const LABEL_ALERGIAS = '¿Padece alergias?';
+
+    public const LABEL_EMBARAZADA = '¿Está embarazada?';
 
     public const INTRO_SUSTANCIAS =
         'Las estadísticas muestran que cerca del 90% de las personas han experimentado o tenido contacto con algún tipo de droga ilegal; por lo cual es muy común que hayamos tenido algún tipo de acercamientocon alguna. Encierre todas las que usted conoce, ha experimentado o usado eventualmente, incluso si solo fue una vez.';
@@ -113,7 +121,31 @@ class SaludHabitosCampos
             'salud_ideacion_dano' => 'nullable|in:si,no',
             'salud_detalle_ideacion' => 'nullable|string|max:2000',
             'salud_detalle_ausencias' => 'nullable|string|max:2000',
-        ], self::reglasValidacionLegacy());
+        ], self::reglasAlergiasEmbarazo(), self::reglasValidacionLegacy());
+    }
+
+    /**
+     * M-F2/F3: las dos preguntas van en todos los formularios (peri/espe solo estas de salud).
+     *
+     * @return array<string, mixed>
+     */
+    public static function reglasAlergiasEmbarazo(): array
+    {
+        return [
+            'salud_alergias' => 'required|in:si,no',
+            'salud_detalle_alergias' => 'nullable|required_if:salud_alergias,si|string|max:2000',
+            'salud_embarazada' => 'required|in:si,no',
+        ];
+    }
+
+    /** @return list<array{key: string, label: string}> */
+    public static function preguntasAlergiasEmbarazo(): array
+    {
+        return [
+            ['key' => 'salud_alergias', 'label' => self::LABEL_ALERGIAS],
+            ['key' => 'salud_detalle_alergias', 'label' => 'Detalle de alergias'],
+            ['key' => 'salud_embarazada', 'label' => self::LABEL_EMBARAZADA],
+        ];
     }
 
     /** Compatibilidad con respuestas almacenadas con campos anteriores. */
@@ -196,6 +228,9 @@ class SaludHabitosCampos
             'salud_detalle_hospitalizaciones.required_if' => 'Describa las hospitalizaciones o cirugías.',
             'salud_ausencias_enfermedad.required' => 'Indique cuántas veces faltó al trabajo por enfermedad en el último año.',
             'salud_intento_suicidio.required' => 'Indique si ha intentado suicidarse alguna vez y el motivo.',
+            'salud_alergias.required' => 'Indique si padece alergias.',
+            'salud_detalle_alergias.required_if' => 'Describa las alergias que padece.',
+            'salud_embarazada.required' => 'Indique si está embarazada. Si no aplica, seleccione No.',
         ];
     }
 }

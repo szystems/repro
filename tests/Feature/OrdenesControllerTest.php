@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Config;
 use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
@@ -233,7 +234,7 @@ class OrdenesControllerTest extends TestCase
                 ],
             ]);
 
-        $response->assertRedirect(route('empresa.ordenes.show', $orden));
+        $response->assertRedirect(route('ordenes.show', $orden));
 
         $orden->refresh();
         $this->assertEquals($empresa->id, $orden->empresa_id);
@@ -721,6 +722,36 @@ class OrdenesControllerTest extends TestCase
         // estado_evaluacion permanece en pendiente_de_evaluacion (es independiente)
         $this->assertEquals('link_enviado', $evaluado->estado_formulario);
         $this->assertEquals('pendiente_de_evaluacion', $evaluado->estado_evaluacion);
+        $this->assertTrue($evaluado->token_expira_at->greaterThan(now()->addDays(29)));
+    }
+
+    public function test_i13b_crear_evaluado_token_expira_minimo_30_dias(): void
+    {
+        Mail::fake();
+        Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 31]);
+
+        $admin = User::factory()->create(['role_as' => 3]);
+        $empresa = Empresa::factory()->create();
+        $sede = \App\Models\Sede::factory()->create(['estado' => 1]);
+
+        $this->actingAs($admin)->post(route('ordenes.store'), [
+            'empresa_id'   => $empresa->id,
+            'sede_id'      => $sede->id,
+            'tipo_servicio' => ['vsa'],
+            'evaluados' => [[
+                'nombre'         => 'Ana',
+                'apellidos'      => 'López',
+                'dpi'            => '9876543210101',
+                'email'          => 'ana@example.com',
+                'tipo_servicio'  => 'vsa',
+                'tipo_formulario'=> 'preempleo',
+            ]],
+        ])->assertRedirect();
+
+        $evaluado = EvaluadoOrden::where('email', 'ana@example.com')->first();
+        $this->assertNotNull($evaluado);
+        $this->assertTrue($evaluado->token_expira_at->greaterThan(now()->addDays(29)));
+        $this->assertTrue($evaluado->token_expira_at->lessThanOrEqualTo(now()->addDays(31)->addMinute()));
     }
 
     public function test_r1_reenviar_correo_establece_link_enviado_formulario(): void
@@ -768,5 +799,80 @@ class OrdenesControllerTest extends TestCase
 
         $evaluado->refresh();
         $this->assertEquals('informe_final_enviado', $evaluado->estado_evaluacion);
+    }
+
+    public function test_autoasignar_encargado_no_pisa_quien_programo(): void
+    {
+        $programo = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $programo->roles()->attach(Role::where('name', 'repro')->first());
+        $evaluador = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $evaluador->roles()->attach(Role::where('name', 'repro')->first());
+
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'poligrafista_id' => $programo->id,
+            'responsable_id' => null,
+        ]);
+
+        $this->actingAs($evaluador)
+            ->post(route('evaluados.autoasignar-encargado', $evaluado))
+            ->assertRedirect();
+
+        $evaluado->refresh();
+        $this->assertEquals($evaluador->id, $evaluado->responsable_id);
+        $this->assertEquals($programo->id, $evaluado->poligrafista_id);
+    }
+
+    public function test_empresa_no_puede_autoasignar_encargado(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $userEmpresa = User::factory()->create(['role_as' => 1, 'empresa_id' => $empresa->id, 'estado' => 1]);
+        $userEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'poligrafista_id' => $userEmpresa->id,
+            'responsable_id' => null,
+        ]);
+
+        $this->actingAs($userEmpresa)
+            ->post(route('evaluados.autoasignar-encargado', $evaluado))
+            ->assertForbidden();
+
+        $evaluado->refresh();
+        $this->assertNull($evaluado->responsable_id);
+    }
+
+    public function test_ficha_orden_muestra_autoasignar_y_oculta_encargado_a_empresa(): void
+    {
+        $repro = User::factory()->create(['role_as' => 2, 'estado' => 1, 'name' => 'Otto Programo']);
+        $repro->roles()->attach(Role::where('name', 'repro')->first());
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'poligrafista_id' => $repro->id,
+            'nombre' => 'Juan Alejandro',
+            'apellidos' => 'Cumes García',
+        ]);
+
+        $this->actingAs($repro)
+            ->get(route('ordenes.show', $orden))
+            ->assertOk()
+            ->assertSee('Autoasignarme')
+            ->assertSee('Encargado')
+            ->assertSee('Programó');
+
+        $userEmpresa = User::factory()->create(['role_as' => 1, 'empresa_id' => $empresa->id, 'estado' => 1]);
+        $userEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $this->actingAs($userEmpresa)
+            ->get(route('ordenes.show', $orden))
+            ->assertOk()
+            ->assertDontSee('Autoasignarme')
+            ->assertDontSee('Otto Programo');
     }
 }

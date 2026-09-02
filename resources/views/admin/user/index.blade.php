@@ -36,7 +36,8 @@
                                     Listado de Usuarios
                                     <span class="badge bg-secondary">{{ $users->total() }} usuarios</span>
                                 </div>
-                                <div class="d-flex">
+                                <div class="d-flex align-items-center gap-2">
+                                    @include('partials._ayuda_contextual')
                                     <a target="_blank" href="{{ url('pdf-users') }}{{ $queryUser ? '?fuser='.$queryUser : '' }}{{ isset($role_filter) && $role_filter != '' ? '&role_filter='.$role_filter : '' }}{{ isset($empresa_filter) && $empresa_filter != '' ? '&empresa_filter='.$empresa_filter : '' }}" type="button" class="btn btn-danger me-2">
                                         <i class="bi bi-file-pdf"></i> PDF
                                     </a>
@@ -77,12 +78,19 @@
                                                         <i class="bi bi-pencil-fill"></i>
                                                     </a>
                                                     @endif
-                                                    @if (Auth::user()->role_as >= 2 && $user->principal != 1 && Auth::user()->id != $user->id)
-                                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-{{ $user->id }}">
+                                                    @if (Auth::user()->role_as >= 3 && Auth::user()->id != $user->id)
+                                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-{{ $user->id }}" title="Eliminar usuario">
                                                             <i class="bi bi-trash-fill"></i>
                                                         </button>
                                                     @else
-                                                        <button disabled type="button" class="btn btn-secondary">
+                                                        @php
+                                                            $motivoNoEliminar = Auth::user()->id == $user->id
+                                                                ? 'No puede eliminarse a sí mismo'
+                                                                : (Auth::user()->role_as < 3
+                                                                    ? 'Solo el administrador puede eliminar usuarios'
+                                                                    : 'No se puede eliminar');
+                                                        @endphp
+                                                        <button disabled type="button" class="btn btn-secondary" title="{{ $motivoNoEliminar }}">
                                                             <i class="bi bi-trash-fill"></i>
                                                         </button>
                                                     @endif

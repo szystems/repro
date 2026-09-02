@@ -18,7 +18,8 @@
     {{-- Formulario de subida (colapsado) --}}
     <div class="collapse" id="upload-form-{{ $evaluado->id }}">
         <div class="card-body border-bottom bg-light">
-            <form action="{{ route('documentos-evaluado.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('documentos-evaluado.store') }}" method="POST" enctype="multipart/form-data"
+                  class="zona-pegar-papeleria" tabindex="0" data-file-input="archivo-papeleria-{{ $evaluado->id }}">
                 @csrf
                 <input type="hidden" name="evaluado_orden_id" value="{{ $evaluado->id }}">
 
@@ -34,8 +35,14 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Archivo <small class="text-muted">(máx. 10 MB)</small></label>
-                        <input type="file" name="archivo" class="form-control form-control-sm"
-                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" capture="environment" required>
+                        <input type="file" name="archivo" id="archivo-papeleria-{{ $evaluado->id }}"
+                               class="form-control form-control-sm"
+                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,image/*" capture="environment" required>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-1 btn-tomar-foto"
+                                data-target="archivo-papeleria-{{ $evaluado->id }}">
+                            <i class="bi bi-camera"></i> Tomar foto
+                        </button>
+                        <small class="text-muted d-block">En tablet o celular puede tomar la fotografía. También puede pegar una imagen (Ctrl+V).</small>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Notas <small class="text-muted">(opcional)</small></label>
@@ -73,6 +80,8 @@
                                     <img src="{{ route('documentos-evaluado.preview', $documento) }}"
                                          alt="{{ $documento->tipo_documento_texto }}"
                                          class="card-img-top"
+                                         loading="lazy"
+                                         decoding="async"
                                          style="height: 140px; object-fit: cover;">
                                 </button>
                                 <div class="card-body p-2">
@@ -125,6 +134,8 @@
                                         <img src="{{ route('documentos-evaluado.preview', $documento) }}"
                                              alt="{{ $documento->tipo_documento_texto }}"
                                              class="rounded border"
+                                             loading="lazy"
+                                             decoding="async"
                                              style="width: 48px; height: 48px; object-fit: cover;">
                                     </button>
                                 @endif
@@ -288,3 +299,4 @@ document.addEventListener('click', function (e) {
 </script>
 @endpush
 @endonce
+@include('shared.papeleria-captura-js')

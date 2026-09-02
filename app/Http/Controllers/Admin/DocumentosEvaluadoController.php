@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DocumentoEvaluadoRequest;
 use App\Models\DocumentoEvaluado;
 use App\Models\EvaluadoOrden;
+use App\Support\DocumentoEvaluadoPreview;
+use App\Support\RedirectFichaOrden;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -43,7 +45,7 @@ class DocumentosEvaluadoController extends Controller
             'notas'              => $request->notas ?: null,
         ]);
 
-        return back()->with('success', 'Documento "' . $documento->tipo_documento_texto . '" subido correctamente.');
+        return RedirectFichaOrden::evaluado($evaluado, 'Documento "' . $documento->tipo_documento_texto . '" subido correctamente.');
     }
 
     /**
@@ -82,12 +84,17 @@ class DocumentosEvaluadoController extends Controller
             abort(404, 'El archivo no existe en el servidor.');
         }
 
-        $contenido = Storage::disk('local')->get($documento->ruta_archivo);
-        $mimeType  = $documento->mime_type ?: 'application/octet-stream';
+        $ruta = DocumentoEvaluadoPreview::rutaParaPreview($documento);
+        $mimeType = DocumentoEvaluadoPreview::mimeParaPreview($documento, $ruta);
+        $nombre = $ruta === DocumentoEvaluadoPreview::rutaMiniatura($documento->ruta_archivo)
+            ? pathinfo($documento->nombre_original, PATHINFO_FILENAME).(DocumentoEvaluadoPreview::usaJpeg() ? '.jpg' : '.png')
+            : $documento->nombre_original;
 
-        return response($contenido, 200)
-            ->header('Content-Type', $mimeType)
-            ->header('Content-Disposition', 'inline; filename="' . $documento->nombre_original . '"');
+        return Storage::disk('local')->response($ruta, $nombre, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="'.$nombre.'"',
+            'Cache-Control' => 'private, max-age=86400',
+        ]);
     }
 
     /**
@@ -112,7 +119,7 @@ class DocumentosEvaluadoController extends Controller
 
         $etiqueta = $request->estado_verificacion === 'aprobado' ? 'aprobado' : 'rechazado';
 
-        return back()->with('success', "Documento {$etiqueta} correctamente.");
+        return RedirectFichaOrden::evaluado($documento->evaluadoOrden, "Documento {$etiqueta} correctamente.");
     }
 
     /**
@@ -140,7 +147,7 @@ class DocumentosEvaluadoController extends Controller
         $nombre = $documento->tipo_documento_texto;
         $documento->eliminarConArchivo();
 
-        return back()->with('success', "Documento \"{$nombre}\" eliminado.");
+        return RedirectFichaOrden::evaluado($evaluado, "Documento \"{$nombre}\" eliminado.");
     }
 
     /**

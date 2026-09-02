@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Empresa;
 
+use App\Http\Controllers\Admin\OrdenesController;
+use App\Http\Controllers\Admin\CuestionariosController;
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use App\Models\Sede;
 use App\Models\User;
 use App\Models\EvaluadoOrden;
+use App\Support\EmpresaVisibilidadReclutadoresSupport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,72 +20,19 @@ use Illuminate\Validation\Rule;
 class EmpresaController extends Controller
 {
     /**
-     * Mostrar detalle de una orden para empresa
+     * Listado de órdenes — misma vista REPRO (Sprint D 3.1).
+     */
+    public function indexOrdenesEmpresa(Request $request)
+    {
+        return app(OrdenesController::class)->index($request);
+    }
+
+    /**
+     * Detalle de orden — misma vista REPRO (Sprint D 3.1).
      */
     public function verOrden(\App\Models\Orden $orden)
     {
-        $user = Auth::user();
-        $userEmpresaId = $user->empresa_id;
-
-        if (!$userEmpresaId) {
-            Log::warning('Usuario empresa sin empresa_id intentó ver orden', [
-                'user_id' => $user->id,
-                'orden_id' => $orden->id,
-            ]);
-            return redirect()->route('dashboard')
-                ->with('error', 'Su usuario no tiene una empresa asociada. Contacte al administrador.');
-        }
-
-        // Comparación tolerante a tipos (int vs string)
-        if ((int) $orden->empresa_id !== (int) $userEmpresaId) {
-            Log::warning('Usuario empresa intentó ver orden de otra empresa', [
-                'user_id' => $user->id,
-                'user_empresa_id' => $userEmpresaId,
-                'orden_id' => $orden->id,
-                'orden_empresa_id' => $orden->empresa_id,
-            ]);
-            abort(403, 'Acceso no autorizado. Esta orden no pertenece a su empresa.');
-        }
-
-        if ($orden->archivada) {
-            abort(404);
-        }
-
-        $orden->load([
-            'evaluados' => function ($query) {
-                $query->with([
-                    'documentos.subidoPor',
-                    'cuestionario',
-                    'historialEstados.usuario',
-                ]);
-            },
-        ]);
-
-        $historialVisibleEmpresa = \App\Models\Config::historialVisibleParaEmpresa();
-
-        return view('empresa.ordenes.show', compact('orden', 'historialVisibleEmpresa'));
-    }
-    /**
-     * Listar órdenes de la empresa (solo lectura)
-     */
-    public function indexOrdenesEmpresa()
-    {
-        $empresa = Auth::user()->empresa;
-        if (!$empresa) {
-            return back()->with('error', 'No tiene una empresa asociada');
-        }
-
-        // Eager loading y conteo de evaluados
-        $ordenes = $empresa->ordenes()
-            ->activas()
-            ->withCount('evaluados')
-            ->with(['evaluados' => function ($q) {
-                $q->orderBy('id')->limit(1);
-            }])
-            ->orderByDesc('created_at')
-            ->paginate(15);
-
-        return view('empresa.ordenes.index', compact('ordenes'));
+        return app(OrdenesController::class)->show($orden);
     }
     /**
      * Verificar que el usuario sea de tipo empresa
@@ -183,6 +133,7 @@ class EmpresaController extends Controller
             'contacto_telefono' => 'nullable|string|max:20',
             'contacto_email' => 'nullable|email|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'modo_visibilidad_reclutadores' => ['nullable', Rule::in(array_keys(EmpresaVisibilidadReclutadoresSupport::modosDisponibles()))],
         ]);
 
         // Manejar logo
@@ -385,60 +336,11 @@ class EmpresaController extends Controller
     // ========================================
 
     /**
-     * Listar cuestionarios de la empresa (solo lectura)
+     * Listado de cuestionarios — misma vista REPRO (Sprint D 3.2).
      */
     public function cuestionarios(Request $request)
     {
-        $empresa = Auth::user()->empresa;
-
-        $query = EvaluadoOrden::whereHas('orden', function($q) use ($empresa) {
-            $q->where('empresa_id', $empresa->id)->activas();
-        })->with(['orden']);
-
-        // Filtro por estado de cuestionario
-        if ($request->filled('estado')) {
-            if ($request->estado === 'completado') {
-                $query->where('cuestionario_completado', true);
-            } elseif ($request->estado === 'pendiente') {
-                $query->where('cuestionario_completado', false);
-            }
-        }
-
-        // Filtro por orden
-        if ($request->filled('orden_id')) {
-            $query->where('orden_id', $request->orden_id);
-        }
-
-        // Búsqueda por nombre
-        if ($request->filled('buscar')) {
-            $buscar = $request->buscar;
-            $query->where(function($q) use ($buscar) {
-                $q->where('nombre', 'like', "%{$buscar}%")
-                  ->orWhere('apellidos', 'like', "%{$buscar}%")
-                  ->orWhere('email', 'like', "%{$buscar}%")
-                  ->orWhere('dpi', 'like', "%{$buscar}%");
-            });
-        }
-
-        $cuestionarios = $query->orderBy('created_at', 'desc')->paginate(15);
-
-        // Órdenes para el filtro
-        $ordenes = $empresa->ordenes()->activas()->orderBy('created_at', 'desc')->get();
-
-        // Estadísticas
-        $stats = [
-            'total' => EvaluadoOrden::whereHas('orden', function($q) use ($empresa) {
-                $q->where('empresa_id', $empresa->id)->activas();
-            })->count(),
-            'completados' => EvaluadoOrden::whereHas('orden', function($q) use ($empresa) {
-                $q->where('empresa_id', $empresa->id)->activas();
-            })->where('cuestionario_completado', true)->count(),
-            'pendientes' => EvaluadoOrden::whereHas('orden', function($q) use ($empresa) {
-                $q->where('empresa_id', $empresa->id)->activas();
-            })->where('cuestionario_completado', false)->count(),
-        ];
-
-        return view('empresa.cuestionarios.index', compact('cuestionarios', 'ordenes', 'stats'));
+        return app(CuestionariosController::class)->index($request);
     }
 
     /**
@@ -464,6 +366,10 @@ class EmpresaController extends Controller
          */
         public function generarPDFCuestionarioEmpresa(EvaluadoOrden $evaluado)
         {
+            if ((int) Auth::user()->role_as === 1) {
+                abort(403, 'El PDF del formulario del candidato no está disponible para el perfil cliente.');
+            }
+
             $empresa = Auth::user()->empresa;
             // Verificar que el evaluado pertenece a una orden de esta empresa
             if ($evaluado->orden->empresa_id != $empresa->id) {
@@ -481,6 +387,36 @@ class EmpresaController extends Controller
             $nombreArchivo = $evaluado->nombre . '_' .
                 ($evaluado->apellidos ?? '') . '_Orden' .
                 $evaluado->orden->codigo_orden . '.pdf';
-            return $pdf->download($nombreArchivo);
+            return $pdf->stream($nombreArchivo);
+        }
+
+        /**
+         * PDF de autorización y términos (documento aparte del cuestionario).
+         */
+        public function generarPdfAutorizacionEmpresa(EvaluadoOrden $evaluado)
+        {
+            $empresa = Auth::user()->empresa;
+            if ($evaluado->orden->empresa_id != $empresa->id) {
+                abort(403, 'Acceso no autorizado');
+            }
+            if (!$evaluado->resultadosDisponiblesParaEmpresa()) {
+                abort(403, 'Resultados no autorizados para descarga');
+            }
+
+            $cuestionario = $evaluado->cuestionario;
+            if (!$cuestionario) {
+                abort(404, 'Cuestionario no encontrado');
+            }
+
+            $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.responsable']);
+
+            $pdf = app('dompdf.wrapper');
+            $pdf->loadView('admin.cuestionarios.pdf-autorizacion', compact('cuestionario'));
+
+            $nombreArchivo = $evaluado->nombre . '_' .
+                ($evaluado->apellidos ?? '') . '_Autorizacion_Orden' .
+                $evaluado->orden->codigo_orden . '.pdf';
+
+            return $pdf->stream($nombreArchivo);
         }
 }

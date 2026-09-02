@@ -72,7 +72,7 @@
                 <!-- Órdenes de evaluación e informes -->
                 @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('ordenes.ver'))
                 <li class="sidebar-dropdown">
-                    <a href="#" class="{{ Request::is('ordenes','show-orden/*','add-orden','edit-orden/*','reportes/evaluaciones','reportes/empresas') ? 'active-dropdown':''  }}">
+                    <a href="#" class="{{ Request::is('ordenes','ordenes/create','show-orden/*','add-orden','edit-orden/*','reportes/evaluaciones','reportes/empresas') ? 'active-dropdown':''  }}">
                         <i class="bi bi-file-earmark-text"></i>
                         <span class="menu-text">Órdenes de Evaluación</span>
                         <i class="bi bi-chevron-down menu-arrow"></i>
@@ -82,8 +82,13 @@
                             <li class="{{ Request::is('ordenes','show-orden/*','add-orden','edit-orden/*') ? 'active-page-link':''  }}">
                                 <a href="{{ url('ordenes') }}"><i class="bi bi-list-ul"></i> Listado de órdenes</a>
                             </li>
+                            @if(Auth::user()->role_as >= 3 || Auth::user()->hasPermission('ordenes.crear'))
+                            <li class="{{ Request::is('ordenes/create') ? 'active-page-link':''  }}">
+                                <a href="{{ route('ordenes.create') }}"><i class="bi bi-file-plus-fill"></i> Nueva Orden</a>
+                            </li>
+                            @endif
                             <li class="{{ Request::is('reportes/evaluaciones') ? 'active-page-link':''  }}">
-                                <a href="{{ url('reportes/evaluaciones') }}"><i class="bi bi-file-bar-graph"></i> Estadísticas de Evaluaciones</a>
+                                <a href="{{ url('reportes/evaluaciones') }}"><i class="bi bi-file-bar-graph"></i> INFORMES DE EMPRESAS</a>
                             </li>
                             @if(Auth::user()->role_as >= 2)
                             <li class="{{ Request::is('reportes/empresas') ? 'active-page-link':''  }}">
@@ -192,6 +197,15 @@
                     </a>
                 </li>
                 @endif
+
+                <!-- Centro de Ayuda -->
+                <li class="menu-category">Ayuda</li>
+                <li class="{{ Request::is('ayuda*') ? 'active-page-link' : '' }}">
+                    <a href="{{ route('ayuda.index') }}">
+                        <i class="bi bi-book"></i>
+                        <span class="menu-text">Centro de Ayuda</span>
+                    </a>
+                </li>
 
                 <!-- WhatsApp sedes REPRO -->
                 @if(isset($sedesWhatsApp) && $sedesWhatsApp->isNotEmpty())

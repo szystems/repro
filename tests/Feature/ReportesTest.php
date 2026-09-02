@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exports\EvaluacionesExport;
 use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
@@ -93,7 +94,7 @@ class ReportesTest extends TestCase
         $response->assertViewHas('evaluados');
         $response->assertViewHas('stats');
         $response->assertViewHas('empresas');
-        $response->assertSee('Reporte de Evaluaciones');
+        $response->assertSee('INFORMES DE EMPRESAS');
     }
 
     /**
@@ -253,10 +254,36 @@ class ReportesTest extends TestCase
         $response = $this->actingAs($admin)->get(route('reportes.evaluaciones.excel'));
 
         $response->assertStatus(200);
+        $disposition = (string) $response->headers->get('content-disposition');
+        $contentType = (string) $response->headers->get('content-type');
         $this->assertTrue(
-            str_contains($response->headers->get('content-type'), 'spreadsheet') ||
-            str_contains($response->headers->get('content-type'), 'excel') ||
-            str_contains($response->headers->get('content-disposition'), '.xlsx')
+            str_contains($contentType, 'spreadsheet') ||
+            str_contains($contentType, 'excel') ||
+            str_contains($disposition, '.xlsx') ||
+            str_contains($disposition, '.xls')
         );
+    }
+
+    public function test_evaluaciones_excel_html_incluye_datos(): void
+    {
+        $empresa = Empresa::factory()->create(['nombre' => 'PRUEBA EXCEL STATS', 'estado' => 1]);
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'codigo_orden' => 'ORD-TEST-STATS',
+        ]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Carmen',
+            'apellidos' => 'Castillo',
+            'dpi' => '1234567890101',
+        ]);
+
+        $html = (new EvaluacionesExport(collect([$evaluado->fresh(['orden.empresa'])])))->toHtmlTable();
+
+        $this->assertStringContainsString('ORD-TEST-STATS', $html);
+        $this->assertStringContainsString('PRUEBA EXCEL STATS', $html);
+        $this->assertStringContainsString('Carmen', $html);
+        $this->assertStringContainsString('Castillo', $html);
+        $this->assertStringContainsString('Código Orden', $html);
     }
 }

@@ -43,7 +43,9 @@
             $filtrosQuery = http_build_query(array_filter([
                 'sede_id' => $sedeId,
                 'poligrafista_id' => $poligrafistaId,
+                'encargado_id' => $encargadoId ?? null,
                 'tipo_servicio' => $tipoServicio,
+                'empresa_id' => $empresaId ?? null,
             ]));
         @endphp
 
@@ -77,7 +79,7 @@
                     </div>
                     <div class="card-body py-2">
                         <form action="{{ route('calendario.dia', ['fecha' => $fecha]) }}" method="GET" class="row g-2 align-items-end">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label form-label-sm mb-0">Sede</label>
                                 <select name="sede_id" class="form-select form-select-sm">
                                     <option value="">Todas</option>
@@ -86,16 +88,16 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label form-label-sm mb-0">Poligrafista</label>
-                                <select name="poligrafista_id" class="form-select form-select-sm">
+                            <div class="col-md-2">
+                                <label class="form-label form-label-sm mb-0">Encargado</label>
+                                <select name="encargado_id" class="form-select form-select-sm">
                                     <option value="">Todos</option>
                                     @foreach($poligrafistas as $pol)
-                                        <option value="{{ $pol->id }}" {{ $poligrafistaId == $pol->id ? 'selected' : '' }}>{{ $pol->name }}</option>
+                                        <option value="{{ $pol->id }}" {{ ($encargadoId ?? null) == $pol->id ? 'selected' : '' }}>{{ $pol->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label form-label-sm mb-0">Tipo</label>
                                 <select name="tipo_servicio" class="form-select form-select-sm">
                                     <option value="">Todos</option>
@@ -105,8 +107,22 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
+                                <label class="form-label form-label-sm mb-0">Empresa</label>
+                                <select name="empresa_id" class="form-select form-select-sm">
+                                    <option value="">Todas</option>
+                                    @foreach($empresas as $empresa)
+                                        <option value="{{ $empresa->id }}" {{ ($empresaId ?? null) == $empresa->id ? 'selected' : '' }}>{{ $empresa->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
                                 <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i> Filtrar</button>
                                 <a href="{{ route('calendario.dia', ['fecha' => $fecha]) }}" class="btn btn-sm btn-outline-secondary">Limpiar</a>
+                                @if(Auth::user() && \App\Support\ExportacionesSupport::puedeExportarInformes(Auth::user()))
+                                    <a href="{{ route('calendario.dia.excel', ['fecha' => $fecha] + request()->query()) }}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-file-earmark-excel"></i> Excel
+                                    </a>
+                                @endif
                             </div>
                         </form>
                     </div>
@@ -187,13 +203,19 @@
                                                             @if($cita->modalidad)
                                                                 <span class="badge bg-{{ $cita->modalidad == 'presencial' ? 'info' : 'purple' }} badge-sm">{{ ucfirst($cita->modalidad) }}</span>
                                                             @endif
+                                                            @if($cita->responsable)
+                                                                <i class="bi bi-person-check ms-1"></i> Encargado: {{ $cita->responsable->name }}
+                                                            @endif
                                                             @if($cita->poligrafo)
-                                                                <i class="bi bi-person ms-1"></i> {{ $cita->poligrafo->name }}
+                                                                <i class="bi bi-person ms-1"></i> Programó: {{ $cita->poligrafo->name }}
                                                             @endif
                                                             @if($cita->orden && $cita->orden->empresa)
                                                                 <i class="bi bi-building ms-1"></i> {{ $cita->orden->empresa->nombre }}
                                                             @endif
                                                         </small>
+                                                        @if(filled($cita->motivo_reprogramacion))
+                                                            <br><small class="text-info"><i class="bi bi-chat-left-quote"></i> {{ $cita->motivo_reprogramacion }}</small>
+                                                        @endif
                                                         @php
                                                             $transEval = \App\Models\EvaluadoOrden::transicionesEvaluacion()[$cita->estado_evaluacion] ?? [];
                                                             $nombresEval = \App\Models\EvaluadoOrden::estadosEvaluacionDisponibles();
@@ -277,6 +299,7 @@
                                     <th>Candidato</th>
                                     <th>Hora original</th>
                                     <th>Nueva fecha</th>
+                                    <th>Motivo</th>
                                     <th>Empresa</th>
                                     <th>Tipo</th>
                                 </tr>
@@ -293,6 +316,9 @@
                                     </td>
                                     <td>
                                         <small>{{ $cita->fecha_programada ? \Carbon\Carbon::parse($cita->fecha_programada)->translatedFormat('d M Y h:i A') : '—' }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-info">{{ $cita->motivo_reprogramacion ?: '—' }}</small>
                                     </td>
                                     <td>
                                         <small>{{ $cita->orden && $cita->orden->empresa ? $cita->orden->empresa->nombre : '—' }}</small>
@@ -404,26 +430,13 @@
                         </small>
                     </div>
 
-                    {{-- Poligrafista --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Poligrafista / Evaluador</label>
-                        <select name="poligrafista_id" id="modalPoligrafistaId" class="form-select">
-                            <option value="">Sin asignar</option>
-                            @foreach($poligrafistas as $pol)
-                                <option value="{{ $pol->id }}">{{ $pol->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <input type="hidden" name="poligrafista_id" id="modalPoligrafistaId" value="{{ Auth::id() }}">
+                    <input type="hidden" name="responsable_id" id="modalResponsableId" value="">
 
-                    {{-- Responsable --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Responsable del Proceso</label>
-                        <select name="responsable_id" id="modalResponsableId" class="form-select">
-                            <option value="">Sin asignar</option>
-                            @foreach($poligrafistas as $pol)
-                                <option value="{{ $pol->id }}">{{ $pol->name }} {{ $pol->cargo ? '('.$pol->cargo.')' : '' }}</option>
-                            @endforeach
-                        </select>
+                    <div class="mb-3" id="divMotivoReprogramacion" style="display:none">
+                        <label class="form-label fw-bold">Motivo de reprogramación</label>
+                        <textarea name="motivo_reprogramacion" id="modalMotivoReprogramacion" class="form-control" rows="2"
+                                  maxlength="500" placeholder="Indique por qué se reprograma la cita"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -485,10 +498,14 @@
         document.getElementById('modalHoraInicio').value = '08:00';
         document.getElementById('modalHoraFin').value = '10:00';
         document.getElementById('modalSedeId').value = '{{ $sedeId ?? "" }}';
-        document.getElementById('modalPoligrafistaId').value = '{{ $poligrafistaId ?? "" }}';
+        document.getElementById('modalPoligrafistaId').value = '{{ Auth::id() }}';
+        document.getElementById('modalResponsableId').value = '';
         document.getElementById('modalModalidad').value = '';
         document.getElementById('evaluado_orden_id').value = '';
         document.getElementById('modalModalidadHint').style.display = 'none';
+        document.getElementById('divMotivoReprogramacion').style.display = 'none';
+        document.getElementById('modalMotivoReprogramacion').required = false;
+        document.getElementById('modalMotivoReprogramacion').value = '';
     }
 
     /**
@@ -524,6 +541,9 @@
         if (sedeId) document.getElementById('modalSedeId').value = sedeId;
         document.getElementById('modalModalidad').value = modalidad || '';
         document.getElementById('modalResponsableId').value = responsableId || '';
+        document.getElementById('divMotivoReprogramacion').style.display = 'block';
+        document.getElementById('modalMotivoReprogramacion').required = true;
+        document.getElementById('modalMotivoReprogramacion').value = '';
     }
 </script>
 

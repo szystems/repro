@@ -10,6 +10,143 @@
         return div.innerHTML;
     }
 
+    const MESES_FECHAS = [
+        ['01', 'Enero'], ['02', 'Febrero'], ['03', 'Marzo'], ['04', 'Abril'],
+        ['05', 'Mayo'], ['06', 'Junio'], ['07', 'Julio'], ['08', 'Agosto'],
+        ['09', 'Septiembre'], ['10', 'Octubre'], ['11', 'Noviembre'], ['12', 'Diciembre'],
+    ];
+
+    const ANIOS_ATRAS_FECHAS = 70;
+
+    /** Sufijos que viajan en el formulario para un rango de fechas (incluye nombres antiguos). */
+    const SUFIJOS_DATE_RANGE = [
+        '_inicio_mes', '_inicio_anio', '_fin_mes', '_fin_anio', '_actual', '_inicio', '_fin',
+    ];
+
+    function opcionesMes() {
+        let html = '<option value="">Mes</option>';
+        MESES_FECHAS.forEach(function (mes) {
+            html += '<option value="' + mes[0] + '">' + mes[1] + '</option>';
+        });
+        return html;
+    }
+
+    function opcionesAnio() {
+        const actual = new Date().getFullYear();
+        let html = '<option value="">Año</option>';
+        for (let anio = actual; anio >= actual - ANIOS_ATRAS_FECHAS; anio--) {
+            html += '<option value="' + anio + '">' + anio + '</option>';
+        }
+        return html;
+    }
+
+    function buildDateRangeExtremo(name, index, key, sufijo, etiqueta, marcador, isRequired) {
+        const mesName = name + '[' + index + '][' + key + sufijo + '_mes]';
+        const anioName = name + '[' + index + '][' + key + sufijo + '_anio]';
+        const req = isRequired ? ' required' : '';
+        const label = escapeHtml(etiqueta);
+
+        let html = '<div class="fechas-laboradas-extremo mb-1">';
+        html += '<label class="form-label form-label-sm mb-0 text-muted">' + label + '</label>';
+        html += '<div class="fechas-laboradas-selects">';
+        html += '<select class="form-control form-control-sm" name="' + mesName + '" aria-label="' + label + ' — mes" data-fechas-' + marcador + req + '>' + opcionesMes() + '</select>';
+        html += '<select class="form-control form-control-sm" name="' + anioName + '" aria-label="' + label + ' — año" data-fechas-' + marcador + req + '>' + opcionesAnio() + '</select>';
+        html += '</div></div>';
+
+        return html;
+    }
+
+    function buildDateRangeField(name, index, col, storedValue, isRequired) {
+        const key = col.key;
+        const actualName = name + '[' + index + '][' + key + '_actual]';
+        const actualId = (name + '_' + index + '_' + key + '_actual').replace(/[^\w-]/g, '_');
+
+        let html = '<div class="fechas-laboradas-range" data-fechas-laboradas-range>';
+        html += buildDateRangeExtremo(name, index, key, '_inicio', 'Desde (mes y año)', 'inicio', isRequired);
+        html += buildDateRangeExtremo(name, index, key, '_fin', 'Hasta (mes y año)', 'fin', isRequired);
+        html += '<div class="form-check form-check-sm mt-1">';
+        html += '<input class="form-check-input" type="checkbox" id="' + actualId + '" name="' + actualName + '" value="1" data-fechas-actual>';
+        html += '<label class="form-check-label small" for="' + actualId + '">Sigue laborando</label>';
+        html += '</div></div>';
+
+        return html;
+    }
+
+    /**
+     * «Sigue laborando» manda sobre el estado de los selectores «Hasta».
+     * Debe ejecutarse DESPUÉS de syncWrapperFields/syncFieldState, que reponen
+     * disabled/required de forma genérica y bloqueaban el envío del formulario.
+     */
+    function syncFechasLaboradasRange(wrap) {
+        const checkbox = wrap.querySelector('[data-fechas-actual]');
+        const inicios = wrap.querySelectorAll('[data-fechas-inicio]');
+        const fines = wrap.querySelectorAll('[data-fechas-fin]');
+
+        if (!checkbox || inicios.length === 0 || fines.length === 0) {
+            return;
+        }
+
+        // En secciones ocultas manda el sincronizador de campos condicionales.
+        if (isInsideHiddenContainer(wrap)) {
+            return;
+        }
+
+        const inicioRequerido = Array.prototype.some.call(inicios, function (el) {
+            return el.required || el.dataset.preserveRequired === '1';
+        });
+
+        Array.prototype.forEach.call(fines, function (el) {
+            if (checkbox.checked) {
+                el.value = '';
+                el.disabled = true;
+                el.required = false;
+                delete el.dataset.preserveRequired;
+                return;
+            }
+
+            el.disabled = false;
+            el.required = inicioRequerido;
+        });
+    }
+
+    function prepararFechasLaboradasParaEnvio(root) {
+        (root || document).querySelectorAll('[data-fechas-laboradas-range]').forEach(function (wrap) {
+            if (isInsideHiddenContainer(wrap)) {
+                return;
+            }
+
+            syncFechasLaboradasRange(wrap);
+
+            wrap.querySelectorAll('[data-fechas-inicio], [data-fechas-fin]').forEach(function (el) {
+                el.disabled = false;
+            });
+        });
+    }
+
+    function initFechasLaboradasRanges(root) {
+        (root || document).querySelectorAll('[data-fechas-laboradas-range]').forEach(syncFechasLaboradasRange);
+    }
+
+    function reindexDateRangeField(row, name, index, col) {
+        SUFIJOS_DATE_RANGE.forEach(function (suffix) {
+            row.querySelectorAll('[name$="[' + col.key + suffix + ']"]').forEach(function (input) {
+                input.name = name + '[' + index + '][' + col.key + suffix + ']';
+            });
+        });
+    }
+
+    function isDateRangeEmpty(row, col) {
+        const campos = row.querySelectorAll(
+            '[name$="[' + col.key + '_inicio_mes]"],' +
+            '[name$="[' + col.key + '_inicio_anio]"],' +
+            '[name$="[' + col.key + '_inicio]"]'
+        );
+
+        return Array.prototype.every.call(campos, function (el) {
+            return !String(el.value || '').trim();
+        });
+    }
+
     function buildField(name, index, col, value) {
         const fieldName = name + '[' + index + '][' + col.key + ']';
         const required = col.required ? ' required' : '';
@@ -31,6 +168,8 @@
                 html += '<option value="' + escapeHtml(optVal) + '"' + selected + '>' + escapeHtml(col.options[optVal]) + '</option>';
             });
             html += '</select>';
+        } else if (col.type === 'date_range') {
+            html += buildDateRangeField(name, index, col, value, !!col.required);
         } else if (col.type === 'digits') {
             html += '<input type="text" inputmode="numeric" pattern="[0-9]*" class="form-control form-control-sm tabla-dinamica-input-digits" name="' + fieldName + '" value="' + escapeHtml(value || '') + '"' + maxAttr + required + '>';
         } else {
@@ -102,6 +241,9 @@
         if (addBtn) {
             addBtn.disabled = hidden;
         }
+
+        // Último: «Sigue laborando» debe sobrescribir el estado genérico de arriba.
+        initFechasLaboradasRanges(wrapper);
     }
 
     function syncAllWrappers() {
@@ -168,6 +310,10 @@
 
         tbody.querySelectorAll('.tabla-dinamica-row').forEach(function (row) {
             const vacia = columnas.every(function (col) {
+                if (col.type === 'date_range') {
+                    return isDateRangeEmpty(row, col);
+                }
+
                 const input = row.querySelector('[name$="[' + col.key + ']"]');
                 return !input || !String(input.value || '').trim();
             });
@@ -194,6 +340,11 @@
 
         tableRows.forEach(function (row, index) {
             columnas.forEach(function (col) {
+                if (col.type === 'date_range') {
+                    reindexDateRangeField(row, name, index, col);
+                    return;
+                }
+
                 const input = row.querySelector('[name$="[' + col.key + ']"]');
                 if (input) {
                     input.name = name + '[' + index + '][' + col.key + ']';
@@ -311,6 +462,15 @@
         }
     });
 
+    document.addEventListener('change', function (event) {
+        if (event.target.matches && event.target.matches('[data-fechas-actual]')) {
+            const wrap = event.target.closest('[data-fechas-laboradas-range]');
+            if (wrap) {
+                syncFechasLaboradasRange(wrap);
+            }
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('[data-tabla-dinamica]').forEach(initWrapper);
 
@@ -343,6 +503,11 @@
             cuestionarioForm.addEventListener('change', function () {
                 window.requestAnimationFrame(syncAllWrappers);
             });
+
+            cuestionarioForm.addEventListener('submit', function () {
+                syncAllWrappers();
+                prepararFechasLaboradasParaEnvio(cuestionarioForm);
+            }, true);
         }
     });
 
@@ -352,5 +517,6 @@
         reindex: reindexWrapper,
         buildRow: buildTableRow,
         removeEmptyRowsAll: removeEmptyRowsAll,
+        prepararFechasLaboradasParaEnvio: prepararFechasLaboradasParaEnvio,
     };
 })();

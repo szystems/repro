@@ -74,7 +74,9 @@
     @endif
 
     @if($puedeSubir)
-        <form action="{{ route('cuestionario.subir-documento', $token) }}" method="POST" enctype="multipart/form-data" class="border rounded p-3 bg-light">
+        <form action="{{ route('cuestionario.subir-documento', $token) }}" method="POST" enctype="multipart/form-data"
+              class="border rounded p-3 bg-light zona-pegar-papeleria" tabindex="0"
+              data-file-input="archivo-papeleria-candidato">
             @csrf
             <div class="row g-2">
                 <div class="col-12">
@@ -88,8 +90,14 @@
                 </div>
                 <div class="col-12">
                     <label class="form-label mb-1">Archivo <small class="text-muted">(máx. 10 MB)</small></label>
-                    <input type="file" name="archivo" class="form-control form-control-sm @error('archivo') is-invalid @enderror"
+                    <input type="file" name="archivo" id="archivo-papeleria-candidato"
+                           class="form-control form-control-sm @error('archivo') is-invalid @enderror"
                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,image/*" capture="environment" required>
+                    <button type="button" class="btn btn-outline-secondary btn-sm mt-1 btn-tomar-foto"
+                            data-target="archivo-papeleria-candidato">
+                        <i class="fas fa-camera"></i> Tomar foto
+                    </button>
+                    <small class="text-muted d-block">En celular o tablet puede tomar la foto. También puede pegar una imagen (Ctrl+V).</small>
                     @error('archivo')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -107,3 +115,4 @@
         </div>
     @endif
 </div>
+@include('shared.papeleria-captura-js')

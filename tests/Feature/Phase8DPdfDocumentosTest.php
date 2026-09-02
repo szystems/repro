@@ -173,9 +173,9 @@ class Phase8DPdfDocumentosTest extends TestCase
         $this->assertEquals($repro2->id, $evaluado->responsable_id);
     }
 
-    // ─── 8D.1: Autorización/términos en PDF ───
+    // ─── 8D.1: Autorización/términos en PDF aparte ───
 
-    public function test_pdf_cuestionario_incluye_autorizacion(): void
+    public function test_pdf_cuestionario_no_incluye_autorizacion(): void
     {
         $empresa = Empresa::factory()->create();
         [$orden, $evaluado, $admin] = $this->crearOrdenConEvaluado($empresa);
@@ -193,20 +193,68 @@ class Phase8DPdfDocumentosTest extends TestCase
             'completado_at' => now()->subDay(),
         ]);
 
-        // Use the PDF view directly with the data that would be passed
         $view = view('admin.cuestionarios.pdf', [
             'cuestionario' => $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.documentos', 'evaluadoOrden.responsable']),
             'respuestasPorSeccion' => collect(),
         ])->render();
 
-        $this->assertStringContainsString('AUTORIZACIÓN PARA EVALUACIÓN', $view);
+        $this->assertStringNotContainsString('AUTORIZACIÓN PARA EVALUACIÓN', $view);
+        $this->assertStringNotContainsString('Firmado digitalmente', $view);
+    }
+
+    public function test_pdf_autorizacion_incluye_terminos_y_firma(): void
+    {
+        $empresa = Empresa::factory()->create();
+        [$orden, $evaluado, $admin] = $this->crearOrdenConEvaluado($empresa);
+
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 5,
+            'total_secciones' => 5,
+            'progreso_porcentaje' => 100,
+            'completado' => true,
+            'acepta_terminos' => true,
+            'acepta_terminos_at' => now()->subDay(),
+            'firma_digital' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==',
+            'completado_at' => now()->subDay(),
+        ]);
+
+        $view = view('admin.cuestionarios.pdf-autorizacion', [
+            'cuestionario' => $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.responsable']),
+        ])->render();
+
+        $this->assertStringContainsString('Autorización y Términos', $view);
         $this->assertStringContainsString($evaluado->nombre, $view);
         $this->assertStringContainsString($evaluado->dpi, $view);
         $this->assertStringContainsString('voluntaria', $view);
         $this->assertStringContainsString('Firmado digitalmente', $view);
     }
 
-    public function test_pdf_cuestionario_incluye_consentimiento_poligrafo(): void
+    public function test_ruta_pdf_autorizacion_admin_responde(): void
+    {
+        $empresa = Empresa::factory()->create();
+        [$orden, $evaluado, $admin] = $this->crearOrdenConEvaluado($empresa);
+
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'total_secciones' => 5,
+            'completado' => true,
+            'acepta_terminos' => true,
+            'completado_at' => now()->subDay(),
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.cuestionarios.pdf-autorizacion', $cuestionario));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $disposition = strtolower((string) $response->headers->get('content-disposition'));
+        $this->assertStringContainsString('inline', $disposition);
+        $this->assertStringNotContainsString('attachment', $disposition);
+    }
+
+    public function test_pdf_cuestionario_no_incluye_consentimiento_poligrafo(): void
     {
         $empresa = Empresa::factory()->create();
         [$orden, $evaluado, $admin] = $this->crearOrdenConEvaluado($empresa);
@@ -227,6 +275,31 @@ class Phase8DPdfDocumentosTest extends TestCase
         $view = view('admin.cuestionarios.pdf', [
             'cuestionario' => $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.documentos', 'evaluadoOrden.responsable']),
             'respuestasPorSeccion' => collect(),
+        ])->render();
+
+        $this->assertStringNotContainsString('Consentimiento adicional', $view);
+    }
+
+    public function test_pdf_autorizacion_incluye_consentimiento_poligrafo(): void
+    {
+        $empresa = Empresa::factory()->create();
+        [$orden, $evaluado, $admin] = $this->crearOrdenConEvaluado($empresa);
+        $evaluado->update(['tipo_servicio' => 'poligrafo']);
+
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 5,
+            'total_secciones' => 5,
+            'progreso_porcentaje' => 100,
+            'completado' => true,
+            'acepta_terminos' => true,
+            'firma_digital' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==',
+            'completado_at' => now()->subDay(),
+        ]);
+
+        $view = view('admin.cuestionarios.pdf-autorizacion', [
+            'cuestionario' => $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.responsable']),
         ])->render();
 
         $this->assertStringContainsString('Consentimiento adicional', $view);
@@ -305,7 +378,7 @@ class Phase8DPdfDocumentosTest extends TestCase
 
     // ─── 8D.4: Firma/nombre del responsable en PDF ───
 
-    public function test_pdf_cuestionario_incluye_responsable(): void
+    public function test_pdf_cuestionario_no_incluye_responsable(): void
     {
         $responsable = $this->crearRepro();
         $responsable->update(['cargo' => 'Poligrafista Senior']);
@@ -327,12 +400,36 @@ class Phase8DPdfDocumentosTest extends TestCase
             'respuestasPorSeccion' => collect(),
         ])->render();
 
+        $this->assertStringNotContainsString('Responsable del Proceso', $view);
+    }
+
+    public function test_pdf_autorizacion_incluye_responsable(): void
+    {
+        $responsable = $this->crearRepro();
+        $responsable->update(['cargo' => 'Poligrafista Senior']);
+        $empresa = Empresa::factory()->create();
+        [$orden, $evaluado, $admin] = $this->crearOrdenConEvaluado($empresa, $responsable);
+
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'total_secciones' => 5,
+            'completado' => true,
+            'acepta_terminos' => true,
+            'firma_digital' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==',
+            'completado_at' => now()->subDay(),
+        ]);
+
+        $view = view('admin.cuestionarios.pdf-autorizacion', [
+            'cuestionario' => $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.responsable']),
+        ])->render();
+
         $this->assertStringContainsString($responsable->name, $view);
         $this->assertStringContainsString('Poligrafista Senior', $view);
         $this->assertStringContainsString('Responsable del Proceso', $view);
     }
 
-    public function test_pdf_cuestionario_sin_responsable_no_muestra_firma(): void
+    public function test_pdf_autorizacion_sin_responsable_no_muestra_firma(): void
     {
         $empresa = Empresa::factory()->create();
         [$orden, $evaluado, $admin] = $this->crearOrdenConEvaluado($empresa);
@@ -347,9 +444,8 @@ class Phase8DPdfDocumentosTest extends TestCase
             'completado_at' => now()->subDay(),
         ]);
 
-        $view = view('admin.cuestionarios.pdf', [
-            'cuestionario' => $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.documentos', 'evaluadoOrden.responsable']),
-            'respuestasPorSeccion' => collect(),
+        $view = view('admin.cuestionarios.pdf-autorizacion', [
+            'cuestionario' => $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.responsable']),
         ])->render();
 
         $this->assertStringNotContainsString('Responsable del Proceso', $view);

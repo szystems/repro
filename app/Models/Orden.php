@@ -30,6 +30,8 @@ class Orden extends Model
         'cantidad_evals',
         'estado',
         'creado_por',
+        'reclutador_id',
+        'confidencial',
         'tipo_creador',
         'fecha_solicitud',
         'fecha_limite',
@@ -52,6 +54,7 @@ class Orden extends Model
         'fecha_limite' => 'date',
         'documentos_adjuntos' => 'array',
         'resultados_visibles_empresa' => 'boolean',
+        'confidencial' => 'boolean',
         'archivada' => 'boolean',
         'archivada_at' => 'datetime',
         // H-09: PII cifrado en base de datos
@@ -114,6 +117,12 @@ class Orden extends Model
     public function creador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creado_por');
+    }
+
+    /** Reclutador de la empresa cliente asignado al proceso (Sprint E). */
+    public function reclutador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reclutador_id');
     }
 
     public function archivadaPor(): BelongsTo

@@ -218,7 +218,7 @@ class EmpresaModulosTest extends TestCase
             ->get(route('empresa.cuestionarios'));
 
         $response->assertStatus(200);
-        $response->assertViewIs('empresa.cuestionarios.index');
+        $response->assertViewIs('admin.cuestionarios.index');
         $response->assertSee($evaluado->nombre);
     }
 

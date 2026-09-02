@@ -60,6 +60,7 @@
                             </div>
                             <div class="col-12 col-md-auto">
                                 <div class="btn-group">
+                                    @include('partials._ayuda_contextual', ['class' => 'me-1'])
                                     <a href="{{ url('show-user/'.$user->id) }}" class="btn btn-outline-secondary">
                                         <i class="bi bi-arrow-left"></i> Volver al perfil
                                     </a>
@@ -248,7 +249,16 @@
                                                                     $todosPermisos = \App\Models\Permission::orderBy('module')->get()->groupBy('module');
                                                                     // Mostrar solo permisos del rol personal (no heredados del rol base repro)
                                                                     $rolPersonal = \App\Models\Role::where('name', 'user_' . $user->id)->with('permissions')->first();
-                                                                    $permisosUsuario = $rolPersonal ? $rolPersonal->permissions->pluck('name')->toArray() : [];
+                                                                    if ($rolPersonal) {
+                                                                        $permisosUsuario = $rolPersonal->permissions->pluck('name')->toArray();
+                                                                    } else {
+                                                                        $permisosUsuario = $user->roles
+                                                                            ->flatMap(fn ($r) => $r->permissions)
+                                                                            ->pluck('name')
+                                                                            ->unique()
+                                                                            ->values()
+                                                                            ->toArray();
+                                                                    }
                                                                     $moduloIconos = [
                                                                         'ordenes' => 'bi-folder',
                                                                         'evaluaciones' => 'bi-clipboard-check',

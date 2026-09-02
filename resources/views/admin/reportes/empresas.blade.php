@@ -216,10 +216,12 @@
                            class="btn btn-danger btn-sm" target="_blank">
                             <i class="bi bi-file-pdf me-1"></i>Exportar PDF
                         </a>
+                        @if(\App\Support\ExportacionesSupport::puedeExportarInformes(Auth::user()))
                         <a href="{{ route('reportes.empresas.excel', request()->query()) }}" 
                            class="btn btn-success btn-sm">
                             <i class="bi bi-file-excel me-1"></i>Exportar Excel
                         </a>
+                        @endif
                     </div>
                 </div>
                 <div class="card-body p-0">

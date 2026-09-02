@@ -48,20 +48,7 @@ class InformacionFamiliarRequest extends FormRequest
             'numero_hijos' => 'nullable|required_if:tiene_hijos,si|integer|min:1|max:20',
             'hijos_menores' => 'nullable|integer|min:0|max:20',
             'hijos_dependientes' => 'nullable|integer|min:0|max:20',
-            
-            // Hogar
-            'personas_hogar' => 'required|integer|min:1|max:50',
-            'dependientes_economicos' => 'required|integer|min:0|max:20',
-            
-            // Vivienda
-            'tipo_vivienda' => 'required|string|in:propia_pagada,propia_pagando,alquilada,prestada,familiar,otro',
-            'monto_hipoteca' => 'nullable|numeric|min:0',
-            'anos_restantes_hipoteca' => 'nullable|integer|min:0|max:50',
-            'monto_alquiler' => 'nullable|numeric|min:0',
-            
-            // Gastos del hogar
-            'personas_contribuyen_gastos' => 'required|integer|min:1|max:20',
-            
+
             // Observaciones
             'observaciones_familiares' => 'nullable|string|max:2000',
         ];
@@ -70,11 +57,18 @@ class InformacionFamiliarRequest extends FormRequest
             $reglas['tiene_hermanos'] = 'required|in:si,no';
         }
 
-        return array_merge(
-            $reglas,
+        $reglasFamilia = array_merge(
             InformacionFamiliarPadres::reglasValidacion(),
             InformacionFamiliarPareja::reglasValidacion(),
-            InformacionFamiliarExparejas::reglasValidacion(),
+        );
+
+        if (! in_array($tipo, ['periodica', 'especifica'], true)) {
+            $reglasFamilia = array_merge($reglasFamilia, InformacionFamiliarExparejas::reglasValidacion());
+        }
+
+        return array_merge(
+            $reglas,
+            $reglasFamilia,
             TablaDinamica::reglasValidacion(2, $tipo)
         );
     }
@@ -93,14 +87,6 @@ class InformacionFamiliarRequest extends FormRequest
             'numero_hijos.integer' => 'El número de hijos debe ser un número entero.',
             'numero_hijos.required_if' => 'Indique el número de hijos.',
             'numero_hijos.min' => 'Debe indicar al menos 1 hijo.',
-            'personas_hogar.required' => 'Debe indicar cuántas personas viven en su hogar.',
-            'personas_hogar.integer' => 'El número de personas debe ser un número entero.',
-            'personas_hogar.min' => 'Debe haber al menos 1 persona en el hogar.',
-            'dependientes_economicos.required' => 'Debe indicar el número de dependientes económicos.',
-            'tipo_vivienda.required' => 'Debe seleccionar el tipo de vivienda.',
-            'tipo_vivienda.in' => 'Seleccione un tipo de vivienda válido.',
-            'personas_contribuyen_gastos.required' => 'Debe indicar cuántas personas contribuyen a los gastos.',
-            'personas_contribuyen_gastos.min' => 'Al menos 1 persona debe contribuir a los gastos.',
         ], InformacionFamiliarPadres::mensajesValidacion(), InformacionFamiliarPareja::mensajesValidacion(), InformacionFamiliarExparejas::mensajesValidacion(), TablaDinamica::mensajesValidacion());
     }
 }

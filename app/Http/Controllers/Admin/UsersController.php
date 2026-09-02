@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\UserMail;
 use App\Mail\UserResetPasswordMail;
+use App\Support\EmpresaPermisosSupport;
 
 class UsersController extends Controller
 {
@@ -122,6 +123,7 @@ class UsersController extends Controller
 
         // Cargar todos los roles válidos (excluir evaluado), ordenados por nivel desc y nombre
         $roles = Role::where('name', '!=', 'evaluado')
+            ->sinPersonales()
             ->orderByDesc('level')
             ->orderBy('display_name')
             ->get();
@@ -206,6 +208,12 @@ class UsersController extends Controller
             }
             $user->empresa_id = $request->input('empresa_id');
             $user->cargo = $request->input('cargo');
+            // Sin titular: mismo perfil que un trabajador creado en el portal cliente
+            if ((int) $user->principal !== 1) {
+                $user->permisos = EmpresaPermisosSupport::permisosDefaultTrabajador();
+            } else {
+                $user->permisos = null;
+            }
         } else {
             // Asegurarse de que empresa_id sea null para otros tipos de usuario
             $user->empresa_id = null;
@@ -249,7 +257,7 @@ class UsersController extends Controller
 
     public function edituser($id)
     {
-        $user = User::with('roles')->find($id);
+        $user = User::with('roles.permissions')->find($id);
         $currentUser = Auth::user();
 
         // Solo el propio usuario puede editar su perfil; editar otros es solo para admin
@@ -271,6 +279,7 @@ class UsersController extends Controller
 
         // Cargar todos los roles válidos (excluir evaluado)
         $roles = Role::where('name', '!=', 'evaluado')
+            ->sinPersonales()
             ->orderByDesc('level')
             ->orderBy('display_name')
             ->get();
@@ -353,9 +362,9 @@ class UsersController extends Controller
         $user->direccion = $request->input('direccion');
         $user->fecha_nacimiento = $request->input('fecha_nacimiento');
 
-        // Actualizar estado principal si se tiene permiso
-        if ($currentUser->role_as >= 2 && $request->has('principal')) {
-            $user->principal = $request->has('principal') ? 1 : 0;
+        // Checkbox principal: en empresa se puede desmarcar (HTML no envía el campo).
+        if ($currentUser->role_as >= 2 && (int) $user->role_as === 2 && $request->has('principal')) {
+            $user->principal = 1;
         }
 
         // Actualizar rol si se tiene permiso (solo admin)
@@ -405,6 +414,12 @@ class UsersController extends Controller
                 $user->empresa_id = $nuevaEmpresaId;
             }
             $user->cargo = $request->input('cargo');
+            if ($currentUser->role_as >= 2) {
+                $user->principal = $request->boolean('principal') ? 1 : 0;
+            }
+            if ((int) $user->principal !== 1 && empty($user->permisos)) {
+                $user->permisos = EmpresaPermisosSupport::permisosDefaultTrabajador();
+            }
         }
 
         if ($user->role_as == 2 && $currentUser->role_as == 3) {
@@ -424,7 +439,11 @@ class UsersController extends Controller
                 // Crear/actualizar rol personal del usuario para permisos granulares
                 $personalRole = \App\Models\Role::firstOrCreate(
                     ['name' => 'user_' . $user->id],
-                    ['display_name' => 'Permisos de ' . $user->name, 'description' => 'Rol personal']
+                    [
+                        'display_name' => 'Permisos de ' . $user->name,
+                        'description' => 'Permisos individuales (interno)',
+                        'level' => 2,
+                    ]
                 );
                 $permissionIds = \App\Models\Permission::whereIn('name', $permisosSeleccionados)->pluck('id')->toArray();
                 $personalRole->permissions()->sync($permissionIds);
@@ -471,14 +490,19 @@ class UsersController extends Controller
         $user = User::find($id);
         $currentUser = Auth::user();
 
-        // Verificar permisos
-        if ($currentUser->role_as < 2 || ($currentUser->role_as == 2 && $user->role_as >= 2)) {
-            return redirect('users')->with('error', 'No tiene permisos para eliminar este usuario');
+        if ((int) $currentUser->id === (int) $user->id) {
+            return redirect('users')->with('error', 'No puede eliminar su propio usuario.');
         }
 
-        // No permitir eliminar usuarios principales
-        if ($user->principal == 1) {
-            return redirect('users')->with('error', 'No se puede eliminar un usuario principal');
+        if ($currentUser->role_as < 3) {
+            return redirect('users')->with('error', 'Solo el administrador puede eliminar usuarios.');
+        }
+
+        if ((int) $user->role_as >= 3) {
+            $otrosAdmins = User::where('role_as', '>=', 3)->where('estado', 1)->where('id', '!=', $user->id)->count();
+            if ($otrosAdmins === 0) {
+                return redirect('users')->with('error', 'No se puede eliminar el último administrador del sistema.');
+            }
         }
 
         // Eliminar foto si existe
@@ -494,7 +518,11 @@ class UsersController extends Controller
         $user->email = $user->email.'-Deleted'.$user->id;
         $user->update();
 
-        return redirect('users')->with('status', __('Usuario eliminado correctamente.'));
+        $avisoPrincipal = ((int) $user->principal === 1)
+            ? ' Era el usuario principal de su empresa; asigne otro titular si hace falta.'
+            : '';
+
+        return redirect('users')->with('status', __('Usuario eliminado correctamente.') . $avisoPrincipal);
     }
 
     public function pdf(Request $request)
