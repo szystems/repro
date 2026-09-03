@@ -1259,7 +1259,7 @@ class CuestionarioController extends Controller
             default => [
                 'Enlace no válido',
                 'No pudimos encontrar un formulario asociado a este enlace.',
-                'Verifique que copió la dirección completa (debe comenzar con reproappv2.szystems.com/cuestionario/…). Si el enlace vino por correo o WhatsApp, pida uno nuevo desde la orden de evaluación.',
+                'Verifique que copió la dirección completa (debe comenzar con '.config('cuestionario_ayuda.host_publico').'/cuestionario/…). Si el enlace vino por correo o WhatsApp, pida uno nuevo desde la orden de evaluación.',
             ],
         };
 

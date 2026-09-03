@@ -8,6 +8,7 @@ mkdir -p \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs
+chown -R www-data:www-data bootstrap/cache storage || true
 chmod -R ug+rwX bootstrap/cache storage || true
 
 php artisan package:discover --ansi || true

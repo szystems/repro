@@ -37,7 +37,7 @@
 ## 📋 MIGRACIÓN — LEER PRIMERO (autorizada 31-ago-2026)
 
 **Plan:** `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`  
-**Siguiente paso:** commitear código prod a GitHub (master está atrás del FTP). Luego MySQL vacío + app en Coolify proyecto **REPRO**. **M5 dump = copia exacta: avisar a Otto antes.** No `portal` DNS aún. No dump/cutover ahora.
+**Siguiente paso:** M5 dump = copia exacta. **Avisar a Otto antes** (freeze Stephany o iPage en mantenimiento). No `portal` DNS. Humo Coolify OK: `/login` 200 en sslip.io. iPage sigue prod.
 
 | ID | Qué falta para EMPEZAR |
 |----|------------------------|
@@ -45,7 +45,7 @@
 | **C2** | Zona Cloudflare `reprogt.com` **Active**. NS `casey` + `jewel`. Correo **iPage**: MX `mx.ipage.com` + SPF `ip4:66.96.128.0/18` + DMARC `p=none`. IMAP/SMTP iPage no van en CF. No Email Routing. No `portal` aún. |
 | **C3** | SSH desde este WSL: permission denied. Coolify Terminal sí. Clave a agregar: `szystems@gmail.com` ed25519. |
 | **C4** | ✅ Coolify **v4.1.2** en `http://5.78.235.235:8000/` (mismo CPX31). Proyecto **REPRO** creado (vacío). Otras apps: Asonata, ControClinic, Portal Szystems, Clínicas del Valle. |
-| **C5** | GitHub App **szystems** ya está en Coolify Sources. Falta conectar el repo `szystems/repro` al proyecto REPRO (después de pushear código actual). |
+| **C5** | ✅ App **repro-portal** (Dockerfile.coolify, UUID `ot2bqftjjqp9d2l2ez7awoha`) **Running**. Humo `/login` 200 en `http://ot2bqftjjqp9d2l2ez7awoha.5.78.235.235.sslip.io`. MySQL 8 **repro-mysql** (`repro_portal`, UUID `y5ix9lpo9ybgd8sh20ufhlnt`) vacío. Volumen `/var/www/storage`. Cron `schedule:run`. No `portal` DNS. |
 | **C6** | Password MySQL iPage + `.env` prod (mismo `APP_KEY`) |
 | **C7** | `MAIL_*` actuales |
 | **C8** | Acceso sitio **reproxela.com** (no está en este repo) |

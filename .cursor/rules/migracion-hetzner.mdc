@@ -13,4 +13,4 @@ Plan canónico: `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-0
 - **M5 = copia exacta.** Antes de dump/import: avisar a Otto. Él avisa a Stephany (no crear órdenes/registros) **o** se pone iPage en mantenimiento / se desconecta para que no escriban. No empezar el dump hasta que Otto confirme el freeze.
 - No resetear passwords de Stephany. No regenerar Word NEVERIA/CORALSA/PERCO.
 - Coolify **sí** está: v4.1.2 en `http://5.78.235.235:8000/` (CPX31 `5.78.235.235`). Proyecto **REPRO** vacío. No tocar Asonata/ControClinic/Portal Szystems/Clínicas del Valle.
-- Siguiente: pushear código actual a GitHub (master ≠ FTP prod). No `portal` DNS aún. Datos = M5.
+- Siguiente: freeze M5 (avisar a Otto). No `portal` DNS. Humo Coolify `/login` 200 en sslip.io. iPage sigue prod.

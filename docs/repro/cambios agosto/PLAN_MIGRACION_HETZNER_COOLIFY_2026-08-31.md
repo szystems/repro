@@ -2,7 +2,7 @@
 
 **Fecha:** 31 de agosto de 2026  
 **Autorización:** Otto (hoy) — Stephany ya dio permiso de pasar a servidor propio.  
-**Estado:** 📋 **C1 + C2 hechos** (dominio + zona Cloudflare Active 1-sep) · **ahora C3–C9** (SSH Hetzner, Coolify, backups) · no cortar iPage.  
+**Estado:** 📋 **M3 humo OK** (sslip.io `/login` 200, 2-sep) · **M4 en repo** · **siguiente = freeze M5** · no cortar iPage.  
 **Supersede:** `H0_MIGRACION_SERVIDOR_2026-08-13.md` (era decisión de negocio; ahora es ejecución).  
 **Prod actual:** https://reproappv2.szystems.com (iPage, LiteSpeed, sin `ZipArchive` / XMLWriter / Imagick).  
 **Repo app:** https://github.com/szystems/repro · `master`
@@ -55,12 +55,12 @@ Marcar ✅ cuando Otto confirme que las tiene a mano. **No escribir contraseñas
 | **C2** | Zona DNS en **Cloudflare** + nameservers | Otto | ✅ 1-sep-2026. Zona **Active**. NS `casey` + `jewel`. Correo **iPage** (casillas creadas ahí): MX `mx.ipage.com` + SPF `ip4:66.96.128.0/18` + DMARC `p=none`. SMTP/IMAP: `smtp.ipage.com:465` / `imap.ipage.com:993` (cliente/app, no van en CF). **No** Email Routing. `@`/`www` A → `66.96.147.159` (proxied). **No** crear `portal` hasta Coolify. |
 | **C3** | SSH o consola Hetzner al CPX31 | Otto | WSL: permission denied. Coolify Terminal OK. Agregar pubkey `szystems@gmail.com` ed25519 a root. |
 | **C4** | ¿Coolify ya está instalado? URL + user admin | Otto | ✅ v4.1.2 · `http://5.78.235.235:8000/` · proyecto **REPRO** (vacío, env production). |
-| **C5** | Conectar Coolify ↔ GitHub (`szystems/repro`) | Otto | GitHub App **szystems** ya existe. Falta resource app + pushear código (GitHub master ≠ iPage FTP). |
+| **C5** | Conectar Coolify ↔ GitHub (`szystems/repro`) | Otto | ✅ App **repro-portal** Running (Dockerfile.coolify). Humo `/login` 200 sslip.io. MySQL 8 vacío. No `portal` DNS. |
 | **C6** | Password MySQL iPage + copia del `.env` prod | Otto | **Obligatorio copiar el mismo `APP_KEY`.** Si se regenera, se rompen sesiones y datos cifrados. |
-| **C7** | SMTP de la app | Otto | Hoy iPage. Luego `noreply@reprogt.com` vía SMTP de **Network Solutions** (no Cloudflare Email Routing). |
+| **C7** | SMTP de la app | Otto | Casillas y SMTP en **iPage**: `noreply@reprogt.com` → `smtp.ipage.com:465` SSL. No Cloudflare Email Routing. |
 | **C8** | Acceso al sitio **reproxela.com** (FTP/cPanel/WordPress) | Otto / Stephany | No está en este repo. Hace falta para moverlo a `reprogt.com` y poner los links. |
 | **C9** | Encender **backups** del VPS en Hetzner | Otto | ✅ ya estaban ON (Disable Backups visible). 7 slots automáticos. |
-| **C10** | Casillas `@reprogt.com` | Otto / Stephany | **Network Solutions** (ilimitadas). DNS del correo vive en Cloudflare. |
+| **C10** | Casillas `@reprogt.com` | Otto / Stephany | ✅ creadas en **iPage** (`info@` y `noreply@`). Contraseñas en `.env.reprogt-mail` (local, no git). |
 
 ---
 
@@ -276,14 +276,14 @@ SSO desde la web **no** está previsto. Un `<a href>` basta.
 
 | Fase | Estado | Fecha |
 |------|--------|-------|
-| M0 Huecos C1–C9 | ⬜ | |
-| M1 Dominio/DNS | ⬜ | |
-| M2 Coolify + MySQL | ⬜ | |
-| M3 App vacía + SSL | ⬜ | |
-| M4 Código TrustProxies / textos | ⬜ | |
-| M5 Dump + storage | ⬜ | |
+| M0 Huecos C1–C9 | 🟡 C3 SSH WSL pendiente; C6–C8 faltan | 2-sep-2026 |
+| M1 Dominio/DNS | ✅ zona CF Active; no `portal` aún | 1-sep-2026 |
+| M2 Coolify + MySQL | ✅ v4.1.2 + repro-mysql | 1-sep-2026 |
+| M3 App vacía + SSL | 🟡 login 200 http sslip.io; HTTPS pendiente de cert | 2-sep-2026 |
+| M4 Código TrustProxies / textos | 🟡 en working tree (host de APP_URL) | 2-sep-2026 |
+| M5 Dump + storage | ⬜ freeze Otto | |
 | M6 Cutover + 301 iPage | ⬜ | |
 | M7 Web + links | ⬜ | |
 | M8 Cierre | ⬜ | |
 
-**Siguiente paso humano:** Otto llena C1–C9. Con eso se puede empezar M1–M3 sin tocar a Stephany.
+**Siguiente paso humano:** Otto confirma freeze M5 (Stephany no escribe **o** iPage en mantenimiento). Luego dump `dbreprov2` + `storage/app`. No `portal` DNS hasta M6.

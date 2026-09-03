@@ -10,9 +10,22 @@ class TrustProxies extends Middleware
     /**
      * The trusted proxies for this application.
      *
+     * Vacío en iPage. En Coolify/Traefik: TRUSTED_PROXIES=*
+     *
      * @var array<int, string>|string|null
      */
     protected $proxies;
+
+    public function __construct()
+    {
+        $trusted = env('TRUSTED_PROXIES');
+
+        if ($trusted === '*' || $trusted === '**') {
+            $this->proxies = '*';
+        } elseif (is_string($trusted) && $trusted !== '') {
+            $this->proxies = array_values(array_filter(array_map('trim', explode(',', $trusted))));
+        }
+    }
 
     /**
      * The headers that should be used to detect proxies.
