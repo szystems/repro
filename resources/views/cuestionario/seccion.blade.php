@@ -165,6 +165,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-<script src="{{ asset('js/cuestionario-autosave.js') }}?v={{ filemtime(public_path('js/cuestionario-autosave.js')) }}"></script>
+<script src="{{ \App\Support\PublicAsset::url('js/cuestionario-autosave.js') }}"></script>
 @include('cuestionario.partials.resaltar-errores-validacion')
 @endpush

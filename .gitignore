@@ -2,7 +2,9 @@
 /vendor/
 /node_modules/
 /public/assets/
-/public/js/
+# Mix/build leftovers; los .js del cuestionario SÍ van en git (Coolify no corre npm)
+/public/js/*
+!/public/js/*.js
 /public/css/
 /storage/
 /bootstrap/cache/

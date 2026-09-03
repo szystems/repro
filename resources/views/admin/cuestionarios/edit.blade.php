@@ -391,8 +391,8 @@
 @push('scripts')
 {{-- Servido desde el propio dominio: con el CDN la vista previa quedaba cargando indefinidamente
      cuando la red del cliente lo bloqueaba. --}}
-<script src="{{ asset('js/mammoth.browser.min.js') }}?v={{ is_file(public_path('js/mammoth.browser.min.js')) ? filemtime(public_path('js/mammoth.browser.min.js')) : time() }}"></script>
-<script src="{{ asset('js/foto-candidato.js') }}?v={{ filemtime(public_path('js/foto-candidato.js')) }}"></script>
+<script src="{{ \App\Support\PublicAsset::url('js/mammoth.browser.min.js') }}"></script>
+<script src="{{ \App\Support\PublicAsset::url('js/foto-candidato.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formEditarCuestionario');

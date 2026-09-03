@@ -63,7 +63,7 @@
         window.formacionAcademicaNiveles = @json(HistorialAcademico::NIVELES);
         window.formacionAcademicaVisibles = @json(HistorialAcademico::mapaNivelesVisibles());
     </script>
-    <script src="{{ asset('js/formacion-academica.js') }}?v={{ filemtime(public_path('js/formacion-academica.js')) }}"></script>
+    <script src="{{ \App\Support\PublicAsset::url('js/formacion-academica.js') }}"></script>
     @endpush
 @endif
 

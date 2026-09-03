@@ -128,7 +128,7 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/fecha-nacimiento-mask.js') }}?v={{ filemtime(public_path('js/fecha-nacimiento-mask.js')) }}"></script>
+<script src="{{ \App\Support\PublicAsset::url('js/fecha-nacimiento-mask.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const dpiInput = document.getElementById('dpi');
