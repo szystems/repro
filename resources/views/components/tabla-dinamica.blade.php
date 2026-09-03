@@ -203,6 +203,6 @@
         </style>
     @endpush
     @push('scripts')
-        <script src="{{ asset('js/tabla-dinamica.js') }}?v={{ filemtime(public_path('js/tabla-dinamica.js')) }}"></script>
+        <script src="{{ \App\Support\PublicAsset::url('js/tabla-dinamica.js') }}"></script>
     @endpush
 @endonce

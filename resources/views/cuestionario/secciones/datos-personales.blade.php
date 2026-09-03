@@ -290,8 +290,8 @@
 
 @push('scripts')
 <script src="{{ asset('js/depto-municipio-select.js') }}"></script>
-<script src="{{ asset('js/foto-candidato.js') }}?v={{ filemtime(public_path('js/foto-candidato.js')) }}"></script>
-<script src="{{ asset('js/fecha-nacimiento-mask.js') }}?v={{ filemtime(public_path('js/fecha-nacimiento-mask.js')) }}"></script>
+<script src="{{ \App\Support\PublicAsset::url('js/foto-candidato.js') }}"></script>
+<script src="{{ \App\Support\PublicAsset::url('js/fecha-nacimiento-mask.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const fechaNacimiento = document.getElementById('fecha_nacimiento');

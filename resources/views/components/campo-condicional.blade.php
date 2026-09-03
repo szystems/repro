@@ -16,6 +16,6 @@
 
 @once
     @push('scripts')
-        <script src="{{ asset('js/campos-condicionales.js') }}?v={{ filemtime(public_path('js/campos-condicionales.js')) }}"></script>
+        <script src="{{ \App\Support\PublicAsset::url('js/campos-condicionales.js') }}"></script>
     @endpush
 @endonce
