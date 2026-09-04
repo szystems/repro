@@ -434,9 +434,10 @@ class UsersController extends Controller
             // Se usa 'permisos_enviados' (campo oculto) para detectar el envío incluso
             // cuando no hay ninguna casilla marcada (HTML no envía arrays vacíos).
             if ($request->has('permisos_enviados')) {
-                $permisosSeleccionados = $request->input('permisos_sistema', []);
+                $permisosSeleccionados = \App\Support\ReproPermisosSupport::conNucleo(
+                    $request->input('permisos_sistema', [])
+                );
 
-                // Crear/actualizar rol personal del usuario para permisos granulares
                 $personalRole = \App\Models\Role::firstOrCreate(
                     ['name' => 'user_' . $user->id],
                     [
@@ -448,15 +449,14 @@ class UsersController extends Controller
                 $permissionIds = \App\Models\Permission::whereIn('name', $permisosSeleccionados)->pluck('id')->toArray();
                 $personalRole->permissions()->sync($permissionIds);
 
-                // Desasociar el rol base 'repro' y asignar solo el rol personal.
-                // Esto garantiza que el usuario tiene EXACTAMENTE los permisos seleccionados,
-                // sin heredar los permisos del rol compartido repro.
-                // IMPORTANTE: CheckRole usa role_as (no user_role), así que role:repro sigue funcionando.
+                // El rol repro se queda: quitarlo dejaba al empleado sin
+                // ordenes.editar si las casillas no cubrían el núcleo.
+                $rolesMantener = [$personalRole->id];
                 $baseRole = \App\Models\Role::where('name', 'repro')->first();
                 if ($baseRole) {
-                    $user->roles()->detach($baseRole->id);
+                    $rolesMantener[] = $baseRole->id;
                 }
-                $user->roles()->syncWithoutDetaching([$personalRole->id]);
+                $user->roles()->syncWithoutDetaching($rolesMantener);
             }
         }
 

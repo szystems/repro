@@ -61,6 +61,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'resultados.ver', 'display_name' => 'Ver Resultados', 'module' => 'resultados'],
             ['name' => 'resultados.descargar', 'display_name' => 'Descargar Resultados', 'module' => 'resultados'],
             ['name' => 'resultados.editar', 'display_name' => 'Editar Resultados', 'module' => 'resultados'],
+            ['name' => 'resultados.eliminar', 'display_name' => 'Eliminar informes (preliminar y final)', 'module' => 'resultados'],
             
             // Módulo: Cuestionarios
             ['name' => 'cuestionarios.ver', 'display_name' => 'Ver Cuestionarios', 'module' => 'cuestionarios'],
@@ -167,7 +168,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $reproPermissions = [
             'ordenes.ver', 'ordenes.crear', 'ordenes.editar', 'ordenes.eliminar',
             'evaluaciones.ver', 'evaluaciones.crear', 'evaluaciones.editar', 'evaluaciones.realizar',
-            'resultados.ver', 'resultados.descargar', 'resultados.editar',
+            'resultados.ver', 'resultados.descargar', 'resultados.editar', 'resultados.eliminar',
             'cuestionarios.ver',
             'empresas.ver',
             'usuarios.ver',

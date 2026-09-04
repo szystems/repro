@@ -241,7 +241,8 @@
                                                             <div class="mb-0">
                                                                 <label class="form-label">Permisos del usuario</label>
                                                                 <div class="form-text mb-2">
-                                                                    Seleccione los permisos que tendrá este usuario REPRO:
+                                                                    Los permisos operativos del núcleo REPRO no se pueden quitar.
+                                                                    Marque solo extras (finanzas, usuarios, reportes, etc.).
                                                                 </div>
                                                                 {{-- Campo oculto para detectar envío aunque no haya casillas marcadas --}}
                                                                 <input type="hidden" name="permisos_enviados" value="1">
@@ -277,8 +278,13 @@
                                                                         @foreach($permsModulo as $perm)
                                                                         <div class="col-md-6 col-lg-4">
                                                                             <div class="form-check">
+                                                                                @if(\App\Support\ReproPermisosSupport::esNucleo($perm->name))
+                                                                                <input type="hidden" name="permisos_sistema[]" value="{{ $perm->name }}">
+                                                                                <input class="form-check-input" type="checkbox" id="perm_{{ $perm->id }}" checked disabled>
+                                                                                @else
                                                                                 <input class="form-check-input" type="checkbox" value="{{ $perm->name }}" name="permisos_sistema[]" id="perm_{{ $perm->id }}" {{ in_array($perm->name, $permisosUsuario) ? 'checked' : '' }}>
-                                                                                <label class="form-check-label small" for="perm_{{ $perm->id }}">{{ $perm->display_name }}</label>
+                                                                                @endif
+                                                                                <label class="form-check-label small" for="perm_{{ $perm->id }}">{{ $perm->display_name }}{{ \App\Support\ReproPermisosSupport::esNucleo($perm->name) ? ' (núcleo)' : '' }}</label>
                                                                             </div>
                                                                         </div>
                                                                         @endforeach

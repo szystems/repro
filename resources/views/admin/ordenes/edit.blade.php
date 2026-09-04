@@ -74,7 +74,7 @@
                                 </div>
                             </div>
 
-                            @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                            @if(Auth::user()->role_as >= 2)
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="empresa_id" class="form-label">Empresa *</label>
@@ -299,7 +299,7 @@
                                                 <option value="especifica" {{ old('evaluados.'.$index.'.tipo_formulario', $evaluado->tipo_formulario) == 'especifica' ? 'selected' : '' }}>Específica</option>
                                             </select>
                                         </div>
-                                        @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                                        @if(Auth::user()->role_as >= 2)
                                         <div class="col-md-6 mb-2">
                                             <label class="form-label">Modalidad</label>
                                             <select class="form-select" name="evaluados[{{ $index }}][modalidad]">
@@ -328,7 +328,7 @@
                                         </div>
                                     </div>
 
-                                    @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                                    @if(Auth::user()->role_as >= 2)
                                     <div class="row">
                                         <div class="col-md-6 mb-2">
                                             <label class="form-label">Polígrafo Asignado</label>
@@ -413,7 +413,7 @@
                                 </span>
                             </div>
                             
-                            @if(Auth::user()->hasAnyRole(['admin', 'repro']) && !in_array($orden->estado, ['entregado', 'cancelado']))
+                            @if(Auth::user()->role_as >= 2 && !in_array($orden->estado, ['entregado', 'cancelado']))
                             <hr>
                             <small class="text-muted">
                                 <i class="bi bi-info-circle"></i>
@@ -528,7 +528,7 @@
                     <option value="especifica">Específica</option>
                 </select>
             </div>
-            @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+            @if(Auth::user()->role_as >= 2)
             <div class="col-md-6 mb-2">
                 <label class="form-label">Modalidad</label>
                 <select class="form-select evaluado-modalidad" name="">
@@ -540,7 +540,7 @@
             @endif
         </div>
         
-        @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+        @if(Auth::user()->role_as >= 2)
         <div class="row">
             <div class="col-md-6 mb-2">
                 <label class="form-label">Polígrafo Asignado</label>
@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded', function() {
         newEvaluado.querySelector('.evaluado-tipo-formulario').name = `evaluados[${evaluadoIndex}][tipo_formulario]`;
         const modalidadEl = newEvaluado.querySelector('.evaluado-modalidad');
         if (modalidadEl) modalidadEl.name = `evaluados[${evaluadoIndex}][modalidad]`;
-        @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+        @if(Auth::user()->role_as >= 2)
         const poligrafistaSelect = newEvaluado.querySelector('.evaluado-poligrafista');
         if (poligrafistaSelect) {
             poligrafistaSelect.name = `evaluados[${evaluadoIndex}][poligrafista_id]`;
@@ -778,5 +778,6 @@ document.addEventListener('DOMContentLoaded', function() {
     actualizarBotonesQuitarEvaluado();
 });
 </script>
+@include('admin.ordenes._js_reclutadores_empresa')
 
 @endsection

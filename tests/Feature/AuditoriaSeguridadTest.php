@@ -552,69 +552,60 @@ class AuditoriaSeguridadTest extends TestCase
         $response->assertOk();
     }
 
-    // Permisos granulares: rol base desvinculado cuando se asignan permisos individuales
-    // ──────────────────────────────────────────────────────────
-
-    public function test_repro_sin_permisos_individuales_no_hereda_permisos_del_rol_base(): void
+    public function test_guardar_permisos_no_quita_rol_repro_ni_nucleo_operativo(): void
     {
         $admin = $this->crearAdmin();
 
-        // Crear repro con rol base (que tiene ordenes.eliminar del setUp del crearRepro)
         $repro = User::factory()->create(['role_as' => 2, 'estado' => 1]);
         $reproRole = Role::where('name', 'repro')->first();
-        $reproRole->permissions()->syncWithoutDetaching(
-            Permission::firstOrCreate(['name' => 'sedes.ver'], ['display_name' => 'Ver sedes', 'module' => 'sedes'])->id
-        );
         $repro->roles()->attach($reproRole);
 
-        // Verificar que hereda sedes.ver del rol base
-        $this->assertTrue($repro->fresh()->hasPermission('sedes.ver'));
-
-        // Admin guarda permisos individuales vacíos (permisos_enviados sin permisos_sistema)
         $this->actingAs($admin)->put(route('users.update', $repro->id), [
             'name' => $repro->name,
             'email' => $repro->email,
             'role_as' => 2,
             'fecha_nacimiento' => '1990-01-01',
             'permisos_enviados' => '1',
-            // permisos_sistema[] ausente = sin permisos
         ]);
 
-        // Ahora el repro NO debe tener sedes.ver (el rol base fue desvinculado)
         $repro->refresh();
         $repro->unsetRelation('roles');
-        $this->assertFalse($repro->hasPermission('sedes.ver'));
+        $this->assertTrue($repro->hasRole('repro'));
+        $this->assertTrue($repro->hasPermission('ordenes.editar'));
+        $this->assertTrue($repro->hasPermission('resultados.eliminar'));
     }
 
-    public function test_repro_con_permiso_individual_solo_tiene_ese_permiso(): void
+    public function test_guardar_extras_mantiene_nucleo_repro(): void
     {
         $admin = $this->crearAdmin();
 
         $repro = User::factory()->create(['role_as' => 2, 'estado' => 1]);
         $reproRole = Role::where('name', 'repro')->first();
-        // Dar al rol base sedes.ver y ordenes.ver
-        $pSedes = Permission::firstOrCreate(['name' => 'sedes.ver'], ['display_name' => 'Ver sedes', 'module' => 'sedes']);
-        $pOrdenes = Permission::firstOrCreate(['name' => 'ordenes.ver'], ['display_name' => 'Ver órdenes', 'module' => 'ordenes']);
-        $reproRole->permissions()->syncWithoutDetaching([$pSedes->id, $pOrdenes->id]);
         $repro->roles()->attach($reproRole);
+        Permission::firstOrCreate(
+            ['name' => 'reportes.ver'],
+            ['display_name' => 'Ver Reportes', 'module' => 'reportes']
+        );
+        Permission::firstOrCreate(
+            ['name' => 'ordenes.ver'],
+            ['display_name' => 'Ver Órdenes', 'module' => 'ordenes']
+        );
 
-        // Admin guarda solo ordenes.ver como permiso individual
         $this->actingAs($admin)->put(route('users.update', $repro->id), [
             'name' => $repro->name,
             'email' => $repro->email,
             'role_as' => 2,
             'fecha_nacimiento' => '1990-01-01',
             'permisos_enviados' => '1',
-            'permisos_sistema' => ['ordenes.ver'],
+            'permisos_sistema' => ['ordenes.ver', 'reportes.ver'],
         ]);
 
         $repro->refresh();
         $repro->unsetRelation('roles');
 
-        // Tiene ordenes.ver (explícito)
-        $this->assertTrue($repro->hasPermission('ordenes.ver'));
-        // NO tiene sedes.ver (no fue seleccionado y el rol base fue desvinculado)
-        $this->assertFalse($repro->hasPermission('sedes.ver'));
+        $this->assertTrue($repro->hasRole('repro'));
+        $this->assertTrue($repro->hasPermission('ordenes.editar'));
+        $this->assertTrue($repro->hasPermission('reportes.ver'));
     }
 }
 

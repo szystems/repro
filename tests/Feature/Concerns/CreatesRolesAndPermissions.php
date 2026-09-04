@@ -32,7 +32,7 @@ trait CreatesRolesAndPermissions
         $reproPermisos = [
             'ordenes.ver', 'ordenes.crear', 'ordenes.editar', 'ordenes.eliminar',
             'evaluaciones.ver', 'evaluaciones.crear', 'evaluaciones.editar', 'evaluaciones.realizar',
-            'resultados.ver', 'resultados.descargar', 'resultados.editar',
+            'resultados.ver', 'resultados.descargar', 'resultados.editar', 'resultados.eliminar',
             'cuestionarios.ver',
             'empresas.ver', 'empresas.crear', 'empresas.editar',
             'usuarios.ver',

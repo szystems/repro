@@ -191,11 +191,36 @@ class OrdenesController extends Controller
 
         $sedes = Sede::where('estado', 1)->orderBy('nombre')->get();
 
-        $reclutadores = $this->reclutadoresParaFormulario(
-            Auth::user()->role_as == 1 ? Auth::user()->empresa_id : null
-        );
+        $empresaIdReclutadores = Auth::user()->role_as == 1
+            ? Auth::user()->empresa_id
+            : (old('empresa_id') ? (int) old('empresa_id') : null);
+
+        $reclutadores = $this->reclutadoresParaFormulario($empresaIdReclutadores);
 
         return view('admin.ordenes.create', compact('empresas', 'poligrafistas', 'sedes', 'reclutadores'));
+    }
+
+    /**
+     * Personal activo de una empresa (gerente + trabajadores) para el combo de reclutador.
+     */
+    public function reclutadoresPorEmpresa(Request $request)
+    {
+        if (Auth::user()->role_as < 2) {
+            abort(403);
+        }
+
+        $empresaId = (int) $request->query('empresa_id');
+        if ($empresaId < 1 || ! Empresa::where('id', $empresaId)->where('estado', 1)->exists()) {
+            return response()->json([]);
+        }
+
+        return response()->json(
+            $this->reclutadoresParaFormulario($empresaId)->map(fn (User $u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'principal' => (int) $u->principal === 1,
+            ])->values()
+        );
     }
 
     /**
@@ -1163,8 +1188,6 @@ class OrdenesController extends Controller
         }
 
         // Staff REPRO (admin o empleado): role_as, no el nombre del rol Spatie.
-        // Al guardar permisos individuales se crea user_{id} y se desasocia 'repro';
-        // hasAnyRole(['repro']) fallaba aunque el permiso ordenes.editar estuviera marcado.
         if (Auth::user()->role_as >= 2) {
             return true;
         }
@@ -1493,8 +1516,7 @@ class OrdenesController extends Controller
      */
     public function eliminarResultadoArchivo(EvaluadoOrden $evaluado, string $tipo)
     {
-        // Solo REPRO y admin
-        if (Auth::user()->role_as < 2) {
+        if (Auth::user()->role_as < 2 || ! Auth::user()->hasPermission('resultados.eliminar')) {
             abort(403, 'No tiene permisos para esta acción.');
         }
 
@@ -1747,7 +1769,7 @@ class OrdenesController extends Controller
     }
 
     /**
-     * Reclutadores (trabajadores) de una empresa para asignación de procesos.
+     * Personal activo de la empresa (gerente + trabajadores) para asignación de procesos.
      */
     private function reclutadoresParaFormulario(?int $empresaId): \Illuminate\Support\Collection
     {
@@ -1756,8 +1778,9 @@ class OrdenesController extends Controller
         }
 
         return User::where('empresa_id', $empresaId)
-            ->where('principal', 0)
+            ->where('role_as', 1)
             ->where('estado', 1)
+            ->orderByDesc('principal')
             ->orderBy('name')
             ->get();
     }
@@ -1768,7 +1791,7 @@ class OrdenesController extends Controller
             $reclutadorId = (int) $request->input('reclutador_id');
             $valido = User::where('id', $reclutadorId)
                 ->where('empresa_id', $empresaId)
-                ->where('principal', 0)
+                ->where('role_as', 1)
                 ->where('estado', 1)
                 ->exists();
 

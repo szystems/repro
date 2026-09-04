@@ -44,7 +44,7 @@
                                     </div>
                                 </div>
                                 
-                                @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                                @if(Auth::user()->role_as >= 2)
                                 <div class="col-md-3 mb-2">
                                     <label class="form-label">Empresa</label>
                                     <select class="form-select" name="empresa_id">

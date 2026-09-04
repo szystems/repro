@@ -55,7 +55,7 @@
                                 @if(Auth::user()->role_as >= 2)
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Empresa <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('empresa_id') is-invalid @enderror" name="empresa_id" required>
+                                    <select class="form-select @error('empresa_id') is-invalid @enderror" name="empresa_id" id="empresa_id" required>
                                         <option value="">Seleccionar empresa...</option>
                                         @foreach($empresas as $empresa)
                                         <option value="{{ $empresa->id }}" {{ old('empresa_id') == $empresa->id ? 'selected' : '' }}>
@@ -292,7 +292,7 @@ function agregarEvaluado(datos = {}) {
                         <option value="especifica" ${tipoFormulario === 'especifica' ? 'selected' : ''}>Específica</option>
                     </select>
                 </div>
-                @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                @if(Auth::user()->role_as >= 2)
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Modalidad</label>
                     <select class="form-select" name="evaluados[${contadorEvaluados}][modalidad]">
@@ -407,4 +407,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+@include('admin.ordenes._js_reclutadores_empresa')
 @endpush

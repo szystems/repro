@@ -2,22 +2,22 @@
 @php
     $mostrarCampos = (Auth::user()->role_as == 1 && (int) Auth::user()->principal === 1)
         || Auth::user()->role_as >= 2;
+    $reclutadores = $reclutadores ?? collect();
 @endphp
 
 @if($mostrarCampos)
 <div class="row">
-    @if(isset($reclutadores) && $reclutadores->count())
     <div class="col-md-6 mb-3">
         <label class="form-label">
             Reclutador asignado
             <small class="text-muted">(opcional)</small>
         </label>
-        <select class="form-select @error('reclutador_id') is-invalid @enderror" name="reclutador_id">
+        <select class="form-select @error('reclutador_id') is-invalid @enderror" name="reclutador_id" id="reclutador_id">
             <option value="">Sin asignar — visible según modo de la empresa</option>
             @foreach($reclutadores as $reclutador)
             <option value="{{ $reclutador->id }}"
                 {{ (string) old('reclutador_id', $orden->reclutador_id ?? '') === (string) $reclutador->id ? 'selected' : '' }}>
-                {{ $reclutador->name }}
+                {{ $reclutador->name }}{{ (int) $reclutador->principal === 1 ? ' (gerente RRHH)' : '' }}
             </option>
             @endforeach
         </select>
@@ -26,9 +26,9 @@
         @enderror
         <small class="text-muted d-block mt-1">
             Define quién gestiona el proceso. Los demás reclutadores no lo verán si está marcado como confidencial.
+            Elija primero la empresa para ver su personal.
         </small>
     </div>
-    @endif
 
     <div class="col-md-6 mb-3">
         <label class="form-label d-block">Visibilidad entre reclutadores</label>

@@ -252,10 +252,14 @@ class Phase8FFuncionalidadesComplejasTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHasNoErrors();
 
-        // Verificar que se creó un rol personal con los permisos
         $personalRole = Role::where('name', 'user_' . $repro->id)->first();
         $this->assertNotNull($personalRole);
-        $this->assertEquals(3, $personalRole->permissions()->count());
+        $nombres = $personalRole->permissions()->pluck('name')->all();
+        $this->assertContains('ordenes.ver', $nombres);
+        $this->assertContains('evaluaciones.ver', $nombres);
+        $this->assertContains('reportes.ver', $nombres);
+        $this->assertContains('ordenes.editar', $nombres);
+        $this->assertTrue($repro->fresh()->hasRole('repro'));
     }
 
     // ========================================

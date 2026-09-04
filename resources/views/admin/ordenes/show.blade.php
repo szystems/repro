@@ -304,7 +304,7 @@
                     </div>
                     <div class="card-body">
 
-                        @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                        @if(Auth::user()->role_as >= 2)
                         <form action="{{ route('ordenes.cambiar-estado', ['orden' => $orden]) }}" method="POST">
                             @csrf
                             @method('PATCH')
@@ -825,7 +825,7 @@
                                         <div class="mb-3">
                                             <div class="btn-group" role="group">
                                                 @if($cuestionario)
-                                                    @if(Auth::user()->hasAnyRole(['admin', 'repro']))
+                                                    @if(Auth::user()->role_as >= 2)
                                                         <a href="{{ route('admin.cuestionarios.show', $cuestionario->id) }}"
                                                            class="btn btn-outline-info btn-sm" title="Ver Cuestionario">
                                                             <i class="bi bi-eye"></i> Ver Cuestionario
@@ -968,6 +968,7 @@
                                                                            class="btn btn-sm btn-outline-info" title="Descargar">
                                                                             <i class="bi bi-download"></i>
                                                                         </a>
+                                                                        @if(Auth::user()->hasPermission('resultados.eliminar'))
                                                                         <form action="{{ route('evaluados.eliminar-resultado-archivo', [$evaluado->id, 'preliminar']) }}"
                                                                               method="POST" class="d-inline"
                                                                               onsubmit="return confirm('¿Eliminar resultado preliminar?')">
@@ -977,6 +978,7 @@
                                                                                 <i class="bi bi-trash"></i>
                                                                             </button>
                                                                         </form>
+                                                                        @endif
                                                                     </div>
                                                                 </div>
                                                             @else
@@ -1012,13 +1014,13 @@
                                                                            class="btn btn-sm btn-outline-success" title="Descargar">
                                                                             <i class="bi bi-download"></i>
                                                                         </a>
-                                                                        @if(Auth::user()->role_as >= 3)
+                                                                        @if(Auth::user()->hasPermission('resultados.eliminar') && (Auth::user()->role_as >= 3 || $orden->estado !== 'entregado'))
                                                                         <form action="{{ route('evaluados.eliminar-resultado-archivo', [$evaluado->id, 'final']) }}"
                                                                               method="POST" class="d-inline"
                                                                               onsubmit="return confirm('¿Eliminar informe final? Esto permite reemplazarlo.')">
                                                                             @csrf
                                                                             @method('DELETE')
-                                                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar (solo admin)">
+                                                                            <button class="btn btn-sm btn-outline-danger" title="{{ $orden->estado === 'entregado' ? 'Eliminar (solo admin: orden entregada)' : 'Eliminar informe final' }}">
                                                                                 <i class="bi bi-trash"></i>
                                                                             </button>
                                                                         </form>

@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Support\EmpresaPermisosSupport;
+use App\Support\ReproPermisosSupport;
 use App\Support\HistorialLaboralPeriodico;
 use App\Support\InformeWordBloquesEvaluador;
 use App\Support\SocioeconomicoComplementariaCampos;
@@ -89,5 +90,13 @@ class RevisionAgosto2026SupportTest extends TestCase
         $this->assertSame('required|array|min:2', $reglas['referencias_familiares']);
         $this->assertSame('required|array|min:2', $reglas['referencias_personales']);
         $this->assertSame('nullable|array', $reglas['referencias_vecinales']);
+    }
+
+    public function test_nucleo_repro_cubre_editar_orden_y_eliminar_informe(): void
+    {
+        $this->assertTrue(ReproPermisosSupport::esNucleo('ordenes.editar'));
+        $this->assertTrue(ReproPermisosSupport::esNucleo('resultados.eliminar'));
+        $this->assertFalse(ReproPermisosSupport::esNucleo('finanzas.editar'));
+        $this->assertContains('ordenes.editar', ReproPermisosSupport::conNucleo(['reportes.ver']));
     }
 }

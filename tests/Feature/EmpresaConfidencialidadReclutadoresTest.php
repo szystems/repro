@@ -6,6 +6,7 @@ use App\Models\Empresa;
 use App\Models\Orden;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\EmpresaPermisosSupport;
 use App\Support\EmpresaVisibilidadReclutadoresSupport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\Concerns\CreatesRolesAndPermissions;
@@ -42,12 +43,15 @@ class EmpresaConfidencialidadReclutadoresTest extends TestCase
         ]);
         $this->principal->roles()->sync([$empresaRole->id]);
 
+        $permisosTrabajador = json_encode(EmpresaPermisosSupport::permisosDefaultTrabajador());
+
         $this->reclutadorA = User::factory()->create([
             'role_as' => 1,
             'empresa_id' => $this->empresa->id,
             'principal' => 0,
             'estado' => 1,
             'name' => 'Reclutador A',
+            'permisos' => $permisosTrabajador,
         ]);
         $this->reclutadorA->roles()->sync([$empresaRole->id]);
 
@@ -57,6 +61,7 @@ class EmpresaConfidencialidadReclutadoresTest extends TestCase
             'principal' => 0,
             'estado' => 1,
             'name' => 'Reclutador B',
+            'permisos' => $permisosTrabajador,
         ]);
         $this->reclutadorB->roles()->sync([$empresaRole->id]);
     }

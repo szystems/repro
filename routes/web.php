@@ -174,6 +174,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // Ver
     Route::middleware(['permission:ordenes.ver'])->group(function () {
         Route::get('ordenes/excel', [OrdenesController::class, 'excel'])->name('ordenes.excel');
+        Route::get('ordenes/reclutadores', [OrdenesController::class, 'reclutadoresPorEmpresa'])->name('ordenes.reclutadores');
         Route::get('ordenes', [OrdenesController::class, 'index'])->name('ordenes.index');
         Route::get('ordenes/{orden}', [OrdenesController::class, 'show'])->name('ordenes.show');
         Route::get('ordenes/{orden}/pdf', [OrdenesController::class, 'pdf'])->name('ordenes.pdf');
@@ -228,6 +229,8 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     });
     Route::middleware(['permission:resultados.editar'])->group(function () {
         Route::post('evaluados/{evaluado}/resultado-archivo', [OrdenesController::class, 'subirResultadoArchivo'])->name('evaluados.subir-resultado-archivo');
+    });
+    Route::middleware(['permission:resultados.eliminar'])->group(function () {
         Route::delete('evaluados/{evaluado}/resultado-archivo/{tipo}', [OrdenesController::class, 'eliminarResultadoArchivo'])->name('evaluados.eliminar-resultado-archivo');
     });
 

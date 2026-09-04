@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\EmpresaPermisosSupport;
+use App\Support\ReproPermisosSupport;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -113,10 +114,15 @@ class User extends Authenticatable
      *
      * Empresa principal: todos los permisos del portal cliente (MAPA).
      * Empresa trabajador: solo permisos_empresa JSON (ignora rol Spatie).
-     * REPRO/admin: permisos del rol Spatie.
+     * Admin (role_as >= 3): todo.
+     * Empleado REPRO: núcleo operativo + permisos de sus roles (repro y/o user_{id}).
      */
     public function hasPermission(string $permissionName): bool
     {
+        if ((int) $this->role_as >= 3) {
+            return true;
+        }
+
         if ($this->isEmpresa()) {
             if ((int) $this->principal === 1) {
                 return EmpresaPermisosSupport::permisoSistemaPermitido($permissionName);
@@ -127,6 +133,10 @@ class User extends Authenticatable
                 : (string) ($this->permisos ?? '');
 
             return EmpresaPermisosSupport::empresaTienePermisoSistema($permisosJson, $permissionName);
+        }
+
+        if ((int) $this->role_as >= 2 && ReproPermisosSupport::esNucleo($permissionName)) {
+            return true;
         }
 
         return $this->roles()
