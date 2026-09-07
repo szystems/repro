@@ -1124,7 +1124,7 @@
                                                     </div>
                                                     <div class="mt-2 d-flex justify-content-between align-items-center">
                                                         <div>
-                                                            <button type="button" class="btn btn-sm btn-outline-secondary insertar-tabla-preliminar" data-evaluado="{{ $evaluado->id }}" title="Inserta una tabla de 2 columnas para llenar">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary insertar-tabla-preliminar" data-evaluado="{{ $evaluado->id }}" title="Inserta una tabla con Resultado y Observaciones">
                                                                 <i class="bi bi-table"></i> Insertar tabla
                                                             </button>
                                                             <button type="button" class="btn btn-sm btn-outline-secondary agregar-fila-preliminar" title="Agrega una fila a la tabla donde está el cursor">
@@ -1585,7 +1585,7 @@ function copiarEnlaceEvaluado(url) {
 (function () {
     const Delta = Quill.import('delta');
     const BlockEmbed = Quill.import('blots/block/embed');
-    const HTML_TABLA_VACIA = '<thead><tr><th>Columna 1</th><th>Columna 2</th></tr></thead>'
+    const HTML_TABLA_VACIA = '<thead><tr><th>Resultado:</th><th>Observaciones:</th></tr></thead>'
         + '<tbody><tr><td><br></td><td><br></td></tr><tr><td><br></td><td><br></td></tr></tbody>';
     let rangoTabla = null;
 
