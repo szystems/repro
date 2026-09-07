@@ -1964,10 +1964,12 @@ class InformeWordRelleno
 
             $tabla = InformeWordXml::reconstruirTabla($tabla, $filas);
 
-            return InformeWordXml::eliminarFilasPorEtiquetas($tabla, [
+            $tabla = InformeWordXml::eliminarFilasPorEtiquetas($tabla, [
                 'Colaboración y actitud durante el proceso',
                 'Observaciones adicionales',
             ]);
+
+            return InformeWordXml::forzarTamanoFuenteTabla($tabla, 24);
         });
     }
 

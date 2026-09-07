@@ -48,7 +48,7 @@
 |----|-----|--------|
 | **Q-I1** | Sede en Informes de empresas (`/reportes/evaluaciones`) | ✅ prod 7-sep · tests + navegador (Xela 490→162) |
 | **Q-E1** | Texto historial de empleos (párrafo ella) | ✅ prod 7-sep · tests + navegador seccion 3 |
-| **Q-T1** | Nombre candidato en título Informe preliminar | ⬜ |
+| **Q-T1** | Nombre candidato en título Informe preliminar | ✅ prod 7-sep · tests + navegador ORD-2026-0141 |
 | **Q-W1** | Word complementaria a 12 pt (solo esa tabla) | ⬜ |
 | **Q-M1** | `NuevaOrdenSedeMail` solo si `tipo_creador=empresa` | ⬜ |
 | **Q-Q1** | Quill: color + tablas (sanitizado) | ⬜ |

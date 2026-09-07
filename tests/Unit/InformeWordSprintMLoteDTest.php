@@ -53,6 +53,17 @@ class InformeWordSprintMLoteDTest extends TestCase
         );
     }
 
+    public function test_complementaria_preempleo_usa_fuente_12(): void
+    {
+        $xml = $this->xmlDe('poligrafo', 'preempleo', 'Observación laboral Q-W1');
+        $limites = InformeWordXml::limitesTablaPorMarcador($xml, 'INFORMACIÓN COMPLEMENTARIA:');
+        $this->assertNotNull($limites);
+        $tabla = substr($xml, $limites[0], $limites[1] - $limites[0]);
+
+        $this->assertStringContainsString('w:val="24"', $tabla);
+        $this->assertDoesNotMatchRegularExpression('/<w:sz(?:Cs)? w:val="22"\/>/', $tabla);
+    }
+
     public function test_periodica_vuelca_word_laboral_en_informacion_complementaria(): void
     {
         $xml = $this->xmlDe('vsa', 'periodica', 'Borrador laboral peri M-P6');
