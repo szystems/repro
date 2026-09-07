@@ -1082,13 +1082,16 @@
                                                       method="POST" class="informe-preliminar-form">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <div id="editor-preliminar-{{ $evaluado->id }}" style="min-height: 150px; max-height: 400px; overflow-y: auto;">
+                                                    <div id="editor-preliminar-{{ $evaluado->id }}" class="editor-informe-preliminar" style="min-height: 150px; max-height: 400px; overflow-y: auto;">
                                                         {!! $evaluado->texto_informe_preliminar !!}
                                                     </div>
                                                     <input type="hidden" name="texto_informe_preliminar"
                                                            id="hidden-preliminar-{{ $evaluado->id }}"
                                                            value="{{ $evaluado->texto_informe_preliminar }}">
-                                                    <div class="mt-2 d-flex justify-content-end">
+                                                    <div class="mt-2 d-flex justify-content-between align-items-center">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary insertar-tabla-preliminar" data-evaluado="{{ $evaluado->id }}">
+                                                            <i class="bi bi-table"></i> Insertar tabla
+                                                        </button>
                                                         <button type="submit" class="btn btn-sm btn-info text-white">
                                                             <i class="bi bi-save"></i> Guardar informe
                                                         </button>
@@ -1275,6 +1278,20 @@
     max-height: 400px;
     overflow-y: auto;
 }
+.ql-editor table,
+.informe-preliminar-form table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.5rem 0;
+}
+.ql-editor th,
+.ql-editor td,
+.informe-preliminar-form th,
+.informe-preliminar-form td {
+    border: 1px solid #adb5bd;
+    padding: 4px 8px;
+    min-width: 4rem;
+}
 .ql-snow .ql-toolbar button,
 .ql-snow.ql-toolbar button {
     width: 28px !important;
@@ -1448,6 +1465,7 @@ document.querySelectorAll('[id^="editor-preliminar-"]').forEach(function(editorE
             toolbar: [
                 [{ 'header': [2, 3, false] }],
                 ['bold', 'italic', 'underline'],
+                [{ 'color': [] }, { 'background': [] }],
                 [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                 ['clean']
             ]
@@ -1465,7 +1483,18 @@ document.querySelectorAll('[id^="editor-preliminar-"]').forEach(function(editorE
         form.addEventListener('submit', function() {
             hiddenInput.value = quill.root.innerHTML;
         });
+        const btnTabla = form.querySelector('.insertar-tabla-preliminar');
+        if (btnTabla) {
+            btnTabla.addEventListener('click', function() {
+                const rango = quill.getSelection(true);
+                quill.clipboard.dangerouslyPasteHTML(
+                    rango ? rango.index : 0,
+                    '<table><thead><tr><th>Columna 1</th><th>Columna 2</th></tr></thead><tbody><tr><td></td><td></td></tr><tr><td></td><td></td></tr></tbody></table><p></p>'
+                );
+            });
+        }
     }
+    window['quillPreliminar' + evaluadoId] = quill;
 });
 </script>
 

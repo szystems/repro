@@ -142,5 +142,31 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $response->assertSee('Informe Preliminar');
         $response->assertSee('— ' . trim($this->evaluado->nombre.' '.$this->evaluado->apellidos), false);
         $response->assertSee('editor-preliminar-' . $this->evaluado->id);
+        $response->assertSee("color': []", false);
+        $response->assertSee('Insertar tabla');
+    }
+
+    /** @test */
+    public function q_q1_conserva_color_y_tablas_y_limpia_xss(): void
+    {
+        $html = '<p><span style="color: rgb(255, 0, 0); font-weight: bold; background-image: url(javascript:alert(1))">Rojo</span></p>'
+            .'<table><tr><td onclick="alert(1)">Celda</td></tr></table>'
+            .'<img src=x onerror=alert(1)>';
+
+        $response = $this->actingAs($this->admin)
+            ->patch(route('evaluados.guardar-informe-preliminar', $this->evaluado->id), [
+                'texto_informe_preliminar' => $html,
+            ]);
+
+        $response->assertRedirect();
+        $guardado = $this->evaluado->fresh()->texto_informe_preliminar;
+
+        $this->assertStringContainsString('<table>', $guardado);
+        $this->assertStringContainsString('Celda', $guardado);
+        $this->assertStringContainsString('color: rgb(255, 0, 0)', $guardado);
+        $this->assertStringNotContainsString('onclick', $guardado);
+        $this->assertStringNotContainsString('<img', $guardado);
+        $this->assertStringNotContainsString('javascript', $guardado);
+        $this->assertStringNotContainsString('background-image', $guardado);
     }
 }

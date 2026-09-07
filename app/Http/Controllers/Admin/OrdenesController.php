@@ -1834,7 +1834,7 @@ class OrdenesController extends Controller
             return $html;
         }
 
-        $tagsPermitidos = '<p><br><b><strong><i><em><u><s><strike><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><pre><code><span><div><a>';
+        $tagsPermitidos = '<p><br><b><strong><i><em><u><s><strike><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><pre><code><span><div><a><table><thead><tbody><tr><th><td>';
         $limpio = strip_tags($html, $tagsPermitidos);
 
         // Eliminar atributos peligrosos (on*, javascript:, style con expresiones)
@@ -1842,6 +1842,34 @@ class OrdenesController extends Controller
         $limpio = preg_replace("/\s+on[a-z]+\s*=\s*'[^']*'/i", '', $limpio) ?? $limpio;
         $limpio = preg_replace('/\s+(href|src)\s*=\s*"\s*javascript:[^"]*"/i', '', $limpio) ?? $limpio;
         $limpio = preg_replace("/\s+(href|src)\s*=\s*'\s*javascript:[^']*'/i", '', $limpio) ?? $limpio;
+        $limpio = preg_replace_callback(
+            '/\sstyle\s*=\s*("|\')(.*?)\1/i',
+            static function (array $m): string {
+                $permitidas = [
+                    'color', 'background-color', 'text-align',
+                    'border', 'border-collapse', 'border-color', 'border-width',
+                    'width', 'padding', 'font-weight', 'font-style', 'text-decoration',
+                ];
+                $keep = [];
+                foreach (explode(';', $m[2]) as $decl) {
+                    if (! str_contains($decl, ':')) {
+                        continue;
+                    }
+                    [$prop, $val] = array_map('trim', explode(':', $decl, 2));
+                    $prop = strtolower($prop);
+                    if (! in_array($prop, $permitidas, true) || $val === '') {
+                        continue;
+                    }
+                    if (preg_match('/expression|javascript|behavior|@import|url\s*\(/i', $val)) {
+                        continue;
+                    }
+                    $keep[] = $prop.': '.$val;
+                }
+
+                return $keep === [] ? '' : ' style="'.implode('; ', $keep).'"';
+            },
+            $limpio
+        ) ?? $limpio;
 
         return $limpio;
     }
