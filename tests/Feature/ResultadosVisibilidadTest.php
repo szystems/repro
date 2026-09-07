@@ -431,6 +431,8 @@ class ResultadosVisibilidadTest extends TestCase
         ]);
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'nombre' => 'Carmen Fernanda',
+            'apellidos' => 'Castillo VistaCliente',
             'cuestionario_completado' => true,
             'texto_informe_preliminar' => '<p>Informe visible para empresa</p>',
         ]);
@@ -440,6 +442,8 @@ class ResultadosVisibilidadTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Informe visible para empresa', false);
+        $response->assertSee('Informe Preliminar / Observaciones');
+        $response->assertSee('Carmen Fernanda Castillo VistaCliente');
     }
 
     public function test_empresa_ve_informe_de_evaluado_listo_aunque_orden_no_este_entregada(): void

@@ -8,6 +8,7 @@
         <div class="card-header bg-success bg-opacity-10 py-2">
             <h6 class="mb-0 text-success">
                 <i class="bi bi-file-earmark-check"></i> Informe Final
+                — {{ trim($evaluado->nombre.' '.$evaluado->apellidos) }}
                 <span class="badge bg-success ms-2">Disponible</span>
             </h6>
         </div>
@@ -25,6 +26,7 @@
         <div class="card-header bg-info bg-opacity-10 py-2">
             <h6 class="mb-0 text-info">
                 <i class="bi bi-file-earmark-text"></i> Informe Preliminar / Observaciones
+                — {{ trim($evaluado->nombre.' '.$evaluado->apellidos) }}
             </h6>
         </div>
         <div class="card-body">
@@ -45,6 +47,7 @@
         <div class="card-header bg-info bg-opacity-10 py-2">
             <h6 class="mb-0 text-info">
                 <i class="bi bi-file-earmark-arrow-down"></i> Informe Preliminar
+                — {{ trim($evaluado->nombre.' '.$evaluado->apellidos) }}
             </h6>
         </div>
         <div class="card-body py-2">
