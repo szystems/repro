@@ -1151,6 +1151,10 @@ class OrdenesController extends Controller
      */
     private function notificarUsuariosSede(Orden $orden): void
     {
+        if ($orden->tipo_creador !== 'empresa') {
+            return;
+        }
+
         try {
             $usuarios = User::where('sede_id', $orden->sede_id)
                 ->where('estado', 1)

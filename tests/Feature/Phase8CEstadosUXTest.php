@@ -324,14 +324,14 @@ class Phase8CEstadosUXTest extends TestCase
 
     // ─── 8C.12: Notificación nueva orden a sede ───
 
-    public function test_nueva_orden_con_sede_envia_notificacion(): void
+    public function test_nueva_orden_repro_con_sede_no_envia_notificacion_a_sede(): void
     {
         Mail::fake();
 
         $admin = $this->crearAdmin();
         $sede = Sede::factory()->create();
         $empresa = Empresa::factory()->create();
-        $reproSede = $this->crearRepro($sede);
+        $this->crearRepro($sede);
 
         $response = $this->actingAs($admin)->post(route('ordenes.store'), [
             'empresa_id' => $empresa->id,
@@ -343,6 +343,37 @@ class Phase8CEstadosUXTest extends TestCase
                     'apellidos' => 'Evaluado',
                     'dpi' => '1234567890123',
                     'email' => 'eval@test.com',
+                    'tipo_servicio' => 'poligrafo',
+                    'tipo_formulario' => 'preempleo',
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        Mail::assertNotQueued(NuevaOrdenSedeMail::class);
+    }
+
+    public function test_nueva_orden_cliente_con_sede_envia_notificacion(): void
+    {
+        Mail::fake();
+
+        $sede = Sede::factory()->create();
+        $empresa = Empresa::factory()->create();
+        $cliente = $this->crearEmpresa($empresa);
+        $this->crearRepro($sede);
+
+        $response = $this->actingAs($cliente)->post(route('ordenes.store'), [
+            'empresa_id' => $empresa->id,
+            'sede_id' => $sede->id,
+            'prioridad' => 'normal',
+            'evaluados' => [
+                [
+                    'nombre' => 'Test',
+                    'apellidos' => 'Cliente',
+                    'dpi' => '1234567890123',
+                    'email' => 'eval-cliente@test.com',
                     'tipo_servicio' => 'poligrafo',
                     'tipo_formulario' => 'preempleo',
                 ],
