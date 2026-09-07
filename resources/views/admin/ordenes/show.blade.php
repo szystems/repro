@@ -1108,6 +1108,20 @@
                                                     <input type="hidden" name="texto_informe_preliminar"
                                                            id="hidden-preliminar-{{ $evaluado->id }}"
                                                            value="{{ $evaluado->texto_informe_preliminar }}">
+                                                    <div class="repro-colores-preliminar" role="group" aria-label="Colores del informe">
+                                                        <span class="repro-colores-label">Color de letra:</span>
+                                                        <button type="button" class="repro-swatch-color" data-color="#000000" title="Negro" aria-label="Color negro" style="background:#000000;"></button>
+                                                        <button type="button" class="repro-swatch-color" data-color="#e60000" title="Rojo" aria-label="Color rojo" style="background:#e60000;"></button>
+                                                        <button type="button" class="repro-swatch-color" data-color="#ff9900" title="Naranja" aria-label="Color naranja" style="background:#ff9900;"></button>
+                                                        <button type="button" class="repro-swatch-color" data-color="#008a00" title="Verde" aria-label="Color verde" style="background:#008a00;"></button>
+                                                        <button type="button" class="repro-swatch-color" data-color="#0066cc" title="Azul" aria-label="Color azul" style="background:#0066cc;"></button>
+                                                        <button type="button" class="repro-swatch-color" data-color="#9933ff" title="Morado" aria-label="Color morado" style="background:#9933ff;"></button>
+                                                        <span class="repro-colores-label ms-2">Fondo:</span>
+                                                        <button type="button" class="repro-swatch-bg" data-color="#ffff00" title="Fondo amarillo" aria-label="Fondo amarillo" style="background:#ffff00;"></button>
+                                                        <button type="button" class="repro-swatch-bg" data-color="#b7e1cd" title="Fondo verde" aria-label="Fondo verde" style="background:#b7e1cd;"></button>
+                                                        <button type="button" class="repro-swatch-bg" data-color="#cce5ff" title="Fondo azul" aria-label="Fondo azul" style="background:#cce5ff;"></button>
+                                                        <button type="button" class="repro-swatch-bg repro-swatch-clear" data-color="" title="Quitar fondo" aria-label="Quitar fondo"></button>
+                                                    </div>
                                                     <div class="mt-2 d-flex justify-content-between align-items-center">
                                                         <div>
                                                             <button type="button" class="btn btn-sm btn-outline-secondary insertar-tabla-preliminar" data-evaluado="{{ $evaluado->id }}" title="Inserta una tabla de 2 columnas para llenar">
@@ -1117,7 +1131,7 @@
                                                                 <i class="bi bi-plus"></i> Agregar fila
                                                             </button>
                                                             <div class="form-text mt-1 mb-0">
-                                                                Seleccione texto en una celda y use <strong>B</strong> o el color de la barra. La <strong>×</strong> elimina la fila.
+                                                                Seleccione el texto y pulse un cuadro de <strong>Color de letra</strong> o <strong>Fondo</strong>. La <strong>A</strong> de la barra abre más colores. La <strong>×</strong> elimina la fila.
                                                             </div>
                                                         </div>
                                                         <button type="submit" class="btn btn-sm btn-info text-white">
@@ -1293,6 +1307,15 @@
     border: 1px solid #ced4da;
     border-radius: 4px 4px 0 0;
     padding: 6px 8px;
+    overflow: visible;
+}
+.informe-preliminar-form,
+.card:has(.informe-preliminar-form),
+.card-body:has(.informe-preliminar-form) {
+    overflow: visible;
+}
+.ql-snow .ql-picker.ql-expanded .ql-picker-options {
+    z-index: 2000;
 }
 .ql-container.ql-snow {
     border: 1px solid #ced4da;
@@ -1368,9 +1391,57 @@
     height: 24px !important;
     font-size: 14px;
 }
+.ql-snow .ql-color-picker,
+.ql-snow .ql-background {
+    border: 1px solid #adb5bd;
+    border-radius: 4px;
+    padding: 0 2px;
+    background: #fff;
+}
 .ql-snow .ql-picker-label {
     padding-left: 8px;
     padding-right: 2px;
+}
+.repro-colores-preliminar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+}
+.repro-colores-preliminar .repro-colores-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #495057;
+    margin-right: 2px;
+}
+.repro-swatch-color,
+.repro-swatch-bg {
+    width: 26px;
+    height: 26px;
+    border: 2px solid #495057;
+    border-radius: 4px;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,.12);
+}
+.repro-swatch-color:hover,
+.repro-swatch-bg:hover {
+    outline: 2px solid #0d6efd;
+    outline-offset: 1px;
+}
+.repro-swatch-bg.repro-swatch-clear {
+    background: #fff;
+    position: relative;
+}
+.repro-swatch-bg.repro-swatch-clear::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    top: 50%;
+    border-top: 2px solid #dc3545;
+    transform: rotate(-45deg);
 }
 .ql-snow .ql-picker-label svg,
 .ql-snow .ql-picker-options svg {
@@ -1740,6 +1811,16 @@ function copiarEnlaceEvaluado(url) {
                 quill.removeFormat(quill.getSelection(true));
             });
         });
+        const colorLabel = toolbar.container.querySelector('.ql-color .ql-picker-label');
+        if (colorLabel) {
+            colorLabel.setAttribute('title', 'Color de letra — pulse para ver la paleta');
+            colorLabel.setAttribute('aria-label', 'Color de letra');
+        }
+        const bgLabel = toolbar.container.querySelector('.ql-background .ql-picker-label');
+        if (bgLabel) {
+            bgLabel.setAttribute('title', 'Color de fondo — pulse para ver la paleta');
+            bgLabel.setAttribute('aria-label', 'Color de fondo');
+        }
 
         if (hiddenInput.value) {
             quill.clipboard.dangerouslyPasteHTML(hiddenInput.value);
@@ -1779,6 +1860,23 @@ function copiarEnlaceEvaluado(url) {
                     agregarFilaA(table);
                 });
             }
+            form.querySelectorAll('.repro-swatch-color').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const value = btn.getAttribute('data-color');
+                    formatoEnTablaOQuill('foreColor', value, function () {
+                        quill.format('color', value);
+                    });
+                });
+            });
+            form.querySelectorAll('.repro-swatch-bg').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const raw = btn.getAttribute('data-color');
+                    const value = raw ? raw : false;
+                    formatoEnTablaOQuill('backColor', value === false ? 'transparent' : value, function () {
+                        quill.format('background', value);
+                    });
+                });
+            });
         }
         window['quillPreliminar' + evaluadoId] = quill;
     });

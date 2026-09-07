@@ -146,6 +146,8 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $response->assertSee('Insertar tabla');
         $response->assertSee('Agregar fila');
         $response->assertSee('Eliminar fila');
+        $response->assertSee('Color de letra');
+        $response->assertSee('repro-swatch-color');
         $response->assertSee('reproTabla');
         $response->assertSee('foreColor');
     }
