@@ -47,11 +47,11 @@
 | ID | Pedido | Cambio | Riesgo | Orden |
 |----|--------|--------|--------|-------|
 | **Q-I1** | Sede + fechas en informes | `<select name="sede_id">` en `evaluaciones.blade.php`. Backend ya filtra. | Bajo | ✅ prod 7-sep |
-| **Q-E1** | Texto historial de empleos | Párrafo de ella en `historial-laboral.blade.php` (y peri si aplica) | Bajo | 2 |
-| **Q-T1** | Nombre en título preliminar | Header en `ordenes/show.blade.php` | Bajo | 3 |
-| **Q-W1** | Complementaria Word 12 | `forzarTamanoFuenteTabla(..., 24)` solo en esa tabla | Bajo | 4 |
-| **Q-M1** | Mail nueva orden solo cliente | `notificarUsuariosSede()` si `tipo_creador === 'empresa'` | Bajo | 5 |
-| **Q-Q1** | Quill color + tablas | Toolbar + `sanitizarHtmlInforme()` | Medio | 6 |
+| **Q-E1** | Texto historial de empleos | Párrafo de ella en `historial-laboral.blade.php` (y peri si aplica) | Bajo | ✅ prod 7-sep |
+| **Q-T1** | Nombre en título preliminar | Header en `ordenes/show.blade.php` | Bajo | ✅ prod 7-sep |
+| **Q-W1** | Complementaria Word 12 | `forzarTamanoFuenteTabla(..., 24)` solo en esa tabla | Bajo | ✅ prod 7-sep |
+| **Q-M1** | Mail nueva orden solo cliente | `notificarUsuariosSede()` si `tipo_creador === 'empresa'` | Bajo | ✅ prod 7-sep |
+| **Q-Q1** | Quill color + tablas | Toolbar + `sanitizarHtmlInforme()` | Medio | ✅ prod 7-sep |
 | **Q-A1** | Dos personas + columna Entrevistó | `entrevistador_id` nullable + Autoasignarme entrevista + historial/Excel | Medio · aditivo | 7 |
 | **Q-C1** | Inventario de correos | Documentado aquí. Sin código. | — | Hecho |
 

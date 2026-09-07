@@ -41,7 +41,7 @@
 
 **Origen:** WA 7-sep 09:46 (lista final Stephany).  
 **Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
-**Siguiente:** implementar Q-I1 → Q-E1 → Q-T1 → Q-W1 → Q-M1 → Q-Q1 → Q-A1. Q-C1 documentado (sin código).  
+**Siguiente:** Q-A1 (`entrevistador_id` + Autoasignarme entrevista + columna historial). Q-C1 documentado.  
 **No:** `migrate:fresh` · pisar Programó/Encargado · Coolify Upgrade · tocar ControClinic/portal Szystems cleanup.
 
 | ID | Qué | Estado |
@@ -49,10 +49,10 @@
 | **Q-I1** | Sede en Informes de empresas (`/reportes/evaluaciones`) | ✅ prod 7-sep · tests + navegador (Xela 490→162) |
 | **Q-E1** | Texto historial de empleos (párrafo ella) | ✅ prod 7-sep · tests + navegador seccion 3 |
 | **Q-T1** | Nombre candidato en título Informe preliminar | ✅ prod 7-sep · tests + navegador ORD-2026-0141 |
-| **Q-W1** | Word complementaria a 12 pt (solo esa tabla) | ⬜ |
-| **Q-M1** | `NuevaOrdenSedeMail` solo si `tipo_creador=empresa` | ⬜ |
-| **Q-Q1** | Quill: color + tablas (sanitizado) | ⬜ |
-| **Q-A1** | `entrevistador_id` + Autoasignarme entrevista + columna historial | ⬜ |
+| **Q-W1** | Word complementaria a 12 pt (solo esa tabla) | ✅ prod 7-sep |
+| **Q-M1** | `NuevaOrdenSedeMail` solo si `tipo_creador=empresa` | ✅ prod 7-sep |
+| **Q-Q1** | Quill: color + tablas (sanitizado) | ✅ prod 7-sep · toolbar color + Insertar tabla en ORD-2026-0141 |
+| **Q-A1** | `entrevistador_id` + Autoasignarme entrevista + columna historial | 🔄 en curso |
 | **Q-C1** | Inventario de correos | ✅ en el plan |
 
 ---

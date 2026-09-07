@@ -252,6 +252,7 @@
                                     <th>Sede</th>
                                     <th>Programó</th>
                                     <th>Encargado</th>
+                                    <th>Entrevistó</th>
                                     <th>Tipo</th>
                                     <th>Fecha</th>
                                     <th>Estado de Evaluación</th>
@@ -275,6 +276,7 @@
                                     <td class="small">{{ $h->sede->nombre ?? '—' }}</td>
                                     <td class="small">{{ $h->poligrafo ? $h->poligrafo->name : '—' }}</td>
                                     <td class="small">{{ $h->responsable ? $h->responsable->name : 'Sin asignar' }}</td>
+                                    <td class="small">{{ $h->entrevistador ? $h->entrevistador->name : 'Sin asignar' }}</td>
                                     <td><span class="badge bg-primary">{{ ucfirst($h->tipo_servicio ?? '—') }}</span></td>
                                     <td class="small text-muted">{{ $h->fecha_programada ? \Carbon\Carbon::parse($h->fecha_programada)->format('d/m/Y H:i') : '—' }}</td>
                                     <td><span class="badge bg-{{ $estadoColor }}">{{ ucfirst(str_replace('_', ' ', $h->estado_evaluacion)) }}</span></td>

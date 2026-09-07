@@ -866,13 +866,92 @@ class OrdenesControllerTest extends TestCase
             ->assertSee('Encargado')
             ->assertSee('Programó');
 
-        $userEmpresa = User::factory()->create(['role_as' => 1, 'empresa_id' => $empresa->id, 'estado' => 1]);
+        $userEmpresa = User::factory()->create(['role_as' => 1, 'empresa_id' => $empresa->id, 'estado' => 1, 'principal' => 1]);
         $userEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
 
         $this->actingAs($userEmpresa)
             ->get(route('ordenes.show', $orden))
             ->assertOk()
             ->assertDontSee('Autoasignarme')
+            ->assertDontSee('Autoasignarme entrevista')
             ->assertDontSee('Otto Programo');
+    }
+
+    public function test_autoasignar_entrevistador_no_pisa_programo_ni_encargado(): void
+    {
+        $programo = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $programo->roles()->attach(Role::where('name', 'repro')->first());
+        $encargado = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $encargado->roles()->attach(Role::where('name', 'repro')->first());
+        $entrevisto = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $entrevisto->roles()->attach(Role::where('name', 'repro')->first());
+
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'poligrafista_id' => $programo->id,
+            'responsable_id' => $encargado->id,
+            'entrevistador_id' => null,
+        ]);
+
+        $this->actingAs($entrevisto)
+            ->post(route('evaluados.autoasignar-entrevistador', $evaluado))
+            ->assertRedirect();
+
+        $evaluado->refresh();
+        $this->assertEquals($entrevisto->id, $evaluado->entrevistador_id);
+        $this->assertEquals($programo->id, $evaluado->poligrafista_id);
+        $this->assertEquals($encargado->id, $evaluado->responsable_id);
+    }
+
+    public function test_empresa_no_puede_autoasignar_entrevistador(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $userEmpresa = User::factory()->create(['role_as' => 1, 'empresa_id' => $empresa->id, 'estado' => 1]);
+        $userEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'entrevistador_id' => null,
+        ]);
+
+        $this->actingAs($userEmpresa)
+            ->post(route('evaluados.autoasignar-entrevistador', $evaluado))
+            ->assertForbidden();
+
+        $evaluado->refresh();
+        $this->assertNull($evaluado->entrevistador_id);
+    }
+
+    public function test_ficha_orden_muestra_entrevisto_y_oculta_a_empresa(): void
+    {
+        $repro = User::factory()->create(['role_as' => 2, 'estado' => 1, 'name' => 'Ana Entrevista']);
+        $repro->roles()->attach(Role::where('name', 'repro')->first());
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'entrevistador_id' => $repro->id,
+            'nombre' => 'Carmen',
+            'apellidos' => 'Castillo',
+        ]);
+
+        $this->actingAs($repro)
+            ->get(route('ordenes.show', $orden))
+            ->assertOk()
+            ->assertSee('Entrevistó')
+            ->assertSee('Autoasignarme entrevista')
+            ->assertSee('Ana Entrevista');
+
+        $userEmpresa = User::factory()->create(['role_as' => 1, 'empresa_id' => $empresa->id, 'estado' => 1, 'principal' => 1]);
+        $userEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $this->actingAs($userEmpresa)
+            ->get(route('ordenes.show', $orden))
+            ->assertOk()
+            ->assertDontSee('Autoasignarme entrevista')
+            ->assertDontSee('Ana Entrevista');
     }
 }

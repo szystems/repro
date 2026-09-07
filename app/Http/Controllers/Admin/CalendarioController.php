@@ -101,7 +101,7 @@ class CalendarioController extends Controller
             ->deOrdenesActivas()
             ->whereNotNull('fecha_programada')
             ->whereBetween('fecha_programada', [$inicioHist, $finHist])
-            ->with(['poligrafo', 'responsable', 'sede', 'orden.empresa']);
+            ->with(['poligrafo', 'responsable', 'entrevistador', 'sede', 'orden.empresa']);
         $this->aplicarFiltrosCitas($historialQuery, $filtros);
 
         $historialReprogQuery = EvaluadoOrden::query()
@@ -109,7 +109,7 @@ class CalendarioController extends Controller
             ->where('estado_programacion', 'reprogramado')
             ->whereNotNull('fecha_programada_original')
             ->whereBetween('fecha_programada_original', [$inicioHist, $finHist])
-            ->with(['poligrafo', 'responsable', 'sede', 'orden.empresa']);
+            ->with(['poligrafo', 'responsable', 'entrevistador', 'sede', 'orden.empresa']);
         $this->aplicarFiltrosCitas($historialReprogQuery, $filtros);
 
         $historial = $historialQuery->get()
@@ -186,7 +186,7 @@ class CalendarioController extends Controller
             ->deOrdenesActivas()
             ->programados()
             ->enDia($fecha)
-            ->with(['poligrafo', 'responsable', 'sede', 'orden.empresa']);
+            ->with(['poligrafo', 'responsable', 'entrevistador', 'sede', 'orden.empresa']);
         $this->aplicarFiltrosCitas($query, $filtros);
 
         $citas = $query->orderBy('fecha_programada')->get();
@@ -197,7 +197,7 @@ class CalendarioController extends Controller
             ->where('estado_programacion', 'reprogramado')
             ->whereNotNull('fecha_programada_original')
             ->whereDate('fecha_programada_original', $fecha)
-            ->with(['poligrafo', 'responsable', 'sede', 'orden.empresa']);
+            ->with(['poligrafo', 'responsable', 'entrevistador', 'sede', 'orden.empresa']);
         $this->aplicarFiltrosCitas($citasHistoricas, $filtros);
         $citasHistoricas = $citasHistoricas
             ->orderBy('fecha_programada_original')
@@ -344,7 +344,7 @@ class CalendarioController extends Controller
             ->deOrdenesActivas()
             ->whereNotNull('fecha_programada')
             ->whereBetween('fecha_programada', [$inicio, $fin->copy()->endOfDay()])
-            ->with(['poligrafo', 'responsable', 'sede', 'orden.empresa']);
+            ->with(['poligrafo', 'responsable', 'entrevistador', 'sede', 'orden.empresa']);
 
         $this->aplicarFiltrosCitas($query, $this->filtrosDesdeRequest($request));
 

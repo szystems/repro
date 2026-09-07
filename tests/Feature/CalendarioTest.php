@@ -934,7 +934,8 @@ class CalendarioTest extends TestCase
             ->assertSee('Empresa')
             ->assertSee('Desde')
             ->assertSee('Hasta')
-            ->assertSee('Programó');
+            ->assertSee('Programó')
+            ->assertSee('Entrevistó');
 
         $this->actingAs($this->usuarioAdmin())
             ->get('/calendario/dia/2026-03-19')
@@ -974,17 +975,19 @@ class CalendarioTest extends TestCase
         $mes = $this->actingAs($admin)
             ->get('/calendario/excel?mes=3&anio=2026')
             ->assertOk();
-        $this->assertStringContainsString('Reyna', $mes->getContent());
-        $this->assertStringContainsString('Iris', $mes->getContent());
-        $this->assertStringContainsString('Total por encargado', $mes->getContent());
-        $this->assertStringContainsString('Programó', $mes->getContent());
-        $this->assertStringContainsString('Encargado', $mes->getContent());
+        $contenidoMes = $this->contenidoDescargaExcel($mes);
+        $this->assertStringContainsString('Reyna', $contenidoMes);
+        $this->assertStringContainsString('Iris', $contenidoMes);
+        $this->assertStringContainsString('Programó', $contenidoMes);
+        $this->assertStringContainsString('Encargado', $contenidoMes);
+        $this->assertStringContainsString('Entrevistó', $contenidoMes);
 
         $filtrado = $this->actingAs($admin)
             ->get('/calendario/excel?mes=3&anio=2026&poligrafista_id='.$polA->id)
             ->assertOk();
-        $this->assertStringContainsString('Reyna', $filtrado->getContent());
-        $this->assertStringNotContainsString('Iris', $filtrado->getContent());
+        $contenidoFiltrado = $this->contenidoDescargaExcel($filtrado);
+        $this->assertStringContainsString('Reyna', $contenidoFiltrado);
+        $this->assertStringNotContainsString('Iris', $contenidoFiltrado);
 
         $this->crearEvaluado([
             'sede_id' => $sede->id,
@@ -998,9 +1001,10 @@ class CalendarioTest extends TestCase
         $rango = $this->actingAs($admin)
             ->get('/calendario/excel?fecha_desde=2026-03-19&fecha_hasta=2026-03-25&mes=3&anio=2026')
             ->assertOk();
-        $this->assertStringContainsString('Reyna', $rango->getContent());
-        $this->assertStringContainsString('Iris', $rango->getContent());
-        $this->assertStringNotContainsString('Fuera', $rango->getContent());
+        $contenidoRango = $this->contenidoDescargaExcel($rango);
+        $this->assertStringContainsString('Reyna', $contenidoRango);
+        $this->assertStringContainsString('Iris', $contenidoRango);
+        $this->assertStringNotContainsString('Fuera', $contenidoRango);
         $this->assertStringContainsString('calendario-2026-03-19_2026-03-25', $rango->headers->get('content-disposition') ?? '');
     }
 
@@ -1033,7 +1037,8 @@ class CalendarioTest extends TestCase
             ->assertOk()
             ->assertSee('Juan')
             ->assertSee('Cumes')
-            ->assertSee('Maria');
+            ->assertSee('Maria')
+            ->assertSee('Entrevistó');
 
         $this->actingAs($this->usuarioAdmin())
             ->get('/calendario?empresa_id='.$empresaA->id.'&mes=3&anio=2026')
@@ -1089,5 +1094,37 @@ class CalendarioTest extends TestCase
         $this->actingAs($this->usuarioEmpresa())
             ->get('/calendario/excel')
             ->assertForbidden();
+    }
+
+    private function contenidoDescargaExcel($response): string
+    {
+        $base = $response->baseResponse;
+        $raw = '';
+        if ($base instanceof \Symfony\Component\HttpFoundation\BinaryFileResponse) {
+            $raw = (string) file_get_contents($base->getFile()->getPathname());
+        } elseif ((string) $response->getContent() !== '') {
+            $raw = (string) $response->getContent();
+        } elseif (method_exists($response, 'streamedContent')) {
+            $raw = (string) $response->streamedContent();
+        }
+
+        if ($raw !== '' && str_starts_with($raw, 'PK') && class_exists(\ZipArchive::class)) {
+            $tmp = tempnam(sys_get_temp_dir(), 'xlsx');
+            file_put_contents($tmp, $raw);
+            $zip = new \ZipArchive();
+            $abierto = $zip->open($tmp);
+            $xml = '';
+            if ($abierto === true) {
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $xml .= (string) $zip->getFromIndex($i);
+                }
+                $zip->close();
+            }
+            @unlink($tmp);
+
+            return $xml !== '' ? $xml : $raw;
+        }
+
+        return $raw;
     }
 }

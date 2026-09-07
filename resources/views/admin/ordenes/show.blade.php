@@ -219,6 +219,7 @@
                                     @php
                                         $quienProgramo = $orden->evaluados->whereNotNull('poligrafista_id')->pluck('poligrafista.name')->unique();
                                         $encargadosAsignados = $orden->evaluados->whereNotNull('responsable_id')->pluck('responsable.name')->unique();
+                                        $entrevistadoresAsignados = $orden->evaluados->whereNotNull('entrevistador_id')->pluck('entrevistador.name')->unique();
                                     @endphp
                                     @if($quienProgramo->isNotEmpty())
                                         @foreach($quienProgramo as $nombreProgramo)
@@ -233,6 +234,16 @@
                                     @if($encargadosAsignados->isNotEmpty())
                                         @foreach($encargadosAsignados as $nombreEncargado)
                                             <span class="badge bg-success me-1">{{ $nombreEncargado }}</span>
+                                        @endforeach
+                                    @else
+                                        <span class="text-muted">Sin asignar</span>
+                                    @endif
+                                </div>
+                                <label class="form-label fw-bold mt-2">Entrevistó</label>
+                                <div>
+                                    @if($entrevistadoresAsignados->isNotEmpty())
+                                        @foreach($entrevistadoresAsignados as $nombreEntrevisto)
+                                            <span class="badge bg-warning text-dark me-1">{{ $nombreEntrevisto }}</span>
                                         @endforeach
                                     @else
                                         <span class="text-muted">Sin asignar</span>
@@ -559,10 +570,19 @@
                                                     <small class="d-block">
                                                         <i class="bi bi-person-check"></i> <strong>Encargado:</strong> {{ $evaluado->responsable->name ?? 'Sin asignar' }}
                                                     </small>
+                                                    <small class="d-block">
+                                                        <i class="bi bi-chat-left-text"></i> <strong>Entrevistó:</strong> {{ $evaluado->entrevistador->name ?? 'Sin asignar' }}
+                                                    </small>
                                                     <form action="{{ route('evaluados.autoasignar-encargado', $evaluado) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         <button type="submit" class="btn btn-outline-primary btn-sm mt-1" title="Asignarte como encargado sin cambiar quién programó">
                                                             <i class="bi bi-person-plus"></i> Autoasignarme
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ route('evaluados.autoasignar-entrevistador', $evaluado) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-outline-warning btn-sm mt-1" title="Asignarte como entrevistador sin cambiar Programó ni Encargado">
+                                                            <i class="bi bi-person-plus"></i> Autoasignarme entrevista
                                                         </button>
                                                     </form>
                                                 @endif

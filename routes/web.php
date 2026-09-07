@@ -195,6 +195,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         Route::post('evaluados/{evaluado}/invalidar-enlace-formulario', [OrdenesController::class, 'invalidarEnlaceFormulario'])->name('evaluados.invalidar-enlace-formulario');
         Route::patch('evaluados/{evaluado}/motivo-hecho', [OrdenesController::class, 'actualizarMotivoHecho'])->name('evaluados.actualizar-motivo-hecho');
         Route::post('evaluados/{evaluado}/autoasignar-encargado', [OrdenesController::class, 'autoasignarEncargado'])->name('evaluados.autoasignar-encargado');
+        Route::post('evaluados/{evaluado}/autoasignar-entrevistador', [OrdenesController::class, 'autoasignarEntrevistador'])->name('evaluados.autoasignar-entrevistador');
     });
     // Eliminar
     Route::middleware(['permission:ordenes.eliminar'])->group(function () {

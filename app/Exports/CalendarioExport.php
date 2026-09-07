@@ -28,6 +28,7 @@ class CalendarioExport implements FromCollection, WithHeadings, WithMapping
             'Sede',
             'Programó',
             'Encargado',
+            'Entrevistó',
             'Tipo',
             'Estado evaluación',
             'Estado programación',
@@ -46,6 +47,7 @@ class CalendarioExport implements FromCollection, WithHeadings, WithMapping
             $cita->sede->nombre ?? '—',
             $cita->poligrafo->name ?? 'Sin asignar',
             $cita->responsable->name ?? 'Sin asignar',
+            $cita->entrevistador->name ?? 'Sin asignar',
             match ($cita->tipo_servicio) {
                 'poligrafo' => 'Polígrafo',
                 'vsa' => 'VSA',

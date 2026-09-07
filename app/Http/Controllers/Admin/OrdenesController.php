@@ -393,7 +393,7 @@ class OrdenesController extends Controller
             'sede',
             'archivadaPor',
             'evaluados' => function($query) {
-                $query->with(['poligrafista', 'responsable', 'sede', 'cuestionario', 'documentos'])->orderBy('nombre');
+                $query->with(['poligrafista', 'responsable', 'entrevistador', 'sede', 'cuestionario', 'documentos'])->orderBy('nombre');
             }
         ]);
 
@@ -1220,7 +1220,7 @@ class OrdenesController extends Controller
         }
 
         // Cargar relaciones necesarias
-        $orden->load(['empresa', 'creador', 'evaluados.poligrafista', 'evaluados.responsable', 'evaluados.sede']);
+        $orden->load(['empresa', 'creador', 'evaluados.poligrafista', 'evaluados.responsable', 'evaluados.entrevistador', 'evaluados.sede']);
 
         $estados = Orden::estadosDisponibles();
         $config = \App\Models\Config::first();
@@ -1239,7 +1239,7 @@ class OrdenesController extends Controller
             abort(403, 'No tienes permisos para ver esta orden.');
         }
 
-        $orden->load(['empresa', 'sede', 'evaluados.poligrafista', 'evaluados.responsable', 'evaluados.sede']);
+        $orden->load(['empresa', 'sede', 'evaluados.poligrafista', 'evaluados.responsable', 'evaluados.entrevistador', 'evaluados.sede']);
 
         $esEmpresa = Auth::user()->role_as < 2;
         $mostrarInformePreliminar = !$esEmpresa || $orden->resultados_visibles_empresa;
@@ -1268,7 +1268,7 @@ class OrdenesController extends Controller
             abort(403, 'Solo usuarios REPRO pueden descargar el informe Word.');
         }
 
-        $evaluado->load(['poligrafista', 'responsable', 'sede', 'orden.empresa', 'orden.sede']);
+        $evaluado->load(['poligrafista', 'responsable', 'entrevistador', 'sede', 'orden.empresa', 'orden.sede']);
 
         $path = \App\Support\InformeWordExport::generar($orden, $evaluado);
         $filename = \App\Support\InformeWordNombresArchivo::generar($evaluado, $orden);
@@ -1328,6 +1328,30 @@ class OrdenesController extends Controller
             $programoId
                 ? 'Te asignaste como encargado. Quien programó el proceso se mantiene.'
                 : 'Te asignaste como encargado de este proceso.'
+        );
+    }
+
+    /**
+     * Q-A1: quien entrevista, sin pisar Programó ni Encargado.
+     */
+    public function autoasignarEntrevistador(EvaluadoOrden $evaluado)
+    {
+        if ((int) Auth::user()->role_as < 2) {
+            abort(403, 'Solo personal REPRO puede autoasignarse como entrevistador.');
+        }
+        if (!$this->usuarioPuedeVerOrden($evaluado->orden)) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        $programoId = $evaluado->poligrafista_id;
+        $encargadoId = $evaluado->responsable_id;
+        $evaluado->autoasignarEntrevistador((int) Auth::id());
+
+        return back()->with(
+            'success',
+            ($programoId || $encargadoId)
+                ? 'Te asignaste como entrevistador. Programó y Encargado se mantienen.'
+                : 'Te asignaste como entrevistador de este proceso.'
         );
     }
 

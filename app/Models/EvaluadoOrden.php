@@ -48,6 +48,7 @@ class EvaluadoOrden extends Model
         'tipo_formulario',
         'poligrafista_id',
         'responsable_id',
+        'entrevistador_id',
         'sede_id',
         'modalidad',
         'fecha_programada',
@@ -185,6 +186,25 @@ class EvaluadoOrden extends Model
             return false;
         }
         $this->responsable_id = $id;
+
+        return $this->save();
+    }
+
+    /**
+     * Quien entrevistó. No toca Programó (poligrafista_id) ni Encargado (responsable_id).
+     */
+    public function entrevistador()
+    {
+        return $this->belongsTo(User::class, 'entrevistador_id');
+    }
+
+    public function autoasignarEntrevistador(?int $userId = null): bool
+    {
+        $id = $userId ?? Auth::id();
+        if (!$id) {
+            return false;
+        }
+        $this->entrevistador_id = $id;
 
         return $this->save();
     }
