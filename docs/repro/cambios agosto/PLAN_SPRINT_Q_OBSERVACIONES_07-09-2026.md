@@ -46,7 +46,7 @@
 
 | ID | Pedido | Cambio | Riesgo | Orden |
 |----|--------|--------|--------|-------|
-| **Q-I1** | Sede + fechas en informes | `<select name="sede_id">` en `evaluaciones.blade.php`. Backend ya filtra. | Bajo | 1 · tests OK |
+| **Q-I1** | Sede + fechas en informes | `<select name="sede_id">` en `evaluaciones.blade.php`. Backend ya filtra. | Bajo | ✅ prod 7-sep |
 | **Q-E1** | Texto historial de empleos | Párrafo de ella en `historial-laboral.blade.php` (y peri si aplica) | Bajo | 2 |
 | **Q-T1** | Nombre en título preliminar | Header en `ordenes/show.blade.php` | Bajo | 3 |
 | **Q-W1** | Complementaria Word 12 | `forzarTamanoFuenteTabla(..., 24)` solo en esa tabla | Bajo | 4 |

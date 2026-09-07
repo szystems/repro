@@ -55,9 +55,19 @@
 
 <hr class="my-4">
 <h5 class="mb-3">Historial de empleos</h5>
-<p class="text-muted small mb-2">
-    EMPLEOS: (colocar todos los empleos, aunque hayan sido periodos cortos, temporales, informales o aunque no tenga constancia laboral)
-</p>
+<div class="alert alert-warning py-2 mb-3" id="instruccion-historial-empleos">
+    <p class="mb-2">
+        <strong>Historial de empleos:</strong>
+        registre todos los empleos que ha tenido, del más reciente al más antiguo,
+        incluyendo períodos cortos, trabajos temporales, informales o sin constancia laboral.
+    </p>
+    <p class="mb-2">
+        Si ha tenido más de un empleo, use <strong>+ Agregar empleo</strong> para registrar cada experiencia por separado.
+    </p>
+    <p class="mb-0">
+        Es importante registrar todo el historial, sin omitir ningún empleo, para el proceso de verificación.
+    </p>
+</div>
 
 <div class="form-group">
     <label for="experiencia_previa" class="form-label">{{ HistorialLaboralIntegridad::LABEL_EXPERIENCIA_PREVIA }} <span class="required">*</span></label>

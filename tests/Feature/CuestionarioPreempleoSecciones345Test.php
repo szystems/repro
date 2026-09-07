@@ -69,6 +69,23 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
         }
     }
 
+    public function test_historial_empleos_muestra_instruccion_completa(): void
+    {
+        $this->avanzarHastaSeccion(2);
+
+        $response = $this->get(route('cuestionario.seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 3,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('id="instruccion-historial-empleos"', false);
+        $response->assertSee('del más reciente al más antiguo', false);
+        $response->assertSee('+ Agregar empleo', false);
+        $response->assertSee('sin omitir ningún empleo', false);
+        $response->assertDontSee('EMPLEOS: (colocar todos los empleos', false);
+    }
+
     public function test_formacion_academica_y_empleos_en_valor_json(): void
     {
         $this->avanzarHastaSeccion(2);

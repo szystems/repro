@@ -46,8 +46,8 @@
 
 | ID | Qué | Estado |
 |----|-----|--------|
-| **Q-I1** | Sede en Informes de empresas (`/reportes/evaluaciones`) | 🔄 en curso |
-| **Q-E1** | Texto historial de empleos (párrafo ella) | ⬜ |
+| **Q-I1** | Sede en Informes de empresas (`/reportes/evaluaciones`) | ✅ prod 7-sep · tests + navegador (Xela 490→162) |
+| **Q-E1** | Texto historial de empleos (párrafo ella) | 🔄 tests OK · deploy |
 | **Q-T1** | Nombre candidato en título Informe preliminar | ⬜ |
 | **Q-W1** | Word complementaria a 12 pt (solo esa tabla) | ⬜ |
 | **Q-M1** | `NuevaOrdenSedeMail` solo si `tipo_creador=empresa` | ⬜ |
