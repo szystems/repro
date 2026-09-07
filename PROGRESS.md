@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-08-31 — **Plan migración** Hetzner/Coolify/`reprogt.com` · iPage sigue. Doc: `PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`
+**Ultima actualizacion:** 2026-09-07 — **Sprint Q** observaciones Stephany. Plan: `PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md` · prod `https://portal.reprogt.com`
 
 > **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
@@ -16,11 +16,11 @@
 
 | Qué | Detalle |
 |-----|---------|
-| **Fase** | **Migración** — plan listo, faltan accesos C1–C9 |
-| **Plan** | `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md` |
-| **Esta sesión** | Inventario H0 + VPS + Coolify/dominio. Destino: `reprogt.com` + `portal.reprogt.com`. |
-| **Siguiente paso** | Otto: comprar dominio, SSH, Coolify, `.env` iPage, backups VPS, acceso reproxela. |
-| **Diferido** | Cutover (M5–M6) hasta que M0–M3 estén verdes. |
+| **Fase** | **Sprint Q** — lista WA Stephany 7-sep |
+| **Plan** | `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md` |
+| **Esta sesión** | Plan en contexto + implementación uno a uno (tests + prod + navegador). |
+| **Siguiente paso** | Q-I1 sede en Informes de empresas. |
+| **Prod** | `https://portal.reprogt.com` · iPage 503 · no `migrate:fresh`. |
 
 ### Feedback cliente 20-ago-2026 (WhatsApp + `Ultimos cambios 20-08-2026`)
 

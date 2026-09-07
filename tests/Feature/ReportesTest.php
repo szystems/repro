@@ -7,6 +7,7 @@ use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Models\Role;
+use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -221,6 +222,41 @@ class ReportesTest extends TestCase
         $response->assertStatus(200);
         $evaluados = $response->viewData('evaluados');
         $this->assertEquals(1, $evaluados->count());
+    }
+
+    public function test_evaluaciones_report_muestra_filtro_sede(): void
+    {
+        $admin = $this->createAdminUser();
+        $sede = Sede::factory()->create(['nombre' => 'Xela Centro', 'estado' => 1]);
+
+        $response = $this->actingAs($admin)->get(route('reportes.evaluaciones'));
+
+        $response->assertOk();
+        $response->assertSee('name="sede_id"', false);
+        $response->assertSee('Todas las sedes', false);
+        $response->assertSee('Xela Centro', false);
+        $this->assertTrue($response->viewData('sedes')->contains('id', $sede->id));
+    }
+
+    public function test_evaluaciones_report_filters_by_sede(): void
+    {
+        $admin = $this->createAdminUser();
+        $sede1 = Sede::factory()->create(['estado' => 1]);
+        $sede2 = Sede::factory()->create(['estado' => 1]);
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $orden1 = Orden::factory()->create(['empresa_id' => $empresa->id, 'sede_id' => $sede1->id]);
+        $orden2 = Orden::factory()->create(['empresa_id' => $empresa->id, 'sede_id' => $sede2->id]);
+
+        EvaluadoOrden::factory()->create(['orden_id' => $orden1->id, 'sede_id' => $sede1->id]);
+        EvaluadoOrden::factory()->create(['orden_id' => $orden2->id, 'sede_id' => $sede2->id]);
+
+        $response = $this->actingAs($admin)->get(route('reportes.evaluaciones', [
+            'sede_id' => $sede1->id,
+        ]));
+
+        $response->assertOk();
+        $this->assertEquals(1, $response->viewData('evaluados')->count());
+        $response->assertSee((string) $sede1->id, false);
     }
 
     /**

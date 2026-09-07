@@ -1,15 +1,18 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 31 de agosto de 2026  
-**Estado:** 🟢 Sprint P en prod · 📋 **MIGRACIÓN autorizada** (plan, aún no cutover) · iPage sigue vivo  
+**Fecha de Contexto:** 7 de septiembre de 2026  
+**Estado:** 🟡 **SPRINT Q EN CURSO** · portal live `https://portal.reprogt.com` · iPage 503  
 
-**Plan migración (leer antes de tocar infra):** `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`  
-**Destino:** web `reprogt.com` (hoy reproxela.com) · app `portal.reprogt.com` · Coolify en Hetzner CPX31 `ubuntu-8gb-hil-1`  
-**No cortar** https://reproappv2.szystems.com hasta M6. **No** `migrate:fresh`. **Copiar el mismo `APP_KEY`.**
+**Plan activo:** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
+**Plan migración:** `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`  
+**Destino:** web `reprogt.com` · app `portal.reprogt.com` · Coolify Hetzner CPX31  
+**No** `migrate:fresh`. **No** reciclar `poligrafista_id` / `responsable_id`. No resetear claves de Stephany. No regenerar NEVERIA/CORALSA/PERCO.
 
+**Evidencia 7-sep:** `docs/repro/cambios agosto/Observaciones 07-09-2026/`  
+**Plan Sprint Q (activo):** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
 **Evidencia 28-ago noche:** `docs/repro/cambios agosto/Observaciones 28-08-2026 noche/`  
-**Plan Sprint P (UAT Word, no bloquea migración):** `docs/repro/cambios agosto/PLAN_SPRINT_P_OBSERVACIONES_28-08-2026-NOCHE.md`  
+**Plan Sprint P (cerrado prod):** `docs/repro/cambios agosto/PLAN_SPRINT_P_OBSERVACIONES_28-08-2026-NOCHE.md`  
 **Evidencia 28-ago mañana:** `docs/repro/cambios agosto/Observaciones 28-08-2026/`  
 **Plan Sprint O (cerrado UAT con correcciones):** `docs/repro/cambios agosto/PLAN_SPRINT_O_OBSERVACIONES_28-08-2026.md`  
 **Evidencia 27-ago:** `docs/repro/cambios agosto/Observaciones 27-08-2026/`  
@@ -29,30 +32,50 @@
 **Plan A–E (cerrado):** `docs/repro/cambios agosto/PLAN_REVISION_AGOSTO_2026.md`  
 **Permisos empresa (OBLIGATORIO leer antes de tocar portal cliente):** `docs/repro/cambios agosto/PERMISOS_EMPRESA_CLIENTE.md`  
 **Feedback 12-ago:** `docs/repro/cambios agosto/ultimos cambios 12-08-2026/`  
-**Producción:** https://reproappv2.szystems.com  
+**Producción:** https://portal.reprogt.com  
 **Repo:** https://github.com/szystems/repro · branch `master`
 
 ---
 
-## 📋 MIGRACIÓN — LEER PRIMERO (autorizada 31-ago-2026)
+## 🟡 SPRINT Q — LEER PRIMERO (7-sep-2026)
+
+**Origen:** WA 7-sep 09:46 (lista final Stephany).  
+**Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
+**Siguiente:** implementar Q-I1 → Q-E1 → Q-T1 → Q-W1 → Q-M1 → Q-Q1 → Q-A1. Q-C1 documentado (sin código).  
+**No:** `migrate:fresh` · pisar Programó/Encargado · Coolify Upgrade · tocar ControClinic/portal Szystems cleanup.
+
+| ID | Qué | Estado |
+|----|-----|--------|
+| **Q-I1** | Sede en Informes de empresas (`/reportes/evaluaciones`) | 🔄 en curso |
+| **Q-E1** | Texto historial de empleos (párrafo ella) | ⬜ |
+| **Q-T1** | Nombre candidato en título Informe preliminar | ⬜ |
+| **Q-W1** | Word complementaria a 12 pt (solo esa tabla) | ⬜ |
+| **Q-M1** | `NuevaOrdenSedeMail` solo si `tipo_creador=empresa` | ⬜ |
+| **Q-Q1** | Quill: color + tablas (sanitizado) | ⬜ |
+| **Q-A1** | `entrevistador_id` + Autoasignarme entrevista + columna historial | ⬜ |
+| **Q-C1** | Inventario de correos | ✅ en el plan |
+
+---
+
+## 📋 MIGRACIÓN — (autorizada 31-ago-2026 · live)
 
 **Plan:** `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`  
-**Siguiente paso:** M5 dump = copia exacta. **Avisar a Otto antes** (freeze Stephany o iPage en mantenimiento). No `portal` DNS. Humo Coolify OK: `/login` 200 en sslip.io. iPage sigue prod.
+**Siguiente paso:** portal live + Resend en Coolify (3-sep-2026). iPage **503**. Apex MX/SPF iPage intactos. Aviso a Stephany enviado a `info@reprogt.com` (CC Otto). Humo de ella: login, reclutador, editar orden, correo (revisar spam). No `migrate:fresh`. No quitar freeze iPage.
 
 | ID | Qué falta para EMPEZAR |
 |----|------------------------|
 | **C1** | Comprar **reprogt.com** | ✅ 1-sep-2026 |
-| **C2** | Zona Cloudflare `reprogt.com` **Active**. NS `casey` + `jewel`. Correo **iPage**: MX `mx.ipage.com` + SPF `ip4:66.96.128.0/18` + DMARC `p=none`. IMAP/SMTP iPage no van en CF. No Email Routing. No `portal` aún. |
+| **C2** | Zona Cloudflare `reprogt.com` **Active**. NS `casey` + `jewel`. `portal` A → `5.78.235.235` **DNS only**. Correo **iPage**: MX `mx.ipage.com` + SPF `ip4:66.96.128.0/18` + DMARC `p=none`. No Email Routing. |
 | **C3** | SSH desde este WSL: permission denied. Coolify Terminal sí. Clave a agregar: `szystems@gmail.com` ed25519. |
-| **C4** | ✅ Coolify **v4.1.2** en `http://5.78.235.235:8000/` (mismo CPX31). Proyecto **REPRO** creado (vacío). Otras apps: Asonata, ControClinic, Portal Szystems, Clínicas del Valle. |
-| **C5** | ✅ App **repro-portal** (Dockerfile.coolify, UUID `ot2bqftjjqp9d2l2ez7awoha`) **Running**. Humo `/login` 200 en `http://ot2bqftjjqp9d2l2ez7awoha.5.78.235.235.sslip.io`. MySQL 8 **repro-mysql** (`repro_portal`, UUID `y5ix9lpo9ybgd8sh20ufhlnt`) vacío. Volumen `/var/www/storage`. Cron `schedule:run`. No `portal` DNS. |
-| **C6** | Password MySQL iPage + `.env` prod (mismo `APP_KEY`) |
-| **C7** | `MAIL_*` actuales |
+| **C4** | ✅ Coolify **v4.1.2** en `http://5.78.235.235:8000/` (mismo CPX31). Proyecto **REPRO** creado (vacío). Otras apps: Asonata, ControClinic, Portal Szystems, Clínicas del Valle. **2026-09-07:** no reactivar `force_docker_cleanup` ni auto-update; `max_restart_count=0` en apps 2/4/5. Watchdog start-first (repo `controclinic/scripts`). |
+| **C5** | ✅ App **repro-portal** (Dockerfile.coolify, UUID `ot2bqftjjqp9d2l2ez7awoha`) **Running**. Humo `/login` 200 HTTP y HTTPS (`https://ot2bqftjjqp9d2l2ez7awoha.5.78.235.235.sslip.io`). MySQL 8 **repro-mysql** (`repro_portal`, UUID `y5ix9lpo9ybgd8sh20ufhlnt`) con dump M5 (52 users / 407 órdenes). Volumen `/var/www/storage` con `storage/app` (1241 archivos). Cron `schedule:run`. No `portal` DNS. |
+| **C6** | ✅ `.env` iPage copiado (local `.env.ipage-live`). Mismo `APP_KEY` pegado en Coolify. |
+| **C7** | ✅ Resend en Coolify (`smtp.resend.com:587`, From `noreply@reprogt.com`). Apex MX/SPF iPage sin tocar. |
 | **C8** | Acceso sitio **reproxela.com** (no está en este repo) |
 | **C9** | ✅ Backups VPS ya estaban ON (Hetzner, 7 slots). |
 
 **Ya tenemos:** FTP iPage, host/user/BD `dbreprov2`, repo GitHub, identidad del VPS, UAT PRUEBA 1.  
-**No hacer aún:** dump prod (hasta freeze confirmado por Otto), cambiar DNS de la app, cutover.
+**No hacer aún:** `portal` DNS, cutover M6, quitar freeze iPage, `migrate:fresh`.
 
 ---
 

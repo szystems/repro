@@ -67,6 +67,17 @@
                             </div>
                             @endif
                             <div class="col-md-2">
+                                <label class="form-label">Sede</label>
+                                <select name="sede_id" class="form-select">
+                                    <option value="">Todas las sedes</option>
+                                    @foreach($sedes as $sede)
+                                        <option value="{{ $sede->id }}" {{ (string) request('sede_id') === (string) $sede->id ? 'selected' : '' }}>
+                                            {{ $sede->nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
                                 <label class="form-label">Tipo de Servicio</label>
                                 <select name="tipo_servicio" class="form-select">
                                     <option value="">Todos</option>
