@@ -1586,7 +1586,7 @@ function copiarEnlaceEvaluado(url) {
     const Delta = Quill.import('delta');
     const BlockEmbed = Quill.import('blots/block/embed');
     const HTML_TABLA_VACIA = '<thead><tr><th>Resultado:</th><th>Observaciones:</th></tr></thead>'
-        + '<tbody><tr><td><br></td><td><br></td></tr><tr><td><br></td><td><br></td></tr></tbody>';
+        + '<tbody><tr><td><br></td><td><br></td></tr></tbody>';
     let rangoTabla = null;
 
     function celdaDeNodo(nodo) {
