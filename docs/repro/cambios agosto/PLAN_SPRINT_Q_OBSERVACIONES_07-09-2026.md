@@ -1,7 +1,7 @@
 # Sprint Q — Observaciones Stephany 7-sep-2026
 
 **Cliente:** Stephany Castro / REPRO  
-**Estado:** 🟡 En curso  
+**Estado:** ✅ Cerrado prod 7-sep-2026  
 **Prod:** https://portal.reprogt.com  
 **iPage:** `reproappv2.szystems.com` sigue 503 — no descongelar  
 **Evidencia:** `docs/repro/cambios agosto/Observaciones 07-09-2026/WA_09-46_lista_stephany.jpg`  
@@ -52,7 +52,7 @@
 | **Q-W1** | Complementaria Word 12 | `forzarTamanoFuenteTabla(..., 24)` solo en esa tabla | Bajo | ✅ prod 7-sep |
 | **Q-M1** | Mail nueva orden solo cliente | `notificarUsuariosSede()` si `tipo_creador === 'empresa'` | Bajo | ✅ prod 7-sep |
 | **Q-Q1** | Quill color + tablas | Toolbar + `sanitizarHtmlInforme()` | Medio | ✅ prod 7-sep |
-| **Q-A1** | Dos personas + columna Entrevistó | `entrevistador_id` nullable + Autoasignarme entrevista + historial/Excel | Medio · aditivo | 7 |
+| **Q-A1** | Dos personas + columna Entrevistó | `entrevistador_id` nullable + Autoasignarme entrevista + historial/Excel | Medio · aditivo | ✅ prod 7-sep |
 | **Q-C1** | Inventario de correos | Documentado aquí. Sin código. | — | Hecho |
 
 ---

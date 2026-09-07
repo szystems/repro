@@ -2,7 +2,7 @@
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
 **Fecha de Contexto:** 7 de septiembre de 2026  
-**Estado:** 🟡 **SPRINT Q EN CURSO** · portal live `https://portal.reprogt.com` · iPage 503  
+**Estado:** ✅ **SPRINT Q CERRADO PROD 7-sep-2026** · portal live `https://portal.reprogt.com` · iPage 503  
 
 **Plan activo:** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
 **Plan migración:** `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`  
@@ -41,7 +41,7 @@
 
 **Origen:** WA 7-sep 09:46 (lista final Stephany).  
 **Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
-**Siguiente:** Q-A1 (`entrevistador_id` + Autoasignarme entrevista + columna historial). Q-C1 documentado.  
+**Siguiente:** Sprint Q cerrado. Esperar siguiente lista de Stephany. No `migrate:fresh`. No descongelar iPage.  
 **No:** `migrate:fresh` · pisar Programó/Encargado · Coolify Upgrade · tocar ControClinic/portal Szystems cleanup.
 
 | ID | Qué | Estado |
@@ -52,7 +52,7 @@
 | **Q-W1** | Word complementaria a 12 pt (solo esa tabla) | ✅ prod 7-sep |
 | **Q-M1** | `NuevaOrdenSedeMail` solo si `tipo_creador=empresa` | ✅ prod 7-sep |
 | **Q-Q1** | Quill: color + tablas (sanitizado) | ✅ prod 7-sep · toolbar color + Insertar tabla en ORD-2026-0141 |
-| **Q-A1** | `entrevistador_id` + Autoasignarme entrevista + columna historial | 🔄 en curso |
+| **Q-A1** | `entrevistador_id` + Autoasignarme entrevista + columna historial | ✅ prod 7-sep · Carmen #264 Entrevistó=UAT, Programó/Encargado intactos |
 | **Q-C1** | Inventario de correos | ✅ en el plan |
 
 ---

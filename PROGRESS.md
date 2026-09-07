@@ -18,8 +18,8 @@
 |-----|---------|
 | **Fase** | **Sprint Q** — lista WA Stephany 7-sep |
 | **Plan** | `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md` |
-| **Esta sesión** | Plan en contexto + implementación uno a uno (tests + prod + navegador). |
-| **Siguiente paso** | Q-A1 entrevistador + historial. Q-I1…Q-Q1 ya en prod. |
+| **Esta sesión** | Sprint Q cerrado en prod (Q-I1…Q-A1 + Q-C1). |
+| **Siguiente paso** | Esperar siguiente lista de Stephany. |
 | **Prod** | `https://portal.reprogt.com` · iPage 503 · no `migrate:fresh`. |
 
 ### Feedback cliente 20-ago-2026 (WhatsApp + `Ultimos cambios 20-08-2026`)
