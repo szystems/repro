@@ -1113,8 +1113,11 @@
                                                             <button type="button" class="btn btn-sm btn-outline-secondary insertar-tabla-preliminar" data-evaluado="{{ $evaluado->id }}" title="Inserta una tabla de 2 columnas para llenar">
                                                                 <i class="bi bi-table"></i> Insertar tabla
                                                             </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary agregar-fila-preliminar" title="Agrega una fila a la tabla donde está el cursor">
+                                                                <i class="bi bi-plus"></i> Agregar fila
+                                                            </button>
                                                             <div class="form-text mt-1 mb-0">
-                                                                Aparece una tabla con bordes. Escriba en cada recuadro. Use el botón otra vez para agregar otra tabla.
+                                                                Seleccione texto en una celda y use <strong>B</strong> o el color de la barra. La <strong>×</strong> elimina la fila.
                                                             </div>
                                                         </div>
                                                         <button type="submit" class="btn btn-sm btn-info text-white">
@@ -1331,6 +1334,21 @@
 .ql-editor .repro-tabla-wrap {
     margin: 0.5rem 0;
 }
+.ql-editor .repro-tabla-accion,
+.ql-editor .repro-tabla-accion th,
+.ql-editor .repro-tabla-accion td {
+    border: none !important;
+    background: transparent !important;
+    width: 2.25rem;
+    min-width: 2.25rem;
+    padding: 2px !important;
+    text-align: center;
+    vertical-align: middle;
+}
+.ql-editor .repro-tabla-del-fila {
+    line-height: 1;
+    padding: 0 6px;
+}
 .ql-snow .ql-toolbar button,
 .ql-snow.ql-toolbar button {
     width: 28px !important;
@@ -1498,19 +1516,132 @@ function copiarEnlaceEvaluado(url) {
     const BlockEmbed = Quill.import('blots/block/embed');
     const HTML_TABLA_VACIA = '<thead><tr><th>Columna 1</th><th>Columna 2</th></tr></thead>'
         + '<tbody><tr><td><br></td><td><br></td></tr><tr><td><br></td><td><br></td></tr></tbody>';
+    let rangoTabla = null;
+
+    function celdaDeNodo(nodo) {
+        if (!nodo) {
+            return null;
+        }
+        const el = nodo.nodeType === 1 ? nodo : nodo.parentElement;
+        return el ? el.closest('.repro-tabla-preliminar th, .repro-tabla-preliminar td') : null;
+    }
+
+    function tablaDeNodo(nodo) {
+        const celda = celdaDeNodo(nodo);
+        return celda ? celda.closest('table') : null;
+    }
+
+    function guardarRangoTabla() {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || !celdaDeNodo(sel.anchorNode)) {
+            return;
+        }
+        rangoTabla = sel.getRangeAt(0).cloneRange();
+    }
+
+    function restaurarRangoTabla() {
+        if (!rangoTabla) {
+            return false;
+        }
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(rangoTabla);
+        return true;
+    }
+
+    document.addEventListener('selectionchange', guardarRangoTabla);
 
     function aplicarBordesTabla(table) {
         table.style.borderCollapse = 'collapse';
         table.style.width = '100%';
         table.querySelectorAll('th,td').forEach(function (cell) {
+            if (cell.classList.contains('repro-tabla-accion')) {
+                return;
+            }
             cell.style.border = cell.style.border || '1px solid #6c757d';
             cell.style.padding = cell.style.padding || '6px 8px';
             cell.style.minWidth = '6rem';
         });
         table.querySelectorAll('th').forEach(function (th) {
+            if (th.classList.contains('repro-tabla-accion')) {
+                return;
+            }
             th.style.backgroundColor = th.style.backgroundColor || '#e9ecef';
             th.style.fontWeight = th.style.fontWeight || '600';
         });
+    }
+
+    function columnasDatos(table) {
+        const fila = table.querySelector('thead tr') || table.querySelector('tr');
+        if (!fila) {
+            return 2;
+        }
+        return [...fila.children].filter(function (c) {
+            return !c.classList.contains('repro-tabla-accion');
+        }).length;
+    }
+
+    function decorarTabla(table) {
+        aplicarBordesTabla(table);
+        const theadRow = table.querySelector('thead tr');
+        if (theadRow && !theadRow.querySelector('.repro-tabla-accion')) {
+            const th = document.createElement('th');
+            th.className = 'repro-tabla-accion';
+            th.setAttribute('contenteditable', 'false');
+            theadRow.appendChild(th);
+        }
+        table.querySelectorAll('tbody tr').forEach(function (tr) {
+            if (tr.querySelector('.repro-tabla-del-fila')) {
+                return;
+            }
+            const td = document.createElement('td');
+            td.className = 'repro-tabla-accion';
+            td.setAttribute('contenteditable', 'false');
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-sm btn-outline-danger repro-tabla-del-fila';
+            btn.title = 'Eliminar fila';
+            btn.setAttribute('aria-label', 'Eliminar fila');
+            btn.innerHTML = '&times;';
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const filas = tr.parentElement.querySelectorAll('tr');
+                if (filas.length <= 1) {
+                    return;
+                }
+                tr.remove();
+            });
+            td.appendChild(btn);
+            tr.appendChild(td);
+        });
+    }
+
+    function agregarFilaA(table) {
+        if (!table) {
+            return;
+        }
+        let tbody = table.tBodies[0];
+        if (!tbody) {
+            tbody = table.appendChild(document.createElement('tbody'));
+        }
+        const tr = document.createElement('tr');
+        const n = columnasDatos(table);
+        for (let i = 0; i < n; i++) {
+            const td = document.createElement('td');
+            td.innerHTML = '<br>';
+            tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+        decorarTabla(table);
+    }
+
+    function htmlTablaParaGuardar(table) {
+        const clone = table.cloneNode(true);
+        clone.querySelectorAll('.repro-tabla-accion').forEach(function (el) {
+            el.remove();
+        });
+        return clone.outerHTML;
     }
 
     class ReproTabla extends BlockEmbed {
@@ -1521,14 +1652,21 @@ function copiarEnlaceEvaluado(url) {
             table.className = 'repro-tabla-preliminar';
             table.setAttribute('contenteditable', 'true');
             table.innerHTML = (typeof value === 'string' && value.trim() !== '') ? value : HTML_TABLA_VACIA;
-            aplicarBordesTabla(table);
             node.appendChild(table);
+            decorarTabla(table);
             return node;
         }
 
         static value(node) {
             const table = node.querySelector('table');
-            return table ? table.innerHTML : '';
+            if (!table) {
+                return '';
+            }
+            const clone = table.cloneNode(true);
+            clone.querySelectorAll('.repro-tabla-accion').forEach(function (el) {
+                el.remove();
+            });
+            return clone.innerHTML;
         }
     }
     ReproTabla.blotName = 'reproTabla';
@@ -1554,7 +1692,53 @@ function copiarEnlaceEvaluado(url) {
         });
 
         quill.clipboard.addMatcher('TABLE', function (node) {
-            return new Delta().insert({ reproTabla: node.innerHTML });
+            const clone = node.cloneNode(true);
+            clone.querySelectorAll('.repro-tabla-accion').forEach(function (el) {
+                el.remove();
+            });
+            return new Delta().insert({ reproTabla: clone.innerHTML });
+        });
+
+        const toolbar = quill.getModule('toolbar');
+        function formatoEnTablaOQuill(cmd, value, formatoQuill) {
+            if (restaurarRangoTabla() && celdaDeNodo(window.getSelection().anchorNode)) {
+                document.execCommand(cmd, false, value === undefined ? null : value);
+                guardarRangoTabla();
+                return;
+            }
+            if (formatoQuill) {
+                formatoQuill();
+            }
+        }
+        toolbar.addHandler('bold', function () {
+            formatoEnTablaOQuill('bold', null, function () {
+                quill.format('bold', !quill.getFormat().bold);
+            });
+        });
+        toolbar.addHandler('italic', function () {
+            formatoEnTablaOQuill('italic', null, function () {
+                quill.format('italic', !quill.getFormat().italic);
+            });
+        });
+        toolbar.addHandler('underline', function () {
+            formatoEnTablaOQuill('underline', null, function () {
+                quill.format('underline', !quill.getFormat().underline);
+            });
+        });
+        toolbar.addHandler('color', function (value) {
+            formatoEnTablaOQuill('foreColor', value, function () {
+                quill.format('color', value);
+            });
+        });
+        toolbar.addHandler('background', function (value) {
+            formatoEnTablaOQuill('backColor', value, function () {
+                quill.format('background', value);
+            });
+        });
+        toolbar.addHandler('clean', function () {
+            formatoEnTablaOQuill('removeFormat', null, function () {
+                quill.removeFormat(quill.getSelection(true));
+            });
         });
 
         if (hiddenInput.value) {
@@ -1569,8 +1753,11 @@ function copiarEnlaceEvaluado(url) {
                 tmp.querySelectorAll('.repro-tabla-wrap').forEach(function (wrap) {
                     const table = wrap.querySelector('table');
                     if (table) {
-                        wrap.replaceWith(table);
+                        wrap.replaceWith(document.createRange().createContextualFragment(htmlTablaParaGuardar(table)));
                     }
+                });
+                tmp.querySelectorAll('.repro-tabla-accion').forEach(function (el) {
+                    el.remove();
                 });
                 hiddenInput.value = tmp.innerHTML;
             });
@@ -1582,6 +1769,14 @@ function copiarEnlaceEvaluado(url) {
                     quill.insertEmbed(index, 'reproTabla', HTML_TABLA_VACIA, 'user');
                     quill.insertText(index + 1, '\n', 'user');
                     quill.setSelection(index + 1, 0, 'silent');
+                });
+            }
+            const btnFila = form.querySelector('.agregar-fila-preliminar');
+            if (btnFila) {
+                btnFila.addEventListener('click', function () {
+                    const desdeRango = rangoTabla ? tablaDeNodo(rangoTabla.startContainer) : null;
+                    const table = desdeRango || quill.root.querySelector('table.repro-tabla-preliminar');
+                    agregarFilaA(table);
                 });
             }
         }
