@@ -140,6 +140,7 @@ class Fase7EditorInformePreliminarTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Informe Preliminar');
+        $response->assertSee('— ' . trim($this->evaluado->nombre.' '.$this->evaluado->apellidos), false);
         $response->assertSee('editor-preliminar-' . $this->evaluado->id);
     }
 }

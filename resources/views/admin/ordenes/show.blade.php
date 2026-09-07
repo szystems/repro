@@ -1067,7 +1067,9 @@
                                         <div class="card border-info mt-3">
                                             <div class="card-header bg-info bg-opacity-10 py-2">
                                                 <h6 class="mb-0 text-info">
-                                                    <i class="bi bi-file-earmark-text"></i> Informe Preliminar / Observaciones
+                                                    <i class="bi bi-file-earmark-text"></i>
+                                                    Informe Preliminar / Observaciones
+                                                    — {{ trim($evaluado->nombre.' '.$evaluado->apellidos) }}
                                                     @if($evaluado->texto_informe_preliminar)
                                                         <span class="badge bg-success ms-2">Redactado</span>
                                                     @else
