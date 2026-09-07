@@ -31,8 +31,10 @@ class CuestionarioEvaluadorNotasTest extends TestCase
         $orden = Orden::factory()->create(['empresa_id' => $this->empresaCliente->id]);
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'tipo_servicio' => 'poligrafo',
             'token_unico' => 'token-notas-evaluador',
             'token_expira_at' => now()->addDays(30),
+            'texto_informe_preliminar' => null,
         ]);
 
         $this->cuestionario = Cuestionario::create([
@@ -213,5 +215,49 @@ class CuestionarioEvaluadorNotasTest extends TestCase
                 'evaluador_notas' => ['datos_personales' => 'Intento no autorizado'],
             ])
             ->assertForbidden();
+    }
+
+    public function test_guardar_resultado_word_llena_preliminar_vacio_en_tabla(): void
+    {
+        $repro = $this->crearRepro();
+        $this->cuestionario->evaluadoOrden->update(['tipo_servicio' => 'poligrafo']);
+
+        $this->actingAs($repro)
+            ->put(route('admin.cuestionarios.update', $this->cuestionario->id), [
+                'resultado_informe' => 'no_aprobado',
+                'evaluador_notas' => [
+                    'word_resultado_mentira' => 'preguntas 1 y 7',
+                    'word_observaciones' => 'detalle del evaluador',
+                ],
+            ])
+            ->assertRedirect();
+
+        $html = $this->cuestionario->evaluadoOrden->fresh()->texto_informe_preliminar;
+        $this->assertStringContainsString('<table', (string) $html);
+        $this->assertStringContainsString('No aprobado', (string) $html);
+        $this->assertStringContainsString('detalle del evaluador', (string) $html);
+    }
+
+    public function test_guardar_resultado_word_no_borra_preliminar_existente(): void
+    {
+        $repro = $this->crearRepro();
+        $this->cuestionario->evaluadoOrden->update([
+            'tipo_servicio' => 'poligrafo',
+            'texto_informe_preliminar' => '<p>Tabla hecha a mano hoy</p>',
+        ]);
+
+        $this->actingAs($repro)
+            ->put(route('admin.cuestionarios.update', $this->cuestionario->id), [
+                'resultado_informe' => 'aprobado',
+                'evaluador_notas' => [
+                    'word_observaciones' => 'no debe pisar',
+                ],
+            ])
+            ->assertRedirect();
+
+        $this->assertSame(
+            '<p>Tabla hecha a mano hoy</p>',
+            $this->cuestionario->evaluadoOrden->fresh()->texto_informe_preliminar
+        );
     }
 }

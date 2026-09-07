@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Mail\CitaProgramadaMail;
 use App\Mail\CuestionarioCompletadoMail;
 use App\Mail\EvaluadoAsignadoMail;
 use App\Mail\RecordatorioCuestionarioMail;
+use App\Models\Sede;
 use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
@@ -227,5 +229,28 @@ class NotificacionesEmailTest extends TestCase
             ->assertExitCode(0);
 
         Mail::assertNotQueued(RecordatorioCuestionarioMail::class);
+    }
+
+    public function test_cita_programada_mail_can_be_rendered(): void
+    {
+        $empresa = Empresa::factory()->create(['estado' => 1, 'nombre' => 'Empresa Cita']);
+        $sede = Sede::factory()->create(['nombre' => 'Sede Norte']);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Ana',
+            'apellidos' => 'López',
+            'email' => 'ana.cita@test.com',
+            'fecha_programada' => now()->addDays(2)->setTime(9, 0),
+            'fecha_hora_fin' => now()->addDays(2)->setTime(11, 0),
+            'sede_id' => $sede->id,
+            'modalidad' => 'presencial',
+        ]);
+
+        $mailable = new CitaProgramadaMail($evaluado, false);
+        $mailable->assertSeeInHtml('Ana');
+        $mailable->assertSeeInHtml('Sede Norte');
+        $mailable->assertSeeInHtml('Empresa Cita');
+        $mailable->assertSeeInHtml('09:00');
     }
 }

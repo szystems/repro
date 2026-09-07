@@ -17,6 +17,7 @@ use App\Support\InformeWordBloquesEvaluador;
 use App\Support\InformeWordExport;
 use App\Support\InformeWordNombresArchivo;
 use App\Support\InformeWordPreguntasPoligraficas;
+use App\Support\InformePreliminarDesdeWord;
 use App\Support\InformeWordResultado;
 use App\Support\TablaDinamica;
 use App\Models\CuestionarioRespuesta;
@@ -321,6 +322,11 @@ class CuestionariosController extends Controller
                         'total_cambios' => count($cambiosRealizados)
                     ]);
                 }
+            }
+
+            if (EvaluadorNotasSupport::puedeGestionar(Auth::user())
+                && ($request->has('resultado_informe') || $request->has('evaluador_notas'))) {
+                InformePreliminarDesdeWord::copiarTablaSiPreliminarVacio($cuestionario->evaluadoOrden);
             }
 
             DB::commit();

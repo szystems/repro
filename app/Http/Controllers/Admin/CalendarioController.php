@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\CalendarioExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProgramarCitaRequest;
+use App\Mail\CitaProgramadaMail;
 use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Sede;
@@ -13,6 +14,8 @@ use App\Support\ExportacionesSupport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class CalendarioController extends Controller
 {
@@ -262,6 +265,8 @@ class CalendarioController extends Controller
             $request->responsable_id
         );
 
+        $this->notificarCitaAlCandidato($evaluado->fresh(), false);
+
         return redirect()->back()
             ->with('success', 'Cita programada correctamente para ' . $evaluado->nombre . ' ' . $evaluado->apellidos);
     }
@@ -296,6 +301,8 @@ class CalendarioController extends Controller
             $request->responsable_id,
             $request->motivo_reprogramacion
         );
+
+        $this->notificarCitaAlCandidato($evaluado->fresh(), true);
 
         return redirect()->back()
             ->with('success', 'Cita reprogramada correctamente.');
@@ -413,6 +420,23 @@ class CalendarioController extends Controller
         }
         if (!empty($filtros['empresaId'])) {
             $query->whereHas('orden', fn ($q) => $q->where('empresa_id', $filtros['empresaId']));
+        }
+    }
+
+    private function notificarCitaAlCandidato(?EvaluadoOrden $evaluado, bool $reprogramada): void
+    {
+        if (! $evaluado || empty($evaluado->email)) {
+            return;
+        }
+
+        try {
+            Mail::to($evaluado->email)->queue(new CitaProgramadaMail($evaluado, $reprogramada));
+        } catch (\Exception $e) {
+            Log::error('Error enviando correo de cita al candidato', [
+                'evaluado_id' => $evaluado->id,
+                'reprogramada' => $reprogramada,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

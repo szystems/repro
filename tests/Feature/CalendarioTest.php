@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\CitaProgramadaMail;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Models\Role;
@@ -9,6 +10,7 @@ use App\Models\Sede;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
@@ -287,6 +289,34 @@ class CalendarioTest extends TestCase
         $this->assertEquals('2026-03-20 11:00:00', $evaluado->fecha_hora_fin->format('Y-m-d H:i:s'));
         $this->assertEquals($sede->id, $evaluado->sede_id);
         $this->assertEquals($poligrafista->id, $evaluado->poligrafista_id);
+    }
+
+    public function test_programar_cita_envia_correo_al_candidato(): void
+    {
+        Mail::fake();
+        $sede = Sede::factory()->create(['estado' => 1, 'nombre' => 'Sede Centro']);
+        $poligrafista = $this->usuarioRepro();
+        $evaluado = $this->crearEvaluado([
+            'email' => 'candidato.cita@test.com',
+            'estado_evaluacion' => 'pendiente_de_evaluacion',
+            'fecha_programada' => null,
+        ]);
+
+        $this->actingAs($poligrafista)
+            ->post('/calendario/programar', [
+                'evaluado_orden_id' => $evaluado->id,
+                'fecha' => '2026-03-20',
+                'hora_inicio' => '09:00',
+                'hora_fin' => '11:00',
+                'sede_id' => $sede->id,
+                'poligrafista_id' => $poligrafista->id,
+                'modalidad' => 'presencial',
+            ])
+            ->assertRedirect();
+
+        Mail::assertQueued(CitaProgramadaMail::class, function (CitaProgramadaMail $mail) use ($evaluado) {
+            return $mail->evaluado->id === $evaluado->id && $mail->reprogramada === false;
+        });
     }
 
     public function test_programar_sin_poligrafista_guarda_quien_programo_y_no_asigna_encargado(): void
@@ -621,6 +651,7 @@ class CalendarioTest extends TestCase
                 'hora_fin' => '16:00',
                 'sede_id' => $sede->id,
                 'poligrafista_id' => $poligrafista->id,
+                'motivo_reprogramacion' => 'El candidato reagendó por viaje',
             ])
             ->assertRedirect();
 
@@ -628,6 +659,37 @@ class CalendarioTest extends TestCase
         $this->assertEquals('2026-03-22 14:00:00', $evaluado->fecha_programada->format('Y-m-d H:i:s'));
         $this->assertEquals('2026-03-22 16:00:00', $evaluado->fecha_hora_fin->format('Y-m-d H:i:s'));
         $this->assertEquals('reprogramado', $evaluado->estado_programacion);
+    }
+
+    public function test_reprogramar_cita_envia_correo_al_candidato(): void
+    {
+        Mail::fake();
+        $sede = Sede::factory()->create(['estado' => 1]);
+        $poligrafista = $this->usuarioRepro();
+        $evaluado = $this->crearEvaluado([
+            'email' => 'candidato.reprog@test.com',
+            'fecha_programada' => '2026-03-15 09:00:00',
+            'fecha_hora_fin' => '2026-03-15 11:00:00',
+            'sede_id' => $sede->id,
+            'poligrafista_id' => $poligrafista->id,
+            'estado_programacion' => 'programado',
+        ]);
+
+        $this->actingAs($poligrafista)
+            ->patch('/calendario/evaluados/' . $evaluado->id . '/reprogramar', [
+                'evaluado_orden_id' => $evaluado->id,
+                'fecha' => '2026-03-22',
+                'hora_inicio' => '14:00',
+                'hora_fin' => '16:00',
+                'sede_id' => $sede->id,
+                'poligrafista_id' => $poligrafista->id,
+                'motivo_reprogramacion' => 'El candidato reagendó por viaje',
+            ])
+            ->assertRedirect();
+
+        Mail::assertQueued(CitaProgramadaMail::class, function (CitaProgramadaMail $mail) use ($evaluado) {
+            return $mail->evaluado->id === $evaluado->id && $mail->reprogramada === true;
+        });
     }
 
     public function test_reprogramar_excluye_evaluado_actual_de_antitraslape(): void
