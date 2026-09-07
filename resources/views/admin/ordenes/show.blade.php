@@ -1109,9 +1109,14 @@
                                                            id="hidden-preliminar-{{ $evaluado->id }}"
                                                            value="{{ $evaluado->texto_informe_preliminar }}">
                                                     <div class="mt-2 d-flex justify-content-between align-items-center">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary insertar-tabla-preliminar" data-evaluado="{{ $evaluado->id }}">
-                                                            <i class="bi bi-table"></i> Insertar tabla
-                                                        </button>
+                                                        <div>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary insertar-tabla-preliminar" data-evaluado="{{ $evaluado->id }}" title="Inserta una tabla de 2 columnas para llenar">
+                                                                <i class="bi bi-table"></i> Insertar tabla
+                                                            </button>
+                                                            <div class="form-text mt-1 mb-0">
+                                                                Aparece una tabla con bordes. Escriba en cada recuadro. Use el botón otra vez para agregar otra tabla.
+                                                            </div>
+                                                        </div>
                                                         <button type="submit" class="btn btn-sm btn-info text-white">
                                                             <i class="bi bi-save"></i> Guardar informe
                                                         </button>
@@ -1299,18 +1304,32 @@
     overflow-y: auto;
 }
 .ql-editor table,
+.ql-editor .repro-tabla-wrap table,
 .informe-preliminar-form table {
     border-collapse: collapse;
     width: 100%;
     margin: 0.5rem 0;
+    table-layout: fixed;
 }
 .ql-editor th,
 .ql-editor td,
+.ql-editor .repro-tabla-wrap th,
+.ql-editor .repro-tabla-wrap td,
 .informe-preliminar-form th,
 .informe-preliminar-form td {
-    border: 1px solid #adb5bd;
-    padding: 4px 8px;
-    min-width: 4rem;
+    border: 1px solid #6c757d;
+    padding: 6px 8px;
+    min-width: 6rem;
+    min-height: 1.75rem;
+    background: #fff;
+}
+.ql-editor th,
+.ql-editor .repro-tabla-wrap th {
+    background: #e9ecef;
+    font-weight: 600;
+}
+.ql-editor .repro-tabla-wrap {
+    margin: 0.5rem 0;
 }
 .ql-snow .ql-toolbar button,
 .ql-snow.ql-toolbar button {
@@ -1474,48 +1493,101 @@ function copiarEnlaceEvaluado(url) {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 <script>
-// Inicializar editores Quill para informe preliminar
-document.querySelectorAll('[id^="editor-preliminar-"]').forEach(function(editorEl) {
-    const evaluadoId = editorEl.id.replace('editor-preliminar-', '');
-    const hiddenInput = document.getElementById('hidden-preliminar-' + evaluadoId);
+(function () {
+    const Delta = Quill.import('delta');
+    const BlockEmbed = Quill.import('blots/block/embed');
+    const HTML_TABLA_VACIA = '<thead><tr><th>Columna 1</th><th>Columna 2</th></tr></thead>'
+        + '<tbody><tr><td><br></td><td><br></td></tr><tr><td><br></td><td><br></td></tr></tbody>';
 
-    const quill = new Quill(editorEl, {
-        theme: 'snow',
-        modules: {
-            toolbar: [
-                [{ 'header': [2, 3, false] }],
-                ['bold', 'italic', 'underline'],
-                [{ 'color': [] }, { 'background': [] }],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['clean']
-            ]
-        }
-    });
-
-    // Restaurar contenido si ya existe
-    if (hiddenInput.value) {
-        quill.clipboard.dangerouslyPasteHTML(hiddenInput.value);
-    }
-
-    // Antes de enviar el form, copiar HTML al input oculto
-    const form = editorEl.closest('form.informe-preliminar-form');
-    if (form) {
-        form.addEventListener('submit', function() {
-            hiddenInput.value = quill.root.innerHTML;
+    function aplicarBordesTabla(table) {
+        table.style.borderCollapse = 'collapse';
+        table.style.width = '100%';
+        table.querySelectorAll('th,td').forEach(function (cell) {
+            cell.style.border = cell.style.border || '1px solid #6c757d';
+            cell.style.padding = cell.style.padding || '6px 8px';
+            cell.style.minWidth = '6rem';
         });
-        const btnTabla = form.querySelector('.insertar-tabla-preliminar');
-        if (btnTabla) {
-            btnTabla.addEventListener('click', function() {
-                const rango = quill.getSelection(true);
-                quill.clipboard.dangerouslyPasteHTML(
-                    rango ? rango.index : 0,
-                    '<table><thead><tr><th>Columna 1</th><th>Columna 2</th></tr></thead><tbody><tr><td></td><td></td></tr><tr><td></td><td></td></tr></tbody></table><p></p>'
-                );
-            });
+        table.querySelectorAll('th').forEach(function (th) {
+            th.style.backgroundColor = th.style.backgroundColor || '#e9ecef';
+            th.style.fontWeight = th.style.fontWeight || '600';
+        });
+    }
+
+    class ReproTabla extends BlockEmbed {
+        static create(value) {
+            const node = super.create();
+            node.setAttribute('contenteditable', 'false');
+            const table = document.createElement('table');
+            table.className = 'repro-tabla-preliminar';
+            table.setAttribute('contenteditable', 'true');
+            table.innerHTML = (typeof value === 'string' && value.trim() !== '') ? value : HTML_TABLA_VACIA;
+            aplicarBordesTabla(table);
+            node.appendChild(table);
+            return node;
+        }
+
+        static value(node) {
+            const table = node.querySelector('table');
+            return table ? table.innerHTML : '';
         }
     }
-    window['quillPreliminar' + evaluadoId] = quill;
-});
+    ReproTabla.blotName = 'reproTabla';
+    ReproTabla.tagName = 'DIV';
+    ReproTabla.className = 'repro-tabla-wrap';
+    Quill.register(ReproTabla, true);
+
+    document.querySelectorAll('[id^="editor-preliminar-"]').forEach(function (editorEl) {
+        const evaluadoId = editorEl.id.replace('editor-preliminar-', '');
+        const hiddenInput = document.getElementById('hidden-preliminar-' + evaluadoId);
+
+        const quill = new Quill(editorEl, {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['clean']
+                ]
+            }
+        });
+
+        quill.clipboard.addMatcher('TABLE', function (node) {
+            return new Delta().insert({ reproTabla: node.innerHTML });
+        });
+
+        if (hiddenInput.value) {
+            quill.clipboard.dangerouslyPasteHTML(hiddenInput.value);
+        }
+
+        const form = editorEl.closest('form.informe-preliminar-form');
+        if (form) {
+            form.addEventListener('submit', function () {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = quill.root.innerHTML;
+                tmp.querySelectorAll('.repro-tabla-wrap').forEach(function (wrap) {
+                    const table = wrap.querySelector('table');
+                    if (table) {
+                        wrap.replaceWith(table);
+                    }
+                });
+                hiddenInput.value = tmp.innerHTML;
+            });
+            const btnTabla = form.querySelector('.insertar-tabla-preliminar');
+            if (btnTabla) {
+                btnTabla.addEventListener('click', function () {
+                    const rango = quill.getSelection(true);
+                    const index = rango ? rango.index : quill.getLength();
+                    quill.insertEmbed(index, 'reproTabla', HTML_TABLA_VACIA, 'user');
+                    quill.insertText(index + 1, '\n', 'user');
+                    quill.setSelection(index + 1, 0, 'silent');
+                });
+            }
+        }
+        window['quillPreliminar' + evaluadoId] = quill;
+    });
+})();
 </script>
 
 <script>

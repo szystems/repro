@@ -144,6 +144,8 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $response->assertSee('editor-preliminar-' . $this->evaluado->id);
         $response->assertSee("color': []", false);
         $response->assertSee('Insertar tabla');
+        $response->assertSee('reproTabla');
+        $response->assertSee('Escriba en cada recuadro');
     }
 
     /** @test */

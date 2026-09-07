@@ -28,9 +28,14 @@
             </h6>
         </div>
         <div class="card-body">
-            <div class="border rounded p-3 bg-light">
+            <div class="border rounded p-3 bg-light informe-preliminar-empresa">
                 {!! $evaluado->texto_informe_preliminar !!}
             </div>
+            <style>
+                .informe-preliminar-empresa table { border-collapse: collapse; width: 100%; }
+                .informe-preliminar-empresa th, .informe-preliminar-empresa td { border: 1px solid #6c757d; padding: 6px 8px; }
+                .informe-preliminar-empresa th { background: #e9ecef; }
+            </style>
         </div>
     </div>
     @endif
