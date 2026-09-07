@@ -153,6 +153,7 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $response->assertSee('repro-swatch-color');
         $response->assertSee('reproTabla');
         $response->assertSee('foreColor');
+        $response->assertSee('permitirPortapapelesEnTabla');
     }
 
     /** @test */

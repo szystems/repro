@@ -1131,7 +1131,7 @@
                                                                 <i class="bi bi-plus"></i> Agregar fila
                                                             </button>
                                                             <div class="form-text mt-1 mb-0">
-                                                                Seleccione el texto y pulse un cuadro de <strong>Color de letra</strong> o <strong>Fondo</strong>. La <strong>A</strong> de la barra abre más colores. La <strong>×</strong> elimina la fila.
+                                                                Seleccione el texto y pulse un cuadro de <strong>Color de letra</strong> o <strong>Fondo</strong>. En la tabla se puede copiar y pegar. La <strong>A</strong> de la barra abre más colores. La <strong>×</strong> elimina la fila.
                                                             </div>
                                                         </div>
                                                         <button type="submit" class="btn btn-sm btn-info text-white">
@@ -1768,6 +1768,17 @@ function copiarEnlaceEvaluado(url) {
                 el.remove();
             });
             return new Delta().insert({ reproTabla: clone.innerHTML });
+        });
+
+        function permitirPortapapelesEnTabla(e) {
+            const celda = celdaDeNodo(e.target) || celdaDeNodo(window.getSelection().anchorNode);
+            if (!celda || celda.classList.contains('repro-tabla-accion')) {
+                return;
+            }
+            e.stopImmediatePropagation();
+        }
+        ['copy', 'cut', 'paste'].forEach(function (tipo) {
+            quill.root.addEventListener(tipo, permitirPortapapelesEnTabla, true);
         });
 
         const toolbar = quill.getModule('toolbar');
