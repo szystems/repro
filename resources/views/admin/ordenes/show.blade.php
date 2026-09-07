@@ -1776,6 +1776,47 @@ function copiarEnlaceEvaluado(url) {
                 return;
             }
             e.stopImmediatePropagation();
+            if (e.type !== 'paste' || !e.clipboardData) {
+                return;
+            }
+            e.preventDefault();
+            restaurarRangoTabla();
+            if (!celdaDeNodo(window.getSelection().anchorNode)) {
+                const rango = document.createRange();
+                rango.selectNodeContents(celda);
+                rango.collapse(false);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(rango);
+            }
+            const html = e.clipboardData.getData('text/html') || '';
+            const text = e.clipboardData.getData('text/plain') || '';
+            if (html && html.toLowerCase().indexOf('<table') !== -1) {
+                document.execCommand('insertText', false, text);
+                guardarRangoTabla();
+                return;
+            }
+            if (html.trim()) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                tmp.querySelectorAll('script,style,img,iframe,object').forEach(function (el) {
+                    el.remove();
+                });
+                tmp.querySelectorAll('*').forEach(function (el) {
+                    [...el.attributes].forEach(function (attr) {
+                        if (attr.name.indexOf('on') === 0) {
+                            el.removeAttribute(attr.name);
+                        }
+                    });
+                });
+                document.execCommand('insertHTML', false, tmp.innerHTML);
+                guardarRangoTabla();
+                return;
+            }
+            if (text) {
+                document.execCommand('insertText', false, text);
+                guardarRangoTabla();
+            }
         }
         ['copy', 'cut', 'paste'].forEach(function (tipo) {
             quill.root.addEventListener(tipo, permitirPortapapelesEnTabla, true);
