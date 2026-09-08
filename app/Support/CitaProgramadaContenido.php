@@ -45,7 +45,7 @@ class CitaProgramadaContenido
     {
         return match (self::plantilla($evaluado)) {
             self::PLANTILLA_VSA => 'Prueba VSA - Análisis de Estrés de Voz',
-            self::PLANTILLA_SOCIO => 'Entrevista de Seguridad - Estudio Socioeconómico',
+            self::PLANTILLA_SOCIO => 'Entrevista de Seguridad – Estudio Socioeconómico',
             default => 'Prueba de Polígrafo',
         };
     }

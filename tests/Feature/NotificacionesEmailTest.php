@@ -309,11 +309,16 @@ class NotificacionesEmailTest extends TestCase
             'modalidad' => 'presencial',
         ]);
         $mailPresencial = new CitaProgramadaMail($presencial, false);
-        $mailPresencial->assertSeeInHtml('Entrevista de Seguridad - Estudio Socioeconómico');
-        $mailPresencial->assertSeeInHtml('Si su entrevista es presencial');
+        $mailPresencial->assertSeeInHtml('Entrevista de Seguridad');
+        $mailPresencial->assertSeeInHtml('Estudio Socioeconómico');
+        $mailPresencial->assertSeeInHtml('le compartimos la confirmación');
+        $mailPresencial->assertSeeInHtml('Si su entrevista es PRESENCIAL');
+        $mailPresencial->assertSeeInHtml('Preséntese puntualmente en la sede indicada');
         $mailPresencial->assertSeeInHtml('Sede Socio Xela');
         $mailPresencial->assertSeeInHtml('13 avenida 4-20, Xela');
-        $mailPresencial->assertDontSeeInHtml('Si su entrevista es virtual');
+        $mailPresencial->assertSeeInHtml('políticas de confidencialidad');
+        $mailPresencial->assertDontSeeInHtml('Si su entrevista es VIRTUAL');
+        $mailPresencial->assertDontSeeInHtml('cámara, micrófono');
 
         $virtual = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
@@ -327,8 +332,11 @@ class NotificacionesEmailTest extends TestCase
         ]);
         $mailVirtual = new CitaProgramadaMail($virtual, true);
         $mailVirtual->assertSeeInHtml('Cita reprogramada');
-        $mailVirtual->assertSeeInHtml('Si su entrevista es virtual');
+        $mailVirtual->assertSeeInHtml('Si su entrevista es VIRTUAL');
+        $mailVirtual->assertSeeInHtml('cámara, micrófono');
+        $mailVirtual->assertSeeInHtml('papelería pendiente');
         $mailVirtual->assertDontSeeInHtml('Sede Socio Xela');
-        $mailVirtual->assertDontSeeInHtml('Si su entrevista es presencial');
+        $mailVirtual->assertDontSeeInHtml('Si su entrevista es PRESENCIAL');
+        $mailVirtual->assertDontSeeInHtml('Preséntese puntualmente');
     }
 }
