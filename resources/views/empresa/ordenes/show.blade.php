@@ -121,7 +121,10 @@
                                 <small><i class="bi bi-envelope"></i> {{ $evaluado->email }}</small><br>
                             @endif
                             @if($evaluado->telefono)
-                                <small><i class="bi bi-telephone"></i> {{ $evaluado->telefono }}</small><br>
+                                <small>@include('shared.partials._telefono_whatsapp', ['numero' => $evaluado->telefono, 'etiqueta' => 'WhatsApp'])</small><br>
+                            @endif
+                            @if($evaluado->telefono_alternativo)
+                                <small>@include('shared.partials._telefono_whatsapp', ['numero' => $evaluado->telefono_alternativo, 'etiqueta' => 'Alternativo'])</small><br>
                             @endif
                             @if($evaluado->direccion)
                                 <small><i class="bi bi-geo-alt"></i> {{ $evaluado->direccion }}</small>

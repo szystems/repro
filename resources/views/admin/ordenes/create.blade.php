@@ -224,6 +224,7 @@ function agregarEvaluado(datos = {}) {
     const dpi = datos.dpi || '';
     const email = datos.email || '';
     const telefono = datos.telefono || '';
+    const telefonoAlternativo = datos.telefono_alternativo || '';
     const direccion = datos.direccion || '';
     const observaciones = datos.observaciones || '';
     const tipoServicio = datos.tipo_servicio || 'poligrafo';
@@ -303,8 +304,12 @@ function agregarEvaluado(datos = {}) {
                 </div>
                 @endif
                 <div class="col-md-3 mb-2">
-                    <label class="form-label">Teléfono</label>
-                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono]" placeholder="23451234" value="${telefono}">
+                    <label class="form-label"><i class="bi bi-whatsapp text-success"></i> WhatsApp</label>
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono]" placeholder="45464545" value="${telefono}">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Teléfono alternativo</label>
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono_alternativo]" placeholder="23451234" value="${telefonoAlternativo}">
                 </div>
                 <div class="col-md-6 mb-2">
                     <label class="form-label">Dirección</label>

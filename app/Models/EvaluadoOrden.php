@@ -40,6 +40,7 @@ class EvaluadoOrden extends Model
         'apellidos',
         'email',
         'telefono',
+        'telefono_alternativo',
         'celular',
         'direccion',
         'dpi',

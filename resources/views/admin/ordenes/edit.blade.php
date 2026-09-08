@@ -273,9 +273,14 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4 mb-2">
-                                            <label class="form-label">Teléfono</label>
+                                            <label class="form-label"><i class="bi bi-whatsapp text-success"></i> WhatsApp</label>
                                             <input type="tel" class="form-control" name="evaluados[{{ $index }}][telefono]" 
                                                    value="{{ old('evaluados.'.$index.'.telefono', $evaluado->telefono) }}">
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <label class="form-label">Teléfono alternativo</label>
+                                            <input type="tel" class="form-control" name="evaluados[{{ $index }}][telefono_alternativo]" 
+                                                   value="{{ old('evaluados.'.$index.'.telefono_alternativo', $evaluado->telefono_alternativo) }}">
                                         </div>
                                     </div>
 
@@ -496,8 +501,12 @@
             </select>
             </div>
             <div class="col-md-6 mb-2">
-                <label class="form-label">Teléfono</label>
+                <label class="form-label"><i class="bi bi-whatsapp text-success"></i> WhatsApp</label>
                 <input type="tel" class="form-control evaluado-telefono" name="">
+            </div>
+            <div class="col-md-6 mb-2">
+                <label class="form-label">Teléfono alternativo</label>
+                <input type="tel" class="form-control evaluado-telefono-alternativo" name="">
             </div>
         </div>
 
@@ -607,6 +616,8 @@ document.addEventListener('DOMContentLoaded', function() {
         newEvaluado.querySelector('.evaluado-sede-id').name = `evaluados[${evaluadoIndex}][sede_id]`;
         newEvaluado.querySelector('.evaluado-sede-region-empresa').name = `evaluados[${evaluadoIndex}][sede_region_empresa]`;
         newEvaluado.querySelector('.evaluado-telefono').name = `evaluados[${evaluadoIndex}][telefono]`;
+        const telAlt = newEvaluado.querySelector('.evaluado-telefono-alternativo');
+        if (telAlt) telAlt.name = `evaluados[${evaluadoIndex}][telefono_alternativo]`;
         newEvaluado.querySelector('.evaluado-tipo-servicio').name = `evaluados[${evaluadoIndex}][tipo_servicio]`;
         newEvaluado.querySelector('.evaluado-tipo-formulario').name = `evaluados[${evaluadoIndex}][tipo_formulario]`;
         const modalidadEl = newEvaluado.querySelector('.evaluado-modalidad');

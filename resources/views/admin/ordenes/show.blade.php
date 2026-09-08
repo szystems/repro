@@ -613,12 +613,15 @@
                                                     <i class="bi bi-envelope"></i> {{ $evaluado->email }}<br>
                                                 @endif
                                                 @if($evaluado->telefono)
-                                                    <i class="bi bi-telephone"></i> {{ $evaluado->telefono }}<br>
+                                                    @include('shared.partials._telefono_whatsapp', ['numero' => $evaluado->telefono, 'etiqueta' => 'WhatsApp'])<br>
+                                                @endif
+                                                @if($evaluado->telefono_alternativo)
+                                                    @include('shared.partials._telefono_whatsapp', ['numero' => $evaluado->telefono_alternativo, 'etiqueta' => 'Alternativo'])<br>
                                                 @endif
                                                 @if($evaluado->direccion)
                                                     <i class="bi bi-geo-alt"></i> {{ $evaluado->direccion }}<br>
                                                 @endif
-                                                @if(!$evaluado->email && !$evaluado->telefono && !$evaluado->direccion)
+                                                @if(!$evaluado->email && !$evaluado->telefono && !$evaluado->telefono_alternativo && !$evaluado->direccion)
                                                     <span class="text-muted">Sin contacto</span>
                                                 @endif
                                             </div>

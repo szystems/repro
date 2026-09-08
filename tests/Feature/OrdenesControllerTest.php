@@ -954,4 +954,45 @@ class OrdenesControllerTest extends TestCase
             ->assertDontSee('Autoasignarme entrevista')
             ->assertDontSee('Ana Entrevista');
     }
+
+    public function test_guarda_whatsapp_y_telefono_alternativo_del_candidato(): void
+    {
+        Mail::fake();
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+        $empresa = Empresa::factory()->create();
+        $sede = \App\Models\Sede::factory()->create(['estado' => 1]);
+
+        $this->actingAs($admin)
+            ->get(route('ordenes.create'))
+            ->assertOk()
+            ->assertSee('WhatsApp')
+            ->assertSee('Teléfono alternativo');
+
+        $this->actingAs($admin)->post(route('ordenes.store'), [
+            'empresa_id' => $empresa->id,
+            'sede_id' => $sede->id,
+            'evaluados' => [[
+                'nombre' => 'Carmen',
+                'apellidos' => 'Castillo',
+                'dpi' => '1597534560123',
+                'email' => 'carmen.wa@test.com',
+                'telefono' => '45464545',
+                'telefono_alternativo' => '23451234',
+                'tipo_servicio' => 'poligrafo',
+                'tipo_formulario' => 'preempleo',
+            ]],
+        ])->assertRedirect();
+
+        $evaluado = EvaluadoOrden::where('email', 'carmen.wa@test.com')->first();
+        $this->assertNotNull($evaluado);
+        $this->assertSame('45464545', $evaluado->telefono);
+        $this->assertSame('23451234', $evaluado->telefono_alternativo);
+
+        $this->actingAs($admin)
+            ->get(route('ordenes.show', $evaluado->orden_id))
+            ->assertOk()
+            ->assertSee('wa.me/50245464545')
+            ->assertSee('23451234');
+    }
 }

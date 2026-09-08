@@ -42,6 +42,7 @@ class EmpresaCrearOrdenTest extends TestCase
             'dpi'             => '1234567890123',
             'email'           => 'maria@empresa.com',
             'telefono'        => '55551234',
+            'telefono_alternativo' => '23459876',
             'tipo_servicio'   => 'poligrafo',
             'tipo_formulario' => 'preempleo',
         ];
