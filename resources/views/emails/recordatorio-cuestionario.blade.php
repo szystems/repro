@@ -145,7 +145,11 @@
             <div class="subtitle">Sistema de Evaluaciones</div>
         </div>
         
-        @if($diasRestantes <= 1)
+        @if(!empty($recordatorioAlta))
+        <div class="warning-banner">
+            ⏰ Recordatorio: aún no ha completado su cuestionario
+        </div>
+        @elseif($diasRestantes <= 1)
         <div class="urgent-banner">
             ⚠️ ¡URGENTE! Su cuestionario expira {{ $diasRestantes == 0 ? 'HOY' : 'MAÑANA' }}
         </div>

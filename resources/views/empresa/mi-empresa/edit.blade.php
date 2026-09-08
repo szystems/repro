@@ -171,7 +171,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                                 <small class="text-muted d-block mt-2">
-                                    En procesos marcados como <strong>confidenciales</strong>, solo el gerente RRHH y el reclutador asignado pueden ver la orden.
+                                    En procesos marcados como <strong>confidenciales</strong>, el gerente RRHH siempre los ve; los demás reclutadores no. Cualquier usuario de la empresa puede marcar confidencial las órdenes que crea.
                                 </small>
                             </div>
                         </div>

@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
     {
         // Enviar recordatorios de cuestionarios próximos a expirar
         // Se ejecuta diariamente a las 8:00 AM
-        $schedule->command('notificaciones:recordatorios --dias=3,1')
+        $schedule->command('notificaciones:recordatorios --dias=3,1 --despues-alta=1')
             ->dailyAt('08:00')
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/recordatorios.log'));

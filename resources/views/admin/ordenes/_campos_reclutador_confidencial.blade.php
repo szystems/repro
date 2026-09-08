@@ -1,12 +1,16 @@
 {{-- Sprint E §3.10 — asignación reclutador + proceso confidencial --}}
 @php
-    $mostrarCampos = (Auth::user()->role_as == 1 && (int) Auth::user()->principal === 1)
-        || Auth::user()->role_as >= 2;
+    $userCampos = Auth::user();
+    $puedeAsignarReclutador = $userCampos->role_as >= 2 || (int) $userCampos->principal === 1;
+    $puedeMarcarConfidencial = $userCampos->role_as >= 2
+        || (int) $userCampos->principal === 1
+        || ((int) $userCampos->role_as === 1 && (empty($orden) || (int) ($orden->creado_por ?? 0) === (int) $userCampos->id));
     $reclutadores = $reclutadores ?? collect();
 @endphp
 
-@if($mostrarCampos)
+@if($puedeAsignarReclutador || $puedeMarcarConfidencial)
 <div class="row">
+    @if($puedeAsignarReclutador)
     <div class="col-md-6 mb-3">
         <label class="form-label">
             Reclutador asignado
@@ -29,8 +33,10 @@
             Elija primero la empresa para ver su personal.
         </small>
     </div>
+    @endif
 
-    <div class="col-md-6 mb-3">
+    @if($puedeMarcarConfidencial)
+    <div class="{{ $puedeAsignarReclutador ? 'col-md-6' : 'col-md-12' }} mb-3">
         <label class="form-label d-block">Visibilidad entre reclutadores</label>
         <div class="form-check form-switch mt-2">
             <input class="form-check-input @error('confidencial') is-invalid @enderror"
@@ -41,12 +47,13 @@
                    value="1"
                    {{ old('confidencial', !empty($orden) && $orden->confidencial) ? 'checked' : '' }}>
             <label class="form-check-label" for="confidencial">
-                Proceso <strong>confidencial</strong> (solo gerente RRHH y reclutador asignado)
+                Proceso <strong>confidencial</strong> (el gerente RRHH siempre lo ve; los demás reclutadores no)
             </label>
         </div>
         @error('confidencial')
         <div class="invalid-feedback d-block">{{ $message }}</div>
         @enderror
     </div>
+    @endif
 </div>
 @endif

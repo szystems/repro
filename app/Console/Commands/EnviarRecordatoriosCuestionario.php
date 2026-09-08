@@ -23,6 +23,7 @@ class EnviarRecordatoriosCuestionario extends Command
      */
     protected $signature = 'notificaciones:recordatorios 
                             {--dias=3,1 : Días antes de expiración para enviar recordatorios (separados por coma)}
+                            {--despues-alta=1 : Días después del alta del evaluado (0 desactiva)}
                             {--forzar : Enviar incluso si ya se envió un recordatorio hoy}';
 
     /**
@@ -48,6 +49,22 @@ class EnviarRecordatoriosCuestionario extends Command
         $enviados = 0;
         $errores = 0;
 
+        $diasDespuesAlta = (int) $this->option('despues-alta');
+        if ($diasDespuesAlta > 0) {
+            $this->line("");
+            $this->info("📅 Procesando evaluados dados de alta hace {$diasDespuesAlta} día(s)...");
+
+            $evaluadosAlta = $this->obtenerEvaluadosPorAlta($diasDespuesAlta);
+            if ($evaluadosAlta->isEmpty()) {
+                $this->line("   No hay evaluados pendientes para este período.");
+            } else {
+                $this->line("   Encontrados: {$evaluadosAlta->count()} evaluados");
+                foreach ($evaluadosAlta as $evaluado) {
+                    [$enviados, $errores] = $this->enviarA($evaluado, $enviados, $errores, null, true);
+                }
+            }
+        }
+
         foreach ($diasRecordatorio as $dias) {
             $this->line("");
             $this->info("📅 Procesando evaluados que expiran en {$dias} día(s)...");
@@ -62,44 +79,7 @@ class EnviarRecordatoriosCuestionario extends Command
             $this->line("   Encontrados: {$evaluados->count()} evaluados");
 
             foreach ($evaluados as $evaluado) {
-                try {
-                    if (!$evaluado->email) {
-                        $this->warn("   ⚠️ {$evaluado->nombre} {$evaluado->apellidos}: Sin email");
-                        continue;
-                    }
-
-                    // Verificar si ya se envió recordatorio hoy (a menos que se fuerce)
-                    if (!$this->option('forzar') && $this->yaSeEnvioRecordatorioHoy($evaluado)) {
-                        $this->line("   ⏭️ {$evaluado->nombre}: Ya recibió recordatorio hoy");
-                        continue;
-                    }
-
-                    Mail::to($evaluado->email)
-                        ->send(new RecordatorioCuestionarioMail($evaluado, $dias));
-
-                    // Registrar que se envió el recordatorio
-                    $evaluado->update([
-                        'notificado_at' => now(),
-                    ]);
-
-                    $this->info("   ✅ {$evaluado->nombre} {$evaluado->apellidos}: Enviado a {$evaluado->email}");
-                    $enviados++;
-
-                    Log::info("Recordatorio enviado", [
-                        'evaluado_id' => $evaluado->id,
-                        'email' => $evaluado->email,
-                        'dias_restantes' => $dias,
-                    ]);
-
-                } catch (\Exception $e) {
-                    $this->error("   ❌ {$evaluado->nombre}: Error - " . $e->getMessage());
-                    $errores++;
-
-                    Log::error("Error enviando recordatorio", [
-                        'evaluado_id' => $evaluado->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
+                [$enviados, $errores] = $this->enviarA($evaluado, $enviados, $errores, $dias, false);
             }
         }
 
@@ -130,6 +110,79 @@ class EnviarRecordatoriosCuestionario extends Command
             ->whereBetween('token_expira_at', [$fechaObjetivo, $fechaObjetivoFin])
             ->with('orden.empresa')
             ->get();
+    }
+
+    /**
+     * Evaluados dados de alta hace N días, formulario incompleto y enlace vigente.
+     */
+    private function obtenerEvaluadosPorAlta(int $dias): \Illuminate\Database\Eloquent\Collection
+    {
+        $desde = now()->subDays($dias)->startOfDay();
+        $hasta = now()->subDays($dias)->endOfDay();
+
+        return EvaluadoOrden::query()
+            ->where('cuestionario_completado', false)
+            ->whereNotNull('token_unico')
+            ->whereNotNull('email')
+            ->where('token_expira_at', '>', now())
+            ->whereBetween('created_at', [$desde, $hasta])
+            ->with('orden.empresa')
+            ->get();
+    }
+
+    /**
+     * @return array{0: int, 1: int}
+     */
+    private function enviarA(EvaluadoOrden $evaluado, int $enviados, int $errores, ?int $diasRestantes, bool $recordatorioAlta): array
+    {
+        try {
+            if (! $evaluado->email) {
+                $this->warn("   ⚠️ {$evaluado->nombre} {$evaluado->apellidos}: Sin email");
+
+                return [$enviados, $errores];
+            }
+
+            if (! $this->option('forzar') && $this->yaSeEnvioRecordatorioHoy($evaluado)) {
+                $this->line("   ⏭️ {$evaluado->nombre}: Ya recibió recordatorio hoy");
+
+                return [$enviados, $errores];
+            }
+
+            $dias = $diasRestantes;
+            if ($dias === null) {
+                $expira = $evaluado->token_expira_at;
+                $dias = $expira
+                    ? max(0, (int) now()->startOfDay()->diffInDays($expira->copy()->startOfDay(), false))
+                    : 0;
+            }
+
+            Mail::to($evaluado->email)
+                ->send(new RecordatorioCuestionarioMail($evaluado, $dias, $recordatorioAlta));
+
+            $evaluado->update([
+                'notificado_at' => now(),
+            ]);
+
+            $this->info("   ✅ {$evaluado->nombre} {$evaluado->apellidos}: Enviado a {$evaluado->email}");
+            $enviados++;
+
+            Log::info('Recordatorio enviado', [
+                'evaluado_id' => $evaluado->id,
+                'email' => $evaluado->email,
+                'dias_restantes' => $dias,
+                'recordatorio_alta' => $recordatorioAlta,
+            ]);
+        } catch (\Exception $e) {
+            $this->error("   ❌ {$evaluado->nombre}: Error - ".$e->getMessage());
+            $errores++;
+
+            Log::error('Error enviando recordatorio', [
+                'evaluado_id' => $evaluado->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return [$enviados, $errores];
     }
 
     /**

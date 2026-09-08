@@ -308,13 +308,14 @@ class OrdenesController extends Controller
             }
 
             $empresaIdOrden = (int) $datosOrden['empresa_id'];
-            if ($this->puedeGestionarConfidencialidadOrden()) {
+            if ($this->puedeAsignarReclutadorOrden()) {
                 $datosOrden['reclutador_id'] = $this->resolverReclutadorId($request, $empresaIdOrden);
-                $datosOrden['confidencial'] = $request->boolean('confidencial');
             } else {
                 $datosOrden['reclutador_id'] = EmpresaVisibilidadReclutadoresSupport::reclutadorIdPorDefecto(Auth::user());
-                $datosOrden['confidencial'] = false;
             }
+            $datosOrden['confidencial'] = $this->puedeMarcarConfidencialidadOrden()
+                ? $request->boolean('confidencial')
+                : false;
 
             $orden = Orden::create($datosOrden);
 
@@ -518,8 +519,10 @@ class OrdenesController extends Controller
                 $datosOrden['empresa_id'] = $validated['empresa_id'];
             }
 
-            if ($this->puedeGestionarConfidencialidadOrden($orden)) {
+            if ($this->puedeAsignarReclutadorOrden()) {
                 $datosOrden['reclutador_id'] = $this->resolverReclutadorId($request, (int) $orden->empresa_id);
+            }
+            if ($this->puedeMarcarConfidencialidadOrden($orden)) {
                 $datosOrden['confidencial'] = $request->boolean('confidencial');
             }
 
@@ -1829,7 +1832,14 @@ class OrdenesController extends Controller
         return EmpresaVisibilidadReclutadoresSupport::reclutadorIdPorDefecto(Auth::user());
     }
 
-    private function puedeGestionarConfidencialidadOrden(?Orden $orden = null): bool
+    private function puedeAsignarReclutadorOrden(): bool
+    {
+        $user = Auth::user();
+
+        return $user->role_as >= 2 || (int) $user->principal === 1;
+    }
+
+    private function puedeMarcarConfidencialidadOrden(?Orden $orden = null): bool
     {
         $user = Auth::user();
 
@@ -1837,15 +1847,15 @@ class OrdenesController extends Controller
             return true;
         }
 
+        if ((int) $user->role_as !== 1) {
+            return false;
+        }
+
         if ((int) $user->principal === 1) {
             return true;
         }
 
-        if ($orden && (int) $orden->creado_por === (int) $user->id) {
-            return true;
-        }
-
-        return false;
+        return $orden === null || (int) $orden->creado_por === (int) $user->id;
     }
 
     /**

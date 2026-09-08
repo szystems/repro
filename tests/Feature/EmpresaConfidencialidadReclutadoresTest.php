@@ -174,4 +174,50 @@ class EmpresaConfidencialidadReclutadoresTest extends TestCase
         $this->assertContains($visible->codigo_orden, $codigos);
         $this->assertNotContains($oculta->codigo_orden, $codigos);
     }
+
+    public function test_formulario_nueva_orden_muestra_confidencial_al_reclutador(): void
+    {
+        $this->habilitarCrearOrdenes($this->reclutadorA);
+
+        $this->actingAs($this->reclutadorA->fresh())
+            ->get(route('ordenes.create'))
+            ->assertOk()
+            ->assertSee('Proceso')
+            ->assertSee('confidencial');
+    }
+
+    public function test_reclutador_puede_crear_orden_confidencial(): void
+    {
+        $this->habilitarCrearOrdenes($this->reclutadorA);
+
+        $this->actingAs($this->reclutadorA->fresh())
+            ->post(route('ordenes.store'), [
+                'empresa_id' => $this->empresa->id,
+                'evaluados' => [[
+                    'nombre' => 'Carla',
+                    'apellidos' => 'Méndez',
+                    'dpi' => '1234567890123',
+                    'email' => 'carla.conf@test.com',
+                    'tipo_servicio' => 'poligrafo',
+                    'tipo_formulario' => 'preempleo',
+                ]],
+                'confidencial' => '1',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $orden = Orden::where('creado_por', $this->reclutadorA->id)->latest('id')->first();
+        $this->assertNotNull($orden);
+        $this->assertTrue((bool) $orden->confidencial);
+        $this->assertSame($this->reclutadorA->id, $orden->reclutador_id);
+        $this->assertTrue(EmpresaVisibilidadReclutadoresSupport::puedeVerOrden($this->principal, $orden));
+        $this->assertFalse(EmpresaVisibilidadReclutadoresSupport::puedeVerOrden($this->reclutadorB, $orden));
+    }
+
+    private function habilitarCrearOrdenes(User $user): void
+    {
+        $permisos = EmpresaPermisosSupport::permisosDefaultTrabajador();
+        $permisos[] = 'crear_ordenes';
+        $user->update(['permisos' => json_encode($permisos)]);
+    }
 }

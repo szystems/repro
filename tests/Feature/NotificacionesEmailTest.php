@@ -231,6 +231,52 @@ class NotificacionesEmailTest extends TestCase
         Mail::assertNotQueued(RecordatorioCuestionarioMail::class);
     }
 
+    public function test_recordatorio_un_dia_despues_del_alta_si_no_completaron(): void
+    {
+        Mail::fake();
+
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'email' => 'alta.ayer@test.com',
+            'cuestionario_completado' => false,
+            'token_unico' => 'token-alta-ayer',
+            'token_expira_at' => now()->addDays(30),
+            'created_at' => now()->subDay(),
+        ]);
+
+        $this->artisan('notificaciones:recordatorios --dias=3 --despues-alta=1')
+            ->assertExitCode(0);
+
+        Mail::assertQueued(RecordatorioCuestionarioMail::class, function (RecordatorioCuestionarioMail $mail) {
+            return $mail->hasTo('alta.ayer@test.com')
+                && $mail->recordatorioAlta === true
+                && ! str_contains($mail->envelope()->subject, 'URGENTE');
+        });
+    }
+
+    public function test_recordatorio_alta_omite_si_ya_completaron(): void
+    {
+        Mail::fake();
+
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'email' => 'alta.completa@test.com',
+            'cuestionario_completado' => true,
+            'token_unico' => 'token-alta-completa',
+            'token_expira_at' => now()->addDays(30),
+            'created_at' => now()->subDay(),
+        ]);
+
+        $this->artisan('notificaciones:recordatorios --dias=3 --despues-alta=1')
+            ->assertExitCode(0);
+
+        Mail::assertNotQueued(RecordatorioCuestionarioMail::class);
+    }
+
     public function test_cita_programada_mail_can_be_rendered(): void
     {
         $empresa = Empresa::factory()->create(['estado' => 1, 'nombre' => 'Empresa Cita']);

@@ -21,14 +21,16 @@ class RecordatorioCuestionarioMail extends Mailable implements ShouldQueue
     public EvaluadoOrden $evaluado;
     public string $urlCuestionario;
     public int $diasRestantes;
+    public bool $recordatorioAlta;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(EvaluadoOrden $evaluado, int $diasRestantes = 0)
+    public function __construct(EvaluadoOrden $evaluado, int $diasRestantes = 0, bool $recordatorioAlta = false)
     {
         $this->evaluado = $evaluado;
         $this->diasRestantes = $diasRestantes;
+        $this->recordatorioAlta = $recordatorioAlta;
         $this->urlCuestionario = route('cuestionario.mostrar', ['token' => $evaluado->token_unico]);
     }
 
@@ -37,8 +39,8 @@ class RecordatorioCuestionarioMail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
-        $urgencia = $this->diasRestantes <= 1 ? '⚠️ URGENTE: ' : '';
-        
+        $urgencia = (! $this->recordatorioAlta && $this->diasRestantes <= 1) ? '⚠️ URGENTE: ' : '';
+
         return new Envelope(
             subject: $urgencia . 'REPRO - Recordatorio: Complete su cuestionario',
         );
@@ -55,6 +57,7 @@ class RecordatorioCuestionarioMail extends Mailable implements ShouldQueue
                 'evaluado' => $this->evaluado,
                 'urlCuestionario' => $this->urlCuestionario,
                 'diasRestantes' => $this->diasRestantes,
+                'recordatorioAlta' => $this->recordatorioAlta,
                 'fechaExpiracion' => $this->evaluado->token_expira_at?->format('d/m/Y H:i'),
                 'empresa' => $this->evaluado->orden->empresa->nombre ?? 'N/A',
             ],
