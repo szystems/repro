@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\EvaluadoOrden;
+use App\Support\CitaProgramadaContenido;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -34,18 +35,28 @@ class CitaProgramadaMail extends Mailable implements ShouldQueue
     {
         $inicio = $this->evaluado->fecha_programada;
         $fin = $this->evaluado->fecha_hora_fin;
+        $plantilla = CitaProgramadaContenido::plantilla($this->evaluado);
 
         return new Content(
             view: 'emails.cita-programada',
             with: [
                 'evaluado' => $this->evaluado,
                 'reprogramada' => $this->reprogramada,
+                'plantilla' => $plantilla,
+                'tituloServicio' => CitaProgramadaContenido::tituloServicio($this->evaluado),
+                'esVirtual' => CitaProgramadaContenido::esVirtual($this->evaluado),
+                'mostrarSede' => CitaProgramadaContenido::mostrarSedeYDireccion($this->evaluado),
                 'empresa' => $this->evaluado->orden->empresa->nombre ?? 'N/A',
+                'puesto' => trim((string) ($this->evaluado->puesto_evaluar ?? '')) ?: 'N/A',
                 'fecha' => $inicio?->format('d/m/Y'),
                 'horaInicio' => $inicio?->format('H:i'),
                 'horaFin' => $fin?->format('H:i'),
                 'sede' => $this->evaluado->sede->nombre ?? 'N/A',
-                'modalidad' => $this->evaluado->modalidad ? ucfirst((string) $this->evaluado->modalidad) : 'N/A',
+                'direccion' => $this->evaluado->sede->direccion ?? 'N/A',
+                'enlaceMaps' => $this->evaluado->sede->enlace_maps ?? null,
+                'modalidad' => CitaProgramadaContenido::etiquetaModalidad($this->evaluado),
+                'urlCuestionario' => CitaProgramadaContenido::urlCuestionario($this->evaluado),
+                'whatsappUrl' => CitaProgramadaContenido::whatsappUrl($this->evaluado),
             ],
         );
     }

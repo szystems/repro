@@ -241,6 +241,8 @@ class NotificacionesEmailTest extends TestCase
             'nombre' => 'Ana',
             'apellidos' => 'López',
             'email' => 'ana.cita@test.com',
+            'tipo_servicio' => 'poligrafo',
+            'puesto_evaluar' => 'Analista',
             'fecha_programada' => now()->addDays(2)->setTime(9, 0),
             'fecha_hora_fin' => now()->addDays(2)->setTime(11, 0),
             'sede_id' => $sede->id,
@@ -252,5 +254,81 @@ class NotificacionesEmailTest extends TestCase
         $mailable->assertSeeInHtml('Sede Norte');
         $mailable->assertSeeInHtml('Empresa Cita');
         $mailable->assertSeeInHtml('09:00');
+        $mailable->assertSeeInHtml('Prueba de Polígrafo');
+        $mailable->assertSeeInHtml('CONDICIONES PARA REALIZAR SU PRUEBA DE POLÍGRAFO');
+        $mailable->assertSeeInHtml('Analista');
+    }
+
+    public function test_cita_vsa_virtual_usa_plantilla_sin_sede(): void
+    {
+        $empresa = Empresa::factory()->create(['estado' => 1, 'nombre' => 'Empresa VSA']);
+        $sede = Sede::factory()->create(['nombre' => 'Sede Virtual Hidden', 'direccion' => 'Calle Secreta 9']);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Bruno',
+            'apellidos' => 'Vásquez',
+            'email' => 'bruno.vsa@test.com',
+            'tipo_servicio' => 'vsa',
+            'puesto_evaluar' => 'Cajero',
+            'fecha_programada' => now()->addDays(2)->setTime(10, 0),
+            'fecha_hora_fin' => now()->addDays(2)->setTime(11, 0),
+            'sede_id' => $sede->id,
+            'modalidad' => 'virtual',
+            'token_unico' => 'token-vsa-cita',
+        ]);
+
+        $mailable = new CitaProgramadaMail($evaluado, false);
+        $mailable->assertSeeInHtml('Prueba VSA - Análisis de Estrés de Voz');
+        $mailable->assertSeeInHtml('CONDICIONES PARA REALIZAR SU PRUEBA VSA');
+        $mailable->assertSeeInHtml('Virtual');
+        $mailable->assertSeeInHtml('Cajero');
+        $mailable->assertSeeInHtml('token-vsa-cita');
+        $mailable->assertDontSeeInHtml('Sede Virtual Hidden');
+        $mailable->assertDontSeeInHtml('Calle Secreta 9');
+        $mailable->assertDontSeeInHtml('Prueba de Polígrafo');
+    }
+
+    public function test_cita_socioeconomico_elige_bloque_segun_modalidad(): void
+    {
+        $empresa = Empresa::factory()->create(['estado' => 1, 'nombre' => 'Empresa Socio']);
+        $sede = Sede::factory()->create([
+            'nombre' => 'Sede Socio Xela',
+            'direccion' => '13 avenida 4-20, Xela',
+        ]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+
+        $presencial = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Carla',
+            'apellidos' => 'Méndez',
+            'tipo_servicio' => 'socioeconomico',
+            'fecha_programada' => now()->addDays(3)->setTime(8, 30),
+            'fecha_hora_fin' => now()->addDays(3)->setTime(10, 0),
+            'sede_id' => $sede->id,
+            'modalidad' => 'presencial',
+        ]);
+        $mailPresencial = new CitaProgramadaMail($presencial, false);
+        $mailPresencial->assertSeeInHtml('Entrevista de Seguridad - Estudio Socioeconómico');
+        $mailPresencial->assertSeeInHtml('Si su entrevista es presencial');
+        $mailPresencial->assertSeeInHtml('Sede Socio Xela');
+        $mailPresencial->assertSeeInHtml('13 avenida 4-20, Xela');
+        $mailPresencial->assertDontSeeInHtml('Si su entrevista es virtual');
+
+        $virtual = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Diego',
+            'apellidos' => 'Ruiz',
+            'tipo_servicio' => 'socioeconomico',
+            'fecha_programada' => now()->addDays(3)->setTime(14, 0),
+            'fecha_hora_fin' => now()->addDays(3)->setTime(15, 30),
+            'sede_id' => $sede->id,
+            'modalidad' => 'virtual',
+        ]);
+        $mailVirtual = new CitaProgramadaMail($virtual, true);
+        $mailVirtual->assertSeeInHtml('Cita reprogramada');
+        $mailVirtual->assertSeeInHtml('Si su entrevista es virtual');
+        $mailVirtual->assertDontSeeInHtml('Sede Socio Xela');
+        $mailVirtual->assertDontSeeInHtml('Si su entrevista es presencial');
     }
 }
