@@ -103,12 +103,8 @@ class EnviarRecordatoriosCuestionario extends Command
         $fechaObjetivo = now()->addDays($dias)->startOfDay();
         $fechaObjetivoFin = now()->addDays($dias)->endOfDay();
 
-        return EvaluadoOrden::query()
-            ->where('cuestionario_completado', false)
-            ->whereNotNull('token_unico')
-            ->whereNotNull('email')
+        return $this->queryPendientesRecordatorio()
             ->whereBetween('token_expira_at', [$fechaObjetivo, $fechaObjetivoFin])
-            ->with('orden.empresa')
             ->get();
     }
 
@@ -120,14 +116,24 @@ class EnviarRecordatoriosCuestionario extends Command
         $desde = now()->subDays($dias)->startOfDay();
         $hasta = now()->subDays($dias)->endOfDay();
 
+        return $this->queryPendientesRecordatorio()
+            ->where('token_expira_at', '>', now())
+            ->whereBetween('created_at', [$desde, $hasta])
+            ->get();
+    }
+
+    private function queryPendientesRecordatorio()
+    {
         return EvaluadoOrden::query()
             ->where('cuestionario_completado', false)
             ->whereNotNull('token_unico')
             ->whereNotNull('email')
-            ->where('token_expira_at', '>', now())
-            ->whereBetween('created_at', [$desde, $hasta])
-            ->with('orden.empresa')
-            ->get();
+            ->whereNotIn('estado_evaluacion', ['cancelado', 'desistio'])
+            ->whereHas('orden', function ($q) {
+                $q->where('archivada', false)
+                    ->where('estado', '!=', 'cancelado');
+            })
+            ->with('orden.empresa');
     }
 
     /**

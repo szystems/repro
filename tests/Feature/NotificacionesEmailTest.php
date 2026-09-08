@@ -277,6 +277,48 @@ class NotificacionesEmailTest extends TestCase
         Mail::assertNotQueued(RecordatorioCuestionarioMail::class);
     }
 
+    public function test_recordatorio_no_sale_si_deshabilitan_el_enlace(): void
+    {
+        Mail::fake();
+
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'email' => 'enlace.off@test.com',
+            'cuestionario_completado' => false,
+            'token_unico' => 'token-enlace-off',
+            'token_expira_at' => now(),
+            'created_at' => now()->subDay(),
+        ]);
+
+        $this->artisan('notificaciones:recordatorios --dias=3 --despues-alta=1')
+            ->assertExitCode(0);
+
+        Mail::assertNotQueued(RecordatorioCuestionarioMail::class);
+    }
+
+    public function test_recordatorio_no_sale_si_la_orden_esta_cancelada(): void
+    {
+        Mail::fake();
+
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id, 'estado' => 'cancelado']);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'email' => 'orden.cancel@test.com',
+            'cuestionario_completado' => false,
+            'token_unico' => 'token-orden-cancel',
+            'token_expira_at' => now()->addDays(30),
+            'created_at' => now()->subDay(),
+        ]);
+
+        $this->artisan('notificaciones:recordatorios --dias=3 --despues-alta=1')
+            ->assertExitCode(0);
+
+        Mail::assertNotQueued(RecordatorioCuestionarioMail::class);
+    }
+
     public function test_cita_programada_mail_can_be_rendered(): void
     {
         $empresa = Empresa::factory()->create(['estado' => 1, 'nombre' => 'Empresa Cita']);
