@@ -88,12 +88,16 @@
                     </ul>
                 @endif
                 <p class="section-title">DOCUMENTACIÓN PENDIENTE</p>
-                <p>Adjunte sus documentos a través del enlace del formulario, o llévelos el día de la entrevista. Deben estar vigentes, completos y legibles.</p>
+                @if($esVirtual)
+                    <p>Adjunte sus documentos a través del enlace del formulario. Deben estar vigentes, completos y legibles.</p>
+                @else
+                    <p>Adjunte sus documentos a través del enlace del formulario, o llévelos el día de la entrevista. Deben estar vigentes, completos y legibles.</p>
+                @endif
             @else
                 <p class="section-title">CONDICIONES PARA REALIZAR SU PRUEBA DE POLÍGRAFO</p>
                 <ul class="conditions">
                     <li>Descanse bien la noche anterior.</li>
-                    <li>Alimente de forma normal; no debe presentarse en ayunas.</li>
+                    <li>Aliméntese de forma normal; no debe presentarse en ayunas.</li>
                     <li>No ingiera alcohol.</li>
                     <li>Si toma medicamentos recetados, continúe su tratamiento e infórmelo al evaluador.</li>
                     <li>Use ropa cómoda.</li>
