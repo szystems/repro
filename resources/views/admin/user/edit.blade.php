@@ -145,7 +145,7 @@
                                                     <label for="role_as" class="form-label">Tipo de Usuario <span class="text-danger">*</span></label>
                                                     <div class="input-group">
                                                         <span class="input-group-text"><i class="bi bi-shield-fill"></i></span>
-                                                        <select name="role_as" id="role_as" class="form-select" required>
+                                                        <select name="role_id" id="role_as" class="form-select" required>
                                                             {{-- Opciones dinámicas desde tabla roles (excluye evaluado) --}}
                                                             @foreach($roles as $role)
                                                             <option value="{{ $role->id }}" {{ $primaryRoleId == $role->id ? 'selected' : '' }}>

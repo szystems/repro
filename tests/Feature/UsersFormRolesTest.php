@@ -100,6 +100,44 @@ class UsersFormRolesTest extends TestCase
         $this->assertStringContainsString('value="' . $empresaRole->id . '" selected', $roleAsSelectHtml);
         // El rol admin no debe estar seleccionado
         $this->assertStringNotContainsString('value="' . $adminRole->id . '" selected', $roleAsSelectHtml);
+        $this->assertStringContainsString('name="role_id"', $html);
+    }
+
+    public function test_editar_usuario_cambia_rol_spatie_de_prueba_a_empresa(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3, 'estado' => 1]);
+        $admin->roles()->attach(Role::where('name', 'admin')->firstOrFail()->id);
+
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $empresaRole = Role::where('name', 'empresa')->firstOrFail();
+        $rolQa = Role::create([
+            'name' => 'empresa_qa_temporal',
+            'display_name' => 'Empresa QA Temporal',
+            'level' => 1,
+        ]);
+
+        $cliente = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+            'principal' => 1,
+            'estado' => 1,
+            'fecha_nacimiento' => '1990-01-01',
+        ]);
+        $cliente->roles()->attach([$empresaRole->id, $rolQa->id]);
+
+        $this->actingAs($admin)->put(route('users.update', $cliente->id), [
+            'name' => $cliente->name,
+            'email' => $cliente->email,
+            'fecha_nacimiento' => '1990-01-01',
+            'role_id' => $empresaRole->id,
+            'empresa_id' => $empresa->id,
+            'principal' => '1',
+        ])->assertRedirect();
+
+        $cliente->refresh();
+        $this->assertSame(1, (int) $cliente->role_as);
+        $this->assertTrue($cliente->roles->contains('name', 'empresa'));
+        $this->assertFalse($cliente->roles->contains('name', 'empresa_qa_temporal'));
     }
 }
 

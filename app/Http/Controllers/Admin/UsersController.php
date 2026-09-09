@@ -285,10 +285,13 @@ class UsersController extends Controller
         // Mapa role_id → level para el JavaScript
         $roleLevels = $roles->pluck('level', 'id');
 
-        // Determinar el rol principal activo del usuario para pre-seleccionar en el form
-        $primaryRoleId = $user->roles
-            ->whereIn('name', $roles->pluck('name')->toArray())
-            ->first()?->id
+        // Preferir el rol de sistema (empresa/repro/admin) si también tiene uno de prueba.
+        $rolSistemaPorNivel = [1 => 'empresa', 2 => 'repro', 3 => 'admin'];
+        $nombreSistema = $rolSistemaPorNivel[(int) $user->role_as] ?? null;
+        $primaryRoleId = $user->roles->firstWhere('name', $nombreSistema)?->id
+            ?? $user->roles
+                ->whereIn('name', $roles->pluck('name')->toArray())
+                ->first()?->id
             ?? $roles->where('level', $user->role_as)->first()?->id;
 
         // Cargar todos los permisos agrupados por módulo

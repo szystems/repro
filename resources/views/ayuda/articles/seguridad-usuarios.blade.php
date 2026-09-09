@@ -73,5 +73,5 @@
 
     <h5 id="roles-prueba"><i class="bi bi-flask me-2"></i>Roles de prueba (p. ej. Empresa QZ Temporal)</h5>
     <p>Un rol Spatie como <strong>Empresa QA Temporal</strong> es solo para pruebas de cliente. <strong>No abre el panel REPRO.</strong> El acceso lo marca el tipo de usuario (<code>role_as</code>: empresa vs REPRO). Una empresa de pruebas (PRUEBA 1) puede tener ese rol sin entrar a Administración.</p>
-    <p>No se puede eliminar un rol si tiene <strong>usuarios asignados</strong>. Reasigne a esas personas el rol <strong>Usuario Empresa</strong> y después sí se borra. No mueva usuarios que ya les funcionan.</p>
+    <p>No se puede eliminar un rol si tiene <strong>usuarios asignados</strong>. En Usuarios → editar, elija <strong>Usuario Empresa</strong> y guarde (eso quita el rol de prueba). No mueva usuarios de clientes que ya les funcionan: el acceso al portal lo marca el <strong>tipo</strong> (empresa vs REPRO), no esa etiqueta extra.</p>
 </div>

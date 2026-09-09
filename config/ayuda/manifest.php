@@ -486,7 +486,7 @@ return [
         ],
         [
             'pregunta' => '¿Qué es el rol Empresa QZ Temporal y por qué no lo puedo borrar?',
-            'respuesta' => 'Es un rol de prueba. No da acceso al panel REPRO (eso lo marca el tipo de usuario). No se borra porque tiene al menos un usuario asignado: cámbielo a Usuario Empresa y después sí se elimina.',
+            'respuesta' => 'Es un rol de prueba. No da acceso al panel REPRO: eso lo marca el tipo de usuario (empresa). Si el cliente ya entra bien al portal, déjelo. Para borrar el rol, en Usuarios edite a esas personas, elija Usuario Empresa y guarde.',
             'audiencias' => ['repro'],
             'solo_admin' => true,
             'icono' => 'bi-flask',
