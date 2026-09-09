@@ -5,6 +5,8 @@
     <ul>
         <li>Vista mensual con evaluados programados por día.</li>
         <li>Click en un día para ver detalle horario.</li>
+        <li>Exportar el listado filtrado a <strong>Excel</strong> (también desde la vista del día).</li>
+        <li>El historial muestra columnas <strong>Programó</strong> y <strong>Entrevistó</strong>.</li>
         <li>No muestra citas de órdenes archivadas. Ver <a href="{{ route('ayuda.show', 'archivar-ordenes') }}">Archivar órdenes</a>.</li>
     </ul>
 

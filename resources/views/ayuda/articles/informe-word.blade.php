@@ -22,6 +22,7 @@
     <ul>
         <li>El informe incluye datos personales, laborales, familiares y secciones específicas según el tipo de formulario.</li>
         <li>Las secciones sin datos (ej. deudas vacías) no aparecen en el documento.</li>
+        <li>La tabla <strong>Información complementaria</strong> va en fuente 12.</li>
         <li>La sección TATUAJES solo muestra información de tatuajes, no documentos adjuntos.</li>
     </ul>
 

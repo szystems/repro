@@ -9,6 +9,7 @@
         <li>Listado filtrado a candidatos de su empresa.</li>
         <li>Estado del cuestionario (completado, pendiente, etc.).</li>
         <li>Empresa, tipo de formulario y fecha.</li>
+        <li>Botón verde <strong>WhatsApp al candidato</strong> si hay teléfono, más copiar/abrir enlace.</li>
     </ul>
 
     <h5>Limitaciones</h5>

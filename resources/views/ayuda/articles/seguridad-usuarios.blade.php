@@ -64,4 +64,14 @@
 
     <h5 id="permisos-ordenes"><i class="bi bi-file-earmark-text me-2"></i>Permiso «Editar órdenes»</h5>
     <p>Si el empleado tiene marcado <strong>Editar órdenes</strong> (y <strong>Ver órdenes</strong>), debe poder abrir la pantalla de edición. No hace falta que figure el rol llamado «repro» en la lista de roles: basta el tipo Personal Repro y el permiso marcado.</p>
+
+    <h5 id="excel-fotos"><i class="bi bi-file-earmark-excel me-2"></i>Excel y foto de usuario</h5>
+    <ul>
+        <li>En el listado hay botón verde <strong>Excel</strong> (y PDF). El Excel respeta los filtros de búsqueda.</li>
+        <li>La foto del usuario se sube al crear o editar. Si antes fallaba, ya se corrigió; vuelva a intentar.</li>
+    </ul>
+
+    <h5 id="roles-prueba"><i class="bi bi-flask me-2"></i>Roles de prueba (p. ej. Empresa QZ Temporal)</h5>
+    <p>Un rol Spatie como <strong>Empresa QA Temporal</strong> es solo para pruebas de cliente. <strong>No abre el panel REPRO.</strong> El acceso lo marca el tipo de usuario (<code>role_as</code>: empresa vs REPRO). Una empresa de pruebas (PRUEBA 1) puede tener ese rol sin entrar a Administración.</p>
+    <p>No se puede eliminar un rol si tiene <strong>usuarios asignados</strong>. Reasigne a esas personas el rol <strong>Usuario Empresa</strong> y después sí se borra. No mueva usuarios que ya les funcionan.</p>
 </div>

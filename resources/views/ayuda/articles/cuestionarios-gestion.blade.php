@@ -3,10 +3,15 @@
 
     <h5>Listado (<code>/cuestionarios</code>)</h5>
     <ul>
-        <li>Filtros por empresa, estado, tipo de formulario y fechas.</li>
-        <li>Cada fila muestra candidato, empresa, tipo de servicio y estado.</li>
+        <li>Filtros por empresa, sede, estado, tipo de formulario y fechas.</li>
+        <li>Cada fila muestra candidato, <strong>puesto</strong>, empresa, sede, tipo de servicio y estado.</li>
+        <li>En <strong>Contacto</strong> hay icono de WhatsApp junto al teléfono. En acciones, el botón verde <strong>WhatsApp al candidato</strong> abre el chat (solo si hay número).</li>
         <li>Los evaluados de órdenes <strong>archivadas</strong> no aparecen. Ver <a href="{{ route('ayuda.show', 'archivar-ordenes') }}">Archivar órdenes</a>.</li>
     </ul>
+    <p class="mb-3">
+        <span class="btn btn-sm btn-success disabled"><i class="bi bi-whatsapp"></i></span>
+        <span class="small text-muted ms-1">Así se ve el botón verde en el listado (REPRO y portal cliente).</span>
+    </p>
 
     <h5>Vista de consulta</h5>
     <ul>

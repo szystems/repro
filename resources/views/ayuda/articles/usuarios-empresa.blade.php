@@ -10,7 +10,8 @@
         <li>Pulse crear nuevo usuario.</li>
         <li>Complete nombre, email y contraseña temporal.</li>
         <li>Asigne permisos individuales (ver órdenes, crear órdenes, subir documentos, ver reportes…).</li>
-        <li>El trabajador recibirá acceso limitado según los permisos marcados.</li>
+        <li>El trabajador recibe un <strong>correo con usuario y contraseña</strong> (revise spam). Si no llega, use «recuperar contraseña» o verifique el email.</li>
+        <li>El trabajador tendrá acceso limitado según los permisos marcados.</li>
     </ol>
 
     <h5>Editar permisos</h5>

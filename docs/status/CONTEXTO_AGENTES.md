@@ -1,16 +1,17 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 7 de septiembre de 2026  
-**Estado:** ✅ **SPRINT Q CERRADO PROD 7-sep-2026** · portal live `https://portal.reprogt.com` · iPage 503  
+**Fecha de Contexto:** 8 de septiembre de 2026  
+**Estado:** ⏸️ **ESPERANDO STEPHANY** · Sprint R cerrado prod 8-sep · portal live `https://portal.reprogt.com` · iPage 503  
 
-**Plan activo:** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
+**Plan activo (último lote):** `docs/repro/cambios agosto/PLAN_SPRINT_R_OBSERVACIONES_08-09-2026.md`  
+**Plan Q (cerrado 7-sep):** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
 **Plan migración:** `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`  
 **Destino:** web `reprogt.com` · app `portal.reprogt.com` · Coolify Hetzner CPX31  
 **No** `migrate:fresh`. **No** reciclar `poligrafista_id` / `responsable_id`. No resetear claves de Stephany. No regenerar NEVERIA/CORALSA/PERCO.
 
 **Evidencia 7-sep:** `docs/repro/cambios agosto/Observaciones 07-09-2026/`  
-**Plan Sprint Q (activo):** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
+**Plan Sprint Q (cerrado):** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
 **Evidencia 28-ago noche:** `docs/repro/cambios agosto/Observaciones 28-08-2026 noche/`  
 **Plan Sprint P (cerrado prod):** `docs/repro/cambios agosto/PLAN_SPRINT_P_OBSERVACIONES_28-08-2026-NOCHE.md`  
 **Evidencia 28-ago mañana:** `docs/repro/cambios agosto/Observaciones 28-08-2026/`  
@@ -37,11 +38,37 @@
 
 ---
 
-## 🟡 SPRINT Q — LEER PRIMERO (7-sep-2026)
+## ⏸️ SPRINT R — LEER PRIMERO (8-sep-2026) · esperando Stephany
+
+**Origen:** WA 8-sep (follow-up post-Q: correos, 15 días, WhatsApp, guía SIGOR, Excel, fotos, UserMail empresa, rol QZ).  
+**Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_R_OBSERVACIONES_08-09-2026.md`  
+**Siguiente:** **no codear**. Esperar si Stephany manda más observaciones → entonces Sprint S.  
+**WA:** Otto ya le mandó (o tiene listo) el mensaje en pasado: “ya quedó en el portal”. No reescribir como pendiente.  
+**Centro de Ayuda:** revisado 8-sep contra el portal. Artículo nuevo `correos-automaticos`. Flujo ya no dice 30 días. FAQ: WhatsApp, Excel usuarios, correo alta empresa, fotos, QZ Temporal. No se subieron capturas con DPI/correos reales.  
+**Guía SIGOR:** `https://portal.reprogt.com/ayuda/guia-usuario-sigor` · ver en navegador · descargar opcional. Fuente ella: `docs/Guia de usuario/GUIA DE USUARIO SIGOR.pdf`. Servida: `resources/ayuda/guia-usuario-sigor.pdf`.  
+**Commits:** `d07339d7` (deploy 175) · `fd5a40b3` (deploy 176).  
+**UAT:** `uat.g1.browser@repro.local` / `UAT.G1Word2026!` · user **271** · no es Stephany.
+
+| ID | Qué | Estado |
+|----|-----|--------|
+| **R-M1** | Correo candidato sin “30 días” / sin fecha límite / sí puesto | ✅ prod |
+| **R-V1** | Enlace 15 días (nuevos + rehabilitar; viejos no se recortan) | ✅ prod · BD `dias_vigencia_token=15` |
+| **R-W1** | WhatsApp en listado de candidatos | ✅ prod |
+| **R-X1** | Excel de usuarios (`/excel-users`) | ✅ prod |
+| **R-F1** | Fotos usuario/empresa (`PerfilImagenSupport`) | ✅ código prod · ella debe re-probar |
+| **R-U1** | Correo al crear usuario desde empresa | ✅ prod |
+| **R-G1** | Guía SIGOR en Centro de Ayuda | ✅ prod |
+| **R-Q1** | Rol Empresa QZ Temporal | ℹ️ explicación WA · no borrar (1 usuario) |
+
+**No:** `migrate:fresh` · pisar Programó/Encargado · Coolify Upgrade · tocar ControClinic/portal Szystems cleanup.
+
+---
+
+## 🟢 SPRINT Q — CERRADO PROD (7-sep-2026)
 
 **Origen:** WA 7-sep 09:46 (lista final Stephany).  
 **Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
-**Siguiente:** Sprint Q cerrado. Esperar siguiente lista de Stephany. No `migrate:fresh`. No descongelar iPage.  
+**Siguiente:** lote R (8-sep) ya cerrado. Esperar Stephany. No `migrate:fresh`. No descongelar iPage.  
 **No:** `migrate:fresh` · pisar Programó/Encargado · Coolify Upgrade · tocar ControClinic/portal Szystems cleanup.
 
 | ID | Qué | Estado |
@@ -400,7 +427,7 @@ Si algo no te cuadra al probarlo, me avisás.
 
 Stephany reporta: un candidato de **hoy** no pudo llenar el formulario porque el enlace apareció **expirado**; ella misma ha visto el mismo error; **no ocurre con todos, solo algunos**; no sabe cuánto dura la vigencia del enlace. Relaciona esto con su pedido de botones **habilitar/deshabilitar** (I11/I12 — UI ya desplegada, investigación pendiente).
 
-**Vigencia en sistema:** `configs.dias_vigencia_token` (default **30 días**, Admin → Configuración). Bloqueo por `token_expira_at` pasado o `estado_formulario = vencido`. Renovar: botón «Habilitar enlace» en orden.
+**Vigencia en sistema:** `configs.dias_vigencia_token` = **15** (Sprint R, 8-sep). Piso `Config::MIN_DIAS_VIGENCIA_ENLACE = 15`. Tokens **nuevos** / al rehabilitar: 15 días. Tokens ya emitidos conservan su fecha. Bloqueo por `token_expira_at` pasado o `estado_formulario = vencido`. Renovar: botón «Habilitar enlace» en orden.
 
 **Pendiente I13:** ~~identificar evaluado~~ → **3 candidatos:** Walter ORD-0040 (#134), Carla ORD-0041 (#135), Gerson ORD-0044 (#138). Enlace expiró a las **2 horas** (no 31 días). Bug código I13b pendiente. Acción: Habilitar enlace mañana sin molestar a Stephany.
 
@@ -899,7 +926,7 @@ Orden.estado         → 4 valores automáticos: orden_recibida, en_proceso, ent
 - Ruta: `GET /cuestionario/{token}` (`cuestionario.mostrar`) — **no** `/cuestionarios/` (admin)
 - Acceso por token sin autenticación; exige `token_expira_at > now()`
 - **Fase 20:** vista `enlace-invalido` distingue token inexistente vs expirado; log `Acceso a cuestionario rechazado`
-- Vigencia: `Config::diasVigenciaTokenEnlace()` (mín. 1 día; 0 en BD → 30)
+- Vigencia: `Config::diasVigenciaTokenEnlace()` (mín. **15** días desde Sprint R; BD `dias_vigencia_token=15`)
 - Verificación de identidad por DPI
 - Navegación por secciones
 - Guardado automático
@@ -1353,5 +1380,5 @@ app/, database/, resources/, routes/  (+ vendor/ en deploy completo)
 
 ---
 
-**Última actualización:** 27 de agosto de 2026 (noche)  
-**Estado:** 🟡 **Sprint N lote A en prod** · N-F0/N-F1 esperan Stephany · no migrar Hetzner
+**Última actualización:** 8 de septiembre de 2026  
+**Estado:** ⏸️ **Esperando Stephany** · Sprint R cerrado prod · portal `https://portal.reprogt.com` · iPage 503 · no `migrate:fresh`

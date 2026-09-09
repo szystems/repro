@@ -61,8 +61,11 @@
             <div id="det-interno" class="accordion-collapse collapse" data-bs-parent="#detalleEvaluadoAyuda">
                 <div class="accordion-body">
                     <ul class="mb-0">
+                        <li><strong>Programó</strong> (<code>poligrafista_id</code>) — quién agendó. No se pisa al autoasignarse entrevista.</li>
+                        <li><strong>Encargado</strong> (<code>responsable_id</code>) — quién lleva el caso. Botón «Autoasignarme».</li>
+                        <li><strong>Entrevistó</strong> (<code>entrevistador_id</code>) — tercera persona (entrevista). Botón «Autoasignarme entrevista».</li>
                         <li><strong>Programación</strong> — botón «Programar cita» si no hay cita asignada.</li>
-                        <li><strong>Informe preliminar / observaciones</strong> — redacción interna REPRO (no visible al cliente).</li>
+                        <li><strong>Informe preliminar</strong> — el título lleva el <strong>nombre del candidato</strong>. El editor admite <strong>color de letra y tablas</strong> (Quill). Visible al cliente solo cuando REPRO lo habilita.</li>
                     </ul>
                 </div>
             </div>

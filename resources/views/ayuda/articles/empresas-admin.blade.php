@@ -4,12 +4,13 @@
     <h5>Listado (<code>/empresas</code>)</h5>
     <ul>
         <li>Buscar por nombre, NIT o estado (activa/inactiva).</li>
-        <li>Exportar listado a PDF.</li>
+        <li>Exportar listado a <strong>PDF</strong> o <strong>Excel</strong> (padrón: permiso <code>empresas.exportar</code>).</li>
     </ul>
 
     <h5>Crear / editar empresa</h5>
     <ul>
-        <li>Datos fiscales, contacto, logo y sedes/regiones de la empresa.</li>
+        <li>Datos fiscales, contacto, <strong>logo</strong> (PNG/JPG) y sedes/regiones de la empresa.</li>
+        <li>Si el logo no subía, ya se corrigió la ruta de guardado. Vuelva a intentar desde editar empresa.</li>
         <li>Configuración de confidencialidad entre reclutadores (si aplica).</li>
     </ul>
 

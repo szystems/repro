@@ -290,6 +290,62 @@ class CentroAyudaTest extends TestCase
             ->assertSee('Permisos individuales');
     }
 
+    public function test_ayuda_refleja_lote_septiembre_2026(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3, 'estado' => 1]);
+
+        $this->actingAs($admin)->get(route('ayuda.show', 'flujo-orden-completa'))
+            ->assertOk()
+            ->assertSee('15 días')
+            ->assertDontSee('Vigencia mínima 30 días');
+
+        $this->actingAs($admin)->get(route('ayuda.show', 'correos-automaticos'))
+            ->assertOk()
+            ->assertSee('Puesto que solicita')
+            ->assertSee('noreply@reprogt.com')
+            ->assertSee('WhatsApp al candidato');
+
+        $this->actingAs($admin)->get(route('ayuda.show', 'cuestionarios-gestion'))
+            ->assertOk()
+            ->assertSee('WhatsApp al candidato');
+
+        $this->actingAs($admin)->get(route('ayuda.show', 'seguridad-usuarios'))
+            ->assertOk()
+            ->assertSee('Empresa QA Temporal')
+            ->assertSee('Excel');
+
+        $this->actingAs($admin)->get(route('ayuda.faq'))
+            ->assertOk()
+            ->assertSee('¿Cómo le escribo al candidato por WhatsApp?')
+            ->assertSee('¿Qué es el rol Empresa QZ Temporal')
+            ->assertSee('¿El correo del candidato sigue diciendo 30 días?');
+
+        $this->actingAs($admin)->get(route('ayuda.buscar', ['q' => 'whatsapp']))
+            ->assertOk()
+            ->assertSee('Gestión de cuestionarios');
+
+        $this->actingAs($admin)->get(route('ayuda.glosario'))
+            ->assertOk()
+            ->assertSee('Entrevistó')
+            ->assertSee('WhatsApp al candidato');
+
+        $empresa = Empresa::factory()->create();
+        $cliente = User::factory()->create([
+            'role_as' => 1,
+            'estado' => 1,
+            'empresa_id' => $empresa->id,
+            'principal' => 1,
+        ]);
+
+        $this->actingAs($cliente)->get(route('ayuda.show', 'correos-automaticos'))
+            ->assertOk()
+            ->assertSee('15 días');
+        $this->actingAs($cliente)->get(route('ayuda.faq'))
+            ->assertOk()
+            ->assertSee('¿Cómo le escribo al candidato por WhatsApp?')
+            ->assertDontSee('Empresa QZ Temporal');
+    }
+
     public function test_contexto_users_y_roles_abre_guia_seguridad(): void
     {
         $admin = User::factory()->create(['role_as' => 3, 'estado' => 1]);

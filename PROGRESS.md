@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-09-07 — **Sprint Q** observaciones Stephany. Plan: `PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md` · prod `https://portal.reprogt.com`
+**Ultima actualizacion:** 2026-09-08 — **Sprint R** follow-up Stephany cerrado. Esperando más observaciones. Plan: `PLAN_SPRINT_R_OBSERVACIONES_08-09-2026.md` · prod `https://portal.reprogt.com`
 
 > **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
@@ -16,10 +16,10 @@
 
 | Qué | Detalle |
 |-----|---------|
-| **Fase** | **Sprint Q** — lista WA Stephany 7-sep |
-| **Plan** | `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md` |
-| **Esta sesión** | Sprint Q cerrado en prod (Q-I1…Q-A1 + Q-C1). |
-| **Siguiente paso** | Esperar siguiente lista de Stephany. |
+| **Fase** | ⏸️ **Esperando Stephany** — Sprint R (8-sep) cerrado en prod |
+| **Plan** | `docs/repro/cambios agosto/PLAN_SPRINT_R_OBSERVACIONES_08-09-2026.md` |
+| **Esta sesión** | R-M1…R-G1 en prod. Centro de Ayuda revisado (correos, 15 días, WhatsApp, Excel, QZ). Esperando Stephany. |
+| **Siguiente paso** | No codear. Si ella manda más observaciones → Sprint S. |
 | **Prod** | `https://portal.reprogt.com` · iPage 503 · no `migrate:fresh`. |
 
 ### Feedback cliente 20-ago-2026 (WhatsApp + `Ultimos cambios 20-08-2026`)

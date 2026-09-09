@@ -10,6 +10,7 @@
         <li><strong>Mis Reportes</strong> — estadísticas exportables (si tiene permiso).</li>
         <li><strong>Mi Empresa</strong> — datos de contacto y gestión de usuarios (principal).</li>
         <li><strong>Sedes REPRO</strong> — ubicaciones y WhatsApp de contacto.</li>
+        <li><strong>Ayuda</strong> — Centro de Ayuda y la <a href="{{ route('ayuda.show', 'guia-usuario-sigor') }}">Guía de usuario SIGOR</a> (se ve en el navegador; descargar es opcional).</li>
     </ul>
 
     <h5><i class="bi bi-person-badge me-2"></i>Tipos de usuario empresa</h5>
@@ -20,6 +21,8 @@
             <tr><td><strong>Trabajador / Reclutador</strong></td><td>Solo si se le asigna</td><td>No</td></tr>
         </tbody>
     </table>
+
+    <p>Al crear un trabajador en <strong>Mi Empresa → Usuarios</strong> le llega un correo con usuario y contraseña. En el listado de candidatos puede escribirle por <strong>WhatsApp</strong> si hay teléfono.</p>
 
     <div class="alert alert-warning">
         <i class="bi bi-exclamation-triangle me-2"></i>

@@ -21,9 +21,9 @@
 
     <h5 id="despues"><i class="bi bi-check2-circle me-2"></i>Después de crear</h5>
     <ul>
-        <li>Cada evaluado recibe un enlace único de cuestionario.</li>
-        <li>Puede copiar el enlace desde el detalle de la orden y enviarlo al candidato.</li>
-        <li>REPRO también puede reenviar el enlace por correo.</li>
+        <li>Cada evaluado con email recibe el correo del enlace (puesto que solicita, sin fecha límite; vigencia <strong>15 días</strong>).</li>
+        <li>Puede copiar el enlace o usar WhatsApp desde el listado de candidatos.</li>
+        <li>REPRO también puede reenviar el correo. El aviso interno a la sede solo se manda si la orden la creó el cliente.</li>
     </ul>
 
     @include('ayuda.partials.callout', [

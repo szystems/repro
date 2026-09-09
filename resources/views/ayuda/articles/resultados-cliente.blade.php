@@ -6,7 +6,7 @@
 
     <h5>Tipos de resultado</h5>
     <ul>
-        <li><strong>Resultado preliminar</strong> — avance o resultado parcial.</li>
+        <li><strong>Resultado preliminar</strong> — avance o resultado parcial. El título incluye el <strong>nombre del candidato</strong> (útil al capturar o reenviar).</li>
         <li><strong>Resultado final</strong> — informe definitivo de la evaluación.</li>
     </ul>
 

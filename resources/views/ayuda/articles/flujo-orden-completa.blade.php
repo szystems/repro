@@ -8,7 +8,7 @@
     <div class="ayuda-flujo-steps">
         <div class="ayuda-paso"><span class="ayuda-paso-num">1</span><div><strong>Cliente crea la orden</strong><br>Portal cliente → Nueva Orden → datos de evaluados, tipos de servicio y formulario.</div></div>
         <div class="ayuda-paso"><span class="ayuda-paso-num">2</span><div><strong>REPRO recibe y procesa</strong><br>La orden aparece en Órdenes de Evaluación con estado «Orden recibida».</div></div>
-        <div class="ayuda-paso"><span class="ayuda-paso-num">3</span><div><strong>Envío de enlace al candidato</strong><br>Copiar enlace, reenviar por correo o WhatsApp. Vigencia mínima 30 días.</div></div>
+        <div class="ayuda-paso"><span class="ayuda-paso-num">3</span><div><strong>Envío de enlace al candidato</strong><br>Correo automático al crear el evaluado, reenvío, copiar enlace o botón verde <strong>WhatsApp al candidato</strong> en el listado. Vigencia <strong>15 días</strong> (enlaces nuevos o al rehabilitar).</div></div>
         <div class="ayuda-paso"><span class="ayuda-paso-num">4</span><div><strong>Candidato llena el cuestionario</strong><br>Verifica DPI → instrucciones → secciones del formulario → envío final.</div></div>
         <div class="ayuda-paso"><span class="ayuda-paso-num">5</span><div><strong>REPRO revisa y evalúa</strong><br>Edita respuestas si necesario, genera informe Word, programa cita si aplica.</div></div>
         <div class="ayuda-paso"><span class="ayuda-paso-num">6</span><div><strong>Documentos y papelería</strong><br>Cliente o REPRO sube DPI, antecedentes, etc. REPRO verifica documentos.</div></div>

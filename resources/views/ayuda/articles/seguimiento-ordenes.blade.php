@@ -4,6 +4,7 @@
     <h5>Listado (<code>/ordenes</code>)</h5>
     <ul>
         <li>Tabla con código de orden, fecha, cantidad de evaluados y estado general.</li>
+        <li>Botón <strong>Exportar Excel</strong> del listado (respeta filtros).</li>
         <li>Click en una orden para ver el detalle completo.</li>
     </ul>
 
@@ -11,7 +12,7 @@
     <p>Similar a la vista REPRO pero con acciones limitadas a su rol:</p>
     <ul>
         <li>Ver datos de cada evaluado y sus estados.</li>
-        <li>Copiar enlace del candidato (si tiene permiso).</li>
+        <li>Copiar enlace del candidato (si tiene permiso) o escribirle por WhatsApp desde Estado de Procesos.</li>
         <li>Subir documentos / papelería.</li>
         <li>Descargar resultados cuando REPRO los publique.</li>
         <li>Descargar PDF de la orden de servicio.</li>

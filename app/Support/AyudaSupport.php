@@ -311,6 +311,8 @@ class AyudaSupport
             'Archivar orden' => 'bi-archive',
             'Eliminar usuario' => 'bi-person-x',
             'Permisos individuales' => 'bi-toggles',
+            'Entrevistó' => 'bi-chat-left-text',
+            'WhatsApp al candidato' => 'bi-whatsapp',
         ];
 
         return collect(self::glosario())
