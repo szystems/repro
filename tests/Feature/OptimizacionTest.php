@@ -29,7 +29,7 @@ class OptimizacionTest extends TestCase
     {
         $expectedNames = [
             'users.index', 'users.show', 'users.create', 'users.store',
-            'users.edit', 'users.update', 'users.destroy', 'users.pdf', 'users.pdf.show',
+            'users.edit', 'users.update', 'users.destroy', 'users.pdf', 'users.excel', 'users.pdf.show',
         ];
 
         foreach ($expectedNames as $name) {

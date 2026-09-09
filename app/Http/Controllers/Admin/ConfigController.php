@@ -45,7 +45,7 @@ class ConfigController extends Controller
         $config->descuento_maximo = $request->input('descuento_maximo', 0);
         $config->impuesto = $request->input('impuesto', 0);
         $config->nombre_empresa = $request->input('nombre_empresa') ?: null;
-        $config->dias_vigencia_token = $request->input('dias_vigencia_token', 30);
+        $config->dias_vigencia_token = $request->input('dias_vigencia_token', 15);
         $config->historial_visible_empresa = $request->boolean('historial_visible_empresa');
         $config->update();
 

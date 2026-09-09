@@ -140,6 +140,22 @@ class ExportacionesPermisosTest extends TestCase
         }
     }
 
+    public function test_admin_descarga_excel_de_usuarios(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'Admin Excel Users',
+            'role_as' => 3,
+            'estado' => 1,
+        ]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+
+        $this->actingAs($admin)->get(route('users.index'))->assertOk()->assertSee('Excel');
+        $excel = $this->actingAs($admin)->get(route('users.excel'))->assertOk();
+        $disposition = (string) $excel->headers->get('content-disposition');
+        $this->assertTrue(str_contains($disposition, '.xls') || str_contains($disposition, '.xlsx'));
+        $this->assertStringContainsString('listado-usuarios-', $disposition);
+    }
+
     private function crearReproSinPermiso(string $permiso): User
     {
         $repro = User::factory()->create(['role_as' => 2, 'estado' => 1]);

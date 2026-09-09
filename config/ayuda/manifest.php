@@ -93,7 +93,7 @@ return [
             'permisos' => ['ordenes.ver'],
             'destacado' => true,
             'orden' => 12,
-            'resumen' => 'Gestión de enlaces del cuestionario: vigencia mínima 30 días, invalidar y rehabilitar.',
+            'resumen' => 'Gestión de enlaces del cuestionario: vigencia mínima 15 días, invalidar y rehabilitar.',
             'vista' => 'ayuda.articles.enlaces-candidato',
             'contexto' => ['ordenes/*'],
             'botones' => [
@@ -101,7 +101,7 @@ return [
                 ['numero' => 2, 'nombre' => 'Copiar enlace', 'accion' => 'Copia la URL del cuestionario al portapapeles.', 'clase' => 'btn btn-outline-secondary btn-sm', 'icono' => 'bi-clipboard'],
                 ['numero' => 3, 'nombre' => 'Correo', 'accion' => 'Reenvía el enlace por correo electrónico al candidato.', 'clase' => 'btn btn-outline-success btn-sm', 'icono' => 'bi-envelope'],
                 ['numero' => 4, 'nombre' => 'Invalidar enlace', 'accion' => 'Bloquea el acceso del candidato hasta que REPRO habilite de nuevo el enlace.', 'clase' => 'btn btn-outline-danger btn-sm', 'icono' => 'bi-lock'],
-                ['numero' => 5, 'nombre' => 'Habilitar enlace', 'accion' => 'Extiende la vigencia (según configuración, mínimo 30 días) y conserva el progreso parcial.', 'clase' => 'btn btn-outline-success btn-sm', 'icono' => 'bi-unlock'],
+                ['numero' => 5, 'nombre' => 'Habilitar enlace', 'accion' => 'Extiende la vigencia (según configuración, mínimo 15 días) y conserva el progreso parcial.', 'clase' => 'btn btn-outline-success btn-sm', 'icono' => 'bi-unlock'],
                 ['numero' => 6, 'nombre' => 'Marcar recibido', 'accion' => 'Cierra el formulario: bloquea el enlace y marca el cuestionario como recibido.', 'clase' => 'btn btn-outline-secondary btn-sm', 'icono' => 'bi-check2-square'],
             ],
             'relacionados' => ['ordenes-detalle-evaluado', 'flujo-orden-completa'],
@@ -409,14 +409,14 @@ return [
     'faq' => [
         [
             'pregunta' => '¿Por qué el enlace del candidato dice "vencido" o "no válido"?',
-            'respuesta' => 'El enlace puede haber expirado (vigencia mínima 30 días configurable), haber sido invalidado manualmente por REPRO, o el candidato copió una URL incompleta. REPRO puede habilitar el enlace de nuevo desde el detalle de la orden.',
+            'respuesta' => 'El enlace puede haber expirado (vigencia mínima 15 días configurable), haber sido invalidado manualmente por REPRO, o el candidato copió una URL incompleta. REPRO puede habilitar el enlace de nuevo desde el detalle de la orden.',
             'audiencias' => ['repro', 'empresa'],
             'icono' => 'bi-link-45deg',
             'articulo' => 'enlaces-candidato',
         ],
         [
             'pregunta' => '¿Cuánto dura el enlace del cuestionario?',
-            'respuesta' => 'La vigencia se configura en Administración → Configuración (mínimo 30 días). Al habilitar un enlace invalidado, se extiende por el número de días configurado.',
+            'respuesta' => 'La vigencia se configura en Administración → Configuración (mínimo 15 días). Al habilitar un enlace invalidado, se extiende por el número de días configurado.',
             'audiencias' => ['repro', 'empresa'],
             'icono' => 'bi-calendar',
             'articulo' => 'enlaces-candidato',

@@ -7,7 +7,7 @@
     <h5>Parámetros principales</h5>
     <ul>
         <li><strong>Logo y moneda</strong> — identidad visual y formato de montos.</li>
-        <li><strong>Días de vigencia del enlace</strong> — mínimo 30 días. Afecta enlaces nuevos y rehabilitados.</li>
+        <li><strong>Días de vigencia del enlace</strong> — mínimo 15 días. Afecta enlaces nuevos y rehabilitados.</li>
         <li><strong>Historial visible para empresa</strong> — permite o restringe que clientes vean historial DPI.</li>
         <li><strong>Redes sociales y contacto</strong> — enlaces públicos.</li>
     </ul>

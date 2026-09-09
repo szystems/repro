@@ -9,8 +9,8 @@ use App\Models\User;
 use App\Http\Requests\EmpresaFormRequest;
 use App\Exports\EmpresasExport;
 use App\Support\ExportacionesSupport;
+use App\Support\PerfilImagenSupport;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Config;
 use Carbon\Carbon;
@@ -102,11 +102,7 @@ class EmpresasController extends Controller
 
         // Subir logo si se proporciona
         if($request->hasFile('logo')) {
-            $file = $request->file('logo');
-            $ext = $file->getClientOriginalExtension();
-            $filename = time().'.'.$ext;
-            $file->move('assets/imgs/empresas', $filename);
-            $empresa->logo = $filename;
+            $empresa->logo = PerfilImagenSupport::guardar($request->file('logo'), 'empresas');
         }
 
         $empresa->save();
@@ -177,19 +173,11 @@ class EmpresasController extends Controller
 
         // Subir logo si se proporciona uno nuevo
         if($request->hasFile('logo')) {
-            // Eliminar logo anterior si existe
-            if($empresa->logo) {
-                $path = 'assets/imgs/empresas/'.$empresa->logo;
-                if(File::exists($path)) {
-                    File::delete($path);
-                }
-            }
-
-            $file = $request->file('logo');
-            $ext = $file->getClientOriginalExtension();
-            $filename = time().'.'.$ext;
-            $file->move('assets/imgs/empresas', $filename);
-            $empresa->logo = $filename;
+            $empresa->logo = PerfilImagenSupport::guardar(
+                $request->file('logo'),
+                'empresas',
+                $empresa->logo
+            );
         }
 
         $empresa->update();

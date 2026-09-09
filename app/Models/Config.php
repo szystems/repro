@@ -44,11 +44,11 @@ class Config extends Model
         return $config ? (bool) $config->historial_visible_empresa : true;
     }
 
-    /** Mínimo operativo de vigencia del enlace del formulario (I13b). */
-    public const MIN_DIAS_VIGENCIA_ENLACE = 30;
+    /** Mínimo operativo de vigencia del enlace del formulario (pedido Stephany 8-sep). */
+    public const MIN_DIAS_VIGENCIA_ENLACE = 15;
 
     /**
-     * Días de vigencia del enlace público del cuestionario (mínimo 30).
+     * Días de vigencia del enlace público del cuestionario (mínimo 15).
      */
     public static function diasVigenciaTokenEnlace(): int
     {

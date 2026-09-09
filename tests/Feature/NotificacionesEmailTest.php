@@ -42,6 +42,7 @@ class NotificacionesEmailTest extends TestCase
             'email' => 'evaluado@test.com',
             'token_unico' => 'test-token-123',
             'token_expira_at' => now()->addDays(30),
+            'puesto_evaluar' => 'Auxiliar de bodega',
         ]);
 
         $mailable = new EvaluadoAsignadoMail($evaluado);
@@ -49,6 +50,10 @@ class NotificacionesEmailTest extends TestCase
         $mailable->assertSeeInHtml($evaluado->nombre);
         $mailable->assertSeeInHtml('test-token-123');
         $mailable->assertSeeInHtml('REPRO Guatemala');
+        $mailable->assertSeeInHtml('Puesto que solicita');
+        $mailable->assertSeeInHtml('Auxiliar de bodega');
+        $mailable->assertDontSeeInHtml('Fecha límite');
+        $mailable->assertDontSeeInHtml('el enlace expira');
     }
 
     /**
@@ -68,8 +73,9 @@ class NotificacionesEmailTest extends TestCase
         $mailable = new RecordatorioCuestionarioMail($evaluado, 3);
 
         $mailable->assertSeeInHtml($evaluado->nombre);
-        $mailable->assertSeeInHtml('3');
-        $mailable->assertSeeInHtml('días restantes');
+        $mailable->assertSeeInHtml('Puesto que solicita');
+        $mailable->assertDontSeeInHtml('días restantes');
+        $mailable->assertDontSeeInHtml('Fecha límite');
     }
 
     /**
@@ -88,7 +94,9 @@ class NotificacionesEmailTest extends TestCase
         $mailable = new RecordatorioCuestionarioMail($evaluado, 1);
 
         $mailable->assertSeeInHtml('URGENTE');
-        $mailable->assertSeeInHtml('día restante');
+        $mailable->assertSeeInHtml('Complételo lo antes posible');
+        $mailable->assertDontSeeInHtml('días restantes');
+        $mailable->assertDontSeeInHtml('Fecha límite');
     }
 
     /**

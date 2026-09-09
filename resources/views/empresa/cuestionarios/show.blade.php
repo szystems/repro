@@ -61,8 +61,14 @@
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label text-muted small">Teléfono:</label>
-                                <div class="fw-medium">{{ $evaluado->telefono ?? 'No registrado' }}</div>
+                                <label class="form-label text-muted small">WhatsApp:</label>
+                                <div class="fw-medium">
+                                    @if($evaluado->telefono)
+                                        @include('shared.partials._telefono_whatsapp', ['numero' => $evaluado->telefono])
+                                    @else
+                                        No registrado
+                                    @endif
+                                </div>
                             </div>
                             @if($evaluado->puesto_aplicar)
                             <div class="col-12 mb-3">

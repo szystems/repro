@@ -72,6 +72,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     Route::middleware(['permission:usuarios.ver'])->group(function () {
         Route::get('users', [UsersController::class, 'users'])->name('users.index');
         Route::get('pdf-users', [UsersController::class, 'pdf'])->name('users.pdf');
+        Route::get('excel-users', [UsersController::class, 'excel'])->name('users.excel');
         Route::get('pdf-user/{id}', [UsersController::class, 'pdfuser'])->name('users.pdf.show');
     });
     // Ver perfil: propio sin permiso, ajeno requiere usuarios.ver (validado en controller)

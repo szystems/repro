@@ -38,18 +38,25 @@ class CuestionarioEnlaceInvalidoTest extends TestCase
         $response->assertSee('ya no está vigente');
     }
 
-    public function test_dias_vigencia_cero_usa_minimo_treinta_dias(): void
+    public function test_dias_vigencia_cero_usa_minimo_quince_dias(): void
     {
         Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 0]);
 
-        $this->assertSame(30, Config::diasVigenciaTokenEnlace());
+        $this->assertSame(15, Config::diasVigenciaTokenEnlace());
     }
 
-    public function test_dias_vigencia_menor_a_treinta_usa_piso_de_treinta(): void
+    public function test_dias_vigencia_menor_a_quince_usa_piso_de_quince(): void
+    {
+        Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 10]);
+
+        $this->assertSame(15, Config::diasVigenciaTokenEnlace());
+    }
+
+    public function test_dias_vigencia_quince_se_respeta(): void
     {
         Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 15]);
 
-        $this->assertSame(30, Config::diasVigenciaTokenEnlace());
+        $this->assertSame(15, Config::diasVigenciaTokenEnlace());
     }
 
     public function test_calcular_expiracion_token_respeta_configuracion(): void

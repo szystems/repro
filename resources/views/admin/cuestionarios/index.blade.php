@@ -354,10 +354,13 @@
                                                     <small class="text-muted"><i class="bi bi-envelope"></i> Sin email</small>
                                                 @endif
                                                 @if($evaluado->telefono)
-                                                    <small><i class="bi bi-telephone"></i> {{ $evaluado->telefono }}</small>
+                                                    <small>@include('shared.partials._telefono_whatsapp', ['numero' => $evaluado->telefono])</small>
+                                                @endif
+                                                @if($evaluado->telefono_alternativo)
+                                                    <small>@include('shared.partials._telefono_whatsapp', ['numero' => $evaluado->telefono_alternativo, 'etiqueta' => 'Alt.'])</small>
                                                 @endif
                                                 @if($evaluado->celular && $evaluado->celular != $evaluado->telefono)
-                                                    <small><i class="bi bi-phone"></i> {{ $evaluado->celular }}</small>
+                                                    <small>@include('shared.partials._telefono_whatsapp', ['numero' => $evaluado->celular])</small>
                                                 @endif
                                             </div>
                                         </td>
@@ -433,8 +436,14 @@
                                             </div>
                                         </td>
                                         <td>
+                                            @php $urlWaCandidato = \App\Support\WhatsAppLink::url($evaluado->telefono); @endphp
                                             @if(($portal ?? 'admin') === 'empresa')
                                             <div class="btn-group btn-group-sm">
+                                                @if($urlWaCandidato)
+                                                <a href="{{ $urlWaCandidato }}" target="_blank" rel="noopener noreferrer" class="btn btn-success" title="WhatsApp al candidato">
+                                                    <i class="bi bi-whatsapp"></i>
+                                                </a>
+                                                @endif
                                                 <a href="{{ route('empresa.cuestionarios.show', $evaluado) }}" class="btn btn-outline-success" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
@@ -459,6 +468,11 @@
                                             </div>
                                             @else
                                             <div class="btn-group">
+                                                @if($urlWaCandidato)
+                                                <a href="{{ $urlWaCandidato }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-success" title="WhatsApp al candidato">
+                                                    <i class="bi bi-whatsapp"></i>
+                                                </a>
+                                                @endif
                                                 <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"
                                                         data-bs-toggle="dropdown">
                                                     <i class="bi bi-gear"></i>

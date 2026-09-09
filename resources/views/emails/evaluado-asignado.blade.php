@@ -134,10 +134,7 @@
             <div class="info-box">
                 <p><strong>Tipo de evaluación:</strong> {{ ucfirst($evaluado->tipo_servicio ?? 'N/A') }}</p>
                 <p><strong>Tipo de formulario:</strong> {{ ucfirst($evaluado->tipo_formulario ?? 'N/A') }}</p>
-                @if($evaluado->puesto_evaluar)
-                <p><strong>Puesto a evaluar:</strong> {{ $evaluado->puesto_evaluar }}</p>
-                @endif
-                <p><strong>Fecha límite:</strong> {{ $fechaExpiracion ?? 'No especificada' }}</p>
+                <p><strong>Puesto que solicita:</strong> {{ $evaluado->puesto_evaluar ?: 'N/A' }}</p>
             </div>
             
             <div class="cta-section">
@@ -158,7 +155,7 @@
                 <p><span class="warning-icon">⚠️ Importante:</span></p>
                 <ul style="margin: 10px 0; padding-left: 20px;">
                     <li>Este enlace es personal e intransferible</li>
-                    <li>El enlace expira el <strong>{{ $fechaExpiracion }}</strong></li>
+                    <li>Complételo lo antes posible. No lo deje para después.</li>
                     <li>No comparta este enlace con terceros</li>
                     <li>Complete el cuestionario en un lugar privado y tranquilo</li>
                 </ul>

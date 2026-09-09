@@ -145,17 +145,9 @@
             <div class="subtitle">Sistema de Evaluaciones</div>
         </div>
         
-        @if(!empty($recordatorioAlta))
-        <div class="warning-banner">
-            ⏰ Recordatorio: aún no ha completado su cuestionario
-        </div>
-        @elseif($diasRestantes <= 1)
+        @if(empty($recordatorioAlta) && $diasRestantes <= 1)
         <div class="urgent-banner">
-            ⚠️ ¡URGENTE! Su cuestionario expira {{ $diasRestantes == 0 ? 'HOY' : 'MAÑANA' }}
-        </div>
-        @elseif($diasRestantes <= 3)
-        <div class="warning-banner">
-            ⏰ Recordatorio: Quedan {{ $diasRestantes }} días para completar su cuestionario
+            ⚠️ ¡URGENTE! Su cuestionario sigue pendiente. Complételo lo antes posible.
         </div>
         @endif
         
@@ -164,14 +156,9 @@
             
             <p>Le recordamos que tiene pendiente completar su cuestionario de evaluación solicitado por <strong>{{ $empresa }}</strong>.</p>
             
-            <div class="countdown-box {{ $diasRestantes <= 1 ? 'urgent' : '' }}">
-                <div class="countdown-number">{{ $diasRestantes }}</div>
-                <div class="countdown-label">{{ $diasRestantes == 1 ? 'día restante' : 'días restantes' }}</div>
-            </div>
-            
             <div class="info-box">
                 <p><strong>Tipo de evaluación:</strong> {{ ucfirst($evaluado->tipo_servicio ?? 'N/A') }}</p>
-                <p><strong>Fecha límite:</strong> {{ $fechaExpiracion ?? 'No especificada' }}</p>
+                <p><strong>Puesto que solicita:</strong> {{ $evaluado->puesto_evaluar ?: 'N/A' }}</p>
             </div>
             
             <div class="cta-section">

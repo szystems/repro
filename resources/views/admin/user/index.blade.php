@@ -38,7 +38,17 @@
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
                                     @include('partials._ayuda_contextual')
-                                    <a target="_blank" href="{{ url('pdf-users') }}{{ $queryUser ? '?fuser='.$queryUser : '' }}{{ isset($role_filter) && $role_filter != '' ? '&role_filter='.$role_filter : '' }}{{ isset($empresa_filter) && $empresa_filter != '' ? '&empresa_filter='.$empresa_filter : '' }}" type="button" class="btn btn-danger me-2">
+                                    @php
+                                        $exportQuery = array_filter([
+                                            'fuser' => $queryUser ?? null,
+                                            'role_filter' => $role_filter ?? null,
+                                            'empresa_filter' => $empresa_filter ?? null,
+                                        ], fn ($v) => $v !== null && $v !== '');
+                                    @endphp
+                                    <a href="{{ route('users.excel', $exportQuery) }}" class="btn btn-success me-2">
+                                        <i class="bi bi-file-earmark-excel"></i> Excel
+                                    </a>
+                                    <a target="_blank" href="{{ route('users.pdf', $exportQuery) }}" type="button" class="btn btn-danger me-2">
                                         <i class="bi bi-file-pdf"></i> PDF
                                     </a>
                                     @if(Auth::user()->role_as >= 1)

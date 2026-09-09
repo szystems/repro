@@ -9,11 +9,15 @@ use App\Models\Empresa;
 use App\Models\Sede;
 use App\Models\User;
 use App\Models\EvaluadoOrden;
+use App\Mail\UserMail;
+use App\Models\Role;
 use App\Support\EmpresaVisibilidadReclutadoresSupport;
+use App\Support\PerfilImagenSupport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -138,14 +142,11 @@ class EmpresaController extends Controller
 
         // Manejar logo
         if ($request->hasFile('logo')) {
-            // Eliminar logo anterior si existe
-            if ($empresa->logo && file_exists(public_path('assets/imgs/empresas/' . $empresa->logo))) {
-                unlink(public_path('assets/imgs/empresas/' . $empresa->logo));
-            }
-
-            $logoName = time() . '_' . $request->file('logo')->getClientOriginalName();
-            $request->file('logo')->move(public_path('assets/imgs/empresas'), $logoName);
-            $validated['logo'] = $logoName;
+            $validated['logo'] = PerfilImagenSupport::guardar(
+                $request->file('logo'),
+                'empresas',
+                $empresa->logo
+            );
         }
 
         $empresa->update($validated);
@@ -232,7 +233,20 @@ class EmpresaController extends Controller
             'permisos' => json_encode($request->input('permisos_empresa', [])),
         ]);
 
-        return redirect()->route('empresa.usuarios')->with('success', 'Usuario creado correctamente');
+        if (Role::where('name', 'empresa')->exists()) {
+            $user->assignRole('empresa');
+        }
+
+        try {
+            Mail::to($user->email)->send(new UserMail($user, $validated['password']));
+        } catch (\Exception $e) {
+            Log::error('Error enviando email de bienvenida (empresa)', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()->route('empresa.usuarios')->with('success', 'Usuario creado correctamente. Se envió el correo de acceso.');
     }
 
     /**

@@ -8,7 +8,10 @@ use App\Models\Orden;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use App\Mail\UserMail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Tests\Support\FakeImage;
 use Tests\TestCase;
 
 class EmpresaModulosTest extends TestCase
@@ -115,6 +118,20 @@ class EmpresaModulosTest extends TestCase
         ]);
     }
 
+    public function test_principal_puede_subir_logo_de_empresa(): void
+    {
+        $response = $this->actingAs($this->empresaUser)
+            ->put(route('empresa.mi-empresa.update'), [
+                'nombre' => $this->empresa->nombre,
+                'logo' => FakeImage::jpeg('logo.jpg'),
+            ]);
+
+        $response->assertRedirect(route('empresa.mi-empresa'));
+        $this->empresa->refresh();
+        $this->assertNotEmpty($this->empresa->logo);
+        $this->assertFileExists(public_path('assets/imgs/empresas/'.$this->empresa->logo));
+    }
+
     // ========================================
     // TESTS DE USUARIOS DE EMPRESA
     // ========================================
@@ -134,6 +151,8 @@ class EmpresaModulosTest extends TestCase
 
     public function test_principal_can_create_user(): void
     {
+        Mail::fake();
+
         $response = $this->actingAs($this->empresaUser)
             ->post(route('empresa.usuarios.store'), [
                 'name' => 'Nuevo Usuario',
@@ -151,6 +170,10 @@ class EmpresaModulosTest extends TestCase
             'role_as' => 1,
             'principal' => 0,
         ]);
+        Mail::assertQueued(UserMail::class, function (UserMail $mail) {
+            return $mail->user->email === 'nuevo@empresa.com'
+                && $mail->password === 'password123';
+        });
     }
 
     public function test_principal_can_update_secondary_user(): void

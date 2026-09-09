@@ -10,9 +10,9 @@
 
     <h5 id="vigencia"><i class="bi bi-calendar me-2"></i>Vigencia del enlace</h5>
     <ul>
-        <li>Al crear un evaluado, el enlace tiene vigencia según configuración del sistema (mínimo <strong>30 días</strong>).</li>
+        <li>Al crear un evaluado, el enlace tiene vigencia según configuración del sistema (mínimo <strong>15 días</strong>).</li>
         <li>En el detalle de la orden verá <em>Vence: DD/MM/AAAA</em> junto al enlace.</li>
-        <li>Si el enlace fue invalidado, aparece el botón <strong>Habilitar enlace</strong> con la duración configurada (ej. 31 días).</li>
+        <li>Si el enlace fue invalidado, aparece el botón <strong>Habilitar enlace</strong> con la duración configurada (ej. 15 días).</li>
     </ul>
     <p class="mb-0">Estados típicos del formulario:
         @include('ayuda.partials.estado-badge', ['tipo' => 'link_enviado'])

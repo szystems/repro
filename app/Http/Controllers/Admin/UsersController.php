@@ -11,7 +11,6 @@ use App\Models\Permission;
 use App\Models\Sede;
 use App\Http\Requests\UserFormRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\File;
 use App\Models\Config;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -20,7 +19,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\UserMail;
 use App\Mail\UserResetPasswordMail;
+use App\Exports\UsersExport;
 use App\Support\EmpresaPermisosSupport;
+use App\Support\ExportacionesSupport;
+use App\Support\PerfilImagenSupport;
 
 class UsersController extends Controller
 {
@@ -175,11 +177,7 @@ class UsersController extends Controller
 
         // Procesamiento de imagen de perfil
         if($request->hasFile('fotografia')) {
-            $file = $request->file('fotografia');
-            $ext = $file->getClientOriginalExtension();
-            $filename = time().'.'.$ext;
-            $file->move('assets/imgs/users', $filename);
-            $user->fotografia = $filename;
+            $user->fotografia = PerfilImagenSupport::guardar($request->file('fotografia'), 'users');
         }
 
         // Asignar datos básicos
@@ -343,15 +341,11 @@ class UsersController extends Controller
 
         // Procesar imagen si se ha subido una nueva
         if($request->hasFile('fotografia')) {
-            $path = 'assets/imgs/users/'.$user->fotografia;
-            if(File::exists($path)) {
-                File::delete($path);
-            }
-            $file = $request->file('fotografia');
-            $ext = $file->getClientOriginalExtension();
-            $filename = time().'.'.$ext;
-            $file->move('assets/imgs/users', $filename);
-            $user->fotografia = $filename;
+            $user->fotografia = PerfilImagenSupport::guardar(
+                $request->file('fotografia'),
+                'users',
+                $user->fotografia
+            );
         }
 
         // Actualizar datos básicos
@@ -506,12 +500,7 @@ class UsersController extends Controller
         }
 
         // Eliminar foto si existe
-        if ($user->fotografia) {
-            $path = 'assets/imgs/users/'.$user->fotografia;
-            if (File::exists($path)) {
-                File::delete($path);
-            }
-        }
+        PerfilImagenSupport::borrar('users', $user->fotografia);
 
         // Marcar como eliminado y modificar email para permitir reutilización
         $user->estado = 0;
@@ -531,7 +520,7 @@ class UsersController extends Controller
         $role_filter = $request->input('role_filter');
         $empresa_filter = $request->input('empresa_filter');
 
-        $usuarios = $this->buildUsersQuery($request->all())->with('empresa')->get();
+        $usuarios = $this->buildUsersQuery($request->all())->with(['empresa', 'roles'])->get();
         $nompdf = date('m/d/Y g:ia');
         $path = public_path('assets/imgs/');
 
@@ -581,6 +570,16 @@ class UsersController extends Controller
             'empresa_filter' => $empresa_filter
         ]);
         return $pdf->stream($titulo.' '.$nompdf.'.pdf');
+    }
+
+    public function excel(Request $request)
+    {
+        $usuarios = $this->buildUsersQuery($request->all())->with(['empresa', 'roles'])->get();
+
+        return ExportacionesSupport::descargarExcel(
+            new UsersExport($usuarios),
+            'listado-usuarios-'.now()->format('Y-m-d')
+        );
     }
 
     public function pdfuser($id)

@@ -283,6 +283,8 @@ class Phase8FFuncionalidadesComplejasTest extends TestCase
         $empresa = Empresa::factory()->create();
         $admin = $this->crearUsuarioEmpresa($empresa);
 
+        \Illuminate\Support\Facades\Mail::fake();
+
         $this->actingAs($admin)->post(route('empresa.usuarios.store'), [
             'name' => 'Sub Usuario',
             'email' => 'sub@test.com',
