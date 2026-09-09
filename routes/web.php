@@ -65,6 +65,8 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         Route::get('/buscar', [AyudaController::class, 'buscar'])->name('buscar');
         Route::get('/faq', [AyudaController::class, 'faq'])->name('faq');
         Route::get('/glosario', [AyudaController::class, 'glosario'])->name('glosario');
+        Route::get('/archivo/guia-usuario-sigor.pdf', [AyudaController::class, 'verGuiaSigor'])->name('guia-sigor');
+        Route::get('/archivo/guia-usuario-sigor/descargar', [AyudaController::class, 'descargarGuiaSigor'])->name('guia-sigor.descargar');
         Route::get('/{slug}', [AyudaController::class, 'show'])->name('show');
     });
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Support\AyudaSupport;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AyudaController extends Controller
 {
@@ -52,5 +53,29 @@ class AyudaController extends Controller
         $terminos = AyudaSupport::glosarioEnriquecido();
 
         return view('ayuda.glosario', compact('terminos'));
+    }
+
+    public function verGuiaSigor(): BinaryFileResponse
+    {
+        return response()->file($this->rutaGuiaSigor(), [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="GUIA DE USUARIO SIGOR.pdf"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    public function descargarGuiaSigor(): BinaryFileResponse
+    {
+        return response()->download($this->rutaGuiaSigor(), 'GUIA DE USUARIO SIGOR.pdf', [
+            'Content-Type' => 'application/pdf',
+        ]);
+    }
+
+    private function rutaGuiaSigor(): string
+    {
+        $ruta = resource_path('ayuda/guia-usuario-sigor.pdf');
+        abort_unless(is_file($ruta), 404, 'La guía no está disponible.');
+
+        return $ruta;
     }
 }

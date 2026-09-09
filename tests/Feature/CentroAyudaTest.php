@@ -72,6 +72,44 @@ class CentroAyudaTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_guia_sigor_se_ve_en_el_navegador_sin_descarga_automatica(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3, 'estado' => 1]);
+
+        $this->actingAs($admin)->get(route('ayuda.index'))
+            ->assertOk()
+            ->assertSee('Guía de usuario SIGOR');
+
+        $this->actingAs($admin)->get(route('ayuda.show', 'guia-usuario-sigor'))
+            ->assertOk()
+            ->assertSee('Abrir en el navegador')
+            ->assertSee('Descargar PDF');
+
+        $vista = $this->actingAs($admin)->get(route('ayuda.guia-sigor'));
+        $vista->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $vista->headers->get('content-type'));
+        $this->assertStringContainsString('inline', strtolower((string) $vista->headers->get('content-disposition')));
+        $this->assertStringNotContainsString('attachment', strtolower((string) $vista->headers->get('content-disposition')));
+
+        $descarga = $this->actingAs($admin)->get(route('ayuda.guia-sigor.descargar'));
+        $descarga->assertOk();
+        $this->assertStringContainsString('attachment', strtolower((string) $descarga->headers->get('content-disposition')));
+    }
+
+    public function test_empresa_tambien_ve_la_guia_sigor(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $user = User::factory()->create([
+            'role_as' => 1,
+            'estado' => 1,
+            'empresa_id' => $empresa->id,
+            'principal' => 1,
+        ]);
+
+        $this->actingAs($user)->get(route('ayuda.show', 'guia-usuario-sigor'))->assertOk();
+        $this->actingAs($user)->get(route('ayuda.guia-sigor'))->assertOk();
+    }
+
     public function test_articulo_inexistente_retorna_404(): void
     {
         $admin = User::factory()->create(['role_as' => 3, 'estado' => 1]);

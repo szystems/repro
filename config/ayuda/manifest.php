@@ -35,7 +35,7 @@ return [
             'resumen' => 'Orientación en 5 minutos: panel de control, menú lateral y roles operativos.',
             'vista' => 'ayuda.articles.inicio-repro',
             'contexto' => ['dashboard'],
-            'relacionados' => ['flujo-orden-completa', 'ordenes-detalle-evaluado'],
+            'relacionados' => ['flujo-orden-completa', 'ordenes-detalle-evaluado', 'guia-usuario-sigor'],
         ],
         [
             'slug' => 'inicio-empresa',
@@ -50,7 +50,22 @@ return [
             'resumen' => 'Cómo navegar el portal cliente, crear órdenes y dar seguimiento a evaluados.',
             'vista' => 'ayuda.articles.inicio-empresa',
             'contexto' => ['dashboard'],
-            'relacionados' => ['crear-orden', 'seguimiento-ordenes'],
+            'relacionados' => ['crear-orden', 'seguimiento-ordenes', 'guia-usuario-sigor'],
+        ],
+        [
+            'slug' => 'guia-usuario-sigor',
+            'titulo' => 'Guía de usuario SIGOR',
+            'categoria' => 'inicio',
+            'modulo' => 'general',
+            'icono' => 'bi-file-earmark-pdf',
+            'audiencias' => ['repro', 'empresa'],
+            'permisos' => [],
+            'destacado' => true,
+            'orden' => 2,
+            'resumen' => 'Manual PDF: se ve en el navegador y se puede descargar si lo necesita.',
+            'vista' => 'ayuda.articles.guia-usuario-sigor',
+            'contexto' => ['ayuda'],
+            'relacionados' => ['inicio-repro', 'inicio-empresa', 'flujo-orden-completa'],
         ],
 
         // ── FLUJOS ──────────────────────────────────────────────
@@ -407,6 +422,13 @@ return [
     ],
 
     'faq' => [
+        [
+            'pregunta' => '¿Dónde está la guía de usuario SIGOR?',
+            'respuesta' => 'En el Centro de Ayuda, artículo «Guía de usuario SIGOR». Se abre en el navegador; la descarga es opcional.',
+            'audiencias' => ['repro', 'empresa'],
+            'icono' => 'bi-file-earmark-pdf',
+            'articulo' => 'guia-usuario-sigor',
+        ],
         [
             'pregunta' => '¿Por qué el enlace del candidato dice "vencido" o "no válido"?',
             'respuesta' => 'El enlace puede haber expirado (vigencia mínima 15 días configurable), haber sido invalidado manualmente por REPRO, o el candidato copió una URL incompleta. REPRO puede habilitar el enlace de nuevo desde el detalle de la orden.',
