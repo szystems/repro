@@ -3,8 +3,9 @@
 
     <h5>Listado (<code>/ordenes</code>)</h5>
     <ul>
-        <li>Tabla con código de orden, fecha, cantidad de evaluados y estado general.</li>
-        <li>Botón <strong>Exportar Excel</strong> del listado (respeta filtros).</li>
+        <li>Tabla con código de orden, reclutador asignado, fecha, cantidad de evaluados y estado general.</li>
+        <li>Filtro <strong>Reclutador</strong> para ver solo los procesos de una persona, o las órdenes sin asignar.</li>
+        <li>Botón <strong>Exportar Excel</strong> del listado (respeta filtros, incluido reclutador).</li>
         <li>Click en una orden para ver el detalle completo.</li>
     </ul>
 

@@ -19,6 +19,9 @@
     <h5>¿Por qué un trabajador no ve «Nueva Orden»?</h5>
     <p>Es comportamiento esperado. Solo usuarios con permiso <em>crear_ordenes</em> ven ese menú. El principal puede activarlo en Mi Empresa → Usuarios → Editar permisos.</p>
 
+    <h5>Filtrar por reclutador</h5>
+    <p>En <strong>Mis Órdenes</strong> el gerente (y REPRO) puede filtrar el listado por reclutador asignado, o ver solo las órdenes sin asignar. El Excel del listado usa el mismo filtro.</p>
+
     <h5>Confidencialidad entre reclutadores</h5>
-    <p>Si su empresa tiene activada la confidencialidad, cada reclutador solo ve las órdenes que él mismo creó.</p>
+    <p>Si su empresa tiene activada la confidencialidad, cada reclutador solo ve las órdenes que él mismo creó o que le fueron asignadas. El gerente siempre ve todos los procesos de su empresa.</p>
 </div>

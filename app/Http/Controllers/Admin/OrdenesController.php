@@ -59,7 +59,9 @@ class OrdenesController extends Controller
             ? Sede::where('estado', 1)->orderBy('nombre')->get()
             : collect();
 
-        return view('admin.ordenes.index', compact('ordenes', 'empresas', 'estados', 'tiposServicio', 'sedes'));
+        $reclutadores = $this->reclutadoresParaFiltro($request);
+
+        return view('admin.ordenes.index', compact('ordenes', 'empresas', 'estados', 'tiposServicio', 'sedes', 'reclutadores'));
     }
 
     /**
@@ -109,6 +111,14 @@ class OrdenesController extends Controller
             $query->where('sede_id', $request->sede_id);
         }
 
+        if ($request->filled('reclutador_id')) {
+            if ($request->reclutador_id === 'sin') {
+                $query->whereNull('reclutador_id');
+            } else {
+                $query->where('reclutador_id', (int) $request->reclutador_id);
+            }
+        }
+
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha_solicitud', '>=', $request->fecha_desde);
         }
@@ -127,7 +137,7 @@ class OrdenesController extends Controller
             });
         }
 
-        return $query->with(['empresa', 'creador', 'sede', 'evaluados'])
+        return $query->with(['empresa', 'creador', 'sede', 'evaluados', 'reclutador'])
             ->withCount('evaluados')
             ->orderBy('fecha_solicitud', 'desc');
     }
@@ -1800,6 +1810,26 @@ class OrdenesController extends Controller
 
             return back()->with('error', 'Error al invalidar el enlace. Intente nuevamente.');
         }
+    }
+
+    /**
+     * Reclutadores para el combo de filtro del listado (empresa propia o, en REPRO, la empresa filtrada).
+     */
+    private function reclutadoresParaFiltro(Request $request): \Illuminate\Support\Collection
+    {
+        if ((int) Auth::user()->role_as === 1) {
+            return $this->reclutadoresParaFormulario((int) Auth::user()->empresa_id);
+        }
+
+        if ($request->filled('empresa_id')) {
+            return $this->reclutadoresParaFormulario((int) $request->empresa_id);
+        }
+
+        return User::where('role_as', 1)
+            ->where('estado', 1)
+            ->whereNotNull('empresa_id')
+            ->orderBy('name')
+            ->get();
     }
 
     /**

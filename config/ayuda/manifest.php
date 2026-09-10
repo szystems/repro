@@ -528,6 +528,13 @@ return [
             'articulo' => 'permisos-trabajador',
         ],
         [
+            'pregunta' => '¿Cómo filtro las órdenes por reclutador?',
+            'respuesta' => 'En Mis Órdenes use el filtro Reclutador. Puede ver los procesos de una persona o solo las órdenes sin asignar. El Excel del listado usa el mismo filtro. El gerente ve todos los procesos de su empresa; cada reclutador ve según el modo de visibilidad (compartido o solo propios).',
+            'audiencias' => ['repro', 'empresa'],
+            'icono' => 'bi-funnel',
+            'articulo' => 'seguimiento-ordenes',
+        ],
+        [
             'pregunta' => '¿Cuándo el cliente puede ver los resultados?',
             'respuesta' => 'REPRO controla la visibilidad. Los resultados aparecen en el detalle de la orden cuando REPRO los marca como visibles para la empresa.',
             'audiencias' => ['repro', 'empresa'],

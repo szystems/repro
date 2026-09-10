@@ -995,4 +995,70 @@ class OrdenesControllerTest extends TestCase
             ->assertSee('wa.me/50245464545')
             ->assertSee('23451234');
     }
+
+    public function test_gerente_filtra_listado_por_reclutador(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $gerente = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+            'principal' => 1,
+            'estado' => 1,
+        ]);
+        $gerente->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $reclutadorA = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+            'principal' => 0,
+            'estado' => 1,
+            'name' => 'Reclutador Ana',
+        ]);
+        $reclutadorB = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+            'principal' => 0,
+            'estado' => 1,
+            'name' => 'Reclutador Bruno',
+        ]);
+
+        $ordenA = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $gerente->id,
+            'reclutador_id' => $reclutadorA->id,
+        ]);
+        $ordenB = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $gerente->id,
+            'reclutador_id' => $reclutadorB->id,
+        ]);
+        $sinAsignar = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $gerente->id,
+            'reclutador_id' => null,
+        ]);
+
+        $this->actingAs($gerente)
+            ->get(route('ordenes.index'))
+            ->assertOk()
+            ->assertSee('Filtrar Órdenes')
+            ->assertSee('Reclutador Ana')
+            ->assertSee($ordenA->codigo_orden)
+            ->assertSee($ordenB->codigo_orden)
+            ->assertSee($sinAsignar->codigo_orden);
+
+        $this->actingAs($gerente)
+            ->get(route('ordenes.index', ['reclutador_id' => $reclutadorA->id]))
+            ->assertOk()
+            ->assertSee($ordenA->codigo_orden)
+            ->assertDontSee($ordenB->codigo_orden)
+            ->assertDontSee($sinAsignar->codigo_orden);
+
+        $this->actingAs($gerente)
+            ->get(route('ordenes.index', ['reclutador_id' => 'sin']))
+            ->assertOk()
+            ->assertSee($sinAsignar->codigo_orden)
+            ->assertDontSee($ordenA->codigo_orden)
+            ->assertDontSee($ordenB->codigo_orden);
+    }
 }

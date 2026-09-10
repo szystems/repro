@@ -113,6 +113,44 @@ class OrdenesExcelYQuitarEvaluadoTest extends TestCase
         );
     }
 
+    public function test_excel_filtra_por_reclutador(): void
+    {
+        Excel::fake();
+
+        $empresa = Empresa::factory()->create();
+        $cliente = $this->crearCliente($empresa);
+        $reclutador = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => $empresa->id,
+            'estado' => 1,
+            'principal' => 0,
+        ]);
+
+        $deAna = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $cliente->id,
+            'reclutador_id' => $reclutador->id,
+        ]);
+        $deOtro = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $cliente->id,
+            'reclutador_id' => $cliente->id,
+        ]);
+
+        $this->actingAs($cliente)
+            ->get(route('ordenes.excel', ['reclutador_id' => $reclutador->id]))
+            ->assertOk();
+
+        Excel::assertDownloaded(
+            'listado-ordenes-'.now()->format('Y-m-d').'.xlsx',
+            function (OrdenesExport $export) use ($deAna, $deOtro) {
+                $ids = $export->collection()->pluck('id');
+
+                return $ids->contains($deAna->id) && ! $ids->contains($deOtro->id);
+            }
+        );
+    }
+
     public function test_editar_quita_evaluado_marcado_y_deja_a_los_demas(): void
     {
         $admin = $this->crearAdmin();

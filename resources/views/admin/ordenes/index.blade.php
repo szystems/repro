@@ -97,6 +97,19 @@
                                 @endif
 
                                 <div class="col-md-2 mb-2">
+                                    <label class="form-label">Reclutador</label>
+                                    <select class="form-select" name="reclutador_id" id="filtro_reclutador_id">
+                                        <option value="">Todos</option>
+                                        <option value="sin" {{ request('reclutador_id') === 'sin' ? 'selected' : '' }}>Sin asignar</option>
+                                        @foreach($reclutadores as $reclutador)
+                                        <option value="{{ $reclutador->id }}" {{ (string) request('reclutador_id') === (string) $reclutador->id ? 'selected' : '' }}>
+                                            {{ $reclutador->name }}{{ $reclutador->principal ? ' (gerente RRHH)' : '' }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2 mb-2">
                                     <label class="form-label">Desde</label>
                                     <input type="date" class="form-control" name="fecha_desde" value="{{ request('fecha_desde') }}">
                                 </div>
@@ -177,6 +190,7 @@
                                     <tr>
                                         <th>Código</th>
                                         <th>Empresa</th>
+                                        <th>Reclutador</th>
                                         <th>Tipos de Servicio</th>
                                         <th>Estado de Orden</th>
                                         <th>Evaluados</th>
@@ -197,6 +211,13 @@
                                             {{ $orden->empresa->nombre ?? 'N/A' }}
                                             @if($orden->sede)
                                                 <br><small class="text-muted"><i class="bi bi-geo-alt"></i> {{ $orden->sede->nombre }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($orden->reclutador)
+                                                {{ $orden->reclutador->name }}
+                                            @else
+                                                <span class="text-muted">Sin asignar</span>
                                             @endif
                                         </td>
                                         <td>
@@ -302,7 +323,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="8" class="text-center">
+                                        <td colspan="{{ Auth::user()->role_as >= 2 ? 9 : 8 }}" class="text-center">
                                             <div class="alert alert-info mb-0">
                                                 <i class="bi bi-info-circle"></i> No hay órdenes registradas
                                             </div>
@@ -336,9 +357,17 @@
 
 @push('scripts')
 <script>
-    // Auto-submit form on select change for better UX
-    document.querySelectorAll('select[name="empresa_id"], select[name="estado"], select[name="tipo_servicio"]').forEach(function(select) {
+    document.querySelectorAll('select[name="estado"], select[name="tipo_servicio"], select[name="reclutador_id"]').forEach(function(select) {
         select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+    document.querySelectorAll('select[name="empresa_id"]').forEach(function(select) {
+        select.addEventListener('change', function() {
+            var reclutador = this.form.querySelector('select[name="reclutador_id"]');
+            if (reclutador) {
+                reclutador.value = '';
+            }
             this.form.submit();
         });
     });

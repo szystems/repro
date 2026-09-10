@@ -4,7 +4,7 @@
     <h5><i class="bi bi-list me-2"></i>Menú lateral</h5>
     <ul>
         <li><strong>Panel Principal</strong> — resumen de sus órdenes y búsqueda de candidatos por DPI.</li>
-        <li><strong>Mis Órdenes</strong> — listado de todas sus solicitudes de evaluación.</li>
+        <li><strong>Mis Órdenes</strong> — listado de todas sus solicitudes de evaluación. Puede filtrar por reclutador (quién pidió el proceso).</li>
         <li><strong>Nueva Orden</strong> — crear solicitud (solo si tiene permiso).</li>
         <li><strong>Estado de Procesos</strong> — avance de cuestionarios de candidatos.</li>
         <li><strong>Mis Reportes</strong> — estadísticas exportables (si tiene permiso).</li>

@@ -25,6 +25,7 @@ class OrdenesExport implements FromCollection, WithHeadings, WithMapping, WithSt
         return [
             'Código',
             'Empresa',
+            'Reclutador',
             'Tipos de Servicio',
             'Estado',
             'Evaluados',
@@ -57,6 +58,7 @@ class OrdenesExport implements FromCollection, WithHeadings, WithMapping, WithSt
         return [
             $orden->codigo_orden,
             $orden->empresa->nombre ?? 'N/A',
+            $orden->reclutador->name ?? 'Sin asignar',
             $tipos !== '' ? $tipos : 'Sin definir',
             $orden->estado_human,
             $evaluados !== '' ? $evaluados : 'Sin evaluados',
