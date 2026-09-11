@@ -22,6 +22,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Support\AutorizacionesLegales;
+use App\Support\DestinatariosCorreoEmpresaSupport;
 use App\Support\CuestionarioAutosave;
 use App\Support\CuestionarioFotoCandidato;
 use App\Support\CuestionarioPrecarga;
@@ -1111,22 +1112,15 @@ class CuestionarioController extends Controller
                 $usuario->notify(new CuestionarioCompletadoNotification($evaluado));
             }
 
-            // Notificación in-app a usuarios de la empresa (Fase 18 — Prioridad 3)
-            $empresaId = $evaluado->orden->empresa_id ?? null;
-            if ($empresaId) {
-                $usuariosEmpresa = User::where('empresa_id', $empresaId)
-                    ->where('role_as', 1)
-                    ->where('estado', 1)
-                    ->get();
-                foreach ($usuariosEmpresa as $usuario) {
-                    $usuario->notify(new CuestionarioCompletadoNotification($evaluado));
-                }
+            $usuariosEmpresa = DestinatariosCorreoEmpresaSupport::usuariosVisiblesEmpresa($evaluado->orden);
+            foreach ($usuariosEmpresa as $usuario) {
+                $usuario->notify(new CuestionarioCompletadoNotification($evaluado));
             }
 
             Log::info('Notificaciones in-app de cuestionario completado enviadas', [
                 'evaluado_id'   => $evaluado->id,
                 'repro'         => $usuariosRepro->count(),
-                'empresa'       => isset($usuariosEmpresa) ? $usuariosEmpresa->count() : 0,
+                'empresa'       => $usuariosEmpresa->count(),
             ]);
 
         } catch (\Exception $e) {

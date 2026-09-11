@@ -38,10 +38,21 @@ class NotificacionesInAppTest extends TestCase
         $this->repro        = User::factory()->create(['role_as' => 2, 'estado' => 1]);
         $this->repro->roles()->attach(Role::where('name', 'repro')->first());
         $this->empresaModel = Empresa::factory()->create(['estado' => 1]);
-        $this->empresa      = User::factory()->create(['role_as' => 1, 'estado' => 1, 'empresa_id' => $this->empresaModel->id]);
+        $this->empresa      = User::factory()->create([
+            'role_as' => 1,
+            'estado' => 1,
+            'principal' => 1,
+            'empresa_id' => $this->empresaModel->id,
+        ]);
         $this->empresa->roles()->attach(Role::where('name', 'empresa')->first());
 
-        $this->orden    = Orden::factory()->create(['empresa_id' => $this->empresaModel->id]);
+        $this->orden    = Orden::factory()->create([
+            'empresa_id' => $this->empresaModel->id,
+            'tipo_creador' => 'repro',
+            'creado_por' => $this->admin->id,
+            'reclutador_id' => null,
+            'confidencial' => false,
+        ]);
         $this->evaluado = EvaluadoOrden::factory()->create([
             'orden_id'        => $this->orden->id,
             'token_unico'     => 'tok-test',

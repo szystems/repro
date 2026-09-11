@@ -23,5 +23,6 @@
     <p>En <strong>Mis Órdenes</strong> el gerente (y REPRO) puede filtrar el listado por reclutador asignado, o ver solo las órdenes sin asignar. El Excel del listado usa el mismo filtro.</p>
 
     <h5>Confidencialidad entre reclutadores</h5>
-    <p>Si su empresa tiene activada la confidencialidad, cada reclutador solo ve las órdenes que él mismo creó o que le fueron asignadas. El gerente siempre ve todos los procesos de su empresa.</p>
+    <p>Marcar <strong>proceso confidencial</strong> recorta quién ve la orden en SIGOR: el gerente siempre la ve; los demás reclutadores no, salvo el asignado o quien la creó. Eso no decide el correo.</p>
+    <p>El <strong>reclutador asignado</strong> puede ir en una orden normal (visible para todos). El correo de resultados e informe le llega solo a esa persona. El gerente no recibe ese correo automático si no es el responsable del proceso.</p>
 </div>

@@ -1,10 +1,11 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 8 de septiembre de 2026  
-**Estado:** ⏸️ **ESPERANDO STEPHANY** · Sprint R cerrado prod 8-sep · portal live `https://portal.reprogt.com` · iPage 503  
+**Fecha de Contexto:** 11 de septiembre de 2026  
+**Estado:** 🔧 **SPRINT S** · correos de resultados según reclutador · portal live `https://portal.reprogt.com` · iPage 503  
 
-**Plan activo (último lote):** `docs/repro/cambios agosto/PLAN_SPRINT_R_OBSERVACIONES_08-09-2026.md`  
+**Plan activo (último lote):** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md`  
+**Plan R (cerrado 8-sep):** `docs/repro/cambios agosto/PLAN_SPRINT_R_OBSERVACIONES_08-09-2026.md`  
 **Plan Q (cerrado 7-sep):** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
 **Plan migración:** `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`  
 **Destino:** web `reprogt.com` · app `portal.reprogt.com` · Coolify Hetzner CPX31  
@@ -38,7 +39,23 @@
 
 ---
 
-## ⏸️ SPRINT R — LEER PRIMERO (8-sep-2026) · esperando Stephany
+## 🔧 SPRINT S — LEER PRIMERO (11-sep-2026) · correos de resultados
+
+**Origen:** WA Stephany (lógica reclutador ≠ confidencial + “no me llegan correos”).  
+**Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md`  
+**Siguiente:** deploy Coolify + humo UAT. El silencio de correos de ella fue **cuota Resend 100/día**, no esta matriz. No `migrate:fresh`.
+
+| ID | Qué | Estado |
+|----|-----|--------|
+| **S-M1** | Correo/campana de resultados solo al responsable (reclutador → creador empresa → titular) | 🔧 código |
+| **S-V1** | Reclutador y confidencial independientes (visibilidad SIGOR no cambia) | ✅ ya estaba; copy UI/ayuda |
+| **S-C1** | Campana orden/evaluado/cuestionario: solo quien puede ver la orden | 🔧 código |
+
+**No:** `migrate:fresh` · pisar Programó/Encargado · Coolify Upgrade · resetear claves de Stephany.
+
+---
+
+## ⏸️ SPRINT R — CERRADO PROD (8-sep-2026) · esperando Stephany
 
 **Origen:** WA 8-sep (follow-up post-Q: correos, 15 días, WhatsApp, guía SIGOR, Excel, fotos, UserMail empresa, rol QZ).  
 **Plan:** `docs/repro/cambios agosto/PLAN_SPRINT_R_OBSERVACIONES_08-09-2026.md`  
@@ -1380,5 +1397,5 @@ app/, database/, resources/, routes/  (+ vendor/ en deploy completo)
 
 ---
 
-**Última actualización:** 8 de septiembre de 2026  
-**Estado:** ⏸️ **Esperando Stephany** · Sprint R cerrado prod · portal `https://portal.reprogt.com` · iPage 503 · no `migrate:fresh`
+**Última actualización:** 11 de septiembre de 2026  
+**Estado:** 🔧 **Sprint S** · correos de resultados al responsable · portal `https://portal.reprogt.com` · iPage 503 · no `migrate:fresh`

@@ -303,7 +303,8 @@ class CentroAyudaTest extends TestCase
             ->assertOk()
             ->assertSee('Puesto que solicita')
             ->assertSee('noreply@reprogt.com')
-            ->assertSee('WhatsApp al candidato');
+            ->assertSee('WhatsApp al candidato')
+            ->assertSee('reclutador asignado');
 
         $this->actingAs($admin)->get(route('ayuda.show', 'cuestionarios-gestion'))
             ->assertOk()
@@ -318,7 +319,8 @@ class CentroAyudaTest extends TestCase
             ->assertOk()
             ->assertSee('¿Cómo le escribo al candidato por WhatsApp?')
             ->assertSee('¿Qué es el rol Empresa QZ Temporal')
-            ->assertSee('¿El correo del candidato sigue diciendo 30 días?');
+            ->assertSee('¿El correo del candidato sigue diciendo 30 días?')
+            ->assertSee('¿A quién le llega el correo de resultados?');
 
         $this->actingAs($admin)->get(route('ayuda.buscar', ['q' => 'whatsapp']))
             ->assertOk()

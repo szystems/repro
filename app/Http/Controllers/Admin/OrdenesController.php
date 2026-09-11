@@ -16,6 +16,7 @@ use App\Notifications\ResultadoPreliminarNotification;
 use App\Support\RedirectFichaOrden;
 use App\Notifications\ResultadosDisponiblesNotification;
 use App\Exports\OrdenesExport;
+use App\Support\DestinatariosCorreoEmpresaSupport;
 use App\Support\EmpresaVisibilidadReclutadoresSupport;
 use App\Support\ExportacionesSupport;
 use App\Support\FormularioAutoTransiciones;
@@ -352,15 +353,9 @@ class OrdenesController extends Controller
                 $usuario->notify(new OrdenCreadaNotification($orden));
             }
 
-            // Notificación in-app a usuarios de la empresa (incluye al creador si es usuario empresa)
-            if ($orden->empresa_id) {
-                $usuariosEmpresa = User::where('empresa_id', $orden->empresa_id)
-                    ->where('role_as', 1)
-                    ->where('estado', 1)
-                    ->get();
-                foreach ($usuariosEmpresa as $usuario) {
-                    $usuario->notify(new OrdenCreadaNotification($orden));
-                }
+            // Campana a usuarios empresa que sí pueden ver la orden
+            foreach (DestinatariosCorreoEmpresaSupport::usuariosVisiblesEmpresa($orden) as $usuario) {
+                $usuario->notify(new OrdenCreadaNotification($orden));
             }
 
             // Redirigir según el rol del usuario
@@ -801,22 +796,12 @@ class OrdenesController extends Controller
                 return;
             }
 
-            // Correo a usuarios de la empresa
-            $emailsEmpresa = \App\Models\User::where('empresa_id', $empresa->id)
-                ->where('role_as', 1)
-                ->pluck('email')
-                ->filter()
-                ->unique();
+            $emailsEmpresa = DestinatariosCorreoEmpresaSupport::emailsResultados($orden);
+            $usuariosEmpresa = DestinatariosCorreoEmpresaSupport::usuariosResultados($orden);
 
             foreach ($emailsEmpresa as $email) {
                 Mail::to($email)->send(new \App\Mail\ResultadosDisponiblesMail($orden));
             }
-
-            // Notificación in-app a usuarios de la empresa
-            $usuariosEmpresa = \App\Models\User::where('empresa_id', $empresa->id)
-                ->where('role_as', 1)
-                ->where('estado', 1)
-                ->get();
 
             // Notificación in-app a admins y colaboradores REPRO (Fase 18 — Prioridad 3)
             $usuariosRepro = \App\Models\User::where('role_as', '>=', 2)
@@ -835,7 +820,7 @@ class OrdenesController extends Controller
             Log::info('Notificación de resultados enviada', [
                 'orden_id'      => $orden->id,
                 'empresa'       => $empresa->nombre,
-                'emails'        => $emailsEmpresa->toArray(),
+                'emails'        => $emailsEmpresa->all(),
                 'repro_notif'   => $usuariosRepro->count(),
             ]);
         } catch (\Exception $e) {
@@ -1075,15 +1060,8 @@ class OrdenesController extends Controller
                 }
             }
 
-            // Siempre: notificar a usuarios de la empresa
-            if ($orden->empresa_id) {
-                $usuariosEmpresa = User::where('empresa_id', $orden->empresa_id)
-                    ->where('role_as', 1)
-                    ->where('estado', 1)
-                    ->get();
-                foreach ($usuariosEmpresa as $usuario) {
-                    $usuario->notify(new EvaluadoAsignadoNotification($evaluado));
-                }
+            foreach (DestinatariosCorreoEmpresaSupport::usuariosVisiblesEmpresa($orden) as $usuario) {
+                $usuario->notify(new EvaluadoAsignadoNotification($evaluado));
             }
         } catch (\Exception $e) {
             Log::error('Error enviando notificación in-app de evaluado asignado', [
@@ -1111,15 +1089,8 @@ class OrdenesController extends Controller
                 $admin->notify(new ResultadoPreliminarNotification($evaluado));
             }
 
-            // Notificar a usuarios de la empresa
-            if ($orden->empresa_id) {
-                $usuariosEmpresa = User::where('empresa_id', $orden->empresa_id)
-                    ->where('role_as', 1)
-                    ->where('estado', 1)
-                    ->get();
-                foreach ($usuariosEmpresa as $usuario) {
-                    $usuario->notify(new ResultadoPreliminarNotification($evaluado));
-                }
+            foreach (DestinatariosCorreoEmpresaSupport::usuariosResultados($orden) as $usuario) {
+                $usuario->notify(new ResultadoPreliminarNotification($evaluado));
             }
         } catch (\Exception $e) {
             Log::error('Error enviando notificación de preliminar subido', [

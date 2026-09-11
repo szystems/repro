@@ -29,7 +29,8 @@
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror
         <small class="text-muted d-block mt-1">
-            Define quién gestiona el proceso. Los demás reclutadores no lo verán si está marcado como confidencial.
+            Quién da seguimiento y quién recibe el correo de resultados / informe, aunque el proceso no sea confidencial.
+            Los demás reclutadores siguen viendo la orden si no está marcada como confidencial.
             Elija primero la empresa para ver su personal.
         </small>
     </div>
@@ -47,7 +48,7 @@
                    value="1"
                    {{ old('confidencial', !empty($orden) && $orden->confidencial) ? 'checked' : '' }}>
             <label class="form-check-label" for="confidencial">
-                Proceso <strong>confidencial</strong> (el gerente RRHH siempre lo ve; los demás reclutadores no)
+                Proceso <strong>confidencial</strong> (solo gerente, creador y reclutador asignado lo ven en SIGOR; no cambia el destinatario del correo)
             </label>
         </div>
         @error('confidencial')

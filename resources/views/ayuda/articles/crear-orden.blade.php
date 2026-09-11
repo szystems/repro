@@ -13,7 +13,7 @@
 
     <h5 id="pasos"><i class="bi bi-list-ol me-2"></i>Paso a paso</h5>
     <div class="ayuda-flujo-steps">
-        <div class="ayuda-paso"><span class="ayuda-paso-num">1</span><div><strong>Datos de la orden</strong><br>Sede REPRO responsable, tipos de servicio (polígrafo, VSA, etc.), tipos de formulario, reclutador asignado (quién pidió el proceso), prioridad e instrucciones.</div></div>
+        <div class="ayuda-paso"><span class="ayuda-paso-num">1</span><div><strong>Datos de la orden</strong><br>Sede REPRO responsable, tipos de servicio (polígrafo, VSA, etc.), tipos de formulario, reclutador asignado (quién da seguimiento y recibe el correo de resultados; independiente de confidencial), prioridad e instrucciones.</div></div>
         <div class="ayuda-paso"><span class="ayuda-paso-num">2</span><div><strong>Evaluados</strong><br>Agregue candidatos con nombre, DPI, puesto, contacto y modalidad (presencial/virtual).</div></div>
         <div class="ayuda-paso"><span class="ayuda-paso-num">3</span><div><strong>Revisión</strong><br>Confirme datos antes de enviar.</div></div>
         <div class="ayuda-paso"><span class="ayuda-paso-num">4</span><div><strong>Envío</strong><br>La orden queda en estado «Orden recibida» y REPRO la procesa.</div></div>

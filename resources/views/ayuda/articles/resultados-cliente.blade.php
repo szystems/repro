@@ -17,5 +17,8 @@
         <li>Descargue el PDF disponible (preliminar o final).</li>
     </ol>
 
+    <h5>¿A quién le llega el correo?</h5>
+    <p>Al <strong>reclutador asignado</strong>, si lo hay. Si no, a quien creó la orden (cuando la creó la empresa) o al titular si la creó REPRO. El gerente ve los procesos en el portal; el correo no se dispara a toda la empresa.</p>
+
     <p>Si no ve resultados, contacte a REPRO por WhatsApp (menú Contacto) o verifique que la evaluación esté completada.</p>
 </div>

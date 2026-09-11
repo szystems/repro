@@ -25,7 +25,13 @@
     <p>Si la empresa crea la orden y elige sede, el personal REPRO de esa sede recibe aviso. Si la orden la crea REPRO, ese correo <strong>no</strong> se manda (evita ruido interno).</p>
 
     <h5 id="resultados"><i class="bi bi-file-earmark-pdf me-2"></i>Resultados a la empresa</h5>
-    <p>Cuando REPRO marca resultados o preliminar visibles, los usuarios de esa empresa reciben correo.</p>
+    <p>Cuando REPRO marca resultados o el informe preliminar como visibles, el correo (y la campana de esos avisos) no se manda a toda la empresa. Reclutador asignado y proceso confidencial son independientes:</p>
+    <ul>
+        <li>Si hay <strong>reclutador asignado</strong>, llega <strong>solo a esa persona</strong>, aunque el proceso no sea confidencial.</li>
+        <li>Si no hay reclutador y la orden la creó la empresa, llega <strong>solo a quien la creó</strong>.</li>
+        <li>Si la creó REPRO y no hay reclutador, llega al <strong>titular</strong> (gerente RRHH). Si no hay titular activo, se usa el correo de la ficha de la empresa.</li>
+        <li>Si el proceso es <strong>confidencial</strong>, nunca se avisa a alguien que no pueda ver esa orden en SIGOR. El gerente sigue viendo la orden en el portal; no recibe el correo si no es el responsable.</li>
+    </ul>
 
     <h5 id="campana"><i class="bi bi-bell me-2"></i>Solo campana (sin correo)</h5>
     <ul>
@@ -36,6 +42,6 @@
     @include('ayuda.partials.callout', [
         'tipo' => 'info',
         'titulo' => 'Si no llega el correo:',
-        'contenido' => 'Pida revisar spam y que el email del candidato o del usuario esté bien escrito. El enlace también se puede copiar o mandar por WhatsApp desde el listado.',
+        'contenido' => 'Pida revisar spam y que el email del candidato o del responsable esté bien escrito. El correo de resultados llega al reclutador asignado (o a quien creó la orden / al titular), no a toda la empresa. El enlace del candidato también se puede copiar o mandar por WhatsApp.',
     ])
 </div>
