@@ -80,6 +80,16 @@ class AppServiceProvider extends ServiceProvider
             } catch (\Throwable $e) {
                 $view->with('sedesWhatsApp', collect());
             }
+
+            $correoAlerta = null;
+            if ((int) $user->role_as >= 2) {
+                try {
+                    $correoAlerta = \App\Support\CorreoEnvioSupport::alertaActiva();
+                } catch (\Throwable $e) {
+                    $correoAlerta = null;
+                }
+            }
+            $view->with('correoAlerta', $correoAlerta);
         });
 
         // Crear una directiva para mostrar/ocultar elementos según el rol

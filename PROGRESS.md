@@ -18,7 +18,7 @@
 |-----|---------|
 | **Fase** | 🔧 **Sprint S** — correos de resultados según reclutador (11-sep) |
 | **Plan** | `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md` |
-| **Esta sesión** | Matriz: reclutador → creador empresa → titular. Confidencial no ensancha el correo. Visibilidad SIGOR igual. |
+| **Esta sesión** | Matriz: reclutador → creador empresa → titular. Aviso REPRO si el correo se corta (Resend 100/día). |
 | **Siguiente paso** | Deploy Coolify + humo UAT. Ops: cuota Resend 100/día (por eso ella no recibía). |
 | **Prod** | `https://portal.reprogt.com` · iPage 503 · no `migrate:fresh`. |
 

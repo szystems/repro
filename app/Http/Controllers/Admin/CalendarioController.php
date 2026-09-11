@@ -10,6 +10,7 @@ use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Sede;
 use App\Models\User;
+use App\Support\CorreoEnvioSupport;
 use App\Support\ExportacionesSupport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -432,11 +433,7 @@ class CalendarioController extends Controller
         try {
             Mail::to($evaluado->email)->queue(new CitaProgramadaMail($evaluado, $reprogramada));
         } catch (\Exception $e) {
-            Log::error('Error enviando correo de cita al candidato', [
-                'evaluado_id' => $evaluado->id,
-                'reprogramada' => $reprogramada,
-                'error' => $e->getMessage(),
-            ]);
+            CorreoEnvioSupport::registrarFallo($e, 'cita_programada');
         }
     }
 }

@@ -542,6 +542,13 @@ return [
             'articulo' => 'resultados-cliente',
         ],
         [
+            'pregunta' => '¿Por qué dejaron de llegar los correos?',
+            'respuesta' => 'Si el portal muestra un aviso amarillo o rojo de límite diario, el servicio de correo (Resend) llegó a su tope (100/día por defecto). Los avisos en SIGOR sí quedan. Se reanudan al día siguiente o al subir el plan. MAIL_ALERTA_ACTIVA / MAIL_LIMITE_DIARIO se configuran en el servidor.',
+            'audiencias' => ['repro'],
+            'icono' => 'bi-envelope-exclamation',
+            'articulo' => 'correos-automaticos',
+        ],
+        [
             'pregunta' => '¿A quién le llega el correo de resultados?',
             'respuesta' => 'Al reclutador asignado, aunque el proceso no sea confidencial. Si no hay reclutador y la creó la empresa, a quien la creó. Si la creó REPRO, al titular. El gerente ve la orden en SIGOR; no recibe ese correo si no es el responsable. Confidencial solo recorta quién ve el proceso, no ensancha el correo.',
             'audiencias' => ['repro', 'empresa'],

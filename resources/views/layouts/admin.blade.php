@@ -185,6 +185,7 @@
 
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
+                    @include('shared.partials.alerta-correo')
                     @yield('content')
                 </div>
 

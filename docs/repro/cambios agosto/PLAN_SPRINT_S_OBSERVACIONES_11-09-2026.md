@@ -33,6 +33,7 @@ Ejemplo de ella: orden normal, todos la ven en SIGOR, hay reclutador, resultados
 | **S-M1** | Correo/campana de resultados al responsable | `DestinatariosCorreoEmpresaSupport` en `notificarResultadosDisponibles` + preliminar | 🔧 |
 | **S-V1** | Campos independientes | Copy del form + Centro de Ayuda. No se toca `puedeVerOrden` | 🔧 |
 | **S-C1** | No filtrar mal campanas | Orden creada / evaluado / cuestionario: `usuariosVisiblesEmpresa` | 🔧 |
+| **S-A1** | Aviso cuando el correo se corta | Banner REPRO + flash si el envío falla. `MAIL_ALERTA_ACTIVA` / `MAIL_LIMITE_DIARIO=100` / `MAIL_ALERTA_DIARIO=90` | 🔧 |
 
 **No se toca:** correo al candidato, cita, recordatorio, `NuevaOrdenSedeMail`, visibilidad de listados.
 

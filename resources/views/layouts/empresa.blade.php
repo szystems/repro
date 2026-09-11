@@ -172,6 +172,7 @@
 
             <!-- Content wrapper -->
             <div class="content-wrapper-scroll">
+                @include('shared.partials.alerta-correo')
                 @yield('content')
             </div>
 

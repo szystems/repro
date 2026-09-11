@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Mail\RecordatorioCuestionarioMail;
+use App\Support\CorreoEnvioSupport;
 use App\Models\EvaluadoOrden;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -181,11 +182,7 @@ class EnviarRecordatoriosCuestionario extends Command
         } catch (\Exception $e) {
             $this->error("   ❌ {$evaluado->nombre}: Error - ".$e->getMessage());
             $errores++;
-
-            Log::error('Error enviando recordatorio', [
-                'evaluado_id' => $evaluado->id,
-                'error' => $e->getMessage(),
-            ]);
+            CorreoEnvioSupport::registrarFallo($e, 'recordatorio_cuestionario');
         }
 
         return [$enviados, $errores];

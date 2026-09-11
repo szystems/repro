@@ -42,6 +42,6 @@
     @include('ayuda.partials.callout', [
         'tipo' => 'info',
         'titulo' => 'Si no llega el correo:',
-        'contenido' => 'Pida revisar spam y que el email del candidato o del responsable esté bien escrito. El correo de resultados llega al reclutador asignado (o a quien creó la orden / al titular), no a toda la empresa. El enlace del candidato también se puede copiar o mandar por WhatsApp.',
+        'contenido' => 'Pida revisar spam y que el email del candidato o del responsable esté bien escrito. El correo de resultados llega al reclutador asignado (o a quien creó la orden / al titular), no a toda la empresa. Si REPRO ve un aviso de límite diario, el servicio de correo (Resend, 100/día) se saturó: el portal sigue; los mails se reanudan mañana. El enlace del candidato también se puede copiar o mandar por WhatsApp.',
     ])
 </div>

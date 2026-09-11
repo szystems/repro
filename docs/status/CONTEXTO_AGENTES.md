@@ -50,6 +50,7 @@
 | **S-M1** | Correo/campana de resultados solo al responsable (reclutador → creador empresa → titular) | 🔧 código |
 | **S-V1** | Reclutador y confidencial independientes (visibilidad SIGOR no cambia) | ✅ ya estaba; copy UI/ayuda |
 | **S-C1** | Campana orden/evaluado/cuestionario: solo quien puede ver la orden | 🔧 código |
+| **S-A1** | Aviso REPRO si Resend/SMTP deja de enviar (100/día) | 🔧 código |
 
 **No:** `migrate:fresh` · pisar Programó/Encargado · Coolify Upgrade · resetear claves de Stephany.
 

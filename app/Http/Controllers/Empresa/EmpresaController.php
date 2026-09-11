@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\EvaluadoOrden;
 use App\Mail\UserMail;
 use App\Models\Role;
+use App\Support\CorreoEnvioSupport;
 use App\Support\EmpresaVisibilidadReclutadoresSupport;
 use App\Support\PerfilImagenSupport;
 use Illuminate\Http\Request;
@@ -240,10 +241,11 @@ class EmpresaController extends Controller
         try {
             Mail::to($user->email)->send(new UserMail($user, $validated['password']));
         } catch (\Exception $e) {
-            Log::error('Error enviando email de bienvenida (empresa)', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
+            CorreoEnvioSupport::registrarFallo($e, 'user_mail_empresa');
+
+            return redirect()->route('empresa.usuarios')
+                ->with('success', 'Usuario creado correctamente.')
+                ->with('error', CorreoEnvioSupport::mensajeFlashFallo());
         }
 
         return redirect()->route('empresa.usuarios')->with('success', 'Usuario creado correctamente. Se envió el correo de acceso.');

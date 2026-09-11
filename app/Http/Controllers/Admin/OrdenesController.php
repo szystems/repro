@@ -16,6 +16,7 @@ use App\Notifications\ResultadoPreliminarNotification;
 use App\Support\RedirectFichaOrden;
 use App\Notifications\ResultadosDisponiblesNotification;
 use App\Exports\OrdenesExport;
+use App\Support\CorreoEnvioSupport;
 use App\Support\DestinatariosCorreoEmpresaSupport;
 use App\Support\EmpresaVisibilidadReclutadoresSupport;
 use App\Support\ExportacionesSupport;
@@ -747,15 +748,20 @@ class OrdenesController extends Controller
 
         // Auto-liberar resultados para el cliente al guardar el informe preliminar
         $orden = $evaluado->orden;
+        $correoOk = true;
         if (!$orden->resultados_visibles_empresa) {
             $orden->update(['resultados_visibles_empresa' => true]);
-            $this->notificarResultadosDisponibles($orden);
+            $correoOk = $this->notificarResultadosDisponibles($orden);
         }
 
         // Notificar que hay un resultado preliminar disponible
         $this->notificarPreliminarSubido($evaluado);
 
-        return back()->with('success', "Informe preliminar de {$evaluado->nombre} {$evaluado->apellidos} guardado y liberado al cliente.");
+        $respuesta = back()->with('success', "Informe preliminar de {$evaluado->nombre} {$evaluado->apellidos} guardado y liberado al cliente.");
+
+        return $correoOk
+            ? $respuesta
+            : $respuesta->with('warning', CorreoEnvioSupport::mensajeFlashFallo());
     }
 
     /**
@@ -771,14 +777,20 @@ class OrdenesController extends Controller
         $nuevoEstado = !$orden->resultados_visibles_empresa;
         $orden->update(['resultados_visibles_empresa' => $nuevoEstado]);
 
-        // Enviar email a la empresa cuando se hacen visibles
+        $correoOk = true;
         if ($nuevoEstado) {
-            $this->notificarResultadosDisponibles($orden);
+            $correoOk = $this->notificarResultadosDisponibles($orden);
         }
 
         $mensaje = $nuevoEstado
-            ? 'Resultados ahora visibles para la empresa. Se envió notificación por correo.'
+            ? ($correoOk
+                ? 'Resultados ahora visibles para la empresa. Se envió notificación por correo.'
+                : 'Resultados ahora visibles para la empresa.')
             : 'Resultados ocultos para la empresa.';
+
+        if ($nuevoEstado && ! $correoOk) {
+            return back()->with('success', $mensaje)->with('warning', CorreoEnvioSupport::mensajeFlashFallo());
+        }
 
         return back()->with('success', $mensaje);
     }
@@ -786,14 +798,14 @@ class OrdenesController extends Controller
     /**
      * Enviar notificación por email cuando resultados están disponibles.
      */
-    private function notificarResultadosDisponibles(Orden $orden): void
+    private function notificarResultadosDisponibles(Orden $orden): bool
     {
         try {
             $orden->load(['empresa', 'evaluados']);
             $empresa = $orden->empresa;
 
             if (!$empresa) {
-                return;
+                return true;
             }
 
             $emailsEmpresa = DestinatariosCorreoEmpresaSupport::emailsResultados($orden);
@@ -823,11 +835,12 @@ class OrdenesController extends Controller
                 'emails'        => $emailsEmpresa->all(),
                 'repro_notif'   => $usuariosRepro->count(),
             ]);
+
+            return true;
         } catch (\Exception $e) {
-            Log::error('Error enviando notificación de resultados', [
-                'orden_id' => $orden->id,
-                'error' => $e->getMessage(),
-            ]);
+            CorreoEnvioSupport::registrarFallo($e, 'resultados_disponibles');
+
+            return false;
         }
     }
 
@@ -1125,11 +1138,7 @@ class OrdenesController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // No fallar el flujo principal si la notificación falla
-            Log::error('Error enviando notificación de asignación', [
-                'evaluado_id' => $evaluado->id,
-                'error' => $e->getMessage(),
-            ]);
+            CorreoEnvioSupport::registrarFallo($e, 'evaluado_asignado');
         }
     }
 
@@ -1152,11 +1161,7 @@ class OrdenesController extends Controller
                 Mail::to($usuario->email)->queue(new \App\Mail\NuevaOrdenSedeMail($orden));
             }
         } catch (\Exception $e) {
-            Log::error('Error notificando usuarios de sede', [
-                'orden_id' => $orden->id,
-                'sede_id' => $orden->sede_id,
-                'error' => $e->getMessage(),
-            ]);
+            CorreoEnvioSupport::registrarFallo($e, 'nueva_orden_sede');
         }
     }
 
@@ -1393,12 +1398,9 @@ class OrdenesController extends Controller
             return back()->with('success', "Correo reenviado exitosamente a {$evaluado->email}");
 
         } catch (\Exception $e) {
-            Log::error('Error reenviando correo', [
-                'evaluado_id' => $evaluado->id,
-                'error' => $e->getMessage(),
-            ]);
+            CorreoEnvioSupport::registrarFallo($e, 'reenviar_correo_candidato');
 
-            return back()->with('error', 'Error al enviar el correo. Intente nuevamente.');
+            return back()->with('error', CorreoEnvioSupport::mensajeFlashFallo());
         }
     }
 

@@ -115,4 +115,14 @@ return [
         ],
     ],
 
+    /*
+    | Tope del proveedor (Resend free = 100/día). Aviso en el portal REPRO
+    | cuando se acerca o cuando el SMTP rechaza. MAIL_ALERTA_ACTIVA=false lo apaga.
+    */
+    'alerta' => [
+        'activa' => env('MAIL_ALERTA_ACTIVA', true),
+        'limite_diario' => (int) env('MAIL_LIMITE_DIARIO', 100),
+        'aviso_desde' => (int) env('MAIL_ALERTA_DIARIO', 90),
+    ],
+
 ];

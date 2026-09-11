@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\UserMail;
 use App\Mail\UserResetPasswordMail;
 use App\Exports\UsersExport;
+use App\Support\CorreoEnvioSupport;
 use App\Support\EmpresaPermisosSupport;
 use App\Support\ExportacionesSupport;
 use App\Support\PerfilImagenSupport;
@@ -244,10 +245,11 @@ class UsersController extends Controller
         try {
             Mail::to($user->email)->send(new UserMail($user, $tempPassword));
         } catch (\Exception $e) {
-            Log::error('Error enviando email de bienvenida', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
+            CorreoEnvioSupport::registrarFallo($e, 'user_mail_repro');
+
+            return redirect('users')
+                ->with('status', __('Usuario agregado correctamente'))
+                ->with('warning', CorreoEnvioSupport::mensajeFlashFallo());
         }
 
         return redirect('users')->with('status', __('Usuario agregado correctamente'));
@@ -466,10 +468,7 @@ class UsersController extends Controller
             try {
                 Mail::to($user->email)->send(new UserResetPasswordMail($user, $tempPassword));
             } catch (\Exception $e) {
-                Log::error('Error enviando email de reset', [
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage(),
-                ]);
+                CorreoEnvioSupport::registrarFallo($e, 'user_reset_password');
             }
         }
 

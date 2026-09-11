@@ -320,7 +320,8 @@ class CentroAyudaTest extends TestCase
             ->assertSee('¿Cómo le escribo al candidato por WhatsApp?')
             ->assertSee('¿Qué es el rol Empresa QZ Temporal')
             ->assertSee('¿El correo del candidato sigue diciendo 30 días?')
-            ->assertSee('¿A quién le llega el correo de resultados?');
+            ->assertSee('¿A quién le llega el correo de resultados?')
+            ->assertSee('¿Por qué dejaron de llegar los correos?');
 
         $this->actingAs($admin)->get(route('ayuda.buscar', ['q' => 'whatsapp']))
             ->assertOk()
