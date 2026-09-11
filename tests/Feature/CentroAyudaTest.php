@@ -301,7 +301,7 @@ class CentroAyudaTest extends TestCase
 
         $this->actingAs($admin)->get(route('ayuda.show', 'correos-automaticos'))
             ->assertOk()
-            ->assertSee('Puesto que solicita')
+            ->assertSee('puesto que solicita')
             ->assertSee('noreply@reprogt.com')
             ->assertSee('WhatsApp al candidato')
             ->assertSee('reclutador asignado');
