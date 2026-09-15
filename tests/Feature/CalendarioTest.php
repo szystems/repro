@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exports\CalendarioExport;
 use App\Mail\CitaProgramadaMail;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
@@ -1068,6 +1069,54 @@ class CalendarioTest extends TestCase
         $this->assertStringContainsString('Iris', $contenidoRango);
         $this->assertStringNotContainsString('Fuera', $contenidoRango);
         $this->assertStringContainsString('calendario-2026-03-19_2026-03-25', $rango->headers->get('content-disposition') ?? '');
+    }
+
+    public function test_calendario_muestra_informe_final_y_subio_pdf_en_historial(): void
+    {
+        $repro = $this->usuarioRepro();
+        $subio = $this->usuarioAdmin();
+        $empresa = \App\Models\Empresa::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Pedro',
+            'apellidos' => 'Informe',
+            'informe_final_responsable_id' => $repro->id,
+            'informe_final_subido_por' => $subio->id,
+            'archivo_resultado_final' => 'resultados/test/final.pdf',
+            'estado_evaluacion' => 'informe_final_enviado',
+            'estado_programacion' => 'programado',
+            'fecha_programada' => '2026-03-20 11:00:00',
+        ]);
+
+        $this->actingAs($this->usuarioAdmin())
+            ->get('/calendario?mes=3&anio=2026')
+            ->assertOk()
+            ->assertSee('Informe final')
+            ->assertSee('Subió PDF final')
+            ->assertSee($repro->name)
+            ->assertSee($subio->name);
+    }
+
+    public function test_calendario_export_html_incluye_columnas_informe_final(): void
+    {
+        $repro = $this->usuarioRepro();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'informe_final_responsable_id' => $repro->id,
+            'archivo_resultado_final' => 'resultados/x.pdf',
+            'informe_final_subido_por' => $repro->id,
+            'fecha_programada' => now(),
+        ]);
+
+        $html = (new CalendarioExport(collect([$evaluado->fresh([
+            'informeFinalResponsable',
+            'informeFinalSubidoPor',
+        ])])))->toHtmlTable();
+
+        $this->assertStringContainsString('Informe final (responsable)', $html);
+        $this->assertStringContainsString('Subió informe final', $html);
+        $this->assertStringContainsString($repro->name, $html);
     }
 
     public function test_historial_incluye_procesos_en_curso_y_filtra_empresa_fecha(): void

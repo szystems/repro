@@ -307,19 +307,25 @@ class ReportesTest extends TestCase
             'empresa_id' => $empresa->id,
             'codigo_orden' => 'ORD-TEST-STATS',
         ]);
+        $reclutador = User::factory()->create(['name' => 'Ana Reclutadora', 'role_as' => 1, 'estado' => 1]);
+        $orden->update(['reclutador_id' => $reclutador->id]);
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
             'nombre' => 'Carmen',
             'apellidos' => 'Castillo',
             'dpi' => '1234567890101',
+            'sede_region_empresa' => 'Sucursal Centro',
         ]);
 
-        $html = (new EvaluacionesExport(collect([$evaluado->fresh(['orden.empresa'])])))->toHtmlTable();
+        $html = (new EvaluacionesExport(collect([$evaluado->fresh(['orden.empresa', 'orden.reclutador'])])))->toHtmlTable();
 
         $this->assertStringContainsString('ORD-TEST-STATS', $html);
         $this->assertStringContainsString('PRUEBA EXCEL STATS', $html);
+        $this->assertStringContainsString('Ana Reclutadora', $html);
+        $this->assertStringContainsString('Sucursal Centro', $html);
         $this->assertStringContainsString('Carmen', $html);
         $this->assertStringContainsString('Castillo', $html);
-        $this->assertStringContainsString('Código Orden', $html);
+        $this->assertStringContainsString('Reclutador', $html);
+        $this->assertStringContainsString('Sede/Región empresa (cliente)', $html);
     }
 }

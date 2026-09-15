@@ -280,18 +280,24 @@ class OrdenesExcelYQuitarEvaluadoTest extends TestCase
             'codigo_orden' => 'ORD-TEST-EXCEL',
             'fecha_solicitud' => now(),
         ]);
+        $reclutador = User::factory()->create(['name' => 'Reclutador Excel', 'role_as' => 1, 'estado' => 1]);
+        $orden->update(['reclutador_id' => $reclutador->id]);
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
             'nombre' => 'Ana',
             'apellidos' => 'Prueba',
             'tipo_servicio' => 'poligrafo',
+            'sede_region_empresa' => 'Regional Norte',
         ]);
 
-        $html = (new OrdenesExport(collect([$orden->fresh(['empresa', 'evaluados'])])))->toHtmlTable();
+        $html = (new OrdenesExport(collect([$orden->fresh(['empresa', 'evaluados', 'reclutador'])])))->toHtmlTable();
 
         $this->assertStringContainsString('ORD-TEST-EXCEL', $html);
         $this->assertStringContainsString('PRUEBA EXCEL', $html);
         $this->assertStringContainsString('Ana Prueba', $html);
+        $this->assertStringContainsString('Reclutador Excel', $html);
+        $this->assertStringContainsString('Regional Norte', $html);
+        $this->assertStringContainsString('Sede/Región empresa (cliente)', $html);
     }
 
     public function test_evaluado_con_informe_no_es_eliminable(): void

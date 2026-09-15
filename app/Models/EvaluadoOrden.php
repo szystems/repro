@@ -50,6 +50,7 @@ class EvaluadoOrden extends Model
         'poligrafista_id',
         'responsable_id',
         'entrevistador_id',
+        'informe_final_responsable_id',
         'sede_id',
         'modalidad',
         'fecha_programada',
@@ -77,6 +78,7 @@ class EvaluadoOrden extends Model
         'resultado_preliminar_at',
         'resultado_final_at',
         'resultado_subido_por',
+        'informe_final_subido_por',
         'fecha_programada_original',
         'motivo_reprogramacion',
     ];
@@ -208,6 +210,41 @@ class EvaluadoOrden extends Model
         $this->entrevistador_id = $id;
 
         return $this->save();
+    }
+
+    public function informeFinalResponsable()
+    {
+        return $this->belongsTo(User::class, 'informe_final_responsable_id');
+    }
+
+    public function informeFinalSubidoPor()
+    {
+        return $this->belongsTo(User::class, 'informe_final_subido_por');
+    }
+
+    /**
+     * Responsable de redactar/cerrar el informe final. No toca Programó, Encargado ni Entrevistó.
+     */
+    public function autoasignarInformeFinalResponsable(?int $userId = null): bool
+    {
+        $id = $userId ?? Auth::id();
+        if (! $id) {
+            return false;
+        }
+        $this->informe_final_responsable_id = $id;
+
+        return $this->save();
+    }
+
+    /** Nombre de quien subió el PDF final (columna dedicada o legado). */
+    public function nombreInformeFinalSubidoPor(): ?string
+    {
+        if (! filled($this->archivo_resultado_final)) {
+            return null;
+        }
+
+        return $this->informeFinalSubidoPor?->name
+            ?? $this->resultadoSubidoPor?->name;
     }
 
     /**

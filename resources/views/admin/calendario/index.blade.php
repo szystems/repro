@@ -253,6 +253,8 @@
                                     <th>Programó</th>
                                     <th>Encargado</th>
                                     <th>Entrevistó</th>
+                                    <th>Informe final</th>
+                                    <th>Subió PDF final</th>
                                     <th>Tipo</th>
                                     <th>Fecha</th>
                                     <th>Estado de Evaluación</th>
@@ -277,13 +279,15 @@
                                     <td class="small">{{ $h->poligrafo ? $h->poligrafo->name : '—' }}</td>
                                     <td class="small">{{ $h->responsable ? $h->responsable->name : 'Sin asignar' }}</td>
                                     <td class="small">{{ $h->entrevistador ? $h->entrevistador->name : 'Sin asignar' }}</td>
+                                    <td class="small">{{ $h->informeFinalResponsable?->name ?? 'Sin asignar' }}</td>
+                                    <td class="small">{{ $h->nombreInformeFinalSubidoPor() ?? '—' }}</td>
                                     <td><span class="badge bg-primary">{{ ucfirst($h->tipo_servicio ?? '—') }}</span></td>
                                     <td class="small text-muted">{{ $h->fecha_programada ? \Carbon\Carbon::parse($h->fecha_programada)->format('d/m/Y H:i') : '—' }}</td>
                                     <td><span class="badge bg-{{ $estadoColor }}">{{ ucfirst(str_replace('_', ' ', $h->estado_evaluacion)) }}</span></td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="8" class="text-muted text-center py-3">No hay candidatos con los filtros seleccionados.</td>
+                                    <td colspan="11" class="text-muted text-center py-3">No hay candidatos con los filtros seleccionados.</td>
                                 </tr>
                                 @endforelse
                             </tbody>

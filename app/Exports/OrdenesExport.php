@@ -26,6 +26,7 @@ class OrdenesExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'Código',
             'Empresa',
             'Reclutador',
+            'Sede/Región empresa (cliente)',
             'Tipos de Servicio',
             'Estado',
             'Evaluados',
@@ -55,10 +56,19 @@ class OrdenesExport implements FromCollection, WithHeadings, WithMapping, WithSt
             ->filter()
             ->implode('; ');
 
+        $sedesCliente = $orden->evaluados
+            ->pluck('sede_region_empresa')
+            ->map(fn ($s) => trim((string) $s))
+            ->filter()
+            ->unique()
+            ->values()
+            ->implode('; ');
+
         return [
             $orden->codigo_orden,
             $orden->empresa->nombre ?? 'N/A',
             $orden->reclutador->name ?? 'Sin asignar',
+            $sedesCliente !== '' ? $sedesCliente : '—',
             $tipos !== '' ? $tipos : 'Sin definir',
             $orden->estado_human,
             $evaluados !== '' ? $evaluados : 'Sin evaluados',

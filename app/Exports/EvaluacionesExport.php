@@ -29,6 +29,8 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
         return [
             'Código Orden',
             'Empresa',
+            'Reclutador',
+            'Sede/Región empresa (cliente)',
             'Nombre',
             'Apellidos',
             'DPI',
@@ -62,6 +64,8 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
         return [
             $evaluado->orden->codigo_orden ?? 'N/A',
             $evaluado->orden->empresa->nombre ?? 'N/A',
+            $evaluado->orden->reclutador->name ?? 'Sin asignar',
+            filled($evaluado->sede_region_empresa) ? $evaluado->sede_region_empresa : '—',
             $evaluado->nombre,
             $evaluado->apellidos,
             $evaluado->dpi,

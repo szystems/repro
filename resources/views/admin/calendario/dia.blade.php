@@ -206,6 +206,15 @@
                                                             @if($cita->responsable)
                                                                 <i class="bi bi-person-check ms-1"></i> Encargado: {{ $cita->responsable->name }}
                                                             @endif
+                                                            @if($cita->entrevistador)
+                                                                <i class="bi bi-chat-left-text ms-1"></i> Entrevistó: {{ $cita->entrevistador->name }}
+                                                            @endif
+                                                            @if($cita->informeFinalResponsable)
+                                                                <i class="bi bi-file-earmark-text ms-1"></i> Informe final: {{ $cita->informeFinalResponsable->name }}
+                                                            @endif
+                                                            @if($cita->nombreInformeFinalSubidoPor())
+                                                                <i class="bi bi-cloud-upload ms-1"></i> Subió PDF: {{ $cita->nombreInformeFinalSubidoPor() }}
+                                                            @endif
                                                             @if($cita->poligrafo)
                                                                 <i class="bi bi-person ms-1"></i> Programó: {{ $cita->poligrafo->name }}
                                                             @endif

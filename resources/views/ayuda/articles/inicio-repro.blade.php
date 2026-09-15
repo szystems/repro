@@ -23,7 +23,7 @@
     <h5><i class="bi bi-whatsapp me-2"></i>Atajos que usa el equipo a diario</h5>
     <ul>
         <li><strong>WhatsApp al candidato</strong> — botón verde en Gestión de Cuestionario (si hay teléfono).</li>
-        <li><strong>Programó / Encargado / Entrevistó</strong> — tres roles distintos en la orden. «Autoasignarme entrevista» no cambia quién programó ni el encargado.</li>
+        <li><strong>Programó / Encargado / Entrevistó / Informe final</strong> — roles distintos en la orden. Cada «Autoasignarme…» solo toca su rol; el calendario y el Excel muestran quién cerró el PDF cuando ya está subido.</li>
         <li><strong>Enlace del candidato</strong> — 15 días al crear o rehabilitar. Ver <a href="{{ route('ayuda.show', 'enlaces-candidato') }}">Enlaces del candidato</a>.</li>
     </ul>
 

@@ -26,7 +26,7 @@ class ReportesController extends Controller
      */
     private function buildEvaluacionesQuery(array $filters): \Illuminate\Database\Eloquent\Builder
     {
-        $query = EvaluadoOrden::with(['orden.empresa', 'cuestionario'])->deOrdenesActivas();
+        $query = EvaluadoOrden::with(['orden.empresa', 'orden.reclutador', 'cuestionario'])->deOrdenesActivas();
 
         // Cliente (empresa): ver todos los evaluados de sus órdenes, independiente del estado.
         // La vista/columnas de resultados se condicionan por separado usando

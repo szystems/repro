@@ -401,7 +401,17 @@ class OrdenesController extends Controller
             'sede',
             'archivadaPor',
             'evaluados' => function($query) {
-                $query->with(['poligrafista', 'responsable', 'entrevistador', 'sede', 'cuestionario', 'documentos'])->orderBy('nombre');
+                $query->with([
+                    'poligrafista',
+                    'responsable',
+                    'entrevistador',
+                    'informeFinalResponsable',
+                    'informeFinalSubidoPor',
+                    'resultadoSubidoPor',
+                    'sede',
+                    'cuestionario',
+                    'documentos',
+                ])->orderBy('nombre');
             }
         ]);
 
@@ -1348,6 +1358,26 @@ class OrdenesController extends Controller
     }
 
     /**
+     * Responsable del informe final (redacción/cierre), sin pisar otros roles.
+     */
+    public function autoasignarInformeFinalResponsable(EvaluadoOrden $evaluado)
+    {
+        if ((int) Auth::user()->role_as < 2) {
+            abort(403, 'Solo personal REPRO puede autoasignarse como responsable del informe final.');
+        }
+        if (! $this->usuarioPuedeVerOrden($evaluado->orden)) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        $evaluado->autoasignarInformeFinalResponsable((int) Auth::id());
+
+        return back()->with(
+            'success',
+            'Te asignaste como responsable del informe final. Programó, Encargado y Entrevistó se mantienen.'
+        );
+    }
+
+    /**
      * Reenviar correo de asignación a un evaluado.
      */
     public function reenviarCorreo(EvaluadoOrden $evaluado)
@@ -1450,11 +1480,15 @@ class OrdenesController extends Controller
             'local'
         );
 
-        $evaluado->update([
+        $payload = [
             $campo         => $path,
             $campoFecha    => now(),
             'resultado_subido_por' => Auth::id(),
-        ]);
+        ];
+        if ($tipo === 'final') {
+            $payload['informe_final_subido_por'] = Auth::id();
+        }
+        $evaluado->update($payload);
 
         // Auto-liberar resultados al cliente según tipo de archivo subido
         $orden = $evaluado->orden;
@@ -1554,10 +1588,14 @@ class OrdenesController extends Controller
             Storage::disk('local')->delete($evaluado->$campo);
         }
 
-        $evaluado->update([
+        $clear = [
             $campo      => null,
             $campoFecha => null,
-        ]);
+        ];
+        if ($tipo === 'final') {
+            $clear['informe_final_subido_por'] = null;
+        }
+        $evaluado->update($clear);
 
         return RedirectFichaOrden::evaluado($evaluado, "Archivo de resultado {$tipo} eliminado correctamente.");
     }

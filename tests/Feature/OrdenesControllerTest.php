@@ -874,6 +874,7 @@ class OrdenesControllerTest extends TestCase
             ->assertOk()
             ->assertDontSee('Autoasignarme')
             ->assertDontSee('Autoasignarme entrevista')
+            ->assertDontSee('Autoasignarme informe final')
             ->assertDontSee('Otto Programo');
     }
 
@@ -923,6 +924,56 @@ class OrdenesControllerTest extends TestCase
 
         $evaluado->refresh();
         $this->assertNull($evaluado->entrevistador_id);
+    }
+
+    public function test_autoasignar_informe_final_no_pisa_otros_roles(): void
+    {
+        $programo = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $programo->roles()->attach(Role::where('name', 'repro')->first());
+        $encargado = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $encargado->roles()->attach(Role::where('name', 'repro')->first());
+        $redactor = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+        $redactor->roles()->attach(Role::where('name', 'repro')->first());
+
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'poligrafista_id' => $programo->id,
+            'responsable_id' => $encargado->id,
+            'entrevistador_id' => $encargado->id,
+            'informe_final_responsable_id' => null,
+        ]);
+
+        $this->actingAs($redactor)
+            ->post(route('evaluados.autoasignar-informe-final', $evaluado))
+            ->assertRedirect();
+
+        $evaluado->refresh();
+        $this->assertEquals($redactor->id, $evaluado->informe_final_responsable_id);
+        $this->assertEquals($programo->id, $evaluado->poligrafista_id);
+        $this->assertEquals($encargado->id, $evaluado->responsable_id);
+        $this->assertEquals($encargado->id, $evaluado->entrevistador_id);
+    }
+
+    public function test_empresa_no_puede_autoasignar_informe_final(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $userEmpresa = User::factory()->create(['role_as' => 1, 'empresa_id' => $empresa->id, 'estado' => 1]);
+        $userEmpresa->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'informe_final_responsable_id' => null,
+        ]);
+
+        $this->actingAs($userEmpresa)
+            ->post(route('evaluados.autoasignar-informe-final', $evaluado))
+            ->assertForbidden();
+
+        $evaluado->refresh();
+        $this->assertNull($evaluado->informe_final_responsable_id);
     }
 
     public function test_ficha_orden_muestra_entrevisto_y_oculta_a_empresa(): void

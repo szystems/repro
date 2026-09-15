@@ -573,6 +573,16 @@
                                                     <small class="d-block">
                                                         <i class="bi bi-chat-left-text"></i> <strong>Entrevistó:</strong> {{ $evaluado->entrevistador->name ?? 'Sin asignar' }}
                                                     </small>
+                                                    <small class="d-block">
+                                                        <i class="bi bi-file-earmark-text"></i> <strong>Informe final:</strong> {{ $evaluado->informeFinalResponsable->name ?? 'Sin asignar' }}
+                                                        @if($evaluado->nombreInformeFinalSubidoPor())
+                                                            <span class="text-muted"> · Subió PDF: {{ $evaluado->nombreInformeFinalSubidoPor() }}
+                                                                @if($evaluado->resultado_final_at)
+                                                                    ({{ $evaluado->resultado_final_at->format('d/m/Y H:i') }})
+                                                                @endif
+                                                            </span>
+                                                        @endif
+                                                    </small>
                                                     <form action="{{ route('evaluados.autoasignar-encargado', $evaluado) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         <button type="submit" class="btn btn-outline-primary btn-sm mt-1" title="Asignarte como encargado sin cambiar quién programó">
@@ -583,6 +593,12 @@
                                                         @csrf
                                                         <button type="submit" class="btn btn-outline-warning btn-sm mt-1" title="Asignarte como entrevistador sin cambiar Programó ni Encargado">
                                                             <i class="bi bi-person-plus"></i> Autoasignarme entrevista
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ route('evaluados.autoasignar-informe-final', $evaluado) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-outline-secondary btn-sm mt-1" title="Asignarte como responsable del informe final sin cambiar los otros roles">
+                                                            <i class="bi bi-person-plus"></i> Autoasignarme informe final
                                                         </button>
                                                     </form>
                                                 @endif

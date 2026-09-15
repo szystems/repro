@@ -345,6 +345,7 @@ class Fase2DocumentacionTest extends TestCase
         $this->assertNotNull($this->evaluado->archivo_resultado_final);
         $this->assertNotNull($this->evaluado->resultado_final_at);
         $this->assertTrue($this->evaluado->tieneResultadoFinal());
+        $this->assertEquals($this->adminUser->id, $this->evaluado->informe_final_subido_por);
     }
 
     public function test_empresa_no_puede_subir_resultado(): void
