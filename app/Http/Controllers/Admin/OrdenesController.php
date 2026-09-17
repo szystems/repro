@@ -35,6 +35,13 @@ use Maatwebsite\Excel\Facades\Excel;
 class OrdenesController extends Controller
 {
     /**
+     * Evaluados recién creados en la transacción actual; correo al candidato solo tras commit.
+     *
+     * @var list<int>
+     */
+    private array $evaluadosPendientesCorreoCandidato = [];
+
+    /**
      * Mostrar lista de órdenes
      */
     public function index(Request $request)
@@ -291,6 +298,8 @@ class OrdenesController extends Controller
         DB::beginTransaction();
 
         try {
+            $this->evaluadosPendientesCorreoCandidato = [];
+
             // Crear orden con solo los campos permitidos
             $datosOrden = [
                 'instrucciones_generales' => $validated['instrucciones_generales'] ?? null,
@@ -338,6 +347,8 @@ class OrdenesController extends Controller
 
             DB::commit();
 
+            $this->enviarCorreosCandidatosTrasCommit();
+
             // Recargar relaciones necesarias para notificaciones
             $orden->load(['empresa', 'evaluados']);
 
@@ -371,6 +382,7 @@ class OrdenesController extends Controller
                 ->with('success', 'Orden creada exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
+            $this->evaluadosPendientesCorreoCandidato = [];
 
             Log::error('Error al crear orden:', [
                 'error' => $e->getMessage(),
@@ -507,6 +519,8 @@ class OrdenesController extends Controller
         DB::beginTransaction();
 
         try {
+            $this->evaluadosPendientesCorreoCandidato = [];
+
             // Actualizar datos básicos de la orden
             $datosOrden = [
                 'instrucciones_generales' => $validated['instrucciones_generales'] ?? $orden->instrucciones_generales,
@@ -557,6 +571,8 @@ class OrdenesController extends Controller
 
             DB::commit();
 
+            $this->enviarCorreosCandidatosTrasCommit();
+
             // Redirigir según el rol del usuario
             if (Auth::user()->role_as == 1) {
                 // Usuario empresa: redirigir a módulo empresa
@@ -568,6 +584,7 @@ class OrdenesController extends Controller
                 ->with('success', 'Orden actualizada exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
+            $this->evaluadosPendientesCorreoCandidato = [];
 
             $evaluadosPayload = collect($request->input('evaluados', []))
                 ->map(function ($item, $index) {
@@ -936,31 +953,18 @@ class OrdenesController extends Controller
 
                     $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
 
-                    // Enviar notificación al evaluado si tiene email
-                    $this->notificarEvaluadoAsignado($evaluadoCreado);
+                    $this->encolarCorreoCandidatoTrasCommit($evaluadoCreado);
 
                     // Notificaciones in-app al asignar un nuevo evaluado
                     $this->notificarEvaluadoAsignadoInApp($evaluadoCreado, $esActualizacion);
-
-                    // Fase 18: si tiene email, el link del formulario fue enviado (solo formulario)
-                    // estado_evaluacion permanece en 'pendiente_de_evaluacion' — es independiente
-                    if (!empty($evaluadoCreado->email)) {
-                        $evaluadoCreado->cambiarEstadoFormulario('link_enviado');
-                    }
                 }
             } else {
                 $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
 
-                // Enviar notificación al evaluado si tiene email
-                $this->notificarEvaluadoAsignado($evaluadoCreado);
+                $this->encolarCorreoCandidatoTrasCommit($evaluadoCreado);
 
                 // Notificaciones in-app al asignar un nuevo evaluado
                 $this->notificarEvaluadoAsignadoInApp($evaluadoCreado, $esActualizacion);
-
-                // Fase 18: si tiene email, el link del formulario fue enviado (solo formulario)
-                if (!empty($evaluadoCreado->email)) {
-                    $evaluadoCreado->cambiarEstadoFormulario('link_enviado');
-                }
             }
         }
 
@@ -1120,6 +1124,42 @@ class OrdenesController extends Controller
                 'evaluado_id' => $evaluado->id,
                 'error' => $e->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * Registra candidatos nuevos para correo solo después de DB::commit (evita enlaces huérfanos).
+     */
+    private function encolarCorreoCandidatoTrasCommit(EvaluadoOrden $evaluado): void
+    {
+        if (! empty($evaluado->email)) {
+            $this->evaluadosPendientesCorreoCandidato[] = $evaluado->id;
+        }
+    }
+
+    /**
+     * Envía correos pendientes y marca link_enviado tras una transacción exitosa.
+     */
+    private function enviarCorreosCandidatosTrasCommit(): void
+    {
+        if ($this->evaluadosPendientesCorreoCandidato === []) {
+            return;
+        }
+
+        $ids = $this->evaluadosPendientesCorreoCandidato;
+        $this->evaluadosPendientesCorreoCandidato = [];
+
+        foreach ($ids as $evaluadoId) {
+            $evaluado = EvaluadoOrden::find($evaluadoId);
+            if (! $evaluado || empty($evaluado->email)) {
+                continue;
+            }
+
+            $this->notificarEvaluadoAsignado($evaluado);
+
+            if ($evaluado->estado_formulario === 'link_pendiente') {
+                $evaluado->fresh()->cambiarEstadoFormulario('link_enviado');
+            }
         }
     }
 

@@ -26,6 +26,7 @@ class EvaluadoAsignadoMail extends Mailable implements ShouldQueue
      */
     public function __construct(EvaluadoOrden $evaluado)
     {
+        $this->afterCommit();
         $this->evaluado = $evaluado;
         $this->urlCuestionario = route('cuestionario.mostrar', ['token' => $evaluado->token_unico]);
     }

@@ -13,5 +13,8 @@ chmod -R ug+rwX bootstrap/cache storage || true
 
 php artisan package:discover --ansi || true
 
+# Cada deploy/restart aplica migraciones pendientes (evita 500 por columnas nuevas sin SSH).
+php artisan migrate --force --no-interaction
+
 php-fpm -D
 exec nginx -g 'daemon off;'
