@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\CorreoEnvioSupport;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -17,3 +18,8 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('correo:olvidar-alerta', function () {
+    CorreoEnvioSupport::olvidarAlertaPersistente();
+    $this->info('Banner persistente de correo eliminado de caché.');
+})->purpose('Quita el aviso global de correo/SMTP (sin resetear contador diario)');

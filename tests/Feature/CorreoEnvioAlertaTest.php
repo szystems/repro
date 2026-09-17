@@ -52,7 +52,7 @@ class CorreoEnvioAlertaTest extends TestCase
         $this->assertStringContainsString('límite diario', $alerta['mensaje']);
     }
 
-    public function test_contador_avisa_al_acercarse_al_tope(): void
+    public function test_contador_no_muestra_banner_solo_por_acercarse_al_tope(): void
     {
         Cache::put(
             'correo.enviados.'.now()->timezone(config('app.timezone'))->toDateString(),
@@ -62,10 +62,18 @@ class CorreoEnvioAlertaTest extends TestCase
 
         CorreoEnvioSupport::registrarEnvio();
 
-        $alerta = CorreoEnvioSupport::alertaActiva();
-        $this->assertNotNull($alerta);
-        $this->assertSame(CorreoEnvioSupport::NIVEL_AVISO, $alerta['nivel']);
+        $this->assertNull(CorreoEnvioSupport::alertaActiva());
         $this->assertSame(90, CorreoEnvioSupport::enviadosHoy());
+    }
+
+    public function test_fallo_puntual_no_deja_banner_global(): void
+    {
+        CorreoEnvioSupport::registrarFallo(
+            new RuntimeException('Connection timed out'),
+            'test'
+        );
+
+        $this->assertNull(CorreoEnvioSupport::alertaActiva());
     }
 
     public function test_contador_corta_al_llegar_al_limite(): void
