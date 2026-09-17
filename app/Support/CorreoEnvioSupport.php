@@ -34,9 +34,7 @@ class CorreoEnvioSupport
             return;
         }
 
-        if ($avisoDesde > 0 && $enviados >= $avisoDesde) {
-            self::guardarAlerta(self::NIVEL_AVISO, self::mensajeAviso($enviados, $limite));
-        }
+        // Solo aviso persistente al llegar al tope; acercarse (p. ej. 90/100) no llena pantalla todo el día.
     }
 
     public static function registrarFallo(Throwable $e, ?string $contexto = null): void
@@ -55,14 +53,10 @@ class CorreoEnvioSupport
 
         if (self::esErrorTope($e)) {
             self::guardarAlerta(self::NIVEL_CORTE, self::mensajeCorte($enviados, $limite));
-
-            return;
         }
 
-        self::guardarAlerta(
-            self::NIVEL_AVISO,
-            'Un correo automático no se pudo enviar. El aviso quedó en el portal. Si se repite, suele ser el límite diario del servicio de correo o un fallo SMTP.'
-        );
+        // Fallos puntuales (timeout, etc.): solo log. El flash de la acción avisa en esa pantalla;
+        // no dejamos banner global todo el día si el correo sí vuelve a salir.
     }
 
     /**
@@ -123,6 +117,12 @@ class CorreoEnvioSupport
     public static function limpiar(): void
     {
         Cache::forget(self::claveContador());
+        Cache::forget(self::claveAlerta());
+    }
+
+    /** Quita el banner amarillo/rojo global (p. ej. aviso obsoleto tras deploy). */
+    public static function olvidarAlertaPersistente(): void
+    {
         Cache::forget(self::claveAlerta());
     }
 
