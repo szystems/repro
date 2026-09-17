@@ -47,6 +47,8 @@ class NotificacionesEmailTest extends TestCase
 
         $mailable = new EvaluadoAsignadoMail($evaluado);
 
+        $this->assertTrue($mailable->afterCommit);
+
         $mailable->assertSeeInHtml($evaluado->nombre);
         $mailable->assertSeeInHtml('test-token-123');
         $mailable->assertSeeInHtml('REPRO Guatemala');
