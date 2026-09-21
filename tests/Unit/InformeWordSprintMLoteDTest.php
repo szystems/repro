@@ -45,12 +45,14 @@ class InformeWordSprintMLoteDTest extends TestCase
             'Licencia de conducir',
             InformeWordXml::textoTablaConcatenado(substr($xml, $limitesQa[0], $limitesQa[1] - $limitesQa[0]))
         );
-        $limitesAspecto = InformeWordXml::limitesTablaPorMarcador($xml, 'ASPECTO LABORAL');
+        $limitesAspecto = InformeWordXml::limitesTablaPorMarcador($xml, 'AMPLIACIÓN DE INFORMACIÓN LABORAL')
+            ?? InformeWordXml::limitesTablaPorMarcador($xml, 'ASPECTO LABORAL');
         $this->assertNotNull($limitesAspecto);
         $this->assertStringContainsString(
             'Observación laboral no debe salir M-P6',
             InformeWordXml::textoTablaConcatenado(substr($xml, $limitesAspecto[0], $limitesAspecto[1] - $limitesAspecto[0]))
         );
+        $this->assertStringContainsString('AMPLIACIÓN DE INFORMACIÓN LABORAL', $xml);
     }
 
     public function test_complementaria_preempleo_usa_fuente_12(): void

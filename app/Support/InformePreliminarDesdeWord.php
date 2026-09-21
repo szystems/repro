@@ -5,16 +5,21 @@ namespace App\Support;
 use App\Models\EvaluadoOrden;
 
 /**
- * Copia el resultado de la redacción Word al informe preliminar,
- * solo si el preliminar todavía está vacío.
+ * Sincroniza la 1ª hoja Word (resultado + observaciones) al informe preliminar del cliente.
+ * No pisa ediciones hechas a mano en la ficha de la orden.
  */
 class InformePreliminarDesdeWord
 {
+    /** @deprecated usar sincronizarDesdeWord */
     public static function copiarTablaSiPreliminarVacio(EvaluadoOrden $evaluado): void
     {
+        self::sincronizarDesdeWord($evaluado);
+    }
+
+    public static function sincronizarDesdeWord(EvaluadoOrden $evaluado): void
+    {
         $evaluado->refresh();
-        $actual = trim(strip_tags((string) ($evaluado->texto_informe_preliminar ?? '')));
-        if ($actual !== '') {
+        if ($evaluado->informe_preliminar_editado_manual) {
             return;
         }
 
@@ -23,7 +28,10 @@ class InformePreliminarDesdeWord
             return;
         }
 
-        $evaluado->update(['texto_informe_preliminar' => $html]);
+        $evaluado->update([
+            'texto_informe_preliminar' => $html,
+            'informe_preliminar_editado_manual' => false,
+        ]);
     }
 
     public static function htmlTabla(EvaluadoOrden $evaluado): ?string

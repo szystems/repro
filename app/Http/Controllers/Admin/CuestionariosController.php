@@ -326,7 +326,7 @@ class CuestionariosController extends Controller
 
             if (EvaluadorNotasSupport::puedeGestionar(Auth::user())
                 && ($request->has('resultado_informe') || $request->has('evaluador_notas'))) {
-                InformePreliminarDesdeWord::copiarTablaSiPreliminarVacio($cuestionario->evaluadoOrden);
+                InformePreliminarDesdeWord::sincronizarDesdeWord($cuestionario->evaluadoOrden);
             }
 
             DB::commit();

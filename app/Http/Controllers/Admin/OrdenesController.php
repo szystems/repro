@@ -771,7 +771,10 @@ class OrdenesController extends Controller
 
         $textoLimpio = $this->sanitizarHtmlInforme($request->texto_informe_preliminar);
 
-        $evaluado->update(['texto_informe_preliminar' => $textoLimpio]);
+        $evaluado->update([
+            'texto_informe_preliminar' => $textoLimpio,
+            'informe_preliminar_editado_manual' => true,
+        ]);
 
         // Auto-liberar resultados para el cliente al guardar el informe preliminar
         $orden = $evaluado->orden;

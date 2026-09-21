@@ -50,7 +50,14 @@ class InformeWordRelleno
             return $tabla;
         });
 
-        foreach (['ASPECTO LABORAL', 'INFORMACIÓN COMPLEMENTARIA LABORAL', 'INFORMACIÓN COMPLEMENTARIA', 'ASPECTO ECONÓMICO'] as $marcador) {
+        foreach ([
+            'AMPLIACIÓN DE INFORMACIÓN LABORAL',
+            'ASPECTO LABORAL',
+            'ASPECTOS JUDICIALES',
+            'INFORMACIÓN COMPLEMENTARIA LABORAL',
+            'INFORMACIÓN COMPLEMENTARIA',
+            'ASPECTO ECONÓMICO',
+        ] as $marcador) {
             $xml = InformeWordXml::insertarFragmentoTrasTabla(
                 $xml,
                 $marcador,
@@ -884,7 +891,18 @@ class InformeWordRelleno
                 $tabla = InformeWordXml::eliminarColumnas($tabla, [$indiceConQuienVive]);
             }
 
-            foreach (array_values($hijos) as $indice => $hijo) {
+            $hijosConDatos = array_values(array_filter($hijos, static function (array $hijo): bool {
+                return trim((string) ($hijo['nombre'] ?? '')) !== ''
+                    || trim((string) ($hijo['edad'] ?? '')) !== ''
+                    || trim((string) ($hijo['ocupacion'] ?? '')) !== ''
+                    || trim((string) ($hijo['telefono'] ?? '')) !== '';
+            }));
+
+            if ($hijosConDatos === []) {
+                return InformeWordXml::reemplazarFilaEnTabla($tabla, 1, ['No tiene'], 1);
+            }
+
+            foreach (array_values($hijosConDatos) as $indice => $hijo) {
                 $fila = $indice + 1;
                 if ($fila > 5) {
                     break;
@@ -1056,7 +1074,7 @@ class InformeWordRelleno
                 }
 
                 if (str_contains(InformeWordXml::textoFila($fila), 'Validación de constancia')) {
-                    return self::filaCeldasVacias($fila, [1]) ? '' : $fila;
+                    return self::rellenarFilaValidacionConstancia($fila, self::textoValidacionConstanciaEstudios($filasAcademicas));
                 }
 
                 return $fila;
@@ -1394,6 +1412,35 @@ class InformeWordRelleno
         }
 
         return null;
+    }
+
+    /** @param list<array<string, mixed>> $filasAcademicas */
+    private static function textoValidacionConstanciaEstudios(array $filasAcademicas): string
+    {
+        foreach (array_reverse($filasAcademicas) as $fila) {
+            $constancia = strtolower(trim((string) ($fila['tiene_constancia'] ?? '')));
+            if ($constancia === 'si' || $constancia === 'sí') {
+                return 'Sí';
+            }
+            if ($constancia === 'no') {
+                return 'No';
+            }
+            $respaldo = trim((string) ($fila['respaldo'] ?? ''));
+            if ($respaldo !== '') {
+                return self::texto($respaldo);
+            }
+        }
+
+        return '';
+    }
+
+    private static function rellenarFilaValidacionConstancia(string $fila, string $valor): string
+    {
+        if ($valor === '') {
+            return $fila;
+        }
+
+        return InformeWordXml::establecerFila($fila, [$valor], 1);
     }
 
     /** @param list<int> $columnas */
@@ -1756,15 +1803,36 @@ class InformeWordRelleno
         );
     }
 
-    /** Preempleo: recuadro ASPECTO LABORAL bajo el historial, sin tocar la Q&A de INFORMACIÓN COMPLEMENTARIA. */
+    /** Preempleo: recuadro de ampliación laboral pegado al historial (como socio), sin tocar la Q&A de INFORMACIÓN COMPLEMENTARIA. */
     private static function rellenarAspectoLaboralPreempleo(string $xml, string $texto): string
     {
+        $xml = self::renombrarAspectoLaboralPreempleoSiLegacy($xml);
+
         return self::rellenarRecuadroNarrativoTrasHistorial(
             $xml,
             $texto,
-            'ASPECTO LABORAL:',
-            ['INFORMACIÓN LABORAL']
+            'AMPLIACIÓN DE INFORMACIÓN LABORAL:',
+            ['EMPLEOS:', 'EMPLEOS', 'INFORMACIÓN LABORAL']
         );
+    }
+
+    /** Plantillas antiguas traían «ASPECTO LABORAL»; Stephany sep-2026 pide el título nuevo. */
+    private static function renombrarAspectoLaboralPreempleoSiLegacy(string $xml): string
+    {
+        if (InformeWordXml::limitesTablaPorMarcador($xml, 'AMPLIACIÓN DE INFORMACIÓN LABORAL') !== null) {
+            return $xml;
+        }
+        if (InformeWordXml::limitesTablaPorMarcador($xml, 'ASPECTO LABORAL') === null) {
+            return $xml;
+        }
+
+        return InformeWordXml::reemplazarTablaPorMarcador($xml, 'ASPECTO LABORAL', function (string $tabla): string {
+            return str_replace(
+                ['ASPECTO LABORAL:', 'ASPECTO LABORAL'],
+                ['AMPLIACIÓN DE INFORMACIÓN LABORAL:', 'AMPLIACIÓN DE INFORMACIÓN LABORAL'],
+                $tabla
+            );
+        });
     }
 
     /**
@@ -2304,11 +2372,28 @@ class InformeWordRelleno
 
         if (InformeWordPlantillas::esVariantePeriodicaLike($variante)
             || $variante === InformeWordPlantillas::VARIANTE_PREEMPLEO) {
-            $xml = InformeWordXml::compactarEntreTablasPorMarcadores(
-                $xml,
-                'INFORMACIÓN LABORAL',
-                'INFORMACIÓN COMPLEMENTARIA'
-            );
+            $marcadorAmpliacion = InformeWordXml::limitesTablaPorMarcador($xml, 'AMPLIACIÓN DE INFORMACIÓN LABORAL') !== null
+                ? 'AMPLIACIÓN DE INFORMACIÓN LABORAL'
+                : 'ASPECTO LABORAL';
+            $tieneAmpliacion = InformeWordXml::limitesTablaPorMarcador($xml, $marcadorAmpliacion) !== null;
+            if ($tieneAmpliacion) {
+                $xml = InformeWordXml::compactarEntreTablasPorMarcadores(
+                    $xml,
+                    'INFORMACIÓN LABORAL',
+                    $marcadorAmpliacion
+                );
+                $xml = InformeWordXml::compactarEntreTablasPorMarcadores(
+                    $xml,
+                    $marcadorAmpliacion,
+                    'INFORMACIÓN COMPLEMENTARIA'
+                );
+            } else {
+                $xml = InformeWordXml::compactarEntreTablasPorMarcadores(
+                    $xml,
+                    'INFORMACIÓN LABORAL',
+                    'INFORMACIÓN COMPLEMENTARIA'
+                );
+            }
             $xml = InformeWordXml::compactarEntreTablasPorMarcadores(
                 $xml,
                 'INFORMACIÓN COMPLEMENTARIA',

@@ -180,14 +180,14 @@ class InformeWordAnexos
         ));
         $celdaTitulo2 = InformeWordXml::construirCeldaSimple(7200, InformeWordXml::establecerTextoCelda(
             '<w:tc><w:tcPr><w:tcW w:w="7200" w:type="dxa"/><w:shd w:val="clear" w:color="auto" w:fill="002060"/></w:tcPr><w:p/></w:tc>',
-            'Descripción'
+            'Imagen'
         ));
         $filasTabla[] = InformeWordXml::construirFilaDosColumnas($celdaTitulo1, $celdaTitulo2);
         $limite = microtime(true) + self::SEGUNDOS_MAX_ANEXOS;
 
         foreach ($documentos as $documento) {
             $etiqueta = DocumentoEvaluado::tiposDocumento()[$documento->tipo_documento] ?? $documento->tipo_documento;
-            $descripcionBase = $etiqueta . "\n" . $documento->nombre_original;
+            $descripcionBase = $documento->nombre_original;
 
             if (microtime(true) > $limite) {
                 $filasTabla[] = self::construirFilaPapeleriaTexto($descripcionBase, '[Omitido] ' . $etiqueta);

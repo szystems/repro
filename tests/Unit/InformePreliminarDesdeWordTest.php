@@ -38,7 +38,7 @@ class InformePreliminarDesdeWordTest extends TestCase
             InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => 'vocabulario despectivo',
         ], $autor->id);
 
-        InformePreliminarDesdeWord::copiarTablaSiPreliminarVacio($evaluado);
+        InformePreliminarDesdeWord::sincronizarDesdeWord($evaluado);
 
         $html = $evaluado->fresh()->texto_informe_preliminar;
         $this->assertStringContainsString('<table', $html);
@@ -49,15 +49,36 @@ class InformePreliminarDesdeWordTest extends TestCase
         $this->assertStringContainsString('vocabulario despectivo', $html);
     }
 
-    public function test_no_pisa_un_preliminar_ya_escrito(): void
+    public function test_no_pisa_preliminar_editado_manualmente_en_ficha(): void
     {
         $evaluado = $this->evaluadoPoli([
             'resultado' => 'aprobado',
             'texto_informe_preliminar' => '<p>Ya redactado a mano</p>',
+            'informe_preliminar_editado_manual' => true,
         ]);
 
-        InformePreliminarDesdeWord::copiarTablaSiPreliminarVacio($evaluado);
+        InformePreliminarDesdeWord::sincronizarDesdeWord($evaluado);
 
         $this->assertSame('<p>Ya redactado a mano</p>', $evaluado->fresh()->texto_informe_preliminar);
+    }
+
+    public function test_sincroniza_de_nuevo_cuando_corrigieron_la_primera_hoja(): void
+    {
+        $evaluado = $this->evaluadoPoli(['resultado' => 'aprobado']);
+        $autor = User::factory()->create();
+        EvaluadorNotasSupport::guardarDesdeRequest($evaluado->id, [
+            InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => 'texto inicial',
+        ], $autor->id);
+        InformePreliminarDesdeWord::sincronizarDesdeWord($evaluado);
+        $this->assertStringContainsString('texto inicial', (string) $evaluado->fresh()->texto_informe_preliminar);
+
+        EvaluadorNotasSupport::guardarDesdeRequest($evaluado->id, [
+            InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => 'texto corregido en revisión',
+        ], $autor->id);
+        InformePreliminarDesdeWord::sincronizarDesdeWord($evaluado->fresh());
+
+        $html = $evaluado->fresh()->texto_informe_preliminar;
+        $this->assertStringContainsString('texto corregido en revisión', (string) $html);
+        $this->assertStringNotContainsString('texto inicial', (string) $html);
     }
 }

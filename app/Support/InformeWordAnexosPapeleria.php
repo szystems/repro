@@ -90,7 +90,12 @@ class InformeWordAnexosPapeleria
         $disponibles = [];
 
         foreach (self::TIPOS_ANEXO as $tipo) {
-            if (in_array($tipo, $tiposSubidos, true)) {
+            if (! in_array($tipo, $tiposSubidos, true)) {
+                continue;
+            }
+            $tieneImagen = $evaluado->documentos
+                ->contains(fn (DocumentoEvaluado $doc): bool => $doc->tipo_documento === $tipo && $doc->es_imagen);
+            if ($tieneImagen) {
                 $disponibles[$tipo] = $etiquetas[$tipo] ?? $tipo;
             }
         }
@@ -113,7 +118,7 @@ class InformeWordAnexosPapeleria
         $evaluado->loadMissing('documentos');
 
         return $evaluado->documentos
-            ->filter(fn (DocumentoEvaluado $doc): bool => in_array($doc->tipo_documento, $seleccionados, true))
+            ->filter(fn (DocumentoEvaluado $doc): bool => in_array($doc->tipo_documento, $seleccionados, true) && $doc->es_imagen)
             ->values();
     }
 }

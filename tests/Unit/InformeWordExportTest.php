@@ -552,7 +552,7 @@ class InformeWordExportTest extends TestCase
         $this->assertGreaterThanOrEqual(1, substr_count($texto, 'DI'));
     }
 
-    public function test_pdf_de_papeleria_seleccionado_se_lista_por_nombre_sin_embeber_paginas(): void
+    public function test_pdf_de_papeleria_seleccionado_no_se_incluye_en_el_word(): void
     {
         $orden = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
@@ -585,11 +585,12 @@ class InformeWordExportTest extends TestCase
         @unlink($path);
 
         $this->assertIsString($xml);
-        $this->assertStringContainsString('curriculum-pesado.pdf', $xml);
-        $this->assertStringContainsString('[PDF]', $xml);
+        $this->assertStringNotContainsString('curriculum-pesado.pdf', $xml);
+        $this->assertStringNotContainsString('[PDF]', $xml);
+        $this->assertStringNotContainsString('DOCUMENTOS ADJUNTOS', $xml);
         $this->assertEmpty(array_filter(
             $nombres,
-            static fn ($nombre): bool => is_string($nombre) && str_contains($nombre, 'anexo_papeleria_pdf_')
+            static fn ($nombre): bool => is_string($nombre) && str_contains($nombre, 'anexo_papeleria')
         ));
     }
 

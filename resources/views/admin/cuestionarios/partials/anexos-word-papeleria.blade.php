@@ -11,7 +11,7 @@
         </h6>
         <small class="text-muted d-block mt-1">
             Marque solo los documentos que deben ir en ANEXOS. Si no marca ninguno, el Word no carga ni procesa la papelería del candidato.
-            Las imágenes se insertan (si no son demasiado pesadas); los PDF se listan por nombre para no saturar el servidor al generar el archivo.
+            Solo se incluyen archivos en formato imagen (JPG, PNG, etc.); los PDF no se anexan al Word.
         </small>
     </div>
     <div class="card-body">

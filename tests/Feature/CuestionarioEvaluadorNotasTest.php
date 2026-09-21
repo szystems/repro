@@ -244,6 +244,7 @@ class CuestionarioEvaluadorNotasTest extends TestCase
         $this->cuestionario->evaluadoOrden->update([
             'tipo_servicio' => 'poligrafo',
             'texto_informe_preliminar' => '<p>Tabla hecha a mano hoy</p>',
+            'informe_preliminar_editado_manual' => true,
         ]);
 
         $this->actingAs($repro)

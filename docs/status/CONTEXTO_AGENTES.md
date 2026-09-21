@@ -1,10 +1,11 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 11 de septiembre de 2026  
-**Estado:** 🔧 **SPRINT S** · correos de resultados según reclutador · portal live `https://portal.reprogt.com` · iPage 503  
+**Fecha de Contexto:** 20 de septiembre de 2026  
+**Estado:** 🔧 **SPRINT T** · preliminar 1ª hoja + Word preempleo poli/VSA · KPI Excel/calendario ✅ prod · Resend Pro ⏸ · portal `https://portal.reprogt.com` · iPage 503  
 
-**Plan activo (último lote):** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md`  
+**Plan activo:** `docs/repro/cambios septiembre/20'09'2026/PLAN_SPRINT_T_OBSERVACIONES_20-09-2026.md`  
+**Plan S (correos reclutador):** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md` · merge prod ~`3f6092a6`  
 **Plan R (cerrado 8-sep):** `docs/repro/cambios agosto/PLAN_SPRINT_R_OBSERVACIONES_08-09-2026.md`  
 **Plan Q (cerrado 7-sep):** `docs/repro/cambios agosto/PLAN_SPRINT_Q_OBSERVACIONES_07-09-2026.md`  
 **Plan migración:** `docs/repro/cambios agosto/PLAN_MIGRACION_HETZNER_COOLIFY_2026-08-31.md`  

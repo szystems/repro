@@ -74,6 +74,7 @@ class EvaluadoOrden extends Model
         'sede_region_empresa',
         'archivo_resultado_preliminar',
         'texto_informe_preliminar',
+        'informe_preliminar_editado_manual',
         'archivo_resultado_final',
         'resultado_preliminar_at',
         'resultado_final_at',
@@ -109,6 +110,7 @@ class EvaluadoOrden extends Model
         return [
             'orden_id' => 'integer',
             'cuestionario_completado' => 'boolean',
+            'informe_preliminar_editado_manual' => 'boolean',
             'notificado' => 'boolean',
             'intentos_acceso' => 'integer',
             'fecha_programada' => 'datetime',
