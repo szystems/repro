@@ -21,8 +21,8 @@
 |--------|--------|--------|
 | **T-KPI** Excel reclutador + sede cliente; calendario informe final; autoasignación informe final | ✅ **Prod** | Commit `f42a0d50` · migración `2026_09_15_120000_add_informe_final_roles…` batch **121** |
 | **T-MAIL** Pago Resend Pro + team REPRO Portal | ⏸ **Pendiente Otto** | Checkout Stripe abierto; cuenta `szystemscorreos@outlook.com` · mover `reprogt.com` + API key Coolify después del pago |
-| **T-PRE** Preliminar no se actualiza al corregir 1ª hoja | ✅ **Prod** (commit `75497e58`) | Flag `informe_preliminar_editado_manual` + `sincronizarDesdeWord` |
-| **T-WORD** Cambios Word Polígrafo + VSA **solo preempleo** | 🔧 **Parcial** | T-W1/W2/W3/W4/W6 en código · **T-W5** plantillas pendiente revisión Stephany |
+| **T-PRE** Preliminar no se actualiza al corregir 1ª hoja | ✅ **Prod** (`fbf8fb91`) | Flag `informe_preliminar_editado_manual` + `sincronizarDesdeWord` · ayuda actualizada |
+| **T-WORD** Cambios Word Polígrafo + VSA **solo preempleo** | ✅ **Prod** (`fbf8fb91`) | Código + export fuentes · plantillas v2 ya tenían validación/docDefaults 12pt |
 
 ---
 
@@ -160,4 +160,4 @@ php artisan test --filter='InformePreliminar|CuestionarioEvaluadorNotas|InformeW
 
 ## Siguiente acción recomendada
 
-**Deploy:** `75497e58` en `master` (Coolify auto-deploy). Stephany: UAT 1ª hoja ↔ preliminar + Word preempleo poli/VSA. Pendiente **T-W5** (tamaños en `.docx`) y **T-MAIL** (Otto).
+**Deploy:** `fbf8fb91` en `master` (Coolify auto-deploy). **UAT Stephany:** 1ª hoja ↔ preliminar + Word preempleo poli/VSA. **Solo ops:** **T-MAIL** (pago Resend Pro + dominio/API — Otto).

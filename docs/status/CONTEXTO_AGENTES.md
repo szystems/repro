@@ -2,7 +2,7 @@
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
 **Fecha de Contexto:** 20 de septiembre de 2026  
-**Estado:** 🔧 **SPRINT T** · preliminar 1ª hoja + Word preempleo poli/VSA · KPI Excel/calendario ✅ prod · Resend Pro ⏸ · portal `https://portal.reprogt.com` · iPage 503  
+**Estado:** ✅ **SPRINT T código cerrado** (`fbf8fb91`) · preliminar 1ª hoja + Word preempleo poli/VSA · KPI Excel/calendario ✅ · **Resend Pro ⏸ Otto** · portal `https://portal.reprogt.com` · iPage 503  
 
 **Plan activo:** `docs/repro/cambios septiembre/20'09'2026/PLAN_SPRINT_T_OBSERVACIONES_20-09-2026.md`  
 **Plan S (correos reclutador):** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md` · merge prod ~`3f6092a6`  
@@ -37,6 +37,23 @@
 **Feedback 12-ago:** `docs/repro/cambios agosto/ultimos cambios 12-08-2026/`  
 **Producción:** https://portal.reprogt.com  
 **Repo:** https://github.com/szystems/repro · branch `master`
+
+---
+
+## ✅ SPRINT T — Stephany 20-sep-2026 (cerrado dev · UAT cliente)
+
+**Plan:** `docs/repro/cambios septiembre/20'09'2026/PLAN_SPRINT_T_OBSERVACIONES_20-09-2026.md`  
+**Evidencia:** `CAMBIOS PARA WORD DE POLIGRAFO Y VSA PREEMPLEO.docx` (misma carpeta)  
+**Prod:** `fbf8fb91` · PHPUnit Docker: Sprint T + preliminar + cuestionario notas OK.
+
+| ID | Entrega | Estado |
+|----|---------|--------|
+| **T-KPI** | Excel reclutador/sede cliente; calendario informe final | ✅ prod anterior |
+| **T-PRE** | Preliminar sync 1ª hoja salvo edición manual en ficha | ✅ prod |
+| **T-W1–W6** | Word solo preempleo poli+VSA (hijos, ampliación laboral, judicial, constancia, fuentes, papelería imágenes) | ✅ prod |
+| **T-MAIL** | Resend Pro + cutover `reprogt.com` | ⏸ **Otto** (no bloquea portal) |
+
+**No reabrir** salvo bug UAT de Stephany. **No** periódico/específico/socio.
 
 ---
 

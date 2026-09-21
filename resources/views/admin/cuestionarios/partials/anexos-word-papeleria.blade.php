@@ -1,5 +1,5 @@
-{{-- Checkboxes de papelería para anexos del informe Word --}}
-@if($puedeGestionarNotasEvaluador ?? false)
+{{-- Checkboxes de papelería para anexos del informe Word (misma visibilidad que redacción Word) --}}
+@if(($puedeGestionarNotasEvaluador ?? false) || (($informePreempleoActivo ?? false) && ($puedeGestionarInformePreempleo ?? false)))
 @php
     $seleccionados = old('word_anexos_papeleria', $anexosPapeleriaSeleccionados ?? \App\Support\InformeWordAnexosPapeleria::tiposSeleccionados($cuestionario->evaluado_orden_id));
     $tiposAnexoDisponibles = $tiposAnexoDisponibles ?? [];

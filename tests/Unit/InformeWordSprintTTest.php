@@ -63,6 +63,33 @@ class InformeWordSprintTTest extends TestCase
         $this->assertStringContainsString('w:spacing', $entre);
     }
 
+    public function test_vsa_preempleo_tambien_usa_ampliacion_laboral(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_servicio' => 'vsa',
+            'tipo_formulario' => 'preempleo',
+        ]);
+        Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 5,
+            'total_secciones' => 5,
+            'completado' => true,
+        ]);
+        EvaluadorNota::guardarNota($evaluado->id, 'word_laboral', '', 'VSA ampliación T', null);
+        $path = InformeWordExport::generar($orden->fresh(), $evaluado->fresh(['cuestionario', 'orden.empresa', 'sede']));
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($path) === true);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        @unlink($path);
+        $this->assertIsString($xml);
+        $this->assertStringContainsString('AMPLIACIÓN DE INFORMACIÓN LABORAL', $xml);
+        $this->assertStringContainsString('VSA ampliación T', $xml);
+    }
+
     public function test_validacion_constancia_estudios_se_rellena_y_conserva_fila(): void
     {
         $xml = $this->xmlPreempleoPoligrafo([], [

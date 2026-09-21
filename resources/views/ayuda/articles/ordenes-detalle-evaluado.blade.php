@@ -66,7 +66,7 @@
                         <li><strong>Entrevistó</strong> (<code>entrevistador_id</code>) — tercera persona (entrevista). Botón «Autoasignarme entrevista».</li>
                         <li><strong>Informe final</strong> (<code>informe_final_responsable_id</code>) — quien redacta/cierra el PDF final. Botón «Autoasignarme informe final». Al subir el PDF se registra aparte quién lo subió (visible en calendario).</li>
                         <li><strong>Programación</strong> — botón «Programar cita» si no hay cita asignada.</li>
-                        <li><strong>Informe preliminar</strong> — el título lleva el <strong>nombre del candidato</strong>. El editor admite <strong>color de letra y tablas</strong> (Quill). Visible al cliente solo cuando REPRO lo habilita.</li>
+                        <li><strong>Informe preliminar</strong> — el título lleva el <strong>nombre del candidato</strong>. El editor admite <strong>color de letra y tablas</strong> (Quill). Se actualiza solo desde la 1ª hoja del cuestionario al guardar, salvo que REPRO lo haya editado manualmente aquí (entonces queda fijo). Visible al cliente solo cuando REPRO lo habilita.</li>
                     </ul>
                 </div>
             </div>

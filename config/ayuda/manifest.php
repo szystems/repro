@@ -571,6 +571,14 @@ return [
             'articulo' => 'informe-word',
         ],
         [
+            'pregunta' => 'Corregí la 1ª hoja pero el preliminar del cliente sigue viejo, ¿por qué?',
+            'respuesta' => 'Al guardar el cuestionario, el preliminar se regenera desde resultado y observaciones de la 1ª hoja. Si alguien editó el preliminar a mano en la ficha de la orden, el portal deja de sobrescribirlo para no perder esa redacción. Borre o ajuste el preliminar manual y guarde, o vuelva a sincronizar editando la 1ª hoja sin haber marcado edición manual en la ficha.',
+            'audiencias' => ['repro'],
+            'permisos' => ['evaluaciones.editar'],
+            'icono' => 'bi-file-earmark-richtext',
+            'articulo' => 'informe-word',
+        ],
+        [
             'pregunta' => '¿Cómo busco un candidato que ya fue evaluado antes?',
             'respuesta' => 'Use "Historial por DPI o nombre" en el menú Evaluaciones (requiere permiso). También puede buscar por DPI desde el Panel de Control del portal cliente.',
             'audiencias' => ['repro'],
