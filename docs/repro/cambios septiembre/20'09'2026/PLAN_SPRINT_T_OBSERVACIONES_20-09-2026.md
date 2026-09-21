@@ -112,7 +112,7 @@
 3. [x] T-W3      Ampliación laboral (título + layout)
 4. [x] T-W4      Despegar tablas judicial / complementaria
 5. [x] T-W2      Validación constancia estudios (plantilla + datos)
-6. [ ] T-W5      Helvetica / tamaños plantillas preempleo poli+VSA
+6. [x] T-W5      Helvetica / tamaños plantillas preempleo poli+VSA (export: 18/22/24 half-pts)
 7. [x] T-W6      Papelería anexos (diagnóstico + fix)
 — paralelo ops —
 8. [ ] T-MAIL    Pago Resend + cutover dominio/API (Otto + dev post-pago)

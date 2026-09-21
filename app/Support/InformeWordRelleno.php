@@ -2412,7 +2412,33 @@ class InformeWordRelleno
             }
         }
 
+        if ($variante === InformeWordPlantillas::VARIANTE_PREEMPLEO) {
+            $xml = self::normalizarFuentesPreempleoExportado($xml);
+        }
+
         return InformeWordXml::separarTablasContiguas($xml);
+    }
+
+    /** T-W5: al generar el .docx, criterios 9 pt y tatuajes/deudas 11 pt (Helvetica ya en plantilla). */
+    private static function normalizarFuentesPreempleoExportado(string $xml): string
+    {
+        if (InformeWordXml::limitesTablaPorMarcador($xml, 'Criterios de interpretación') !== null) {
+            $xml = InformeWordXml::reemplazarTablaPorMarcador(
+                $xml,
+                'Criterios de interpretación',
+                static fn (string $tabla): string => InformeWordXml::forzarTamanoFuenteTabla($tabla, 18)
+            );
+        }
+
+        if (InformeWordXml::limitesTablaPorMarcador($xml, 'TATUAJES') !== null) {
+            $xml = InformeWordXml::reemplazarTablaPorMarcador(
+                $xml,
+                'TATUAJES',
+                static fn (string $tabla): string => InformeWordXml::forzarTamanoFuenteTabla($tabla, 22)
+            );
+        }
+
+        return $xml;
     }
 
     /** M-P6: historial laboral sí; la tabla Q&A complementaria laboral se elimina en preempleo/socio. Peri/espe conservan el recuadro INFORMACIÓN COMPLEMENTARIA para word_laboral (N-L1). */
