@@ -7,9 +7,12 @@ mkdir -p \
     storage/framework/cache/data \
     storage/framework/sessions \
     storage/framework/views \
-    storage/logs
-chown -R www-data:www-data bootstrap/cache storage || true
-chmod -R ug+rwX bootstrap/cache storage || true
+    storage/logs \
+    public/assets/imgs/users \
+    public/assets/imgs/empresas \
+    public/assets/imgs/logos
+chown -R www-data:www-data bootstrap/cache storage public/assets/imgs || true
+chmod -R ug+rwX bootstrap/cache storage public/assets/imgs || true
 
 php artisan package:discover --ansi || true
 

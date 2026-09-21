@@ -205,6 +205,43 @@
                                                                         <input name="cargo" id="cargo_empresa" type="text" class="form-control" placeholder="Ej: Gerente de RRHH" value="{{ old('cargo', $user->cargo) }}" />
                                                                     </div>
                                                                 </div>
+
+                                                                @if((int) $user->principal !== 1 && Auth::user()->role_as == 3)
+                                                                @php
+                                                                    $permisosTrabajador = old('permisos_empresa', \App\Support\EmpresaPermisosSupport::listaDesde($user->permisos));
+                                                                    if (! is_array($permisosTrabajador)) {
+                                                                        $permisosTrabajador = [];
+                                                                    }
+                                                                @endphp
+                                                                <div class="col-md-12">
+                                                                    <label class="form-label">Permisos de este trabajador</label>
+                                                                    <p class="form-text">Solo cambian a esta persona. No crean un rol ni modifican al resto de la empresa.</p>
+                                                                    <input type="hidden" name="permisos_empresa_enviados" value="1">
+                                                                    <div class="row">
+                                                                        @foreach([
+                                                                            'ver_ordenes' => 'Ver órdenes',
+                                                                            'crear_ordenes' => 'Crear órdenes',
+                                                                            'ver_resultados' => 'Ver resultados',
+                                                                            'descargar_pdf' => 'Descargar PDFs (orden de servicio)',
+                                                                            'subir_documentos' => 'Subir papelería',
+                                                                            'editar_ordenes' => 'Editar / cancelar órdenes propias',
+                                                                            'descargar_documentos' => 'Ver y descargar papelería',
+                                                                            'ver_reportes' => 'Ver reportes',
+                                                                        ] as $clavePermiso => $etiquetaPermiso)
+                                                                        <div class="col-md-6">
+                                                                            <div class="form-check mb-2">
+                                                                                <input class="form-check-input" type="checkbox" value="{{ $clavePermiso }}" name="permisos_empresa[]" id="repro_perm_{{ $clavePermiso }}" {{ in_array($clavePermiso, $permisosTrabajador, true) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label" for="repro_perm_{{ $clavePermiso }}">{{ $etiquetaPermiso }}</label>
+                                                                            </div>
+                                                                        </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                </div>
+                                                                @elseif((int) $user->principal === 1)
+                                                                <div class="col-md-12">
+                                                                    <p class="form-text mb-0">El usuario principal tiene todos los permisos del portal de su empresa.</p>
+                                                                </div>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     </div>

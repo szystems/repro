@@ -102,8 +102,8 @@
                                             @if($usuario->principal != 1)
                                                 <div class="btn-group btn-group-sm">
                                                     <a href="{{ route('empresa.usuarios.edit', $usuario) }}" 
-                                                       class="btn btn-outline-primary" title="Editar">
-                                                        <i class="bi bi-pencil"></i>
+                                                       class="btn btn-outline-primary" title="Editar permisos de este usuario">
+                                                        <i class="bi bi-pencil"></i> Editar
                                                     </a>
                                                     <form action="{{ route('empresa.usuarios.destroy', $usuario) }}" 
                                                           method="POST" class="d-inline"

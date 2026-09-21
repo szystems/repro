@@ -7,17 +7,17 @@
         </thead>
         <tbody>
             <tr><td>Ver órdenes</td><td class="text-success">✓</td><td class="text-success">✓</td></tr>
-            <tr><td>Crear órdenes</td><td class="text-success">✓</td><td class="text-danger">✗ (salvo permiso)</td></tr>
+            <tr><td>Crear órdenes</td><td class="text-success">✓</td><td class="text-success">✓</td></tr>
             <tr><td>Editar órdenes propias</td><td class="text-success">✓</td><td class="text-success">✓</td></tr>
             <tr><td>Subir documentos</td><td class="text-success">✓</td><td class="text-success">✓</td></tr>
             <tr><td>Ver / descargar resultados</td><td class="text-success">✓</td><td class="text-success">✓</td></tr>
-            <tr><td>Ver reportes</td><td class="text-success">✓</td><td class="text-danger">✗ (salvo permiso)</td></tr>
+            <tr><td>Ver reportes</td><td class="text-success">✓</td><td class="text-success">✓</td></tr>
             <tr><td>Gestionar usuarios</td><td class="text-success">✓</td><td class="text-danger">✗</td></tr>
         </tbody>
     </table>
 
-    <h5>¿Por qué un trabajador no ve «Nueva Orden»?</h5>
-    <p>Es comportamiento esperado. Solo usuarios con permiso <em>crear_ordenes</em> ven ese menú. El principal puede activarlo en Mi Empresa → Usuarios → Editar permisos.</p>
+    <h5>¿Por qué un trabajador no ve «Nueva Orden» o los reportes?</h5>
+    <p>Los usuarios nuevos ya traen marcados <strong>Crear órdenes</strong> y <strong>Ver reportes</strong>. Si una cuenta antigua no los tiene, el titular los activa en <strong>Mi Empresa → Usuarios → Editar</strong>. REPRO puede hacer lo mismo en <strong>Administración → Usuarios</strong>, solo para esa persona, sin crear un rol.</p>
 
     <h5>Filtrar por reclutador</h5>
     <p>En <strong>Mis Órdenes</strong> el gerente (y REPRO) puede filtrar el listado por reclutador asignado, o ver solo las órdenes sin asignar. El Excel del listado usa el mismo filtro.</p>

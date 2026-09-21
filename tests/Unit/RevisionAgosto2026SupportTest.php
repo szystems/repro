@@ -63,13 +63,15 @@ class RevisionAgosto2026SupportTest extends TestCase
         $this->assertTrue(EmpresaPermisosSupport::empresaTienePermisoSistema($json, 'ordenes.eliminar'));
     }
 
-    public function test_perfil_default_trabajador_sin_crear_ordenes(): void
+    public function test_perfil_default_trabajador_incluye_crear_ordenes_y_reportes(): void
     {
         $defaults = EmpresaPermisosSupport::permisosDefaultTrabajador();
         $json = json_encode($defaults);
 
-        $this->assertNotContains('crear_ordenes', $defaults);
-        $this->assertFalse(EmpresaPermisosSupport::empresaTienePermisoSistema($json, 'ordenes.crear'));
+        $this->assertContains('crear_ordenes', $defaults);
+        $this->assertContains('ver_reportes', $defaults);
+        $this->assertTrue(EmpresaPermisosSupport::empresaTienePermisoSistema($json, 'ordenes.crear'));
+        $this->assertTrue(EmpresaPermisosSupport::empresaTienePermisoSistema($json, 'reportes.ver'));
         $this->assertTrue(EmpresaPermisosSupport::empresaTienePermisoSistema($json, 'documentos.subir'));
         $this->assertTrue(EmpresaPermisosSupport::empresaTienePermisoSistema($json, 'ordenes.ver'));
     }

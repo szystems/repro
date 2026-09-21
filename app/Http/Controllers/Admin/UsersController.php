@@ -24,6 +24,8 @@ use App\Support\CorreoEnvioSupport;
 use App\Support\EmpresaPermisosSupport;
 use App\Support\ExportacionesSupport;
 use App\Support\PerfilImagenSupport;
+use Illuminate\Http\UploadedFile;
+use RuntimeException;
 
 class UsersController extends Controller
 {
@@ -177,8 +179,12 @@ class UsersController extends Controller
         }
 
         // Procesamiento de imagen de perfil
-        if($request->hasFile('fotografia')) {
-            $user->fotografia = PerfilImagenSupport::guardar($request->file('fotografia'), 'users');
+        if ($request->hasFile('fotografia')) {
+            $guardada = $this->guardarFotografia($request->file('fotografia'));
+            if ($guardada === null) {
+                return redirect()->back()->withInput();
+            }
+            $user->fotografia = $guardada;
         }
 
         // Asignar datos básicos
@@ -345,12 +351,12 @@ class UsersController extends Controller
         }
 
         // Procesar imagen si se ha subido una nueva
-        if($request->hasFile('fotografia')) {
-            $user->fotografia = PerfilImagenSupport::guardar(
-                $request->file('fotografia'),
-                'users',
-                $user->fotografia
-            );
+        if ($request->hasFile('fotografia')) {
+            $guardada = $this->guardarFotografia($request->file('fotografia'), $user->fotografia);
+            if ($guardada === null) {
+                return redirect()->back()->withInput();
+            }
+            $user->fotografia = $guardada;
         }
 
         // Actualizar datos básicos
@@ -416,7 +422,12 @@ class UsersController extends Controller
             if ($currentUser->role_as >= 2) {
                 $user->principal = $request->boolean('principal') ? 1 : 0;
             }
-            if ((int) $user->principal !== 1 && empty($user->permisos)) {
+            // JSON del trabajador: solo este usuario. No crea un rol Spatie.
+            if ((int) $user->principal !== 1 && $request->has('permisos_empresa_enviados') && (int) $currentUser->role_as === 3) {
+                $user->permisos = EmpresaPermisosSupport::normalizarSeleccion(
+                    (array) $request->input('permisos_empresa', [])
+                );
+            } elseif ((int) $user->principal !== 1 && $user->permisos === null) {
                 $user->permisos = EmpresaPermisosSupport::permisosDefaultTrabajador();
             }
         }
@@ -619,6 +630,19 @@ class UsersController extends Controller
         $pdf->setPaper('Letter', 'portrait');
 
         return $pdf->stream('Usuario_'.$usuario->name.'_'.$nompdf.'.pdf');
+    }
+
+    private function guardarFotografia(UploadedFile $archivo, ?string $anterior = null): ?string
+    {
+        try {
+            return PerfilImagenSupport::guardar($archivo, 'users', $anterior);
+        } catch (RuntimeException $e) {
+            report($e);
+
+            session()->flash('error', 'No se pudo guardar la foto de perfil. Use JPG o PNG de menos de 3 MB e intente de nuevo.');
+
+            return null;
+        }
     }
 
     // Método para cambiar contraseña por el propio usuario

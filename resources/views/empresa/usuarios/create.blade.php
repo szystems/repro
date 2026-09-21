@@ -107,7 +107,7 @@
                             <div class="card bg-light mb-3">
                                 <div class="card-body">
                                     <h6 class="card-title mb-2"><i class="bi bi-shield-check text-success"></i> Permisos del usuario</h6>
-                                    <p class="form-text mb-2">Perfil <strong>trabajador</strong> (reclutador/asistente): por defecto puede ver órdenes, editar las propias, gestionar papelería y descargar PDF de orden de servicio. Solo marque «Crear órdenes» si debe actuar como usuario principal.</p>
+                                    <p class="form-text mb-2">Perfil <strong>trabajador</strong> (reclutador/asistente): por defecto puede ver y <strong>crear órdenes</strong>, <strong>ver reportes</strong>, editar las propias, gestionar papelería y descargar el PDF de la orden. Quite una casilla solo si esta persona no debe tener ese acceso.</p>
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-check mb-2">
@@ -116,7 +116,7 @@
                                             </div>
                                             <div class="form-check mb-2">
                                                 <input class="form-check-input" type="checkbox" value="crear_ordenes" name="permisos_empresa[]" id="perm_crear_ordenes" {{ in_array('crear_ordenes', $permisosSeleccionados, true) ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="perm_crear_ordenes">Crear órdenes <span class="text-muted">(solo si aplica)</span></label>
+                                                <label class="form-check-label" for="perm_crear_ordenes">Crear órdenes</label>
                                             </div>
                                             <div class="form-check mb-2">
                                                 <input class="form-check-input" type="checkbox" value="ver_resultados" name="permisos_empresa[]" id="perm_ver_resultados" {{ in_array('ver_resultados', $permisosSeleccionados, true) ? 'checked' : '' }}>
@@ -178,12 +178,13 @@
                             Los <strong>trabajadores</strong> (reclutadores/asistentes) acceden al panel con los permisos que marque abajo.
                         </p>
                         <ul class="small mb-0">
-                            <li>Ver órdenes y estado de procesos</li>
-                            <li>Editar/cancelar órdenes propias (si aplica)</li>
+                            <li>Ver y crear órdenes</li>
+                            <li>Ver reportes</li>
+                            <li>Editar/cancelar órdenes propias</li>
                             <li>Subir y descargar papelería del candidato</li>
                             <li>Descargar PDF de orden de servicio</li>
                         </ul>
-                        <p class="small text-muted mt-2 mb-0">Crear órdenes nuevas queda reservado al <strong>usuario principal</strong>, salvo que usted lo habilite explícitamente.</p>
+                        <p class="small text-muted mt-2 mb-0">Puede quitar «Crear órdenes» o «Ver reportes» si este usuario no los necesita. El cambio es solo de esta cuenta.</p>
                         <hr>
                         <p class="card-text small text-muted mb-0">
                             <i class="bi bi-shield-check"></i> Solo el usuario principal puede gestionar otros usuarios.

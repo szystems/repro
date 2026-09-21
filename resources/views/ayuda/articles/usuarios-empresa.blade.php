@@ -19,6 +19,6 @@
 
     <div class="alert alert-info">
         <i class="bi bi-info-circle me-2"></i>
-        El perfil por defecto de un trabajador <strong>no incluye</strong> crear órdenes ni ver reportes. Asígnelos explícitamente si los necesita.
+        Al crear un trabajador, <strong>Crear órdenes</strong> y <strong>Ver reportes</strong> vienen marcados. Puede quitarlos en ese formulario o después, en Editar: el cambio vale solo para ese usuario.
     </div>
 </div>

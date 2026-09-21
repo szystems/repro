@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Empresa;
+use App\Support\EmpresaPermisosSupport;
+use App\Support\PerfilImagenSupport;
+use Illuminate\Http\UploadedFile;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Models\Permission;
@@ -276,6 +279,8 @@ class Phase8FFuncionalidadesComplejasTest extends TestCase
         $response->assertOk();
         $response->assertSee('Permisos del usuario');
         $response->assertSee('permisos_empresa[]');
+        $response->assertSee('perm_crear_ordenes" checked', false);
+        $response->assertSee('perm_ver_reportes" checked', false);
     }
 
     public function test_permisos_empresa_guardados_al_crear_sub_usuario(): void
@@ -348,9 +353,92 @@ class Phase8FFuncionalidadesComplejasTest extends TestCase
         $this->assertFalse($subUser->tienePermisoEmpresa('ver_reportes'));
     }
 
+    public function test_admin_repro_edita_permisos_de_un_trabajador_sin_crear_rol(): void
+    {
+        $admin = $this->crearAdmin();
+        $empresa = Empresa::factory()->create();
+        $rolEmpresa = Role::where('name', 'empresa')->firstOrFail();
+        $trabajador = User::factory()->create([
+            'empresa_id' => $empresa->id,
+            'role_as' => 1,
+            'principal' => 0,
+            'fecha_nacimiento' => '1992-05-05',
+            'permisos' => ['ver_ordenes'],
+        ]);
+        $trabajador->assignRole('empresa');
+        $companero = User::factory()->create([
+            'empresa_id' => $empresa->id,
+            'role_as' => 1,
+            'principal' => 0,
+            'permisos' => ['ver_ordenes'],
+        ]);
+
+        $this->actingAs($admin)
+            ->get(url('edit-user/'.$trabajador->id))
+            ->assertOk()
+            ->assertSee('Permisos de este trabajador')
+            ->assertSee('permisos_empresa_enviados');
+
+        $response = $this->actingAs($admin)->put(url('update-user/'.$trabajador->id), [
+            'name' => $trabajador->name,
+            'email' => $trabajador->email,
+            'fecha_nacimiento' => '1992-05-05',
+            'role_id' => $rolEmpresa->id,
+            'empresa_id' => $empresa->id,
+            'cargo' => 'Reclutador',
+            'permisos_empresa_enviados' => '1',
+            'permisos_empresa' => ['ver_ordenes', 'crear_ordenes', 'ver_reportes'],
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+
+        $lista = EmpresaPermisosSupport::listaDesde($trabajador->fresh()->permisos);
+        $this->assertEqualsCanonicalizing(['ver_ordenes', 'crear_ordenes', 'ver_reportes'], $lista);
+        $this->assertTrue($trabajador->fresh()->hasPermission('ordenes.crear'));
+        $this->assertNull(Role::where('name', 'user_'.$trabajador->id)->first());
+        $this->assertEqualsCanonicalizing(
+            ['ver_ordenes'],
+            EmpresaPermisosSupport::listaDesde($companero->fresh()->permisos)
+        );
+    }
+
+    public function test_cambiar_foto_perfil_no_responde_500(): void
+    {
+        $admin = $this->crearAdmin();
+        $admin->forceFill(['fotografia' => null, 'fecha_nacimiento' => '1990-01-01'])->save();
+        Role::where('name', 'admin')->update(['level' => 3]);
+        $roleId = Role::where('name', 'admin')->value('id');
+
+        $response = $this->actingAs($admin)->put(url('update-user/'.$admin->id), [
+            'name' => $admin->name,
+            'email' => $admin->email,
+            'fecha_nacimiento' => '1990-01-01',
+            'role_id' => $roleId,
+            'fotografia' => $this->jpegSubida(),
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+        $nombre = $admin->fresh()->fotografia;
+        $this->assertNotEmpty($nombre);
+        $this->assertFileExists(public_path('assets/imgs/users/'.$nombre));
+        PerfilImagenSupport::borrar('users', $nombre);
+    }
+
     // ========================================
     // HELPERS
     // ========================================
+
+    private function jpegSubida(): UploadedFile
+    {
+        $ruta = tempnam(sys_get_temp_dir(), 'perfil').'.jpg';
+        file_put_contents($ruta, base64_decode(
+            '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA='
+        ));
+
+        return new UploadedFile($ruta, 'perfil.jpg', 'image/jpeg', null, true);
+    }
 
     private function assertStringContains(string $needle, string $haystack): void
     {

@@ -12,17 +12,20 @@ class EmpresaPermisosSupport
 {
     /**
      * Perfil por defecto al crear un trabajador (reclutador/asistente).
-     * Sin crear órdenes ni reportes; incluye papelería, PDF orden y editar propias.
+     * Incluye crear órdenes y ver reportes: son quienes arman la orden y consultan resultados.
+     * El titular puede quitar casillas al crear o después, solo para ese usuario.
      *
      * @var list<string>
      */
     public const PERMISOS_DEFAULT_TRABAJADOR = [
         'ver_ordenes',
+        'crear_ordenes',
         'ver_resultados',
         'descargar_pdf',
         'subir_documentos',
         'editar_ordenes',
         'descargar_documentos',
+        'ver_reportes',
     ];
 
     /** @var array<string, list<string>> permiso empresa (JSON) → permisos sistema */
@@ -78,6 +81,40 @@ class EmpresaPermisosSupport
     public static function permisosDefaultTrabajador(): array
     {
         return self::PERMISOS_DEFAULT_TRABAJADOR;
+    }
+
+    /**
+     * Deja solo claves del portal empresa, sin duplicados.
+     *
+     * @param  list<mixed>  $claves
+     * @return list<string>
+     */
+    public static function normalizarSeleccion(array $claves): array
+    {
+        $permitidas = self::clavesDisponibles();
+        $salida = [];
+        foreach ($claves as $clave) {
+            if (! is_string($clave) || ! in_array($clave, $permitidas, true) || in_array($clave, $salida, true)) {
+                continue;
+            }
+            $salida[] = $clave;
+        }
+
+        return $salida;
+    }
+
+    /** Lee el JSON de `users.permisos` aunque haya quedado doblemente codificado. */
+    public static function listaDesde(mixed $valor): array
+    {
+        if (is_string($valor)) {
+            $decoded = json_decode($valor, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            $valor = $decoded;
+        }
+
+        return is_array($valor) ? self::normalizarSeleccion($valor) : [];
     }
 
     public static function trabajadorTienePermiso(?string $permisoEmpresaJson, string $claveEmpresa): bool

@@ -66,7 +66,7 @@ class CentroAyudaTest extends TestCase
         ]);
 
         $this->assertNull(AyudaSupport::articuloPorSlug($trabajador, 'usuarios-empresa'));
-        $this->assertNull(AyudaSupport::articuloPorSlug($trabajador, 'crear-orden'));
+        $this->assertNotNull(AyudaSupport::articuloPorSlug($trabajador, 'crear-orden'));
 
         $response = $this->actingAs($trabajador)->get(route('ayuda.show', 'seguimiento-ordenes'));
         $response->assertOk();

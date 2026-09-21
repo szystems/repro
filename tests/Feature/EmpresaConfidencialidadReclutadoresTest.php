@@ -217,7 +217,9 @@ class EmpresaConfidencialidadReclutadoresTest extends TestCase
     private function habilitarCrearOrdenes(User $user): void
     {
         $permisos = EmpresaPermisosSupport::permisosDefaultTrabajador();
-        $permisos[] = 'crear_ordenes';
-        $user->update(['permisos' => json_encode($permisos)]);
+        if (! in_array('crear_ordenes', $permisos, true)) {
+            $permisos[] = 'crear_ordenes';
+        }
+        $user->update(['permisos' => $permisos]);
     }
 }

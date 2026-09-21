@@ -23,7 +23,8 @@ RUN mkdir -p \
         storage/framework/views \
         storage/logs \
     && composer install --no-dev --ignore-platform-reqs --no-interaction --prefer-dist --optimize-autoloader --no-scripts \
-    && chown -R www-data:www-data /var/www/bootstrap/cache /var/www/storage
+    && mkdir -p public/assets/imgs/users public/assets/imgs/empresas public/assets/imgs/logos \
+    && chown -R www-data:www-data /var/www/bootstrap/cache /var/www/storage /var/www/public/assets/imgs
 
 COPY docker/coolify/nginx.conf /etc/nginx/sites-available/default
 RUN rm -f /etc/nginx/sites-enabled/default \

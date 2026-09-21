@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -36,6 +37,15 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             //
+        });
+
+        $this->renderable(function (PostTooLargeException $e, $request) {
+            $mensaje = 'El archivo es demasiado grande. La foto debe pesar menos de 3 MB.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $mensaje], 413);
+            }
+
+            return redirect()->back()->with('error', $mensaje);
         });
     }
 }

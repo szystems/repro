@@ -123,7 +123,8 @@ class SprintKPortalTest extends TestCase
             EmpresaPermisosSupport::permisosDefaultTrabajador(),
             $trabajador->permisos
         );
-        $this->assertFalse($trabajador->tienePermisoEmpresa('crear_ordenes'));
+        $this->assertTrue($trabajador->tienePermisoEmpresa('crear_ordenes'));
+        $this->assertTrue($trabajador->tienePermisoEmpresa('ver_reportes'));
         $this->assertTrue($trabajador->hasPermission('ordenes.ver'));
         $this->assertFalse($trabajador->hasPermission('usuarios.ver'));
 

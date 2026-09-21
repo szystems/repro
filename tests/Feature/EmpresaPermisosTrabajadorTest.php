@@ -32,9 +32,11 @@ class EmpresaPermisosTrabajadorTest extends TestCase
         ]);
         $trabajador->roles()->attach(Role::where('name', 'empresa')->first());
 
-        $this->assertFalse($trabajador->hasPermission('ordenes.crear'));
+        $this->assertTrue($trabajador->hasPermission('ordenes.crear'));
+        $this->assertTrue($trabajador->hasPermission('reportes.ver'));
         $this->assertTrue($trabajador->hasPermission('documentos.subir'));
         $this->assertTrue($trabajador->hasPermission('ordenes.ver'));
+        $this->assertFalse($trabajador->hasPermission('sedes.ver'));
     }
 
     public function test_usuario_principal_tiene_todos_los_permisos_del_mapa(): void
