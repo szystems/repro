@@ -36,6 +36,10 @@
                 @php
                     $marcado = in_array($documento->id, $idsSeleccionados, true)
                         || ($idsSeleccionados === [] && in_array($documento->tipo_documento, $tiposSeleccionados, true));
+                    $previo = old('word_anexos_papeleria');
+                    if ($previo !== null) {
+                        $marcado = in_array((string) $documento->id, array_map('strval', (array) $previo), true);
+                    }
                 @endphp
                 <div class="col-md-6 mb-2">
                     <div class="form-check">
@@ -44,7 +48,7 @@
                                id="anexo_papeleria_{{ $documento->id }}"
                                name="word_anexos_papeleria[]"
                                value="{{ $documento->id }}"
-                               @checked(old('word_anexos_papeleria') !== null ? in_array((string) $documento->id, array_map('strval', (array) old('word_anexos_papeleria')), true) : $marcado)
+                               @checked($marcado)
                                @disabled($soloLectura ?? false)>
                         <label class="form-check-label" for="anexo_papeleria_{{ $documento->id }}">
                             {{ $etiquetasAnexo[$documento->tipo_documento] ?? $documento->tipo_documento }}
