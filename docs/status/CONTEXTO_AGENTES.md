@@ -91,7 +91,7 @@
 | Validación de constancia de estudios **vacía** | No se copia el sí/no del candidato; la llena el evaluador (presentó y validó MINEDUC) |
 | Historial laboral + ampliación **pegados** | Recompactar después de `separarTablasContiguas` (ese paso volvía a separarlas) |
 | Totales de deudas en **11 pt** sin salto de línea | La fila TOTALES tiene 4 celdas y el pase posterior la dejaba en 12 pt |
-| Anexos | En editar cuestionario, una casilla **por imagen** (JPG/PNG). Dos archivos del mismo tipo se eligen por separado. PDF no entra. Van al final, después de TATUAJES (o al cierre del documento si no hay esa tabla) |
+| Anexos | En la orden → **Documentos**, columna **En el Word** (se guarda al marcar). También en editar cuestionario. Solo JPG/PNG; dos archivos del mismo tipo se eligen por separado. PDF no entra. Van al final, después de TATUAJES |
 
 **No:** periódico / específico / socio, salvo que ella lo pida. **No** regenerar NEVERIA/CORALSA/PERCO. **No** crear usuarios reales. PDF de papelería sigue fuera del Word (evita 503).
 

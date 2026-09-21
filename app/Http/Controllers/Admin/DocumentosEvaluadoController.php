@@ -7,6 +7,7 @@ use App\Http\Requests\DocumentoEvaluadoRequest;
 use App\Models\DocumentoEvaluado;
 use App\Models\EvaluadoOrden;
 use App\Support\DocumentoEvaluadoPreview;
+use App\Support\InformeWordAnexosPapeleria;
 use App\Support\RedirectFichaOrden;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -148,6 +149,39 @@ class DocumentosEvaluadoController extends Controller
         $documento->eliminarConArchivo();
 
         return RedirectFichaOrden::evaluado($evaluado, "Documento \"{$nombre}\" eliminado.");
+    }
+
+    /**
+     * Imágenes que REPRO marcó para pegar al final del informe Word.
+     */
+    public function guardarAnexosWord(Request $request, EvaluadoOrden $evaluado)
+    {
+        if (Auth::user()->role_as < 2 || ! $this->puedeAcceder($evaluado)) {
+            abort(403);
+        }
+
+        $permitidos = InformeWordAnexosPapeleria::imagenesDisponibles($evaluado)
+            ->pluck('id')
+            ->map(static fn ($id): int => (int) $id)
+            ->all();
+        $pedidos = array_map('intval', (array) $request->input('ids', []));
+        $ids = array_values(array_intersect($pedidos, $permitidos));
+
+        InformeWordAnexosPapeleria::guardarSeleccion($evaluado->id, $ids, Auth::id());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'incluidos' => count($ids),
+            ]);
+        }
+
+        return RedirectFichaOrden::evaluado(
+            $evaluado,
+            count($ids) === 0
+                ? 'El Word no llevará papelería.'
+                : 'El Word llevará '.count($ids).' imagen'.(count($ids) === 1 ? '' : 'es').' al final.'
+        );
     }
 
     /**

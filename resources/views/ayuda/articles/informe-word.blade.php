@@ -24,7 +24,7 @@
         <li>Las secciones sin datos (ej. deudas vacías) no aparecen en el documento.</li>
         <li>En <strong>polígrafo y VSA preempleo</strong>: hijos vacíos muestran «No tiene» en la primera columna; el bloque <strong>Ampliación de información laboral</strong> va pegado al historial; la fila <strong>Validación de constancia de estudios</strong> queda vacía para que la llene el evaluador (no se copia el sí/no del candidato). Los totales de deudas van en 11 puntos.</li>
         <li>La tabla <strong>Información complementaria</strong> va en fuente 12.</li>
-        <li>En <strong>Anexos de papelería en informe Word</strong> se marca cada imagen (JPG o PNG). Si hay dos archivos del mismo documento, se elige solo el que debe ir al final del Word. Los PDF no se anexan.</li>
+        <li>En la orden, dentro de <strong>Documentos</strong>, la columna <strong>En el Word</strong> marca cada imagen (JPG o PNG). Se guarda al marcarla. Si hay dos archivos del mismo documento, se elige solo el que debe ir al final. Los PDF no se pegan.</li>
         <li>La sección TATUAJES solo muestra información de tatuajes, no documentos adjuntos.</li>
     </ul>
 

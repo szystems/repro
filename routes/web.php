@@ -190,6 +190,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         Route::put('ordenes/{orden}', [OrdenesController::class, 'update'])->name('ordenes.update');
         Route::patch('ordenes/{orden}/cambiar-estado', [OrdenesController::class, 'cambiarEstado'])->name('ordenes.cambiar-estado');
         Route::patch('ordenes/{orden}/toggle-resultados-visibles', [OrdenesController::class, 'toggleResultadosVisibles'])->name('ordenes.toggle-resultados-visibles');
+        Route::post('evaluados/{evaluado}/anexos-word', [\App\Http\Controllers\Admin\DocumentosEvaluadoController::class, 'guardarAnexosWord'])->name('evaluados.anexos-word');
         Route::post('evaluados/{evaluado}/reenviar-correo', [OrdenesController::class, 'reenviarCorreo'])->name('evaluados.reenviar-correo');
         Route::patch('evaluados/{evaluado}/cambiar-estado', [OrdenesController::class, 'cambiarEstadoEvaluado'])->name('evaluados.cambiar-estado');
         Route::post('evaluados/{evaluado}/rehabilitar-cuestionario', [OrdenesController::class, 'rehabilitarCuestionario'])->name('evaluados.rehabilitar-cuestionario');

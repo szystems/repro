@@ -1,6 +1,16 @@
 {{-- Sección de documentos para un evaluado dentro del show de la orden --}}
 {{-- Variables: $evaluado (EvaluadoOrden con documentos cargados) --}}
 
+@php
+    $puedeMarcarWord = Auth::user()->role_as >= 2;
+    $idsAnexoWord = $puedeMarcarWord
+        ? \App\Support\InformeWordAnexosPapeleria::idsSeleccionados($evaluado->id)
+        : [];
+    $tiposAnexoWord = $puedeMarcarWord
+        ? \App\Support\InformeWordAnexosPapeleria::tiposSeleccionados($evaluado->id)
+        : [];
+    $hayPdfPapeleria = $evaluado->documentos->contains(fn ($doc) => $doc->es_pdf);
+@endphp
 <div class="card mt-3" id="documentos-evaluado-{{ $evaluado->id }}">
     <div class="card-header d-flex justify-content-between align-items-center">
         <div class="card-title mb-0">
@@ -87,6 +97,20 @@
                                 <div class="card-body p-2">
                                     <small class="d-block fw-semibold">{{ $documento->tipo_documento_texto }}</small>
                                     <small class="text-muted">{{ Str::limit($documento->nombre_original, 24) }}</small>
+                                    @if($puedeMarcarWord && \App\Support\InformeWordAnexosPapeleria::puedeAnexarImagen($documento))
+                                        @php $marcadoWord = \App\Support\InformeWordAnexosPapeleria::estaMarcado($documento, $idsAnexoWord, $tiposAnexoWord); @endphp
+                                        <div class="form-check mt-1">
+                                            <input class="form-check-input anexo-word-check"
+                                                   type="checkbox"
+                                                   id="anexo_galeria_{{ $documento->id }}"
+                                                   data-evaluado="{{ $evaluado->id }}"
+                                                   data-doc="{{ $documento->id }}"
+                                                   data-url="{{ route('evaluados.anexos-word', $evaluado) }}"
+                                                   data-token="{{ csrf_token() }}"
+                                                   @checked($marcadoWord)>
+                                            <label class="form-check-label small" for="anexo_galeria_{{ $documento->id }}">En el Word</label>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -96,10 +120,23 @@
         @endif
 
         @if($evaluado->documentos->count() > 0)
+            @if($puedeMarcarWord)
+                <div class="px-3 py-2 border-bottom small text-muted">
+                    Marque <strong>En el Word</strong> en cada imagen que debe ir al final del informe. Se guarda al momento.
+                    Si hay dos archivos del mismo documento, marque solo el que quiere pegar.
+                    @if($hayPdfPapeleria)
+                        Los PDF no se pegan: suba esa hoja como JPG o PNG.
+                    @endif
+                    <span class="anexo-word-estado d-block text-success" data-evaluado="{{ $evaluado->id }}"></span>
+                </div>
+            @endif
             <div class="table-responsive">
                 <table class="table table-sm table-hover mb-0">
                     <thead class="table-light">
                         <tr>
+                            @if($puedeMarcarWord)
+                                <th>En el Word</th>
+                            @endif
                             <th>Tipo</th>
                             <th>Archivo</th>
                             <th>Tamaño</th>
@@ -111,6 +148,27 @@
                     <tbody>
                         @foreach($evaluado->documentos as $documento)
                         <tr>
+                            @if($puedeMarcarWord)
+                                <td>
+                                    @if(\App\Support\InformeWordAnexosPapeleria::puedeAnexarImagen($documento))
+                                        @php $marcadoWord = \App\Support\InformeWordAnexosPapeleria::estaMarcado($documento, $idsAnexoWord, $tiposAnexoWord); @endphp
+                                        <input class="form-check-input anexo-word-check"
+                                               type="checkbox"
+                                               aria-label="Incluir {{ $documento->nombre_original }} en el Word"
+                                               data-evaluado="{{ $evaluado->id }}"
+                                               data-doc="{{ $documento->id }}"
+                                               data-url="{{ route('evaluados.anexos-word', $evaluado) }}"
+                                               data-token="{{ csrf_token() }}"
+                                               @checked($marcadoWord)>
+                                    @elseif($documento->es_pdf)
+                                        <small class="text-muted">PDF</small>
+                                    @elseif($documento->tipo_documento === 'foto_tatuaje')
+                                        <small class="text-muted">Tatuajes</small>
+                                    @else
+                                        <small class="text-muted">—</small>
+                                    @endif
+                                </td>
+                            @endif
                             <td>
                                 @if($documento->es_pdf)
                                     <i class="bi bi-file-pdf text-danger"></i>
@@ -261,6 +319,46 @@
 
 @push('scripts')
 <script>
+document.addEventListener('change', function (e) {
+    const box = e.target.closest('.anexo-word-check');
+    if (!box) { return; }
+
+    const evaluadoId = box.dataset.evaluado;
+    document.querySelectorAll('.anexo-word-check[data-doc="' + box.dataset.doc + '"]').forEach(function (otro) {
+        otro.checked = box.checked;
+    });
+
+    const ids = [];
+    const vistos = {};
+    document.querySelectorAll('.anexo-word-check[data-evaluado="' + evaluadoId + '"]:checked').forEach(function (marcado) {
+        if (vistos[marcado.dataset.doc]) { return; }
+        vistos[marcado.dataset.doc] = true;
+        ids.push(Number(marcado.dataset.doc));
+    });
+
+    const estado = document.querySelector('.anexo-word-estado[data-evaluado="' + evaluadoId + '"]');
+    if (estado) { estado.textContent = 'Guardando…'; }
+
+    fetch(box.dataset.url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': box.dataset.token
+        },
+        body: JSON.stringify({ ids: ids })
+    }).then(function (respuesta) {
+        if (!respuesta.ok) { throw new Error('no'); }
+        if (estado) {
+            estado.textContent = ids.length === 0
+                ? 'El Word no llevará papelería.'
+                : 'Listo. Esas imágenes irán al final del Word.';
+        }
+    }).catch(function () {
+        if (estado) { estado.textContent = 'No se pudo guardar. Intente de nuevo.'; }
+    });
+});
+
 document.addEventListener('click', function (e) {
     const btn = e.target.closest('.btn-preview-doc');
     if (!btn) { return; }

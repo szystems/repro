@@ -159,6 +159,27 @@ class InformeWordAnexosPapeleria
             ->values();
     }
 
+    public static function puedeAnexarImagen(DocumentoEvaluado $documento): bool
+    {
+        return $documento->es_imagen && in_array($documento->tipo_documento, self::TIPOS_ANEXO, true);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @param  list<string>  $tipos
+     */
+    public static function estaMarcado(DocumentoEvaluado $documento, array $ids, array $tipos): bool
+    {
+        if (! self::puedeAnexarImagen($documento)) {
+            return false;
+        }
+        if ($ids !== []) {
+            return in_array($documento->id, $ids, true);
+        }
+
+        return in_array($documento->tipo_documento, $tipos, true);
+    }
+
     /**
      * Imágenes marcadas para el Word. Si la selección guardada es por tipo (anterior),
      * entran todas las imágenes de esos tipos.

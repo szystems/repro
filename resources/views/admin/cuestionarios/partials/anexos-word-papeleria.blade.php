@@ -13,8 +13,8 @@
             <i class="bi bi-paperclip"></i> Anexos de papelería en informe Word
         </h6>
         <small class="text-muted d-block mt-1">
-            Marque las imágenes que deben ir al final del Word, después de tatuajes.
-            Si hay dos archivos del mismo documento (el que trajo el candidato y la validación), marque solo el que quiere anexar.
+            Las mismas casillas están en Documentos de la orden, columna En el Word, y se guardan al marcarlas.
+            Si hay dos archivos del mismo documento, marque solo el que quiere al final.
             Los PDF no se pegan en el Word.
         </small>
     </div>
