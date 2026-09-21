@@ -13,6 +13,15 @@ class InformeWordZip
     /** @var array<string, array<string, string>> */
     private static array $reemplazosPendientes = [];
 
+    /**
+     * Contenido ya reemplazado que ZipArchive no vuelve a leer con getFromName
+     * hasta cerrar el archivo. Sin esto la papelería se calcula sobre una lectura
+     * vacía y el Word sale sin los anexos.
+     *
+     * @var array<string, array<string, string>>
+     */
+    private static array $lecturas = [];
+
     public static function boot(): void
     {
         if (self::$booted) {
@@ -54,13 +63,18 @@ class InformeWordZip
     {
         self::boot();
 
+        $archivo = $zip->filename;
+        if ($archivo !== '') {
+            self::$lecturas[$archivo][$localname] = $contents;
+        }
+
         if (! self::usaPclZip()) {
             $zip->deleteName($localname);
 
             return (bool) $zip->addFromString($localname, $contents);
         }
 
-        self::$reemplazosPendientes[$zip->filename][$localname] = $contents;
+        self::$reemplazosPendientes[$archivo][$localname] = $contents;
 
         return true;
     }
@@ -75,6 +89,10 @@ class InformeWordZip
         self::boot();
 
         $archivo = $zip->filename;
+        if ($archivo !== '' && isset(self::$lecturas[$archivo][$localname])) {
+            return self::$lecturas[$archivo][$localname];
+        }
+
         if ($archivo !== '' && isset(self::$reemplazosPendientes[$archivo][$localname])) {
             return self::$reemplazosPendientes[$archivo][$localname];
         }
@@ -87,6 +105,10 @@ class InformeWordZip
         self::boot();
 
         $archivo = $zip->filename;
+        if ($archivo !== '') {
+            unset(self::$lecturas[$archivo]);
+        }
+
         $reemplazos = ($archivo !== '' && isset(self::$reemplazosPendientes[$archivo]))
             ? self::$reemplazosPendientes[$archivo]
             : null;
