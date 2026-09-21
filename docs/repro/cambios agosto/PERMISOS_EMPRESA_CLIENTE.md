@@ -23,15 +23,17 @@ Lo que la cliente pidió explícitamente en el PDF:
 | Acción | Checkbox UI | Clave JSON | Permiso middleware | Principal | Trabajador (default) |
 |--------|-------------|------------|-------------------|-----------|----------------------|
 | Ver listado de órdenes | Ver órdenes | `ver_ordenes` | `ordenes.ver` | ✅ | ✅ |
-| **Crear nueva orden** | Crear órdenes | `crear_ordenes` | `ordenes.crear` | ✅ | ❌ (no por defecto) |
+| **Crear nueva orden** | Crear órdenes | `crear_ordenes` | `ordenes.crear` | ✅ | ✅ (desde 21-sep-2026, solo altas nuevas) |
 | Editar/cancelar orden propia | Editar / cancelar… | `editar_ordenes` | `ordenes.editar`, `ordenes.eliminar` | ✅ | ✅ |
 | Ver resultados liberados | Ver resultados | `ver_resultados` | `resultados.ver`, `cuestionarios.ver` | ✅ | ✅ |
 | PDF orden de servicio | Descargar PDFs… | `descargar_pdf` | `ordenes.ver`, `resultados.descargar` | ✅ | ✅ |
 | Subir papelería candidato | Subir papelería | `subir_documentos` | `documentos.subir` | ✅ | ✅ |
 | Ver/descargar papelería | Ver y descargar… | `descargar_documentos` | `documentos.ver` | ✅ | ✅ |
-| Reportes evaluaciones | Ver reportes | `ver_reportes` | `reportes.ver` | ✅ | ❌ (no por defecto) |
+| Reportes evaluaciones | Ver reportes | `ver_reportes` | `reportes.ver` | ✅ | ✅ (desde 21-sep-2026, solo altas nuevas) |
 
-**Perfil default trabajador:** `EmpresaPermisosSupport::PERMISOS_DEFAULT_TRABAJADOR`
+**Perfil default trabajador:** `EmpresaPermisosSupport::PERMISOS_DEFAULT_TRABAJADOR` (8 claves; incluye `crear_ordenes` y `ver_reportes` desde prod `9466f5bf`).
+
+**Cuentas creadas antes del 21-sep-2026:** conservan el JSON guardado; no hay migración masiva. Titular: Mi Empresa → Usuarios → Editar. REPRO admin: Administración → Usuarios → **Permisos de este trabajador** (solo JSON en `users.permisos`; no crea rol `user_{id}`).
 
 ---
 

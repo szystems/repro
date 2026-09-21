@@ -43,6 +43,27 @@ class InformeWordObservaciones16AgoTest extends TestCase
         $this->assertSame([], InformeWordXml::problemasEstructura($documentXml));
     }
 
+    public function test_solo_la_imagen_marcada_queda_en_el_word(): void
+    {
+        Storage::fake('local');
+
+        $evaluado = $this->evaluadoConCuestionario();
+        $this->agregarPapeleria($evaluado, ['antecedentes_penales', 'antecedentes_penales']);
+        $docs = $evaluado->fresh('documentos')->documentos->sortBy('id')->values();
+        $this->assertCount(2, $docs);
+        $docs[0]->update(['nombre_original' => 'antecedente-candidato.png']);
+        $docs[1]->update(['nombre_original' => 'validacion-repro.png']);
+
+        InformeWordAnexosPapeleria::guardarSeleccion($evaluado->id, [$docs[1]->id], null);
+
+        $documentXml = $this->documentXmlGenerado($evaluado->fresh());
+
+        $this->assertStringContainsString('DOCUMENTOS ADJUNTOS', $documentXml);
+        $this->assertStringContainsString('validacion-repro.png', $documentXml);
+        $this->assertStringNotContainsString('antecedente-candidato.png', $documentXml);
+        $this->assertSame([], InformeWordXml::problemasEstructura($documentXml));
+    }
+
     public function test_celda_de_papeleria_no_queda_anidada_dentro_de_otra_celda(): void
     {
         $celda = InformeWordXml::construirCeldaSimple(

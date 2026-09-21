@@ -48,6 +48,8 @@ class InformeWordSprintCTest extends TestCase
         DocumentoEvaluado::factory()->create([
             'evaluado_orden_id' => $evaluado->id,
             'tipo_documento' => 'dpi_archivo',
+            'mime_type' => 'image/jpeg',
+            'nombre_original' => 'dpi.jpg',
         ]);
 
         $disponibles = InformeWordAnexosPapeleria::tiposDisponibles($evaluado);
@@ -56,7 +58,7 @@ class InformeWordSprintCTest extends TestCase
         $this->assertArrayNotHasKey('cv', $disponibles);
     }
 
-    public function test_anexos_papeleria_incluye_pdfs_seleccionados(): void
+    public function test_anexos_papeleria_no_incluye_pdf_aunque_el_tipo_este_marcado(): void
     {
         $evaluado = $this->evaluado();
 
@@ -68,10 +70,32 @@ class InformeWordSprintCTest extends TestCase
 
         InformeWordAnexosPapeleria::guardarSeleccion($evaluado->id, ['cv'], $this->userId());
 
+        $this->assertTrue(InformeWordAnexosPapeleria::documentosParaWord($evaluado->fresh())->isEmpty());
+    }
+
+    public function test_anexos_papeleria_elige_una_imagen_y_deja_fuera_la_otra_del_mismo_tipo(): void
+    {
+        $evaluado = $this->evaluado();
+        $original = DocumentoEvaluado::factory()->create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_documento' => 'antecedentes_penales',
+            'mime_type' => 'image/jpeg',
+            'nombre_original' => 'antecedente-candidato.jpg',
+        ]);
+        $validacion = DocumentoEvaluado::factory()->create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_documento' => 'antecedentes_penales',
+            'mime_type' => 'image/jpeg',
+            'nombre_original' => 'validacion-repro.jpg',
+        ]);
+
+        InformeWordAnexosPapeleria::guardarSeleccion($evaluado->id, [$validacion->id], $this->userId());
+
         $docs = InformeWordAnexosPapeleria::documentosParaWord($evaluado->fresh());
 
         $this->assertCount(1, $docs);
-        $this->assertTrue($docs->first()->es_pdf);
+        $this->assertSame($validacion->id, $docs->first()->id);
+        $this->assertNotSame($original->id, $docs->first()->id);
     }
 
     public function test_sin_seleccion_no_incluye_papeleria_aunque_el_candidato_tenga_archivos(): void

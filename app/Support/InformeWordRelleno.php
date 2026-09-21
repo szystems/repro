@@ -46,8 +46,14 @@ class InformeWordRelleno
             $tabla = InformeWordXml::expandirTablaAnchoPagina($tabla, $anchoReferencia);
             $tabla = InformeWordXml::extenderFilasDeUnaCeldaAlGrid($tabla);
             $tabla = InformeWordXml::forzarTamanoFuenteFilasPorAncho($tabla, 24, 22, 5);
+            $filas = InformeWordXml::filasTabla($tabla);
+            foreach ($filas as $indice => $fila) {
+                if (str_contains(InformeWordXml::textoFila($fila), 'TOTALES:')) {
+                    $filas[$indice] = self::filaTotalesDeudasEnOncePuntos($fila);
+                }
+            }
 
-            return $tabla;
+            return InformeWordXml::reconstruirTabla($tabla, $filas);
         });
 
         foreach ([
@@ -899,7 +905,7 @@ class InformeWordRelleno
             }));
 
             if ($hijosConDatos === []) {
-                return InformeWordXml::reemplazarFilaEnTabla($tabla, 1, ['No tiene'], 1);
+                return InformeWordXml::reemplazarFilaEnTabla($tabla, 1, ['No tiene'], 0);
             }
 
             foreach (array_values($hijosConDatos) as $indice => $hijo) {
@@ -1010,7 +1016,7 @@ class InformeWordRelleno
                     }
                 }
 
-                return self::rellenarFilasValidacionConstanciaEnTablaAcademica($tabla, $filasAcademicas);
+                return self::rellenarFilasValidacionConstanciaEnTablaAcademica($tabla);
             }
 
             $nivelesColocados = [];
@@ -1068,13 +1074,13 @@ class InformeWordRelleno
             $tabla = InformeWordXml::eliminarFilasSinDatosEnRango($tabla, 1, 5, 1);
 
             $filas = InformeWordXml::filasTabla($tabla);
-            $filas = array_values(array_map(function (string $fila) use ($estudiosActuales, $estudiaActualmente, $filasAcademicas): string {
+            $filas = array_values(array_map(function (string $fila) use ($estudiosActuales, $estudiaActualmente): string {
                 if (mb_stripos(InformeWordXml::textoFila($fila), 'estudia actualmente') !== false) {
                     return self::rellenarFilaEstudiaActualmente($fila, $estudiosActuales, $estudiaActualmente);
                 }
 
                 if (str_contains(InformeWordXml::textoFila($fila), 'Validación de constancia')) {
-                    return self::rellenarFilaValidacionConstancia($fila, self::textoValidacionConstanciaEstudios($filasAcademicas));
+                    return self::rellenarFilaValidacionConstancia($fila, '');
                 }
 
                 return $fila;
@@ -1414,13 +1420,12 @@ class InformeWordRelleno
         return null;
     }
 
-    /** @param list<array<string, mixed>> $filasAcademicas */
-    private static function rellenarFilasValidacionConstanciaEnTablaAcademica(string $tabla, array $filasAcademicas): string
+    private static function rellenarFilasValidacionConstanciaEnTablaAcademica(string $tabla): string
     {
         $filas = InformeWordXml::filasTabla($tabla);
-        $filas = array_values(array_map(function (string $fila) use ($filasAcademicas): string {
+        $filas = array_values(array_map(function (string $fila): string {
             if (str_contains(InformeWordXml::textoFila($fila), 'Validación de constancia')) {
-                return self::rellenarFilaValidacionConstancia($fila, self::textoValidacionConstanciaEstudios($filasAcademicas));
+                return self::rellenarFilaValidacionConstancia($fila, '');
             }
 
             return $fila;
@@ -1429,32 +1434,12 @@ class InformeWordRelleno
         return InformeWordXml::reconstruirTabla($tabla, $filas);
     }
 
-    /** @param list<array<string, mixed>> $filasAcademicas */
-    private static function textoValidacionConstanciaEstudios(array $filasAcademicas): string
-    {
-        foreach (array_reverse($filasAcademicas) as $fila) {
-            $constancia = strtolower(trim((string) ($fila['tiene_constancia'] ?? '')));
-            if ($constancia === 'si' || $constancia === 'sí') {
-                return 'Sí';
-            }
-            if ($constancia === 'no') {
-                return 'No';
-            }
-            $respaldo = trim((string) ($fila['respaldo'] ?? ''));
-            if ($respaldo !== '') {
-                return self::texto($respaldo);
-            }
-        }
-
-        return '';
-    }
-
+    /**
+     * La fila la llena el evaluador (presentó constancia y se validó en MINEDUC).
+     * No se copia el sí/no que marcó el candidato en el formulario.
+     */
     private static function rellenarFilaValidacionConstancia(string $fila, string $valor): string
     {
-        if ($valor === '') {
-            return $fila;
-        }
-
         return InformeWordXml::establecerFila($fila, [$valor], 1);
     }
 
@@ -2429,6 +2414,15 @@ class InformeWordRelleno
 
         $xml = InformeWordXml::separarTablasContiguas($xml);
 
+        if ($variante === InformeWordPlantillas::VARIANTE_PREEMPLEO
+            && InformeWordXml::limitesTablaPorMarcador($xml, 'AMPLIACIÓN DE INFORMACIÓN LABORAL') !== null) {
+            $xml = InformeWordXml::compactarEntreTablasPorMarcadores(
+                $xml,
+                'INFORMACIÓN LABORAL',
+                'AMPLIACIÓN DE INFORMACIÓN LABORAL'
+            );
+        }
+
         if ($variante === InformeWordPlantillas::VARIANTE_PREEMPLEO) {
             $xml = self::normalizarFuentesPreempleoExportado($xml);
             if (InformeWordXml::limitesTablaPorMarcador($xml, 'ASPECTOS JUDICIALES') !== null) {
@@ -2792,6 +2786,41 @@ class InformeWordRelleno
         }
 
         return $total;
+    }
+
+    /** 11 pt y sin salto de línea, para que Q. 36,000.00 no baje el último dígito. */
+    private static function filaTotalesDeudasEnOncePuntos(string $fila): string
+    {
+        $fila = preg_replace('/<w:sz(Cs)? w:val="\d+"\/>/', '<w:sz$1 w:val="22"/>', $fila) ?? $fila;
+        $sz = '<w:sz w:val="22"/><w:szCs w:val="22"/>';
+        $fila = preg_replace_callback(
+            '/<w:rPr\b[^>]*>.*?<\/w:rPr>/s',
+            static function (array $m) use ($sz): string {
+                if (str_contains($m[0], '<w:sz')) {
+                    return $m[0];
+                }
+
+                return preg_replace('/^(<w:rPr\b[^>]*>)/', '$1'.$sz, $m[0], 1) ?? $m[0];
+            },
+            $fila
+        ) ?? $fila;
+
+        $celdas = InformeWordXml::celdasFila($fila);
+        foreach ($celdas as $indice => $celda) {
+            if ($indice === 0 || str_contains($celda, 'w:noWrap')) {
+                continue;
+            }
+            if (preg_match('/<w:tcPr\b/', $celda) === 1) {
+                $celda = preg_replace('/<w:tcPr\b([^>]*)>/', '<w:tcPr$1><w:noWrap/>', $celda, 1) ?? $celda;
+            } else {
+                $celda = preg_replace('/<w:tc\b([^>]*)>/', '<w:tc$1><w:tcPr><w:noWrap/></w:tcPr>', $celda, 1) ?? $celda;
+            }
+            $celdas[$indice] = $celda;
+        }
+
+        preg_match('/<w:tr\b[^>]*>/', $fila, $apertura);
+
+        return ($apertura[0] ?? '<w:tr>').implode('', $celdas).'</w:tr>';
     }
 
     private static function formatoQuetzales(float $monto): string

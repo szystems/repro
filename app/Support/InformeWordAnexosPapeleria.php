@@ -34,15 +34,7 @@ class InformeWordAnexosPapeleria
      */
     public static function tiposSeleccionados(int $evaluadoOrdenId): array
     {
-        $raw = trim((string) (EvaluadorNotasSupport::mapaPorSeccion($evaluadoOrdenId)[self::SECCION_NOTA] ?? ''));
-        if ($raw === '') {
-            return [];
-        }
-
-        $decoded = json_decode($raw, true);
-        if (! is_array($decoded)) {
-            return [];
-        }
+        $decoded = self::seleccionDecodificada($evaluadoOrdenId);
 
         return array_values(array_filter(
             $decoded,
@@ -51,26 +43,76 @@ class InformeWordAnexosPapeleria
     }
 
     /**
-     * @param  list<string>|null  $tipos
+     * Acepta ids de documento (selección por archivo) o claves de tipo (selección anterior).
+     *
+     * @param  list<int|string>|null  $seleccion
      */
-    public static function guardarSeleccion(int $evaluadoOrdenId, ?array $tipos, ?int $userId): void
+    public static function guardarSeleccion(int $evaluadoOrdenId, ?array $seleccion, ?int $userId): void
     {
-        if ($tipos === null) {
+        if ($seleccion === null) {
             return;
         }
 
-        $validos = array_values(array_unique(array_filter(
-            $tipos,
-            static fn ($tipo): bool => is_string($tipo) && in_array($tipo, self::TIPOS_ANEXO, true)
-        )));
+        $ids = [];
+        $tipos = [];
+        foreach ($seleccion as $valor) {
+            if (is_int($valor) || (is_string($valor) && ctype_digit($valor))) {
+                $id = (int) $valor;
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+
+                continue;
+            }
+            if (is_string($valor) && in_array($valor, self::TIPOS_ANEXO, true)) {
+                $tipos[] = $valor;
+            }
+        }
+
+        $ids = array_values(array_unique($ids));
+        $tipos = array_values(array_unique($tipos));
+        $payload = $ids !== []
+            ? array_map(static fn (int $id): string => (string) $id, $ids)
+            : $tipos;
 
         EvaluadorNota::guardarNota(
             $evaluadoOrdenId,
             self::SECCION_NOTA,
             '',
-            $validos === [] ? null : json_encode($validos, JSON_UNESCAPED_UNICODE),
+            $payload === [] ? null : json_encode($payload, JSON_UNESCAPED_UNICODE),
             $userId
         );
+    }
+
+    /**
+     * @return list<int>
+     */
+    public static function idsSeleccionados(int $evaluadoOrdenId): array
+    {
+        $decoded = self::seleccionDecodificada($evaluadoOrdenId);
+        $ids = [];
+        foreach ($decoded as $valor) {
+            if (is_int($valor) || (is_string($valor) && ctype_digit($valor))) {
+                $ids[] = (int) $valor;
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * @return list<mixed>
+     */
+    private static function seleccionDecodificada(int $evaluadoOrdenId): array
+    {
+        $raw = trim((string) (EvaluadorNotasSupport::mapaPorSeccion($evaluadoOrdenId)[self::SECCION_NOTA] ?? ''));
+        if ($raw === '') {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**
@@ -104,18 +146,41 @@ class InformeWordAnexosPapeleria
     }
 
     /**
-     * Documentos a insertar en ANEXOS del Word (imágenes y PDFs embebidos como páginas PNG).
+     * Imágenes que se pueden marcar una por una (dos archivos del mismo tipo no se anexan juntos).
+     *
+     * @return Collection<int, DocumentoEvaluado>
+     */
+    public static function imagenesDisponibles(EvaluadoOrden $evaluado): Collection
+    {
+        $evaluado->loadMissing('documentos');
+
+        return $evaluado->documentos
+            ->filter(fn (DocumentoEvaluado $doc): bool => $doc->es_imagen && in_array($doc->tipo_documento, self::TIPOS_ANEXO, true))
+            ->values();
+    }
+
+    /**
+     * Imágenes marcadas para el Word. Si la selección guardada es por tipo (anterior),
+     * entran todas las imágenes de esos tipos.
      *
      * @return Collection<int, DocumentoEvaluado>
      */
     public static function documentosParaWord(EvaluadoOrden $evaluado): Collection
     {
+        $evaluado->loadMissing('documentos');
+        $ids = self::idsSeleccionados($evaluado->id);
+        if ($ids !== []) {
+            return $evaluado->documentos
+                ->filter(fn (DocumentoEvaluado $doc): bool => in_array($doc->id, $ids, true)
+                    && $doc->es_imagen
+                    && in_array($doc->tipo_documento, self::TIPOS_ANEXO, true))
+                ->values();
+        }
+
         $seleccionados = self::tiposSeleccionados($evaluado->id);
         if ($seleccionados === []) {
             return collect();
         }
-
-        $evaluado->loadMissing('documentos');
 
         return $evaluado->documentos
             ->filter(fn (DocumentoEvaluado $doc): bool => in_array($doc->tipo_documento, $seleccionados, true) && $doc->es_imagen)

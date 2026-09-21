@@ -26,6 +26,10 @@ class InformeWordSprintTTest extends TestCase
         $tabla = $this->tabla($xml, 'HIJOS:');
         $this->assertStringContainsString('No tiene', $tabla);
         $this->assertStringNotContainsString('No aplica', $tabla);
+        $filas = InformeWordXml::filasTabla($tabla);
+        $celdas = InformeWordXml::celdasFila($filas[1] ?? '');
+        $this->assertNotEmpty($celdas);
+        $this->assertStringContainsString('No tiene', InformeWordXml::textoCelda($celdas[0]));
     }
 
     public function test_ampliacion_laboral_renombra_y_queda_tras_informacion_laboral(): void
@@ -49,6 +53,10 @@ class InformeWordSprintTTest extends TestCase
             'Texto ampliación laboral Sprint T',
             InformeWordXml::textoTablaConcatenado(substr($xml, $limites[0], $limites[1] - $limites[0]))
         );
+
+        $limitesLaboral = InformeWordXml::limitesTablaPorMarcador($xml, 'INFORMACIÓN LABORAL');
+        $this->assertNotNull($limitesLaboral);
+        $this->assertSame($limites[0], $limitesLaboral[1]);
     }
 
     public function test_judicial_deja_espacio_antes_de_informacion_complementaria(): void
@@ -97,7 +105,61 @@ class InformeWordSprintTTest extends TestCase
         ]);
         $tabla = $this->tabla($xml, 'NIVEL ACADÉMICO') ?: $this->tabla($xml, 'DATOS ACADÉMICOS');
         $this->assertStringContainsString('Validación de constancia', $tabla);
-        $this->assertStringContainsString('No', $tabla);
+        foreach (InformeWordXml::filasTabla($tabla) as $fila) {
+            if (! str_contains(InformeWordXml::textoFila($fila), 'Validación de constancia')) {
+                continue;
+            }
+            $celdas = InformeWordXml::celdasFila($fila);
+            $valor = isset($celdas[1]) ? trim(InformeWordXml::textoCelda($celdas[1])) : '';
+            $this->assertSame('', $valor);
+        }
+    }
+
+    public function test_totales_de_deudas_van_en_11_puntos_sin_salto(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
+        ]);
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 5,
+            'total_secciones' => 5,
+            'completado' => true,
+        ]);
+        CuestionarioRespuesta::guardarTabla($cuestionario->id, 'situacion_economica', 'deudas', [[
+            'entidad' => 'Banco',
+            'monto' => '36000',
+            'saldo' => '20905.39',
+            'cuota' => '800',
+            'motivo' => 'Prestamo',
+            'antiguedad' => '1 año',
+            'estatus' => 'al_dia',
+        ]]);
+
+        $path = InformeWordExport::generar($orden->fresh(), $evaluado->fresh(['cuestionario', 'orden.empresa', 'sede']));
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($path) === true);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        @unlink($path);
+        $this->assertIsString($xml);
+
+        $tabla = $this->tabla($xml, 'ASPECTO ECONÓMICO');
+        $filaTotales = '';
+        foreach (InformeWordXml::filasTabla($tabla) as $fila) {
+            if (str_contains(InformeWordXml::textoFila($fila), 'TOTALES:')) {
+                $filaTotales = $fila;
+                break;
+            }
+        }
+        $this->assertNotSame('', $filaTotales);
+        $this->assertStringContainsString('w:val="22"', $filaTotales);
+        $this->assertStringContainsString('w:noWrap', $filaTotales);
+        $this->assertStringContainsString('36,000.00', $filaTotales);
     }
 
     /**

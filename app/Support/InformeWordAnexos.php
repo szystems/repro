@@ -164,7 +164,8 @@ class InformeWordAnexos
             return;
         }
 
-        $posicionInsercion = InformeWordXml::posicionFinTablaPorMarcador($documentXml, 'TATUAJES');
+        $posicionInsercion = InformeWordXml::posicionFinTablaPorMarcador($documentXml, 'TATUAJES')
+            ?? InformeWordXml::posicionAntesDeSectPr($documentXml);
         if ($posicionInsercion === null) {
             return;
         }

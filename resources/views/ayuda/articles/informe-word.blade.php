@@ -22,9 +22,9 @@
     <ul>
         <li>El informe incluye datos personales, laborales, familiares y secciones específicas según el tipo de formulario.</li>
         <li>Las secciones sin datos (ej. deudas vacías) no aparecen en el documento.</li>
-        <li>En <strong>polígrafo y VSA preempleo</strong>: hijos vacíos muestran «No tiene»; el bloque laboral se titula <strong>Ampliación de información laboral</strong> (pegado al historial); validación de constancia de estudios usa la respuesta del formulario.</li>
+        <li>En <strong>polígrafo y VSA preempleo</strong>: hijos vacíos muestran «No tiene» en la primera columna; el bloque <strong>Ampliación de información laboral</strong> va pegado al historial; la fila <strong>Validación de constancia de estudios</strong> queda vacía para que la llene el evaluador (no se copia el sí/no del candidato). Los totales de deudas van en 11 puntos.</li>
         <li>La tabla <strong>Información complementaria</strong> va en fuente 12.</li>
-        <li>Los anexos de papelería en el Word solo incluyen <strong>imágenes</strong> (no PDF); en la tabla figura el nombre del archivo.</li>
+        <li>En <strong>Anexos de papelería en informe Word</strong> se marca cada imagen (JPG o PNG). Si hay dos archivos del mismo documento, se elige solo el que debe ir al final del Word. Los PDF no se anexan.</li>
         <li>La sección TATUAJES solo muestra información de tatuajes, no documentos adjuntos.</li>
     </ul>
 

@@ -2038,6 +2038,18 @@ class InformeWordXml
         InformeWordZip::reemplazarEntrada($zip, '[Content_Types].xml', $contentTypes);
     }
 
+    /** Justo antes de sectPr (o del cierre de body) para anexar al final si no hay tabla TATUAJES. */
+    public static function posicionAntesDeSectPr(string $xml): ?int
+    {
+        if (preg_match('/<w:sectPr\b/', $xml, $coincidencia, PREG_OFFSET_CAPTURE) === 1) {
+            return (int) $coincidencia[0][1];
+        }
+
+        $cierre = strrpos($xml, '</w:body>');
+
+        return $cierre === false ? null : $cierre;
+    }
+
     /** Posición justo después de la última </w:tbl> que contiene el marcador. */
     public static function posicionFinTablaPorMarcador(string $xml, string $marcador): ?int
     {

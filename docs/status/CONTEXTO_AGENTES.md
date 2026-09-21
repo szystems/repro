@@ -1,8 +1,8 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 20 de septiembre de 2026  
-**Estado:** ✅ **SPRINT T código cerrado** (`fbf8fb91`) · preliminar 1ª hoja + Word preempleo poli/VSA · KPI Excel/calendario ✅ · **Resend Pro ⏸ Otto** · portal `https://portal.reprogt.com` · iPage 503  
+**Fecha de Contexto:** 21 de septiembre de 2026 (noche)  
+**Estado:** Word preempleo (constancia vacía, tablas laborales pegadas, totales 11 pt, anexos por imagen) en deploy tras WA 21-sep noche · permisos+foto `9466f5bf` ✅ ella confirmó · **Resend Pro ⏸ Otto** · portal `https://portal.reprogt.com` · iPage 503  
 
 **Plan activo:** `docs/repro/cambios septiembre/20'09'2026/PLAN_SPRINT_T_OBSERVACIONES_20-09-2026.md`  
 **Plan S (correos reclutador):** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md` · merge prod ~`3f6092a6`  
@@ -57,6 +57,48 @@
 
 ---
 
+## ⏸️ Stephany 21-sep-2026 — permisos trabajador + foto perfil (prod · esperando ella)
+
+**Origen:** WA ~9:38–9:54 (2 capturas): (1) reclutadores nuevos sin **Crear órdenes** / **Ver reportes** por defecto; no encontraban edición individual; al editar desde REPRO aparecía un rol Spatie nuevo. (2) cambiar foto de perfil → página **Error del servidor** (500).
+
+**Prod:** `9466f5bf` · push `master` → Coolify auto-deploy · **no codear** hasta nuevas observaciones de Stephany.
+
+| Qué | Entrega | Estado |
+|-----|---------|--------|
+| Default trabajador incluye crear órdenes + ver reportes | `PERMISOS_DEFAULT_TRABAJADOR` · formulario Mi Empresa → Usuario nuevo | ✅ prod (solo **usuarios nuevos**; cuentas existentes sin cambio masivo) |
+| Editar permisos de **un** trabajador sin rol Spatie | Portal empresa: Usuarios → Editar · REPRO: Administración → Usuarios → bloque **Permisos de este trabajador** (no principal) | ✅ prod |
+| Foto perfil sin 500 | `PerfilImagenSupport` + `chown` `public/assets/imgs/users` en `Dockerfile.coolify` / `docker/coolify/start.sh` · flash si falla move | ✅ prod UAT |
+| Centro de Ayuda | `permisos-trabajador`, `usuarios-empresa` (audiencia empresa titular) | ✅ prod |
+| PHPUnit (Docker) | permisos + foto + ayuda (salvo fallo preexistente `ExportacionesPermisosTest` repro sin generar) | ✅ local |
+
+**Humo prod (21-sep, Otto/agente):** login UAT `uat.g1.browser@repro.local` / `UAT.G1Word2026!` · user **271**. Editar user **261** (Alejandra Ramírez, CORPORACIÓN ARIUM, no principal): texto «Solo cambian a esta persona…»; crear/reportes **desmarcados** (JSON viejo intacto). PUT foto user 271 → 302 «Usuario actualizado», imagen `assets/imgs/users/1790015965_99dee842.jpg` HTTP 200. **No** crear usuarios reales en prod (UserMail). **No** guardar permisos en trabajadores reales durante prueba.
+
+**Mensaje WA:** Otto puede avisar a Stephany que ya está en el portal; que pruebe alta de reclutador (casillas marcadas) y cambio de foto (JPG/PNG &lt; 3 MB). Titulares editan reclutadores en Mi Empresa; REPRO puede ajustar uno a uno en Administración → Usuarios.
+
+**Archivos clave:** `EmpresaPermisosSupport.php` · `UsersController.php` · `PerfilImagenSupport.php` · `Handler.php` (PostTooLarge) · `resources/views/admin/user/edit.blade.php` · `empresa/usuarios/create.blade.php` · `docker/coolify/start.sh` · `Dockerfile.coolify`.
+
+**Siguiente:** ella ya respondió el mismo 21-sep (foto y permisos OK). Ver lote Word de la noche.
+
+---
+
+## Stephany 21-sep-2026 noche — Word preempleo + anexos (imágenes)
+
+**Origen:** WA ~10:47–11:00. Foto de perfil y permisos de trabajador: **los dio por buenos** (no reabrir). Pidió ajustes de Word polígrafo/VSA preempleo y volver a anexar papelería **imagen por imagen**.
+
+| Qué | Entrega |
+|-----|---------|
+| Hijos vacíos «No tiene» en la **primera** columna | `rellenarTablaHijos` columna 0 |
+| Validación de constancia de estudios **vacía** | No se copia el sí/no del candidato; la llena el evaluador (presentó y validó MINEDUC) |
+| Historial laboral + ampliación **pegados** | Recompactar después de `separarTablasContiguas` (ese paso volvía a separarlas) |
+| Totales de deudas en **11 pt** sin salto de línea | La fila TOTALES tiene 4 celdas y el pase posterior la dejaba en 12 pt |
+| Anexos | En editar cuestionario, una casilla **por imagen** (JPG/PNG). Dos archivos del mismo tipo se eligen por separado. PDF no entra. Van al final, después de TATUAJES (o al cierre del documento si no hay esa tabla) |
+
+**No:** periódico / específico / socio, salvo que ella lo pida. **No** regenerar NEVERIA/CORALSA/PERCO. **No** crear usuarios reales. PDF de papelería sigue fuera del Word (evita 503).
+
+**Prueba:** `InformeWordSprintTTest`, `InformeWordSprintCTest`, `InformeWordObservaciones16AgoTest` (imagen marcada). UAT `uat.g1.browser@repro.local` / `UAT.G1Word2026!`.
+
+---
+
 ## 🔧 SPRINT S — LEER PRIMERO (11-sep-2026) · correos de resultados
 
 **Origen:** WA Stephany (lógica reclutador ≠ confidencial + “no me llegan correos”).  
@@ -91,7 +133,7 @@
 | **R-V1** | Enlace 15 días (nuevos + rehabilitar; viejos no se recortan) | ✅ prod · BD `dias_vigencia_token=15` |
 | **R-W1** | WhatsApp en listado de candidatos | ✅ prod |
 | **R-X1** | Excel de usuarios (`/excel-users`) | ✅ prod |
-| **R-F1** | Fotos usuario/empresa (`PerfilImagenSupport`) | ✅ código prod · ella debe re-probar |
+| **R-F1** | Fotos usuario/empresa (`PerfilImagenSupport`) | ✅ prod · re-probado 21-sep UAT 271 (`9466f5bf`; antes 500 por permisos dir en contenedor) |
 | **R-U1** | Correo al crear usuario desde empresa | ✅ prod |
 | **R-G1** | Guía SIGOR en Centro de Ayuda | ✅ prod |
 | **R-Q1** | Rol Empresa QZ Temporal | ℹ️ explicación WA · no borrar (1 usuario) |
