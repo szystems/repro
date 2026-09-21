@@ -1010,7 +1010,7 @@ class InformeWordRelleno
                     }
                 }
 
-                return $tabla;
+                return self::rellenarFilasValidacionConstanciaEnTablaAcademica($tabla, $filasAcademicas);
             }
 
             $nivelesColocados = [];
@@ -1068,7 +1068,7 @@ class InformeWordRelleno
             $tabla = InformeWordXml::eliminarFilasSinDatosEnRango($tabla, 1, 5, 1);
 
             $filas = InformeWordXml::filasTabla($tabla);
-            $filas = array_values(array_map(function (string $fila) use ($estudiosActuales, $estudiaActualmente): string {
+            $filas = array_values(array_map(function (string $fila) use ($estudiosActuales, $estudiaActualmente, $filasAcademicas): string {
                 if (mb_stripos(InformeWordXml::textoFila($fila), 'estudia actualmente') !== false) {
                     return self::rellenarFilaEstudiaActualmente($fila, $estudiosActuales, $estudiaActualmente);
                 }
@@ -1412,6 +1412,21 @@ class InformeWordRelleno
         }
 
         return null;
+    }
+
+    /** @param list<array<string, mixed>> $filasAcademicas */
+    private static function rellenarFilasValidacionConstanciaEnTablaAcademica(string $tabla, array $filasAcademicas): string
+    {
+        $filas = InformeWordXml::filasTabla($tabla);
+        $filas = array_values(array_map(function (string $fila) use ($filasAcademicas): string {
+            if (str_contains(InformeWordXml::textoFila($fila), 'Validación de constancia')) {
+                return self::rellenarFilaValidacionConstancia($fila, self::textoValidacionConstanciaEstudios($filasAcademicas));
+            }
+
+            return $fila;
+        }, $filas));
+
+        return InformeWordXml::reconstruirTabla($tabla, $filas);
     }
 
     /** @param list<array<string, mixed>> $filasAcademicas */
@@ -2412,11 +2427,20 @@ class InformeWordRelleno
             }
         }
 
+        $xml = InformeWordXml::separarTablasContiguas($xml);
+
         if ($variante === InformeWordPlantillas::VARIANTE_PREEMPLEO) {
             $xml = self::normalizarFuentesPreempleoExportado($xml);
+            if (InformeWordXml::limitesTablaPorMarcador($xml, 'ASPECTOS JUDICIALES') !== null) {
+                $xml = InformeWordXml::insertarFragmentoTrasTabla(
+                    $xml,
+                    'ASPECTOS JUDICIALES',
+                    InformeWordXml::parrafoEspacio(160, 80)
+                );
+            }
         }
 
-        return InformeWordXml::separarTablasContiguas($xml);
+        return $xml;
     }
 
     /** T-W5: al generar el .docx, criterios 9 pt y tatuajes/deudas 11 pt (Helvetica ya en plantilla). */

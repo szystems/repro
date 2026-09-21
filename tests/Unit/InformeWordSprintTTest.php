@@ -54,11 +54,12 @@ class InformeWordSprintTTest extends TestCase
     public function test_judicial_deja_espacio_antes_de_informacion_complementaria(): void
     {
         $xml = $this->xmlPreempleoPoligrafo([], [], '—', 'Narrativa judicial Sprint T');
-        $posJudicial = strpos($xml, 'ASPECTOS JUDICIALES');
-        $posComplementaria = strpos($xml, 'INFORMACIÓN COMPLEMENTARIA');
-        $this->assertNotFalse($posJudicial);
-        $this->assertNotFalse($posComplementaria);
-        $entre = substr($xml, $posJudicial, $posComplementaria - $posJudicial);
+        $limitesJudicial = InformeWordXml::limitesTablaPorMarcador($xml, 'ASPECTOS JUDICIALES');
+        $limitesComplementaria = InformeWordXml::limitesTablaPorMarcador($xml, 'INFORMACIÓN COMPLEMENTARIA');
+        $this->assertNotNull($limitesJudicial);
+        $this->assertNotNull($limitesComplementaria);
+        $this->assertLessThan($limitesComplementaria[0], $limitesJudicial[1]);
+        $entre = substr($xml, $limitesJudicial[1], $limitesComplementaria[0] - $limitesJudicial[1]);
         $this->assertStringContainsString('w:spacing', $entre);
     }
 

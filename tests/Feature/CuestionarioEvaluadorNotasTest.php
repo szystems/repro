@@ -110,7 +110,7 @@ class CuestionarioEvaluadorNotasTest extends TestCase
             ->assertSeeInOrder([
                 'Editar contenido de cuestionario',
                 'Inicio de redacción de informe en Word',
-                'Resultado de evaluación (primera hoja del informe)',
+                'Resultado de evaluación (primera y última hoja)',
                 'Tablas para informe',
                 'Redacción del informe Word',
             ]);
@@ -125,7 +125,7 @@ class CuestionarioEvaluadorNotasTest extends TestCase
             ->assertOk()
             ->assertSeeInOrder([
                 'Inicio de redacción de informe en Word',
-                'Resultado de evaluación (primera hoja del informe)',
+                'Resultado de evaluación (primera y última hoja)',
                 'Tablas para informe',
                 'Redacción del informe Word',
             ]);
