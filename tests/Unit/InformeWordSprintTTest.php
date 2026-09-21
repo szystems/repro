@@ -100,7 +100,9 @@ class InformeWordSprintTTest extends TestCase
         CuestionarioRespuesta::guardarTabla($cuestionario->id, 'informacion_familiar', 'hijos', $hijos);
         if ($academico !== []) {
             CuestionarioRespuesta::guardarTabla($cuestionario->id, 'historial_laboral', 'formacion_academica', $academico);
-            CuestionarioRespuesta::guardar($cuestionario->id, 'historial_laboral', 'ultimo_nivel_academico', 'universitario');
+            CuestionarioRespuesta::guardarRespuestas($cuestionario->id, 'historial_laboral', [
+                'ultimo_nivel_academico' => 'universitario',
+            ]);
         }
         EvaluadorNota::guardarNota($evaluado->id, 'word_laboral', '', $wordLaboral, null);
         EvaluadorNota::guardarNota($evaluado->id, 'word_judicial', '', $wordJudicial, null);

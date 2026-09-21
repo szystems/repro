@@ -21,8 +21,8 @@
 |--------|--------|--------|
 | **T-KPI** Excel reclutador + sede cliente; calendario informe final; autoasignación informe final | ✅ **Prod** | Commit `f42a0d50` · migración `2026_09_15_120000_add_informe_final_roles…` batch **121** |
 | **T-MAIL** Pago Resend Pro + team REPRO Portal | ⏸ **Pendiente Otto** | Checkout Stripe abierto; cuenta `szystemscorreos@outlook.com` · mover `reprogt.com` + API key Coolify después del pago |
-| **T-PRE** Preliminar no se actualiza al corregir 1ª hoja | 🔧 **Por hacer** | Comportamiento actual documentado abajo |
-| **T-WORD** Cambios Word Polígrafo + VSA **solo preempleo** | 📋 **Por hacer** (lotes) | Ver matriz · **no cambiar nada más** (ella lo pidió explícito) |
+| **T-PRE** Preliminar no se actualiza al corregir 1ª hoja | ✅ **Prod** (commit `75497e58`) | Flag `informe_preliminar_editado_manual` + `sincronizarDesdeWord` |
+| **T-WORD** Cambios Word Polígrafo + VSA **solo preempleo** | 🔧 **Parcial** | T-W1/W2/W3/W4/W6 en código · **T-W5** plantillas pendiente revisión Stephany |
 
 ---
 
@@ -107,13 +107,13 @@
 ## Orden de desarrollo (canónico — no saltar sin cerrar verificación)
 
 ```
-1. [ ] T-PRE     Preliminar ↔ 1ª hoja (+ tests + UAT)
-2. [ ] T-W1      Hijos «No tiene»
-3. [ ] T-W3      Ampliación laboral (título + layout)
-4. [ ] T-W4      Despegar tablas judicial / complementaria
-5. [ ] T-W2      Validación constancia estudios (plantilla + datos)
+1. [x] T-PRE     Preliminar ↔ 1ª hoja (+ tests + UAT)
+2. [x] T-W1      Hijos «No tiene»
+3. [x] T-W3      Ampliación laboral (título + layout)
+4. [x] T-W4      Despegar tablas judicial / complementaria
+5. [x] T-W2      Validación constancia estudios (plantilla + datos)
 6. [ ] T-W5      Helvetica / tamaños plantillas preempleo poli+VSA
-7. [ ] T-W6      Papelería anexos (diagnóstico + fix)
+7. [x] T-W6      Papelería anexos (diagnóstico + fix)
 — paralelo ops —
 8. [ ] T-MAIL    Pago Resend + cutover dominio/API (Otto + dev post-pago)
 ```
@@ -160,4 +160,4 @@ php artisan test --filter='InformePreliminar|CuestionarioEvaluadorNotas|InformeW
 
 ## Siguiente acción recomendada
 
-Implementar **T-PRE** en rama pequeña → tests → deploy → avisar Stephany que prueben 1ª hoja + preliminar antes de abrir **T-W***.
+**Deploy:** `75497e58` en `master` (Coolify auto-deploy). Stephany: UAT 1ª hoja ↔ preliminar + Word preempleo poli/VSA. Pendiente **T-W5** (tamaños en `.docx`) y **T-MAIL** (Otto).
