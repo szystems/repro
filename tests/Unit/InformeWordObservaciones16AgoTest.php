@@ -56,11 +56,24 @@ class InformeWordObservaciones16AgoTest extends TestCase
 
         InformeWordAnexosPapeleria::guardarSeleccion($evaluado->id, [$docs[1]->id], null);
 
-        $documentXml = $this->documentXmlGenerado($evaluado->fresh());
+        $evaluado = $evaluado->fresh(['cuestionario', 'orden', 'documentos']);
+        $path = InformeWordExport::generar($evaluado->orden, $evaluado);
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($path) === true);
+        $documentXml = (string) $zip->getFromName('word/document.xml');
+        $anexos = 0;
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            if (str_contains((string) $zip->getNameIndex($i), 'anexo_papeleria_')) {
+                $anexos++;
+            }
+        }
+        $zip->close();
+        @unlink($path);
 
         $this->assertStringContainsString('DOCUMENTOS ADJUNTOS', $documentXml);
-        $this->assertStringContainsString('validacion-repro.png', $documentXml);
+        $this->assertStringNotContainsString('validacion-repro.png', $documentXml);
         $this->assertStringNotContainsString('antecedente-candidato.png', $documentXml);
+        $this->assertSame(1, $anexos);
         $this->assertSame([], InformeWordXml::problemasEstructura($documentXml));
     }
 

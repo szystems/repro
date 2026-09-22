@@ -2173,6 +2173,26 @@ class InformeWordXml
     }
 
     /**
+     * @param  list<string>  $filasXml  Filas <w:tr>...</w:tr> de una sola celda
+     */
+    public static function construirTablaUnaColumna(array $filasXml, int $ancho = 10800): string
+    {
+        return '<w:tbl><w:tblPr><w:tblW w:w="' . $ancho . '" w:type="dxa"/><w:jc w:val="center"/>'
+            . '<w:tblBorders>'
+            . '<w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/>'
+            . '<w:insideH w:val="nil"/><w:insideV w:val="nil"/>'
+            . '</w:tblBorders></w:tblPr>'
+            . '<w:tblGrid><w:gridCol w:w="' . $ancho . '"/></w:tblGrid>'
+            . implode('', $filasXml)
+            . '</w:tbl>';
+    }
+
+    public static function construirFilaUnaColumna(string $celda): string
+    {
+        return '<w:tr>' . $celda . '</w:tr>';
+    }
+
+    /**
      * Elimina sub-sección Deudas/TOTALES cuando no hay filas de deuda con datos.
      *
      * Conserva la fila con el marcador de narrativa: es el único hueco donde se escribe el texto

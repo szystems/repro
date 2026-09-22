@@ -174,24 +174,13 @@ class InformeWordAnexos
         $siguienteDocPrId = 930001;
         $indice = 0;
         $filasTabla = [];
-
-        $celdaTitulo1 = InformeWordXml::construirCeldaSimple(3600, InformeWordXml::establecerTextoCelda(
-            '<w:tc><w:tcPr><w:tcW w:w="3600" w:type="dxa"/><w:shd w:val="clear" w:color="auto" w:fill="002060"/></w:tcPr><w:p/></w:tc>',
-            'Documento'
-        ));
-        $celdaTitulo2 = InformeWordXml::construirCeldaSimple(7200, InformeWordXml::establecerTextoCelda(
-            '<w:tc><w:tcPr><w:tcW w:w="7200" w:type="dxa"/><w:shd w:val="clear" w:color="auto" w:fill="002060"/></w:tcPr><w:p/></w:tc>',
-            'Imagen'
-        ));
-        $filasTabla[] = InformeWordXml::construirFilaDosColumnas($celdaTitulo1, $celdaTitulo2);
         $limite = microtime(true) + self::SEGUNDOS_MAX_ANEXOS;
 
         foreach ($documentos as $documento) {
             $etiqueta = DocumentoEvaluado::tiposDocumento()[$documento->tipo_documento] ?? $documento->tipo_documento;
-            $descripcionBase = $documento->nombre_original;
 
             if (microtime(true) > $limite) {
-                $filasTabla[] = self::construirFilaPapeleriaTexto($descripcionBase, '[Omitido] ' . $etiqueta);
+                $filasTabla[] = self::construirFilaPapeleriaTexto('[Omitido] ' . $etiqueta);
                 continue;
             }
 
@@ -199,17 +188,16 @@ class InformeWordAnexos
                 $ruta = Storage::disk('local')->path($documento->ruta_archivo);
                 $media = InformeWordFoto::prepararMedia($ruta);
                 if ($media === null) {
-                    $filasTabla[] = self::construirFilaPapeleriaTexto($descripcionBase, '[Imagen] ' . $etiqueta);
+                    $filasTabla[] = self::construirFilaPapeleriaTexto('[Imagen] ' . $etiqueta);
 
                     continue;
                 }
 
-                $fila = self::construirFilaPapeleriaDosColumnas(
+                $fila = self::construirFilaPapeleriaImagen(
                     $media['bytes'],
                     $media['extension'],
                     $media['widthPx'] ?? 480,
                     $media['heightPx'] ?? 360,
-                    $descripcionBase,
                     $zip,
                     $relsXml,
                     $siguienteRelId,
@@ -230,18 +218,12 @@ class InformeWordAnexos
                     $paginas = InformeWordPdfPaginas::paginasComoPng($ruta);
 
                     if ($paginas !== []) {
-                        foreach ($paginas as $numeroPagina => $pagina) {
-                            $descripcion = $descripcionBase;
-                            if ($numeroPagina > 0) {
-                                $descripcion = $etiqueta . ' — pág. ' . ($numeroPagina + 1);
-                            }
-
-                            $fila = self::construirFilaPapeleriaDosColumnas(
+                        foreach ($paginas as $pagina) {
+                            $fila = self::construirFilaPapeleriaImagen(
                                 $pagina['bytes'],
                                 'png',
                                 $pagina['widthPx'],
                                 $pagina['heightPx'],
-                                $descripcion,
                                 $zip,
                                 $relsXml,
                                 $siguienteRelId,
@@ -258,20 +240,20 @@ class InformeWordAnexos
                     }
                 }
 
-                $filasTabla[] = self::construirFilaPapeleriaTexto($descripcionBase, '[PDF] ' . $etiqueta);
+                $filasTabla[] = self::construirFilaPapeleriaTexto('[PDF] ' . $etiqueta);
 
                 continue;
             }
 
-            $filasTabla[] = self::construirFilaPapeleriaTexto($descripcionBase, '[Documento] ' . $etiqueta);
+            $filasTabla[] = self::construirFilaPapeleriaTexto('[Documento] ' . $etiqueta);
         }
 
-        if (count($filasTabla) <= 1) {
+        if ($filasTabla === []) {
             return;
         }
 
         $fragmento = InformeWordXml::parrafoTituloSeccion('DOCUMENTOS ADJUNTOS:')
-            . InformeWordXml::construirTablaDosColumnas($filasTabla);
+            . InformeWordXml::construirTablaUnaColumna($filasTabla);
 
         $documentXml = InformeWordXml::insertarEnPosicion($documentXml, $posicionInsercion, $fragmento);
 
@@ -304,26 +286,21 @@ class InformeWordAnexos
         return false;
     }
 
-    private static function construirFilaPapeleriaTexto(string $descripcion, string $tituloColumna): string
+    private static function construirFilaPapeleriaTexto(string $texto): string
     {
-        $celdaDoc = InformeWordXml::construirCeldaSimple(3600, InformeWordXml::establecerTextoCelda(
-            '<w:tc><w:tcPr><w:tcW w:w="3600" w:type="dxa"/></w:tcPr><w:p/></w:tc>',
-            $tituloColumna
-        ));
-        $celdaDesc = InformeWordXml::construirCeldaSimple(7200, InformeWordXml::establecerCeldaParrafos(
-            '<w:tc><w:tcPr><w:tcW w:w="7200" w:type="dxa"/></w:tcPr><w:p/></w:tc>',
-            explode("\n", $descripcion)
+        $celda = InformeWordXml::construirCeldaSimple(10800, InformeWordXml::establecerTextoCelda(
+            '<w:tc><w:tcPr><w:tcW w:w="10800" w:type="dxa"/></w:tcPr><w:p/></w:tc>',
+            $texto
         ));
 
-        return InformeWordXml::construirFilaDosColumnas($celdaDoc, $celdaDesc);
+        return InformeWordXml::construirFilaUnaColumna($celda);
     }
 
-    private static function construirFilaPapeleriaDosColumnas(
+    private static function construirFilaPapeleriaImagen(
         string $bytes,
         string $extension,
         int $widthPx,
         int $heightPx,
-        string $descripcion,
         PhpWordZipArchive $zip,
         string &$relsXml,
         string &$siguienteRelId,
@@ -339,9 +316,9 @@ class InformeWordAnexos
         $zip->addFromString('word/media/' . $nombreArchivo, $bytes);
         InformeWordXml::registrarExtensionMedia($zip, $extension);
 
-        $celdaBase = '<w:tc><w:tcPr><w:tcW w:w="3600" w:type="dxa"/></w:tcPr><w:p/></w:tc>';
-        ['cx' => $cx, 'cy' => $cy] = InformeWordFoto::dimensionesEmu($widthPx, $heightPx, 480);
-        $celdaImagen = InformeWordXml::construirCeldaSimple(3600, InformeWordFoto::establecerImagenCelda(
+        $celdaBase = '<w:tc><w:tcPr><w:tcW w:w="10800" w:type="dxa"/></w:tcPr><w:p/></w:tc>';
+        ['cx' => $cx, 'cy' => $cy] = InformeWordFoto::dimensionesEmu($widthPx, $heightPx, 620, 820);
+        $celdaImagen = InformeWordXml::construirCeldaSimple(10800, InformeWordFoto::establecerImagenCelda(
             $celdaBase,
             $relId,
             $cx,
@@ -350,12 +327,7 @@ class InformeWordAnexos
         ));
         $siguienteDocPrId++;
 
-        $celdaDesc = InformeWordXml::construirCeldaSimple(7200, InformeWordXml::establecerCeldaParrafos(
-            '<w:tc><w:tcPr><w:tcW w:w="7200" w:type="dxa"/></w:tcPr><w:p/></w:tc>',
-            explode("\n", $descripcion)
-        ));
-
-        return InformeWordXml::construirFilaDosColumnas($celdaImagen, $celdaDesc);
+        return InformeWordXml::construirFilaUnaColumna($celdaImagen);
     }
 
     private static function construirFilaAnexoImagen(
