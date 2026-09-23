@@ -51,6 +51,16 @@ class CuestionarioEspecificaTest extends TestCase
         $this->assertArrayNotHasKey('antecedentes_penales', $tipos);
     }
 
+    public function test_la_casilla_motivo_de_la_prueba_cabe_un_relato_largo(): void
+    {
+        $motivo = collect(TablaDinamica::columnasEmpleoActualPeriodico())->firstWhere('key', 'motivo_prueba');
+        $informe = collect(TablaDinamica::columnasLaboralInformePeriodica())->firstWhere('key', 'motivo');
+
+        $this->assertSame('textarea', $motivo['type']);
+        $this->assertSame(8000, $motivo['max']);
+        $this->assertSame(8000, $informe['max']);
+    }
+
     public function test_pregunta_1_especifica_tiene_label_amplio_caso(): void
     {
         $this->assertStringContainsString(

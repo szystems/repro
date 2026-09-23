@@ -40,6 +40,13 @@
            value="{{ $valor }}"
            @if(isset($col['max'])) maxlength="{{ $col['max'] }}" @endif
            {{ $required }}>
+@elseif(($col['type'] ?? 'text') === 'textarea')
+    <textarea class="form-control form-control-sm @error($errorKey) is-invalid @enderror"
+              id="{{ $inputId }}"
+              name="{{ $inputName }}"
+              rows="{{ (int) ($col['rows'] ?? 3) }}"
+              @if(isset($col['max'])) maxlength="{{ $col['max'] }}" @endif
+              {{ $required }}>{{ $valor }}</textarea>
 @elseif(($col['type'] ?? 'text') === 'currency')
     <input type="text"
            class="form-control form-control-sm @error($errorKey) is-invalid @enderror"

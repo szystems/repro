@@ -196,7 +196,7 @@ class TablaDinamica
             ['key' => 'puesto', 'label' => 'Puesto Ocupado', 'type' => 'text', 'required' => true, 'max' => 100],
             ['key' => 'fechas_laboradas', 'label' => 'Fechas laboradas', 'type' => 'date_range', 'required' => true],
             ['key' => 'salario_actual', 'label' => 'Salario mensual', 'type' => 'number', 'required' => false, 'min' => 0],
-            ['key' => 'motivo_prueba', 'label' => 'Motivo de la prueba', 'type' => 'text', 'required' => false, 'max' => 500],
+            ['key' => 'motivo_prueba', 'label' => 'Motivo de la prueba', 'type' => 'textarea', 'required' => false, 'max' => 8000, 'rows' => 4],
         ];
     }
 
@@ -208,7 +208,7 @@ class TablaDinamica
             ['key' => 'puesto', 'label' => 'Puesto ocupado', 'type' => 'text', 'required' => true, 'max' => 100],
             ['key' => 'fechas', 'label' => 'Fechas laboradas', 'type' => 'text', 'required' => false, 'max' => 80],
             ['key' => 'salario', 'label' => 'Salario mensual', 'type' => 'text', 'required' => false, 'max' => 40],
-            ['key' => 'motivo', 'label' => 'Motivo de la prueba', 'type' => 'text', 'required' => false, 'max' => 500],
+            ['key' => 'motivo', 'label' => 'Motivo de la prueba', 'type' => 'textarea', 'required' => false, 'max' => 8000, 'rows' => 4],
         ];
     }
 

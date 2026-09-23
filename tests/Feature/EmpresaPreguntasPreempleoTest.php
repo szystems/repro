@@ -297,6 +297,66 @@ class EmpresaPreguntasPreempleoTest extends TestCase
             ->assertDontSee($secreto);
     }
 
+    public function test_el_primer_juego_se_puede_nombrar_y_si_no_dice_preguntas_generales(): void
+    {
+        $admin = $this->admin();
+        $empresa = Empresa::factory()->create(['nombre' => 'Ventas Unidas Hombres']);
+
+        $this->actingAs($admin)
+            ->put(route('empresas.update', $empresa->id), $this->datosEmpresa($empresa, [
+                'preguntas_principal_nombre' => 'Administrativos',
+                'preguntas_preempleo' => ['¿Pregunta general de la empresa?', '', '', '', ''],
+                'preguntas_puesto_nombre' => 'Cajero',
+                'preguntas_preempleo_puesto' => ['¿Pregunta de cajero?', '', '', '', ''],
+            ]))
+            ->assertRedirect('show-empresa/'.$empresa->id);
+
+        $registro = EmpresaPreguntasPreempleo::where('empresa_id', $empresa->id)->first();
+        $this->assertSame('Administrativos', $registro->nombrePrincipalVisible());
+
+        $this->actingAs($admin)
+            ->get(route('ordenes.create'))
+            ->assertOk()
+            ->assertSee('Administrativos', false)
+            ->assertSee('Cajero', false);
+
+        $this->actingAs($admin)
+            ->put(route('empresas.update', $empresa->id), $this->datosEmpresa($empresa, [
+                'preguntas_principal_nombre' => '',
+                'preguntas_preempleo' => ['¿Pregunta general de la empresa?', '', '', '', ''],
+                'preguntas_puesto_nombre' => 'Cajero',
+                'preguntas_preempleo_puesto' => ['¿Pregunta de cajero?', '', '', '', ''],
+            ]))
+            ->assertRedirect('show-empresa/'.$empresa->id);
+
+        $this->assertSame(
+            EmpresaPreguntasPreempleo::ETIQUETA_PRINCIPAL,
+            $registro->fresh()->nombrePrincipalVisible()
+        );
+
+        $this->actingAs($admin)
+            ->get(route('ordenes.create'))
+            ->assertOk()
+            ->assertSee('Preguntas generales', false);
+    }
+
+    public function test_el_nombre_del_primer_juego_exige_una_pregunta(): void
+    {
+        $admin = $this->admin();
+        $empresa = Empresa::factory()->create();
+
+        $this->actingAs($admin)
+            ->from(route('empresas.edit', $empresa->id))
+            ->put(route('empresas.update', $empresa->id), $this->datosEmpresa($empresa, [
+                'preguntas_principal_nombre' => 'Administrativos',
+                'preguntas_preempleo' => ['', '', '', '', ''],
+                'preguntas_puesto_nombre' => '',
+                'preguntas_preempleo_puesto' => ['', '', '', '', ''],
+            ]))
+            ->assertRedirect(route('empresas.edit', $empresa->id))
+            ->assertSessionHasErrors('preguntas_principal_nombre');
+    }
+
     public function test_el_segundo_juego_exige_nombre_y_una_pregunta(): void
     {
         $admin = $this->admin();

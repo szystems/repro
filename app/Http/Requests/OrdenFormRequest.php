@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\EvaluadoOrden;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -45,7 +46,7 @@ class OrdenFormRequest extends FormRequest
             // Campos granulares por evaluado
             'evaluados.*.tipo_servicio' => 'required|in:poligrafo,vsa,socioeconomico',
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
-            'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:2000',
+            'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:'.EvaluadoOrden::MOTIVO_HECHO_MAX,
             'evaluados.*.fecha_programada' => 'nullable|date|after_or_equal:today',
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id'
         ];

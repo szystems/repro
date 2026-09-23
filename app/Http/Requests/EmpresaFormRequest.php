@@ -48,6 +48,7 @@ class EmpresaFormRequest extends FormRequest
             'requerimientos_repro' => 'nullable|string|max:5000',
             'preguntas_preempleo' => 'nullable|array|max:5',
             'preguntas_preempleo.*' => 'nullable|string|max:500',
+            'preguntas_principal_nombre' => 'nullable|string|max:100',
             'preguntas_puesto_nombre' => 'nullable|string|max:100',
             'preguntas_preempleo_puesto' => 'nullable|array|max:5',
             'preguntas_preempleo_puesto.*' => 'nullable|string|max:500',
@@ -57,8 +58,18 @@ class EmpresaFormRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            if (! $this->exists('preguntas_preempleo') && ! $this->exists('preguntas_puesto_nombre')) {
+            if (! $this->exists('preguntas_preempleo')
+                && ! $this->exists('preguntas_puesto_nombre')
+                && ! $this->exists('preguntas_principal_nombre')) {
                 return;
+            }
+
+            $nombrePrincipal = trim((string) $this->input('preguntas_principal_nombre'));
+            $hayPrincipal = collect($this->input('preguntas_preempleo', []))
+                ->contains(fn ($texto) => trim((string) $texto) !== '');
+
+            if ($nombrePrincipal !== '' && ! $hayPrincipal) {
+                $validator->errors()->add('preguntas_principal_nombre', 'Escriba al menos una pregunta de este juego.');
             }
 
             $nombre = trim((string) $this->input('preguntas_puesto_nombre'));

@@ -113,4 +113,26 @@ class FaseAAutorizacionesTest extends TestCase
         $response->assertRedirect();
         $this->assertSame('Investigación por faltante de inventario', $evaluado->fresh()->motivo_hecho_evaluacion);
     }
+
+    public function test_el_motivo_de_especifica_guarda_un_relato_de_mas_de_dos_mil_caracteres(): void
+    {
+        $admin = User::factory()->create(['role_as' => 2]);
+        $admin->roles()->attach(Role::where('name', 'repro')->first());
+
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_formulario' => 'especifica',
+        ]);
+
+        $relato = rtrim(str_repeat('El evaluado describió el faltante con fechas y personas. ', 80));
+
+        $this->actingAs($admin)->patch(route('evaluados.actualizar-motivo-hecho', $evaluado), [
+            'motivo_hecho_evaluacion' => $relato,
+        ])->assertRedirect();
+
+        $this->assertSame($relato, $evaluado->fresh()->motivo_hecho_evaluacion);
+        $this->assertGreaterThan(2000, mb_strlen($relato));
+        $this->assertLessThanOrEqual(\App\Models\EvaluadoOrden::MOTIVO_HECHO_MAX, mb_strlen($relato));
+    }
 }

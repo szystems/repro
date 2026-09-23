@@ -172,6 +172,9 @@
             html += buildDateRangeField(name, index, col, value, !!col.required);
         } else if (col.type === 'digits') {
             html += '<input type="text" inputmode="numeric" pattern="[0-9]*" class="form-control form-control-sm tabla-dinamica-input-digits" name="' + fieldName + '" value="' + escapeHtml(value || '') + '"' + maxAttr + required + '>';
+        } else if (col.type === 'textarea') {
+            const rows = col.rows || 3;
+            html += '<textarea class="form-control form-control-sm" name="' + fieldName + '" rows="' + rows + '"' + maxAttr + required + '>' + escapeHtml(value || '') + '</textarea>';
         } else {
             const type = col.type || 'text';
             let extra = maxAttr;
