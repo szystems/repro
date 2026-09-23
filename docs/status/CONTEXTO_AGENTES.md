@@ -1,8 +1,8 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 21 de septiembre de 2026 (noche)  
-**Estado:** Word preempleo (constancia vacía, tablas laborales pegadas, totales 11 pt, anexos por imagen) en deploy tras WA 21-sep noche · permisos+foto `9466f5bf` ✅ ella confirmó · **Resend Pro ⏸ Otto** · portal `https://portal.reprogt.com` · iPage 503  
+**Fecha de Contexto:** 23 de septiembre de 2026  
+**Estado:** Word papelería ✅ ella confirmó que pega; columna del nombre de archivo quitada (`b7140ee4`) · permisos+foto `9466f5bf` ✅ · **Resend Pro ⏸ Otto** · portal `https://portal.reprogt.com` · sitio estático local sin git (ver abajo) · iPage 503  
 
 **Plan activo:** `docs/repro/cambios septiembre/20'09'2026/PLAN_SPRINT_T_OBSERVACIONES_20-09-2026.md`  
 **Plan S (correos reclutador):** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md` · merge prod ~`3f6092a6`  
@@ -77,13 +77,52 @@
 
 **Archivos clave:** `EmpresaPermisosSupport.php` · `UsersController.php` · `PerfilImagenSupport.php` · `Handler.php` (PostTooLarge) · `resources/views/admin/user/edit.blade.php` · `empresa/usuarios/create.blade.php` · `docker/coolify/start.sh` · `Dockerfile.coolify`.
 
-**Siguiente:** ella ya respondió el mismo 21-sep (foto y permisos OK). Ver lote Word de la noche.
+**Siguiente:** lote directo del 23-sep (autorizaciones + observaciones). La cotización del sitio queda abajo y no se codea.
 
 ---
 
-## Stephany 21-sep-2026 noche — Word preempleo + anexos (imágenes)
+## Cotización — rediseño del sitio (NO implementar)
 
-**Origen:** WA ~10:47–11:00. Foto de perfil y permisos de trabajador: **los dio por buenos** (no reabrir). Pidió ajustes de Word polígrafo/VSA preempleo y volver a anexar papelería **imagen por imagen**.
+**Origen:** WA 22-sep noche, Stephany. El sitio actual le parece viejo (~6 años) y con información desactualizada. Quiere un rediseño, no solo cambiar textos. Pestañas: **Inicio, Servicios, Cobertura, SIGOR, Contacto**. Adjuntó `SERVICIOS REPRO MODIFICADA (2)_compressed.pdf` (13 págs.) como base de servicios. Otto le va a armar la propuesta.
+
+**Decisión de Otto (23-sep):** eso entra en la cotización del rediseño, junto con un blog y estos extras:
+
+1. **IA de redacción** dentro del portal: en los campos de texto narrativo del evaluador (laboral, deudas, antecedentes, observaciones). No en tablas. Después de escribir, un botón mejora ortografía, orden y tono. No sustituye lo que escribió.
+2. **Agente del PBX nuevo:** el proveedor dice que el agente puede consultar el estado de un proceso y contestarle a la empresa. Solo datos de esa empresa, previa validación. Hoy no hay API para un tercero. Habría que diseñarla; no es un interruptor.
+
+Esas piezas se ven **dentro de la aplicación** (`portal.reprogt.com`), como la página general, no como un sitio suelto al lado del sistema. El sitio público que ya está en Cloudflare Pages se queda hasta que esa cotización se apruebe.
+
+**Correo del sistema:** ella dijo el 22-sep ~3:28 p. m. que no han tenido problemas de envío. No tocarlo por este lote.
+
+---
+
+## Lote directo 23-sep — autorizaciones y observaciones (en código, pendiente de prod)
+
+**Origen:** WA 22-sep 10:58 a. m. y 2:02 p. m. Esto sí es del portal, aparte de la cotización.
+
+### Autorizaciones — letra y espacio
+
+Todas salen del mismo PDF: `admin/cuestionarios/pdf-autorizacion.blade.php` + `shared/cuestionario/pdf-autorizacion-contenido.blade.php`. El cuerpo está en **9px** y `line-height: 1.6`, y el texto legal son párrafos `<p>`. Por eso se ve chica y con mucho aire. Infornet usa la misma clase.
+
+**Manera segura:** solo CSS del PDF (subir a ~11px y bajar el interlineado, y achicar el margen de los `<p>`). No cambiar `autorizaciones_legales.php` ni el HTML ya guardado en `texto_autorizacion_html`: el texto firmado no se reescribe. Al regenerar el PDF, las plantillas viejas y las nuevas toman el mismo estilo.
+
+### Observaciones del evaluado — fecha y cada comentario aparte
+
+Hoy es **un solo campo** `evaluados.observaciones` (cifrado). En la ficha, «Editar observación» abre el texto anterior y al guardar **lo reemplaza**. Lo ve la empresa y entra al PDF de informe. El historial de cambios es otra tabla (`estado_historial`): fecha, usuario y una nota por cada cambio de estado. No guarda este texto.
+
+**Manera segura:** tabla nueva de notas (evaluado, usuario, texto, fecha). Cada guardado **agrega** una fila; no pisa las anteriores. La lista se muestra como el historial (fecha y hora, quién, texto). El campo actual se conserva con lo ya escrito, como primera nota si hace falta, y se deja de usar como editor que borra. No meter esto en `estado_historial` (esa tabla es de estados y la empresa la filtra). No `migrate:fresh`. No borrar observaciones ya guardadas.
+
+**No mezclar** con «Observaciones del evaluador» de la primera hoja del Word (`word_observaciones`): eso es el informe, no esta nota de la ficha.
+
+---
+
+## Stephany 21–22 sep 2026 — Word papelería (cerrado en prod)
+
+**Origen:** WA 21-sep ~10:47–11:00 y 22-sep ~4:21 p. m. Foto de perfil y permisos de trabajador: **los dio por buenos** (no reabrir). Papelería: primero no pegaba; luego confirmó que **sí pega** y pidió quitar la columna del nombre del archivo.
+
+**Prod:** casillas `bc9cfa29` · el Word no releía el docx y se saltaba los anexos, corregido en `6662de16` · solo la imagen, sin el nombre del archivo, `b7140ee4`.
+
+**Ella:** «me comentan que sí ya pega». Falta que vuelva a descargar para ver el Word sin la columna del nombre.
 
 | Qué | Entrega |
 |-----|---------|
@@ -95,7 +134,20 @@
 
 **No:** periódico / específico / socio, salvo que ella lo pida. **No** regenerar NEVERIA/CORALSA/PERCO. **No** crear usuarios reales. PDF de papelería sigue fuera del Word (evita 503).
 
-**Prueba:** `InformeWordSprintTTest`, `InformeWordSprintCTest`, `InformeWordObservaciones16AgoTest` (imagen marcada). UAT `uat.g1.browser@repro.local` / `UAT.G1Word2026!`.
+**Prueba:** `InformeWordSprintTTest`, `InformeWordSprintCTest`, `InformeWordObservaciones16AgoTest` (imagen marcada, sin el nombre en el XML). UAT `uat.g1.browser@repro.local` / `UAT.G1Word2026!`.
+
+---
+
+## Sitio web reprogt.com (carpeta aparte, 22-sep-2026)
+
+**No está en este repo.** No hay git.
+
+**Carpeta de trabajo:** `/home/szott/proyectos/repro-web` (copia desde `E:\SZ-Software Backup\WebProjects\Paginas Web\reproxela`).  
+**Contexto de esa web:** `CONTEXTO.md` y `MIGRACION.md` en `repro-web`. Trabajar ahí, no aquí. Publicación: Cloudflare Pages, como `migracion/runbooks/02-sitio-a-cloudflare-pages.md`.
+
+HTML local ya tiene **Ingresar** → `https://portal.reprogt.com/login`, sección del portal en el inicio, correo `info@reprogt.com` y marca **REPRO** (sedes Xela y Huehue se quedan). `.htaccess` hace 301 de `reproxela.com` → `https://reprogt.com` y no redirige el dominio nuevo.
+
+**Ya está publicado** en Cloudflare Pages (`reprogt.com` / `www`) y `reproxela.com` hace 301 en el Apache viejo, sin mover el MX. El rediseño que pidió Stephany es otra cosa: ver «Cotización — rediseño del sitio». El PNG del logo todavía dice Xela.
 
 ---
 

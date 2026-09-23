@@ -643,41 +643,25 @@
                                             </div>
                                         </div>
 
-                                        @if($evaluado->observaciones)
-                                        <div class="row mb-3">
-                                            <div class="col-12">
-                                                <small class="text-muted d-block">Observaciones del Evaluado</small>
-                                                <div class="bg-light p-2 rounded border-start border-3 border-info small">{{ $evaluado->observaciones }}</div>
-                                            </div>
-                                        </div>
-                                        @endif
+                                        @include('partials._observaciones_evaluado', ['evaluado' => $evaluado])
 
-                                        {{-- Form para editar observación (solo colaborador/admin) --}}
                                         @if(Auth::user()->role_as >= 2)
                                         <div class="row mb-3">
                                             <div class="col-12">
                                                 <details class="text-sm">
                                                     <summary class="text-muted small" style="cursor:pointer;">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                        {{ $evaluado->observaciones ? 'Editar observación' : 'Agregar observación (visible para empresa)' }}
+                                                        <i class="bi bi-plus-lg"></i>
+                                                        Agregar observación (visible para la empresa)
                                                     </summary>
                                                     <form action="{{ route('evaluados.actualizar-observacion', $evaluado) }}" method="POST" class="mt-2">
                                                         @csrf @method('PATCH')
                                                         <textarea class="form-control form-control-sm" name="observaciones" rows="3"
-                                                                  placeholder="Observación visible para la empresa..."
-                                                                  maxlength="2000">{{ $evaluado->observaciones }}</textarea>
-                                                        <div class="d-flex gap-2 mt-1">
-                                                            <button type="submit" class="btn btn-sm btn-success">
-                                                                <i class="bi bi-check-lg"></i> Guardar
-                                                            </button>
-                                                            @if($evaluado->observaciones)
-                                                            <button type="submit" name="observaciones" value=""
-                                                                    class="btn btn-sm btn-outline-secondary"
-                                                                    onclick="return confirm('¿Eliminar la observación?');">
-                                                                <i class="bi bi-trash"></i> Borrar
-                                                            </button>
-                                                            @endif
-                                                        </div>
+                                                                  placeholder="Nuevo comentario. No reemplaza los anteriores."
+                                                                  maxlength="2000"></textarea>
+                                                        <p class="text-muted small mb-1 mt-1">Queda con fecha y hora, aparte de los comentarios ya guardados.</p>
+                                                        <button type="submit" class="btn btn-sm btn-success">
+                                                            <i class="bi bi-check-lg"></i> Agregar
+                                                        </button>
                                                     </form>
                                                 </details>
                                             </div>

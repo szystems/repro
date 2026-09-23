@@ -423,6 +423,7 @@ class OrdenesController extends Controller
                     'sede',
                     'cuestionario',
                     'documentos',
+                    'entradasObservacion.usuario',
                 ])->orderBy('nombre');
             }
         ]);
@@ -751,9 +752,14 @@ class OrdenesController extends Controller
             'observaciones' => 'nullable|string|max:2000',
         ]);
 
-        $evaluado->update(['observaciones' => $request->observaciones]);
+        $texto = trim((string) $request->input('observaciones', ''));
+        if ($texto === '') {
+            return back()->with('error', 'Escriba la observación antes de guardar.');
+        }
 
-        return back()->with('success', "Observación de {$evaluado->nombre} {$evaluado->apellidos} actualizada.");
+        $evaluado->agregarObservacion($texto, Auth::id());
+
+        return back()->with('success', "Observación de {$evaluado->nombre} {$evaluado->apellidos} agregada.");
     }
 
     /**
@@ -955,6 +961,7 @@ class OrdenesController extends Controller
                     }
 
                     $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
+                    $this->registrarObservacionInicial($evaluadoCreado);
 
                     $this->encolarCorreoCandidatoTrasCommit($evaluadoCreado);
 
@@ -963,6 +970,7 @@ class OrdenesController extends Controller
                 }
             } else {
                 $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
+                $this->registrarObservacionInicial($evaluadoCreado);
 
                 $this->encolarCorreoCandidatoTrasCommit($evaluadoCreado);
 
@@ -1034,12 +1042,23 @@ class OrdenesController extends Controller
         }
     }
 
+    private function registrarObservacionInicial(EvaluadoOrden $evaluado): void
+    {
+        $texto = trim((string) $evaluado->observaciones);
+        if ($texto === '') {
+            return;
+        }
+
+        $evaluado->agregarObservacion($texto, Auth::id());
+    }
+
     /**
      * Actualiza un evaluado existente preservando estados y datos gestionados por otros flujos.
      */
     private function actualizarEvaluadoEnOrden(EvaluadoOrden $evaluado, array $datosEvaluado, array &$evaluadosExistentes): void
     {
         $modalidadAnterior = $evaluado->modalidad;
+        $textoObs = trim((string) ($datosEvaluado['observaciones'] ?? ''));
         $datosActualizacion = array_merge($datosEvaluado, [
             'estado_evaluacion'          => $evaluado->estado_evaluacion,
             'estado_formulario'          => $evaluado->estado_formulario,
@@ -1051,7 +1070,12 @@ class OrdenesController extends Controller
             'token_unico'                => $evaluado->token_unico,
             'token_expira_at'            => $evaluado->token_expira_at,
         ]);
+        unset($datosActualizacion['observaciones']);
         $evaluado->update($datosActualizacion);
+
+        if ($textoObs !== '' && $textoObs !== trim((string) $evaluado->observaciones)) {
+            $evaluado->agregarObservacion($textoObs, Auth::id());
+        }
 
         $evaluado->fresh()->sincronizarCuestionarioConServicio();
 

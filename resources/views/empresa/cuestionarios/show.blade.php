@@ -76,12 +76,9 @@
                                 <div class="fw-medium">{{ $evaluado->puesto_aplicar }}</div>
                             </div>
                             @endif
-                            @if($evaluado->observaciones)
                             <div class="col-12 mb-3">
-                                <label class="form-label text-muted small">Observación REPRO:</label>
-                                <div class="border rounded p-2 bg-light">{{ $evaluado->observaciones }}</div>
+                                @include('partials._observaciones_evaluado', ['evaluado' => $evaluado])
                             </div>
-                            @endif
                         </div>
                     </div>
                 </div>

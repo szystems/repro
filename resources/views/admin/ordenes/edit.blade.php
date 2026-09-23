@@ -329,7 +329,7 @@
                                         <div class="col-md-6 mb-2">
                                             <label class="form-label">Observaciones</label>
                                             <textarea class="form-control" name="evaluados[{{ $index }}][observaciones]" rows="1" 
-                                                      maxlength="1000" placeholder="Observaciones sobre este evaluado...">{{ old('evaluados.'.$index.'.observaciones', $evaluado->observaciones) }}</textarea>
+                                                      maxlength="1000" placeholder="Nuevo comentario. Los anteriores se conservan en la ficha.">{{ old('evaluados.'.$index.'.observaciones', $evaluado->observaciones) }}</textarea>
                                         </div>
                                     </div>
 

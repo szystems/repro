@@ -60,10 +60,27 @@
 
         .autorizacion-cuerpo {
             padding: 10px;
-            font-size: 9px;
-            line-height: 1.6;
+            font-size: 12px;
+            line-height: 1.25;
             border: 1px solid #ddd;
             border-top: none;
+        }
+
+        .autorizacion-cuerpo p,
+        .autorizacion-cuerpo li {
+            margin: 0 0 2px 0;
+        }
+
+        .autorizacion-cuerpo h5,
+        .autorizacion-cuerpo h6 {
+            font-size: 13px;
+            line-height: 1.25;
+            margin: 6px 0 3px;
+        }
+
+        .autorizacion-cuerpo ul {
+            margin: 0 0 2px 16px;
+            padding: 0;
         }
 
         .autorizacion-documento {

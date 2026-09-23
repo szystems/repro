@@ -181,9 +181,7 @@
                             </div>
                         </div>
                     </div>
-                    @if($evaluado->observaciones)
-                        <div class="mt-1"><small class="text-info"><i class="bi bi-chat-left-text"></i> {{ $evaluado->observaciones }}</small></div>
-                    @endif
+                    @include('partials._observaciones_evaluado', ['evaluado' => $evaluado])
 
                     {{-- Informes disponibles para empresa --}}
                     @if($evaluado->resultadosDisponiblesParaEmpresa())

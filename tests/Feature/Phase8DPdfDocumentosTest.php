@@ -451,6 +451,35 @@ class Phase8DPdfDocumentosTest extends TestCase
         $this->assertStringNotContainsString('Responsable del Proceso', $view);
     }
 
+    public function test_pdf_autorizacion_usa_letra_mas_grande_y_menos_interlineado_en_todas(): void
+    {
+        $empresa = Empresa::factory()->create();
+        [$orden, $evaluado, $admin] = $this->crearOrdenConEvaluado($empresa);
+
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'total_secciones' => 5,
+            'completado' => true,
+            'acepta_terminos' => true,
+            'acepta_infornet' => true,
+            'texto_autorizacion_html' => '<p>Texto legal ya firmado.</p>',
+            'texto_infornet_html' => '<p>Texto infornet ya firmado.</p>',
+            'completado_at' => now()->subDay(),
+        ]);
+
+        $view = view('admin.cuestionarios.pdf-autorizacion', [
+            'cuestionario' => $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.responsable']),
+        ])->render();
+
+        $this->assertStringContainsString('font-size: 12px', $view);
+        $this->assertStringContainsString('line-height: 1.25', $view);
+        $this->assertStringContainsString('margin: 0 0 2px 0', $view);
+        $this->assertSame(2, substr_count($view, 'class="autorizacion-cuerpo"'));
+        $this->assertStringContainsString('Texto legal ya firmado.', $view);
+        $this->assertStringContainsString('Texto infornet ya firmado.', $view);
+    }
+
     // ─── PDF de Orden con responsable ───
 
     public function test_pdf_orden_incluye_columna_responsable(): void

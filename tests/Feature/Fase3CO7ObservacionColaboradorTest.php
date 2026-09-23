@@ -65,7 +65,7 @@ class Fase3CO7ObservacionColaboradorTest extends TestCase
         $this->evaluado->update(['observaciones' => 'Nota para la empresa.']);
 
         $response = $this->actingAs($this->empresaUser)
-            ->get(route('ordenes.show', $this->orden));
+            ->get(route('empresa.ordenes.show', $this->orden));
 
         $response->assertStatus(200);
         $response->assertSee('Nota para la empresa.');
@@ -78,12 +78,12 @@ class Fase3CO7ObservacionColaboradorTest extends TestCase
                 'observaciones' => 'Intento de empresa.',
             ]);
 
-        $response->assertRedirect();
+        $response->assertForbidden();
         $this->evaluado->refresh();
         $this->assertNotEquals('Intento de empresa.', $this->evaluado->observaciones);
     }
 
-    public function test_colaborador_puede_borrar_observacion(): void
+    public function test_guardar_vacio_no_borra_la_observacion(): void
     {
         $this->evaluado->update(['observaciones' => 'Observación existente.']);
 
@@ -94,6 +94,34 @@ class Fase3CO7ObservacionColaboradorTest extends TestCase
 
         $response->assertRedirect();
         $this->evaluado->refresh();
-        $this->assertEmpty($this->evaluado->observaciones);
+        $this->assertSame('Observación existente.', $this->evaluado->observaciones);
+    }
+
+    public function test_un_comentario_nuevo_conserva_el_anterior_con_fecha(): void
+    {
+        $this->evaluado->update(['observaciones' => 'Observación existente.']);
+
+        $response = $this->actingAs($this->colaborador)
+            ->patch(route('evaluados.actualizar-observacion', $this->evaluado), [
+                'observaciones' => 'Segundo comentario, el candidato confirmó la cita.',
+            ]);
+
+        $response->assertRedirect();
+        $this->evaluado->refresh();
+        $this->assertSame('Segundo comentario, el candidato confirmó la cita.', $this->evaluado->observaciones);
+        $this->assertSame(2, $this->evaluado->entradasObservacion()->count());
+
+        $ficha = $this->actingAs($this->colaborador)->get(route('ordenes.show', $this->orden));
+        $ficha->assertOk();
+        $ficha->assertSee('Observación existente.');
+        $ficha->assertSee('Segundo comentario, el candidato confirmó la cita.');
+        $ficha->assertSee(now()->timezone('America/Guatemala')->format('d/m/Y H:i'));
+        $ficha->assertSee($this->colaborador->name);
+
+        $empresa = $this->actingAs($this->empresaUser)->get(route('empresa.ordenes.show', $this->orden));
+        $empresa->assertOk();
+        $empresa->assertSee('Observación existente.');
+        $empresa->assertSee('Segundo comentario, el candidato confirmó la cita.');
+        $empresa->assertDontSee('Agregar observación');
     }
 }

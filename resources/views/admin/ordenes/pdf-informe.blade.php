@@ -275,9 +275,18 @@
                     <span class="sin-resultado">Evaluación pendiente de resultado</span>
                 @endif
 
-                @if($evaluado->observaciones)
+                @php $notasObservacionPdf = $evaluado->observacionesParaMostrar(); @endphp
+                @if($notasObservacionPdf->isNotEmpty())
                     <div class="notas-box" style="margin-top: 6px;">
-                        <strong>Observaciones:</strong> {{ $evaluado->observaciones }}
+                        <strong>Observaciones:</strong>
+                        @foreach($notasObservacionPdf as $nota)
+                            <div>
+                                @if(! $nota->sin_fecha_original && $nota->created_at)
+                                    {{ $nota->created_at->timezone(config('app.timezone'))->format('d/m/Y H:i') }} —
+                                @endif
+                                {{ $nota->texto }}
+                            </div>
+                        @endforeach
                     </div>
                 @endif
                 @if(($mostrarInformePreliminar ?? true) && $evaluado->texto_informe_preliminar)

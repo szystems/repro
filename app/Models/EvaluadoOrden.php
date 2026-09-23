@@ -358,6 +358,69 @@ class EvaluadoOrden extends Model
             ->orderBy('created_at', 'desc');
     }
 
+    public function entradasObservacion()
+    {
+        return $this->hasMany(EvaluadoObservacionEntrada::class, 'evaluado_orden_id')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+    }
+
+    /**
+     * Notas de la ficha, la más reciente primero.
+     * Si todavía no hay filas, muestra el texto viejo del campo único, sin inventar la hora.
+     */
+    public function observacionesParaMostrar()
+    {
+        $entradas = $this->relationLoaded('entradasObservacion')
+            ? $this->entradasObservacion
+            : $this->entradasObservacion()->with('usuario')->get();
+
+        if ($entradas->isNotEmpty()) {
+            return $entradas->sortByDesc(fn ($nota) => sprintf(
+                '%s-%010d',
+                optional($nota->created_at)->format('Y-m-d H:i:s') ?? '',
+                $nota->id ?? 0
+            ))->values();
+        }
+
+        $previa = trim((string) $this->observaciones);
+        if ($previa === '') {
+            return collect();
+        }
+
+        return collect([new EvaluadoObservacionEntrada([
+            'texto' => $previa,
+            'sin_fecha_original' => true,
+        ])]);
+    }
+
+    public function agregarObservacion(string $texto, ?int $userId): void
+    {
+        $texto = trim($texto);
+        if ($texto === '') {
+            return;
+        }
+
+        $previa = trim((string) $this->observaciones);
+        $hayEntradas = $this->entradasObservacion()->exists();
+
+        if (! $hayEntradas && $previa !== '' && $previa !== $texto) {
+            $this->entradasObservacion()->create([
+                'texto' => $previa,
+                'user_id' => null,
+                'sin_fecha_original' => true,
+            ]);
+        }
+
+        $this->entradasObservacion()->create([
+            'texto' => $texto,
+            'user_id' => $userId,
+            'sin_fecha_original' => false,
+        ]);
+
+        $this->update(['observaciones' => $texto]);
+    }
+
     /**
      * Usuario que subió el archivo de resultado.
      *
