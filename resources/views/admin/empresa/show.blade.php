@@ -175,6 +175,8 @@
                     </div>
                 </div>
 
+                @include('partials._requerimientos_empresa_repro', ['requerimientosRepro' => $empresa->requerimientos_repro])
+
                 <!-- Notas adicionales -->
                 @if($empresa->notas)
                 <div class="card mb-3">

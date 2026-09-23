@@ -34,7 +34,11 @@
                     </div>
                 </div>
             </div>
-            
+
+            @include('partials._requerimientos_empresa_repro', [
+                'requerimientosRepro' => $cuestionario->evaluadoOrden->orden->empresa->requerimientos_repro ?? null,
+            ])
+
             @if(!empty($cambiosPrecarga))
             <div class="card mb-4 border-warning">
                 <div class="card-header bg-warning bg-opacity-10">

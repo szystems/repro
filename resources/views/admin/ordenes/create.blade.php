@@ -76,6 +76,12 @@
                                 </div>
                                 @endif
 
+                                @if(Auth::user()->role_as >= 2)
+                                <div class="col-12">
+                                    <div class="alert alert-warning d-none mb-3" id="aviso-requerimientos-empresa-orden"></div>
+                                </div>
+                                @endif
+
                                 <!-- Prioridad (Solo REPRO) -->
                                 @if(Auth::user()->role_as >= 2)
                                 <div class="col-md-6 mb-3">

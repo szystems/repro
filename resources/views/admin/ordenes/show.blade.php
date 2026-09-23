@@ -281,6 +281,8 @@
                             </div>
                         </div>
 
+                        @include('partials._requerimientos_empresa_repro', ['requerimientosRepro' => $orden->empresa->requerimientos_repro ?? null])
+
                         @if($orden->instrucciones_generales)
                         <div class="mb-3">
                             <label class="form-label fw-bold">Instrucciones Generales</label>

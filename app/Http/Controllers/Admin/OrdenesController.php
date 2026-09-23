@@ -218,8 +218,9 @@ class OrdenesController extends Controller
 
         $reclutadores = $this->reclutadoresParaFormulario($empresaIdReclutadores);
         $preguntasPuestoPorEmpresa = $this->preguntasPuestoPorEmpresa($empresas->pluck('id'));
+        $requerimientosReproPorEmpresa = $this->requerimientosReproPorEmpresa($empresas->pluck('id'));
 
-        return view('admin.ordenes.create', compact('empresas', 'poligrafistas', 'sedes', 'reclutadores', 'preguntasPuestoPorEmpresa'));
+        return view('admin.ordenes.create', compact('empresas', 'poligrafistas', 'sedes', 'reclutadores', 'preguntasPuestoPorEmpresa', 'requerimientosReproPorEmpresa'));
     }
 
     /**
@@ -471,8 +472,9 @@ class OrdenesController extends Controller
         $reclutadores = $this->reclutadoresParaFormulario($orden->empresa_id);
         $idsEmpresas = $empresas->pluck('id')->push($orden->empresa_id);
         $preguntasPuestoPorEmpresa = $this->preguntasPuestoPorEmpresa($idsEmpresas);
+        $requerimientosReproPorEmpresa = $this->requerimientosReproPorEmpresa($idsEmpresas);
 
-        return view('admin.ordenes.edit', compact('orden', 'empresas', 'poligrafistas', 'estados', 'sedes', 'reclutadores', 'preguntasPuestoPorEmpresa'));
+        return view('admin.ordenes.edit', compact('orden', 'empresas', 'poligrafistas', 'estados', 'sedes', 'reclutadores', 'preguntasPuestoPorEmpresa', 'requerimientosReproPorEmpresa'));
     }
 
     /**
@@ -1068,6 +1070,29 @@ class OrdenesController extends Controller
             ->mapWithKeys(fn (EmpresaPreguntasPreempleo $row) => [
                 $row->empresa_id => $row->nombrePuestoVisible(),
             ])
+            ->all();
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, mixed>|array<int, mixed>  $empresaIds
+     * @return array<int|string, string>
+     */
+    private function requerimientosReproPorEmpresa($empresaIds): array
+    {
+        if (Auth::user()->role_as < 2) {
+            return [];
+        }
+
+        $ids = collect($empresaIds)->filter()->unique()->values();
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        return Empresa::whereIn('id', $ids->all())
+            ->whereNotNull('requerimientos_repro')
+            ->pluck('requerimientos_repro', 'id')
+            ->map(fn ($texto) => trim((string) $texto))
+            ->filter()
             ->all();
     }
 

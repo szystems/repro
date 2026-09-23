@@ -40,7 +40,11 @@
                     </div>
                 </div>
             </div>
-            
+
+            @include('partials._requerimientos_empresa_repro', [
+                'requerimientosRepro' => $cuestionario->evaluadoOrden->orden->empresa->requerimientos_repro ?? null,
+            ])
+
             <form action="{{ route('admin.cuestionarios.update', $cuestionario) }}" 
                   method="POST" 
                   id="formEditarCuestionario"

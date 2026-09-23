@@ -170,6 +170,7 @@
                                         </div>
                                     </div>
                                     @include('admin.empresa.partials.preguntas-preempleo')
+                                    @include('admin.empresa.partials.requerimientos-repro')
                                 </div>
 
                                 <div class="col-lg-4">

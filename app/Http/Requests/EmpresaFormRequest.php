@@ -45,6 +45,7 @@ class EmpresaFormRequest extends FormRequest
             'contacto_telefono' => 'nullable|string|max:20',
             'contacto_email' => 'nullable|email|max:191',
             'notas' => 'nullable|string',
+            'requerimientos_repro' => 'nullable|string|max:5000',
             'preguntas_preempleo' => 'nullable|array|max:5',
             'preguntas_preempleo.*' => 'nullable|string|max:500',
             'preguntas_puesto_nombre' => 'nullable|string|max:100',

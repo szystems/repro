@@ -242,6 +242,61 @@ class EmpresaPreguntasPreempleoTest extends TestCase
         $this->assertSame(2, EvaluadorNota::where('seccion', InformeWordPreguntasPoligraficas::SECCION_NOTA)->count());
     }
 
+    public function test_requerimientos_especiales_solo_los_ve_repro(): void
+    {
+        $admin = $this->admin();
+        $empresa = Empresa::factory()->create();
+        $secreto = 'Pedir constancia de los ultimos dos empleos';
+
+        $this->actingAs($admin)
+            ->put(route('empresas.update', $empresa->id), $this->datosEmpresa($empresa, [
+                'requerimientos_repro' => $secreto,
+                'preguntas_preempleo' => ['', '', '', '', ''],
+            ]))
+            ->assertRedirect('show-empresa/'.$empresa->id);
+
+        $empresa->refresh();
+        $this->assertSame($secreto, $empresa->requerimientos_repro);
+
+        $this->actingAs($admin)
+            ->get(route('empresas.show', $empresa->id))
+            ->assertOk()
+            ->assertSee($secreto);
+
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('ordenes.show', $orden))
+            ->assertOk()
+            ->assertSee($secreto);
+
+        $this->actingAs($admin)
+            ->get(route('ordenes.create'))
+            ->assertOk()
+            ->assertSee($secreto, false);
+
+        $cliente = User::factory()->create([
+            'role_as' => 1,
+            'estado' => 1,
+            'principal' => 1,
+            'empresa_id' => $empresa->id,
+        ]);
+        $cliente->roles()->attach(Role::where('name', 'empresa')->first());
+
+        $this->actingAs($cliente)
+            ->get(route('empresa.ordenes.show', $orden))
+            ->assertOk()
+            ->assertDontSee($secreto);
+
+        $this->actingAs($cliente)
+            ->get(route('empresa.mi-empresa'))
+            ->assertOk()
+            ->assertDontSee($secreto);
+    }
+
     public function test_el_segundo_juego_exige_nombre_y_una_pregunta(): void
     {
         $admin = $this->admin();

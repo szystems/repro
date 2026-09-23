@@ -96,6 +96,7 @@ class EmpresasController extends Controller
         $empresa->contacto_telefono = $request->input('contacto_telefono');
         $empresa->contacto_email = $request->input('contacto_email');
         $empresa->notas = $request->input('notas');
+        $this->asignarRequerimientosRepro($request, $empresa);
         $empresa->estado = 1; // Activa por defecto
         if (Schema::hasColumn('empresas', 'created_by')) {
             $empresa->created_by = Auth::id();
@@ -168,6 +169,7 @@ class EmpresasController extends Controller
         $empresa->contacto_telefono = $request->input('contacto_telefono');
         $empresa->contacto_email = $request->input('contacto_email');
         $empresa->notas = $request->input('notas');
+        $this->asignarRequerimientosRepro($request, $empresa);
 
         if($request->has('estado')) {
             $empresa->estado = $request->input('estado');
@@ -186,6 +188,16 @@ class EmpresasController extends Controller
         $this->guardarPreguntasPreempleo($request, $empresa);
 
         return redirect('show-empresa/'.$id)->with('status', 'Información de empresa actualizada correctamente');
+    }
+
+    private function asignarRequerimientosRepro(EmpresaFormRequest $request, Empresa $empresa): void
+    {
+        if (! $request->exists('requerimientos_repro')) {
+            return;
+        }
+
+        $texto = trim((string) $request->input('requerimientos_repro'));
+        $empresa->requerimientos_repro = $texto !== '' ? $texto : null;
     }
 
     private function guardarPreguntasPreempleo(EmpresaFormRequest $request, Empresa $empresa): void

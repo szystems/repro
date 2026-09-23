@@ -60,7 +60,10 @@
                             <div class="card-title">Información de la Orden</div>
                         </div>
                         <div class="card-body">
-                            
+                            @if(Auth::user()->role_as >= 2)
+                            <div class="alert alert-warning d-none mb-3" id="aviso-requerimientos-empresa-orden"></div>
+                            @endif
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Código de Orden</label>

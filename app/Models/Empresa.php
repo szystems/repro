@@ -27,6 +27,7 @@ class Empresa extends Model
         'contacto_telefono',
         'contacto_email',
         'notas',
+        'requerimientos_repro',
         'modo_visibilidad_reclutadores',
         'created_by',
     ];
