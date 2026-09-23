@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\OrdenFormRequest;
 use App\Mail\EvaluadoAsignadoMail;
 use App\Models\Orden;
+use App\Models\EvaluadoObservacionEntrada;
 use App\Models\EvaluadoOrden;
 use App\Models\Empresa;
 use App\Models\Sede;
@@ -769,6 +770,50 @@ class OrdenesController extends Controller
         $evaluado->agregarObservacion($texto, Auth::id());
 
         return back()->with('success', "Observación de {$evaluado->nombre} {$evaluado->apellidos} agregada.");
+    }
+
+    /**
+     * Corrige el texto de una observación ya guardada, sin agregar otra ni borrar las demás.
+     */
+    public function corregirObservacion(Request $request, EvaluadoOrden $evaluado, EvaluadoObservacionEntrada $entrada): \Illuminate\Http\RedirectResponse
+    {
+        if (Auth::user()->role_as < 2) {
+            return back()->with('error', 'No tiene permisos para realizar esta acción.');
+        }
+
+        if ((int) $entrada->evaluado_orden_id !== (int) $evaluado->id) {
+            abort(404);
+        }
+
+        $request->validate([
+            'observaciones' => 'required|string|max:2000',
+        ]);
+
+        $evaluado->corregirObservacion($entrada, (string) $request->input('observaciones'));
+
+        return back()->with('success', "Observación de {$evaluado->nombre} {$evaluado->apellidos} corregida.");
+    }
+
+    /**
+     * Corrige la observación anterior al historial por notas, cuando todavía era un solo texto.
+     */
+    public function corregirObservacionInicial(Request $request, EvaluadoOrden $evaluado): \Illuminate\Http\RedirectResponse
+    {
+        if (Auth::user()->role_as < 2) {
+            return back()->with('error', 'No tiene permisos para realizar esta acción.');
+        }
+
+        $request->validate([
+            'observaciones' => 'required|string|max:2000',
+        ]);
+
+        if ($evaluado->entradasObservacion()->exists()) {
+            return back()->with('error', 'Esa observación ya está en el historial. Corrija la nota correspondiente.');
+        }
+
+        $evaluado->corregirObservacionInicial((string) $request->input('observaciones'));
+
+        return back()->with('success', "Observación de {$evaluado->nombre} {$evaluado->apellidos} corregida.");
     }
 
     /**

@@ -428,6 +428,37 @@ class EvaluadoOrden extends Model
     }
 
     /**
+     * Corrige el texto de una nota ya guardada. La fecha, el autor y las demás notas quedan igual.
+     */
+    public function corregirObservacion(EvaluadoObservacionEntrada $entrada, string $texto): void
+    {
+        $texto = trim($texto);
+        if ($texto === '' || (int) $entrada->evaluado_orden_id !== (int) $this->id) {
+            return;
+        }
+
+        $entrada->update(['texto' => $texto]);
+
+        $ultima = $this->entradasObservacion()->first();
+        if ($ultima && (int) $ultima->id === (int) $entrada->id) {
+            $this->update(['observaciones' => $texto]);
+        }
+    }
+
+    /**
+     * Corrige el texto viejo de cuando había una sola casilla, antes de existir notas con fecha.
+     */
+    public function corregirObservacionInicial(string $texto): void
+    {
+        $texto = trim($texto);
+        if ($texto === '' || $this->entradasObservacion()->exists()) {
+            return;
+        }
+
+        $this->update(['observaciones' => $texto]);
+    }
+
+    /**
      * Usuario que subió el archivo de resultado.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
