@@ -104,7 +104,7 @@ class CuestionarioEspecificaTest extends TestCase
             ->assertDontSee('Sección no disponible', false);
     }
 
-    public function test_seccion_5_especifica_muestra_solo_judicial(): void
+    public function test_seccion_5_especifica_muestra_salud_de_preempleo_y_judicial(): void
     {
         $orden = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
@@ -135,7 +135,8 @@ class CuestionarioEspecificaTest extends TestCase
             ->assertSee(SaludHabitosCampos::TITULO_SALUD, false)
             ->assertSee(SaludHabitosCampos::LABEL_ALERGIAS, false)
             ->assertSee(SaludHabitosCampos::LABEL_EMBARAZADA, false)
-            ->assertDontSee(SaludHabitosCampos::LABEL_PREOCUPACIONES, false)
+            ->assertSee(SaludHabitosCampos::LABEL_PREOCUPACIONES, false)
+            ->assertSee(SaludHabitosCampos::TITULO_HABITOS, false)
             ->assertDontSee(InformacionComplementaria::TITULO_BLOQUE, false)
             ->assertDontSee('Sección no disponible', false);
     }

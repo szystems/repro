@@ -1,7 +1,6 @@
-{{-- E5 — Antecedentes recientes (aspecto judicial + alergias/embarazo M-F2/F3 + tatuajes) --}}
+{{-- Periódica y específica: judicial + la misma salud y hábitos de preempleo. Sin información complementaria. --}}
 @php
     use App\Support\AntecedentesJudiciales;
-    use App\Support\SaludHabitosCampos;
     $respAnt = $respuestasExistentes ?? [];
 @endphp
 
@@ -21,30 +20,7 @@
     'tipoFormulario' => $cuestionario->tipo_formulario ?? 'periodica',
 ])
 
-<hr class="my-4">
-<h5 class="mb-3">{{ SaludHabitosCampos::TITULO_SALUD }}</h5>
-<p class="text-muted small"><span class="badge bg-secondary">Confidencial</span> Uso interno de REPRO. Si no aplica embarazo, seleccione No.</p>
-@include('cuestionario.secciones.partials.campos-alergias-embarazo')
-
-<div class="form-group mt-4">
-    <label for="tiene_tatuajes" class="form-label">{{ SaludHabitosCampos::LABEL_TATUAJES_PERFORACIONES }} <span class="required">*</span></label>
-    <select class="form-control" id="tiene_tatuajes" name="tiene_tatuajes" required>
-        <option value="">Seleccione...</option>
-        <option value="no" {{ old('tiene_tatuajes', $respAnt['tiene_tatuajes'] ?? '') === 'no' ? 'selected' : '' }}>No</option>
-        <option value="si" {{ old('tiene_tatuajes', $respAnt['tiene_tatuajes'] ?? '') === 'si' ? 'selected' : '' }}>Sí</option>
-    </select>
-</div>
-<x-campo-condicional trigger="tiene_tatuajes" show-when="si">
-    <x-tabla-dinamica
-        name="tatuajes"
-        titulo="Tatuajes"
-        :columnas="\App\Support\TablaDinamica::columnasTatuajes()"
-        :filas="$tablasExistentes['tatuajes'] ?? []"
-        :minFilas="1"
-        textoAgregar="Agregar tatuaje"
-        textoEliminar="Quitar"
-    />
-</x-campo-condicional>
+@include('cuestionario.secciones.partials.campos-salud-habitos')
 
 <div class="form-group">
     <label for="informacion_adicional_final" class="form-label">Si desea agregar alguna información adicional, escríbala aquí</label>

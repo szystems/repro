@@ -125,7 +125,8 @@ class SaludHabitosCampos
     }
 
     /**
-     * M-F2/F3: las dos preguntas van en todos los formularios (peri/espe solo estas de salud).
+     * Alergias, detalle y embarazo van en todos los formularios.
+     * Periódica y específica usan además reglasValidacion() (la misma salud y hábitos de preempleo).
      *
      * @return array<string, mixed>
      */

@@ -26,6 +26,14 @@ class AntecedentesRecientesRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if ($this->has('sustancias_usadas') && is_string($this->input('sustancias_usadas'))) {
+            $this->merge(['sustancias_usadas' => [$this->input('sustancias_usadas')]]);
+        }
+
+        if ($this->has('tiene_tatuajes') && ! $this->has('tiene_perforaciones')) {
+            $this->merge(['tiene_perforaciones' => $this->input('tiene_tatuajes')]);
+        }
+
         $this->prepararTablasDinamicas();
     }
 
@@ -33,10 +41,9 @@ class AntecedentesRecientesRequest extends FormRequest
     {
         return array_merge(
             AntecedentesJudiciales::reglasValidacion(),
-            SaludHabitosCampos::reglasAlergiasEmbarazo(),
+            SaludHabitosCampos::reglasValidacion(),
             [
                 'informacion_adicional_final' => 'nullable|string|max:2000',
-                'tiene_tatuajes' => 'required|in:si,no',
             ],
             TablaDinamica::reglasValidacion(5, $this->resolverTipoFormularioCuestionario())
         );

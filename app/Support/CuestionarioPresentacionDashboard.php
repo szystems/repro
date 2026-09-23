@@ -56,7 +56,10 @@ class CuestionarioPresentacionDashboard
         return CuestionarioSecciones::slug($numeroSeccion, $cuestionario->tipo_formulario ?? 'preempleo');
     }
 
-    /** Periódica y específica: §5 solo aspecto judicial (PDF PERIODICO ESPECIFICO). */
+    /**
+     * Periódica y específica no llevan información complementaria en §5.
+     * La salud y los hábitos sí: son los de preempleo. La empresa no ve ese bloque.
+     */
     public static function esSeccion5SoloJudicial(string $tipoFormulario): bool
     {
         return in_array($tipoFormulario, ['periodica', 'especifica'], true);
@@ -115,7 +118,7 @@ class CuestionarioPresentacionDashboard
                 $bloques[] = [
                     'titulo' => SaludHabitosCampos::TITULO_SALUD,
                     'badge' => 'Confidencial',
-                    'preguntas' => SaludHabitosCampos::preguntasAlergiasEmbarazo(),
+                    'preguntas' => self::preguntasSaludHabitos(),
                 ];
                 $bloques[] = [
                     'titulo' => AntecedentesJudiciales::TITULO_BLOQUE,
@@ -205,7 +208,7 @@ class CuestionarioPresentacionDashboard
             ];
         }
 
-        if ($numeroSeccion === 5 && ! $soloEmpresa && ! self::esSeccion5SoloJudicial($tipoFormulario)) {
+        if ($numeroSeccion === 5 && ! $soloEmpresa) {
             return [
                 ['key' => 'tatuajes', 'titulo' => 'Tatuajes', 'metodo' => 'columnasTatuajes'],
                 ['key' => 'perforaciones', 'titulo' => 'Perforaciones', 'metodo' => 'columnasPerforaciones'],

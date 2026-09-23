@@ -361,17 +361,15 @@ trait CompletaFlujoCuestionario
         );
     }
 
-    /** Periódica y específica §5: judicial + alergias/embarazo + tatuajes + información adicional. */
+    /** Periódica y específica §5: judicial + la misma salud y hábitos de preempleo. Sin complementaria. */
     /** @return array<string, mixed> */
     protected function datosSeccion5PeriodicaEspecifica(array $extra = []): array
     {
         return array_merge(
             $this->respuestasJudiciales(),
+            $this->datosSaludHabitosPreempleo(),
             [
                 'informacion_adicional_final' => 'Sin información adicional.',
-                'tiene_tatuajes' => 'no',
-                'salud_alergias' => 'no',
-                'salud_embarazada' => 'no',
             ],
             $extra
         );

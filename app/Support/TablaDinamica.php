@@ -80,11 +80,7 @@ class TablaDinamica
     /** @return array<string, list<array<string, mixed>>> */
     private static function tablasSeccion5(string $tipoFormulario): array
     {
-        if (in_array($tipoFormulario, ['periodica', 'especifica'], true)) {
-            return ['tatuajes' => self::columnasTatuajes()];
-        }
-
-        if (! in_array($tipoFormulario, ['preempleo', 'socioeconomico'], true)) {
+        if (! in_array($tipoFormulario, ['preempleo', 'socioeconomico', 'periodica', 'especifica'], true)) {
             return [];
         }
 
