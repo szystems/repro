@@ -13,7 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\CompletaFlujoCuestionario;
 use Tests\TestCase;
 
-/** M-F2/F3: alergias + embarazo en todos los formularios; peri/espe solo esas de salud. */
+/** Alergias y embarazo en todos los formularios. Periódica y específica usan la misma salud y hábitos de preempleo. */
 class CuestionarioSaludAlergiasEmbarazoTest extends TestCase
 {
     use RefreshDatabase, CompletaFlujoCuestionario;
@@ -49,7 +49,7 @@ class CuestionarioSaludAlergiasEmbarazoTest extends TestCase
         }
     }
 
-    public function test_periodica_y_especifica_muestran_bloque_salud_corto(): void
+    public function test_periodica_y_especifica_muestran_la_misma_salud_de_preempleo(): void
     {
         foreach (['periodica', 'especifica'] as $tipo) {
             $evaluado = $this->crearEvaluadoListo($tipo, 5);
@@ -61,8 +61,12 @@ class CuestionarioSaludAlergiasEmbarazoTest extends TestCase
                 ->assertOk()
                 ->assertSee(SaludHabitosCampos::TITULO_SALUD, false)
                 ->assertSee(SaludHabitosCampos::LABEL_ALERGIAS, false)
+                ->assertSee('name="salud_detalle_alergias"', false)
                 ->assertSee(SaludHabitosCampos::LABEL_EMBARAZADA, false)
-                ->assertDontSee(SaludHabitosCampos::LABEL_PREOCUPACIONES, false)
+                ->assertSee(SaludHabitosCampos::LABEL_PREOCUPACIONES, false)
+                ->assertSee(SaludHabitosCampos::TITULO_HABITOS, false)
+                ->assertSee(SaludHabitosCampos::HABITOS['habito_tiempo_libre'], false)
+                ->assertSee(SaludHabitosCampos::TITULO_SUSTANCIAS, false)
                 ->assertDontSee(InformacionComplementaria::TITULO_BLOQUE, false);
         }
     }
@@ -86,6 +90,13 @@ class CuestionarioSaludAlergiasEmbarazoTest extends TestCase
             'salud_alergias' => 'si',
             'salud_embarazada' => 'no',
         ]))->assertSessionHasErrors(['salud_detalle_alergias']);
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $evaluado->token_unico,
+            'numero' => 5,
+        ]), $this->datosSeccion5PeriodicaEspecifica([
+            'salud_preocupaciones' => '',
+        ]))->assertSessionHasErrors(['salud_preocupaciones']);
     }
 
     public function test_periodica_guarda_alergias_con_detalle(): void
@@ -105,6 +116,8 @@ class CuestionarioSaludAlergiasEmbarazoTest extends TestCase
         $this->assertSame('si', $resp['salud_alergias'] ?? null);
         $this->assertSame('Penicilina y polvo', $resp['salud_detalle_alergias'] ?? null);
         $this->assertSame('no', $resp['salud_embarazada'] ?? null);
+        $this->assertSame('Ninguna', $resp['salud_preocupaciones'] ?? null);
+        $this->assertSame('Lectura', $resp['habito_tiempo_libre'] ?? null);
     }
 
     public function test_preempleo_guarda_alergias_y_embarazo(): void
@@ -126,20 +139,29 @@ class CuestionarioSaludAlergiasEmbarazoTest extends TestCase
         $this->assertSame('si', $resp['salud_embarazada'] ?? null);
     }
 
-    public function test_dashboard_peri_incluye_bloque_salud_corto(): void
+    public function test_dashboard_peri_y_espe_muestran_la_misma_salud_que_preempleo(): void
     {
-        $titulos = array_column(
-            CuestionarioPresentacionDashboard::bloquesPreguntas(5, 'periodica'),
-            'titulo'
-        );
-        $this->assertContains(SaludHabitosCampos::TITULO_SALUD, $titulos);
-
         $clavesPreempleo = array_column(
             CuestionarioPresentacionDashboard::bloquesPreguntas(5, 'preempleo')[0]['preguntas'] ?? [],
             'key'
         );
-        $this->assertContains('salud_alergias', $clavesPreempleo);
-        $this->assertContains('salud_embarazada', $clavesPreempleo);
+
+        foreach (['periodica', 'especifica'] as $tipo) {
+            $bloques = CuestionarioPresentacionDashboard::bloquesPreguntas(5, $tipo);
+            $titulos = array_column($bloques, 'titulo');
+            $this->assertContains(SaludHabitosCampos::TITULO_SALUD, $titulos);
+            $this->assertNotContains(InformacionComplementaria::TITULO_BLOQUE, $titulos);
+
+            $claves = array_column($bloques[0]['preguntas'] ?? [], 'key');
+            $this->assertContains('salud_preocupaciones', $claves);
+            $this->assertContains('salud_alergias', $claves);
+            $this->assertContains('salud_detalle_alergias', $claves);
+            $this->assertContains('salud_embarazada', $claves);
+            $this->assertContains('habito_tiempo_libre', $claves);
+            $this->assertEqualsCanonicalizing($clavesPreempleo, $claves);
+
+            $this->assertSame([], CuestionarioPresentacionDashboard::bloquesPreguntas(5, $tipo, true));
+        }
     }
 
     private function crearEvaluadoListo(string $tipoFormulario, int $totalSecciones): EvaluadoOrden
@@ -147,7 +169,7 @@ class CuestionarioSaludAlergiasEmbarazoTest extends TestCase
         $orden = Orden::factory()->create();
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
-            'tipo_formulario' => $tipoFormulario,
+            'tipo_formulario' => $tipoFormulario === 'socioeconomico' ? 'preempleo' : $tipoFormulario,
             'tipo_servicio' => $tipoFormulario === 'socioeconomico' ? 'socioeconomico' : 'poligrafo',
             'token_unico' => 'mf2'.$tipoFormulario.str_repeat('x', 20),
             'token_expira_at' => now()->addDays(7),

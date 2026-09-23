@@ -181,7 +181,8 @@ class CuestionarioPeriodicaTest extends TestCase
             ->assertSee(SaludHabitosCampos::TITULO_SALUD, false)
             ->assertSee(SaludHabitosCampos::LABEL_ALERGIAS, false)
             ->assertSee(SaludHabitosCampos::LABEL_EMBARAZADA, false)
-            ->assertDontSee(SaludHabitosCampos::LABEL_PREOCUPACIONES, false)
+            ->assertSee(SaludHabitosCampos::LABEL_PREOCUPACIONES, false)
+            ->assertSee(SaludHabitosCampos::TITULO_HABITOS, false)
             ->assertDontSee(InformacionComplementaria::TITULO_BLOQUE, false)
             ->assertDontSee('Sección no disponible', false);
     }
