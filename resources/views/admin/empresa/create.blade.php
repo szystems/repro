@@ -169,6 +169,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @include('admin.empresa.partials.preguntas-preempleo')
                                 </div>
 
                                 <div class="col-lg-4">

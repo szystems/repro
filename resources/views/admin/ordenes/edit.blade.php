@@ -537,6 +537,14 @@
                     <option value="especifica">Específica</option>
                 </select>
             </div>
+            <div class="col-md-6 mb-2 juego-preguntas-wrap d-none">
+                <label class="form-label">Preguntas de preempleo</label>
+                <select class="form-select evaluado-preguntas-juego" name="" disabled>
+                    <option value="principal">De la empresa</option>
+                    <option value="puesto">Del puesto</option>
+                </select>
+                <small class="text-muted">Solo en preempleo de polígrafo y VSA. Los evaluados que ya están en la orden no cambian.</small>
+            </div>
             @if(Auth::user()->role_as >= 2)
             <div class="col-md-6 mb-2">
                 <label class="form-label">Modalidad</label>
@@ -620,6 +628,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (telAlt) telAlt.name = `evaluados[${evaluadoIndex}][telefono_alternativo]`;
         newEvaluado.querySelector('.evaluado-tipo-servicio').name = `evaluados[${evaluadoIndex}][tipo_servicio]`;
         newEvaluado.querySelector('.evaluado-tipo-formulario').name = `evaluados[${evaluadoIndex}][tipo_formulario]`;
+        const juegoPreguntas = newEvaluado.querySelector('.evaluado-preguntas-juego');
+        if (juegoPreguntas) {
+            juegoPreguntas.name = `evaluados[${evaluadoIndex}][preguntas_juego]`;
+        }
         const modalidadEl = newEvaluado.querySelector('.evaluado-modalidad');
         if (modalidadEl) modalidadEl.name = `evaluados[${evaluadoIndex}][modalidad]`;
         @if(Auth::user()->role_as >= 2)
@@ -636,6 +648,9 @@ document.addEventListener('DOMContentLoaded', function() {
         actualizarBotonesQuitarEvaluado();
         if (window.MatrizFormularioServicioUI) {
             window.MatrizFormularioServicioUI.sincronizarFila(newEvaluado);
+        }
+        if (window.ReproPreguntasPreempleo) {
+            window.ReproPreguntasPreempleo.aplicar(newEvaluado);
         }
     });
     
@@ -790,5 +805,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @include('admin.ordenes._js_reclutadores_empresa')
+@include('admin.ordenes._js_preguntas_preempleo')
 
 @endsection

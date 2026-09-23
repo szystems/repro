@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Empresa;
+use App\Models\EmpresaPreguntasPreempleo;
 use App\Models\User;
 use App\Http\Requests\EmpresaFormRequest;
 use App\Exports\EmpresasExport;
@@ -106,6 +107,7 @@ class EmpresasController extends Controller
         }
 
         $empresa->save();
+        $this->guardarPreguntasPreempleo($request, $empresa);
 
         return redirect('empresas')->with('status', 'Empresa agregada correctamente');
     }
@@ -138,7 +140,7 @@ class EmpresasController extends Controller
      */
     public function edit($id)
     {
-        $empresa = Empresa::findOrFail($id);
+        $empresa = Empresa::with('preguntasPreempleo')->findOrFail($id);
 
         return view('admin.empresa.edit', compact('empresa'));
     }
@@ -181,8 +183,23 @@ class EmpresasController extends Controller
         }
 
         $empresa->update();
+        $this->guardarPreguntasPreempleo($request, $empresa);
 
         return redirect('show-empresa/'.$id)->with('status', 'Información de empresa actualizada correctamente');
+    }
+
+    private function guardarPreguntasPreempleo(EmpresaFormRequest $request, Empresa $empresa): void
+    {
+        if (! $request->exists('preguntas_preempleo') && ! $request->exists('preguntas_puesto_nombre')) {
+            return;
+        }
+
+        EmpresaPreguntasPreempleo::guardarDesdeRequest(
+            $empresa,
+            $request->input('preguntas_preempleo', []),
+            $request->input('preguntas_puesto_nombre'),
+            $request->input('preguntas_preempleo_puesto', [])
+        );
     }
 
     /**

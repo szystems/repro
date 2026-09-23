@@ -69,7 +69,7 @@
                                 </div>
                                 @else
                                 <!-- Usuario empresa: enviar su empresa_id como hidden -->
-                                <input type="hidden" name="empresa_id" value="{{ Auth::user()->empresa_id }}">
+                                <input type="hidden" name="empresa_id" id="empresa_id" value="{{ Auth::user()->empresa_id }}">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Empresa</label>
                                     <input type="text" class="form-control" value="{{ Auth::user()->empresa->nombre ?? 'No asignada' }}" readonly>
@@ -293,6 +293,14 @@ function agregarEvaluado(datos = {}) {
                         <option value="especifica" ${tipoFormulario === 'especifica' ? 'selected' : ''}>Específica</option>
                     </select>
                 </div>
+                <div class="col-md-6 mb-2 juego-preguntas-wrap d-none">
+                    <label class="form-label">Preguntas de preempleo</label>
+                    <select class="form-select juego-preguntas" name="evaluados[${contadorEvaluados}][preguntas_juego]" disabled>
+                        <option value="principal" ${(datos.preguntas_juego || 'principal') !== 'puesto' ? 'selected' : ''}>De la empresa</option>
+                        <option value="puesto" ${datos.preguntas_juego === 'puesto' ? 'selected' : ''}>Del puesto</option>
+                    </select>
+                    <small class="text-muted">Solo en preempleo de polígrafo y VSA.</small>
+                </div>
                 @if(Auth::user()->role_as >= 2)
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Modalidad</label>
@@ -331,6 +339,9 @@ function agregarEvaluado(datos = {}) {
     const nuevo = document.getElementById(`evaluado-${contadorEvaluados}`);
     if (nuevo && window.MatrizFormularioServicioUI) {
         window.MatrizFormularioServicioUI.sincronizarFila(nuevo);
+    }
+    if (nuevo && window.ReproPreguntasPreempleo) {
+        window.ReproPreguntasPreempleo.aplicar(nuevo);
     }
 }
 
@@ -413,4 +424,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @include('admin.ordenes._js_reclutadores_empresa')
+@include('admin.ordenes._js_preguntas_preempleo')
 @endpush

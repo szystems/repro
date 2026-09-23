@@ -21,7 +21,9 @@ use App\Support\DestinatariosCorreoEmpresaSupport;
 use App\Support\EmpresaVisibilidadReclutadoresSupport;
 use App\Support\ExportacionesSupport;
 use App\Support\FormularioAutoTransiciones;
+use App\Models\EmpresaPreguntasPreempleo;
 use App\Support\InformeWordBloquesEvaluador;
+use App\Support\InformeWordPreguntasPoligraficas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -215,8 +217,9 @@ class OrdenesController extends Controller
             : (old('empresa_id') ? (int) old('empresa_id') : null);
 
         $reclutadores = $this->reclutadoresParaFormulario($empresaIdReclutadores);
+        $preguntasPuestoPorEmpresa = $this->preguntasPuestoPorEmpresa($empresas->pluck('id'));
 
-        return view('admin.ordenes.create', compact('empresas', 'poligrafistas', 'sedes', 'reclutadores'));
+        return view('admin.ordenes.create', compact('empresas', 'poligrafistas', 'sedes', 'reclutadores', 'preguntasPuestoPorEmpresa'));
     }
 
     /**
@@ -266,6 +269,7 @@ class OrdenesController extends Controller
             'evaluados.*.telefono_alternativo' => 'nullable|string|max:20',
             'evaluados.*.tipo_servicio' => 'required|in:poligrafo,vsa,socioeconomico',
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
+            'evaluados.*.preguntas_juego' => 'nullable|in:principal,puesto',
             'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
             'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:2000',
             'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
@@ -465,8 +469,10 @@ class OrdenesController extends Controller
         $sedes = Sede::where('estado', 1)->orderBy('nombre')->get();
 
         $reclutadores = $this->reclutadoresParaFormulario($orden->empresa_id);
+        $idsEmpresas = $empresas->pluck('id')->push($orden->empresa_id);
+        $preguntasPuestoPorEmpresa = $this->preguntasPuestoPorEmpresa($idsEmpresas);
 
-        return view('admin.ordenes.edit', compact('orden', 'empresas', 'poligrafistas', 'estados', 'sedes', 'reclutadores'));
+        return view('admin.ordenes.edit', compact('orden', 'empresas', 'poligrafistas', 'estados', 'sedes', 'reclutadores', 'preguntasPuestoPorEmpresa'));
     }
 
     /**
@@ -505,6 +511,7 @@ class OrdenesController extends Controller
             'evaluados.*.telefono_alternativo' => 'nullable|string|max:20',
             'evaluados.*.tipo_servicio' => 'required|in:poligrafo,vsa,socioeconomico',
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
+            'evaluados.*.preguntas_juego' => 'nullable|in:principal,puesto',
             'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
             'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:2000',
             'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
@@ -962,6 +969,7 @@ class OrdenesController extends Controller
 
                     $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
                     $this->registrarObservacionInicial($evaluadoCreado);
+                    $this->sembrarPreguntasSiCorresponde($orden, $evaluadoCreado, $evaluadoData);
 
                     $this->encolarCorreoCandidatoTrasCommit($evaluadoCreado);
 
@@ -971,6 +979,7 @@ class OrdenesController extends Controller
             } else {
                 $evaluadoCreado = EvaluadoOrden::create($datosEvaluado);
                 $this->registrarObservacionInicial($evaluadoCreado);
+                $this->sembrarPreguntasSiCorresponde($orden, $evaluadoCreado, $evaluadoData);
 
                 $this->encolarCorreoCandidatoTrasCommit($evaluadoCreado);
 
@@ -1040,6 +1049,37 @@ class OrdenesController extends Controller
             ]);
             $evaluado->delete();
         }
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, mixed>|array<int, mixed>  $empresaIds
+     * @return array<int|string, string>
+     */
+    private function preguntasPuestoPorEmpresa($empresaIds): array
+    {
+        $ids = collect($empresaIds)->filter()->unique()->values();
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        return EmpresaPreguntasPreempleo::whereIn('empresa_id', $ids->all())
+            ->get()
+            ->filter(fn (EmpresaPreguntasPreempleo $row) => $row->nombrePuestoVisible() !== null)
+            ->mapWithKeys(fn (EmpresaPreguntasPreempleo $row) => [
+                $row->empresa_id => $row->nombrePuestoVisible(),
+            ])
+            ->all();
+    }
+
+    /** @param  array<string, mixed>  $evaluadoData */
+    private function sembrarPreguntasSiCorresponde(Orden $orden, EvaluadoOrden $evaluado, array $evaluadoData): void
+    {
+        InformeWordPreguntasPoligraficas::sembrarEnEvaluadoNuevo(
+            $evaluado,
+            (int) $orden->empresa_id,
+            isset($evaluadoData['preguntas_juego']) ? (string) $evaluadoData['preguntas_juego'] : null,
+            Auth::id()
+        );
     }
 
     private function registrarObservacionInicial(EvaluadoOrden $evaluado): void

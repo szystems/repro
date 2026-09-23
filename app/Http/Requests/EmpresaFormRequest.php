@@ -45,7 +45,33 @@ class EmpresaFormRequest extends FormRequest
             'contacto_telefono' => 'nullable|string|max:20',
             'contacto_email' => 'nullable|email|max:191',
             'notas' => 'nullable|string',
+            'preguntas_preempleo' => 'nullable|array|max:5',
+            'preguntas_preempleo.*' => 'nullable|string|max:500',
+            'preguntas_puesto_nombre' => 'nullable|string|max:100',
+            'preguntas_preempleo_puesto' => 'nullable|array|max:5',
+            'preguntas_preempleo_puesto.*' => 'nullable|string|max:500',
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if (! $this->exists('preguntas_preempleo') && ! $this->exists('preguntas_puesto_nombre')) {
+                return;
+            }
+
+            $nombre = trim((string) $this->input('preguntas_puesto_nombre'));
+            $hayPuesto = collect($this->input('preguntas_preempleo_puesto', []))
+                ->contains(fn ($texto) => trim((string) $texto) !== '');
+
+            if ($nombre !== '' && ! $hayPuesto) {
+                $validator->errors()->add('preguntas_puesto_nombre', 'Escriba al menos una pregunta del puesto.');
+            }
+
+            if ($nombre === '' && $hayPuesto) {
+                $validator->errors()->add('preguntas_puesto_nombre', 'Escriba el nombre del puesto de este segundo juego.');
+            }
+        });
     }
 
     /**

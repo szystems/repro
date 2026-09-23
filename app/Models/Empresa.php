@@ -80,6 +80,11 @@ class Empresa extends Model
         return $this->hasMany(Orden::class, 'empresa_id', 'id');
     }
 
+    public function preguntasPreempleo()
+    {
+        return $this->hasOne(EmpresaPreguntasPreempleo::class, 'empresa_id');
+    }
+
     /**
      * Obtener el estado en formato legible
      */

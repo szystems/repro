@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\EmpresaPreguntasPreempleo;
 use App\Models\EvaluadorNota;
 use App\Models\EvaluadoOrden;
 
@@ -137,6 +138,48 @@ class InformeWordPreguntasPoligraficas
             static fn (array $fila): array => array_merge($fila, ['resultado' => $resultadoDefault]),
             self::FILAS_PLANTILLA
         );
+    }
+
+    /**
+     * Copia las preguntas de la empresa solo en un evaluado recién creado.
+     * Si la empresa no tiene lista, no guarda nada: el informe sigue con las cinco generales.
+     * Un evaluado que ya tiene filas no se reescribe.
+     */
+    public static function sembrarEnEvaluadoNuevo(EvaluadoOrden $evaluado, int $empresaId, ?string $juego, ?int $userId): void
+    {
+        if (! self::aplicaA($evaluado) || ($evaluado->tipo_formulario ?? '') !== 'preempleo') {
+            return;
+        }
+
+        if (self::filasGuardadas($evaluado->id) !== []) {
+            return;
+        }
+
+        $registro = EmpresaPreguntasPreempleo::where('empresa_id', $empresaId)->first();
+        if ($registro === null) {
+            return;
+        }
+
+        $textos = $juego === 'puesto'
+            ? $registro->preguntasPuesto()
+            : $registro->preguntasPrincipales();
+
+        if ($textos === []) {
+            return;
+        }
+
+        $resultado = self::codigoResultadoDefault($evaluado);
+        $filas = [];
+        foreach (array_slice($textos, 0, 5) as $texto) {
+            $filas[] = [
+                'pregunta' => $texto,
+                'respuesta' => 'No',
+                'resultado' => $resultado,
+                'puntuacion' => '',
+            ];
+        }
+
+        self::guardarDesdeRequest($evaluado->id, $filas, $userId);
     }
 
     /**
