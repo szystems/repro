@@ -634,32 +634,20 @@ document.addEventListener('DOMContentLoaded', function() {
         bsCollapse.toggle();
     });
 
-    // Auto-aplicar filtros cuando cambian
+    // Los selects y las fechas se aplican al elegir. El cuadro Buscar espera a Filtrar o Enter:
+    // en el celular el envío automático recargaba la página antes de terminar el nombre.
     const filtros = document.querySelectorAll('#formFiltros input, #formFiltros select');
     filtros.forEach(filtro => {
-        if (filtro.type !== 'submit') {
-            filtro.addEventListener('change', function() {
-                if (this.value !== '' || document.getElementById('filtro_buscar').value !== '') {
-                    // Aplicar filtros automáticamente
-                    setTimeout(() => {
-                        document.getElementById('formFiltros').submit();
-                    }, 300);
-                }
-            });
+        if (filtro.type === 'submit' || filtro.id === 'filtro_buscar') {
+            return;
         }
-    });
-
-    // Búsqueda en tiempo real (con debounce)
-    let searchTimeout;
-    const buscarInput = document.getElementById('filtro_buscar');
-
-    buscarInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            if (this.value.length >= 3 || this.value.length === 0) {
-                document.getElementById('formFiltros').submit();
+        filtro.addEventListener('change', function() {
+            if (this.value !== '' || document.getElementById('filtro_buscar').value !== '') {
+                setTimeout(() => {
+                    document.getElementById('formFiltros').submit();
+                }, 300);
             }
-        }, 500);
+        });
     });
 });
 

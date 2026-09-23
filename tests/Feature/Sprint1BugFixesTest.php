@@ -78,6 +78,20 @@ class Sprint1BugFixesTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_buscar_de_cuestionarios_no_envia_el_filtro_mientras_se_escribe(): void
+    {
+        $admin = $this->crearAdmin();
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.cuestionarios.index'));
+
+        $response->assertOk();
+        $response->assertSee('id="filtro_buscar"', false);
+        $response->assertSee("filtro.id === 'filtro_buscar'", false);
+        $response->assertDontSee('Búsqueda en tiempo real', false);
+        $response->assertDontSee("buscarInput.addEventListener('input'", false);
+    }
+
     // ──────────────────────────────────────────────────────────
     // CA1: motivo de rechazo de papelería visible al candidato
     // ──────────────────────────────────────────────────────────
