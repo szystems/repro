@@ -3,7 +3,8 @@
     $registroPreguntas = isset($empresa) ? $empresa->preguntasPreempleo : null;
     $valoresPrincipales = old('preguntas_preempleo', $registroPreguntas ? $registroPreguntas->espaciosPrincipales() : ['', '', '', '', '']);
     $valoresPuesto = old('preguntas_preempleo_puesto', $registroPreguntas ? $registroPreguntas->espaciosPuesto() : ['', '', '', '', '']);
-    $nombrePuesto = old('preguntas_puesto_nombre', $registroPreguntas->puesto_nombre ?? '');
+    $nombrePrincipal = old('preguntas_principal_nombre', $registroPreguntas?->principal_nombre ?? '');
+    $nombrePuesto = old('preguntas_puesto_nombre', $registroPreguntas?->puesto_nombre ?? '');
 @endphp
 <div class="card mb-3">
     <div class="card-header">
@@ -15,6 +16,15 @@
             Si las escribe, esas salen al final del informe en polígrafo y en VSA.
             Periódica y específica siguen en blanco. Las órdenes ya creadas no cambian.
         </p>
+        <h6 class="mb-2">Primer juego</h6>
+        <div class="mb-2">
+            <label class="form-label" for="preguntas_principal_nombre">Nombre de este juego</label>
+            <input type="text" class="form-control @error('preguntas_principal_nombre') is-invalid @enderror" id="preguntas_principal_nombre" name="preguntas_principal_nombre" maxlength="100" placeholder="Preguntas generales" value="{{ $nombrePrincipal }}">
+            <small class="text-muted">Si lo deja vacío, en la orden se llama Preguntas generales.</small>
+            @error('preguntas_principal_nombre')
+                <div class="invalid-feedback d-block">{{ $message }}</div>
+            @enderror
+        </div>
         @foreach(range(0, 4) as $i)
             <div class="mb-2">
                 <label class="form-label" for="preguntas_preempleo_{{ $i }}">Pregunta {{ $i + 1 }}</label>

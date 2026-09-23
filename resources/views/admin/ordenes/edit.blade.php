@@ -543,7 +543,7 @@
             <div class="col-md-6 mb-2 juego-preguntas-wrap d-none">
                 <label class="form-label">Preguntas de preempleo</label>
                 <select class="form-select evaluado-preguntas-juego" name="" disabled>
-                    <option value="principal">De la empresa</option>
+                    <option value="principal">Preguntas generales</option>
                     <option value="puesto">Del puesto</option>
                 </select>
                 <small class="text-muted">Solo en preempleo de polígrafo y VSA. Los evaluados que ya están en la orden no cambian.</small>

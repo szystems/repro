@@ -272,7 +272,7 @@ class OrdenesController extends Controller
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
             'evaluados.*.preguntas_juego' => 'nullable|in:principal,puesto',
             'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
-            'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:2000',
+            'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:'.EvaluadoOrden::MOTIVO_HECHO_MAX,
             'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
             'evaluados.*.sede_region_empresa' => 'nullable|string|max:100',
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
@@ -515,7 +515,7 @@ class OrdenesController extends Controller
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
             'evaluados.*.preguntas_juego' => 'nullable|in:principal,puesto',
             'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
-            'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:2000',
+            'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:'.EvaluadoOrden::MOTIVO_HECHO_MAX,
             'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
             'evaluados.*.sede_region_empresa' => 'nullable|string|max:100',
             'evaluados.*.fecha_programada' => 'nullable|date|after:today',
@@ -1055,7 +1055,7 @@ class OrdenesController extends Controller
 
     /**
      * @param  \Illuminate\Support\Collection<int, mixed>|array<int, mixed>  $empresaIds
-     * @return array<int|string, string>
+     * @return array<int|string, array{principal: string, puesto: string}>
      */
     private function preguntasPuestoPorEmpresa($empresaIds): array
     {
@@ -1068,7 +1068,10 @@ class OrdenesController extends Controller
             ->get()
             ->filter(fn (EmpresaPreguntasPreempleo $row) => $row->nombrePuestoVisible() !== null)
             ->mapWithKeys(fn (EmpresaPreguntasPreempleo $row) => [
-                $row->empresa_id => $row->nombrePuestoVisible(),
+                $row->empresa_id => [
+                    'principal' => $row->nombrePrincipalVisible(),
+                    'puesto' => $row->nombrePuestoVisible(),
+                ],
             ])
             ->all();
     }
@@ -1430,7 +1433,7 @@ class OrdenesController extends Controller
         }
 
         $request->validate([
-            'motivo_hecho_evaluacion' => 'required|string|max:2000',
+            'motivo_hecho_evaluacion' => 'required|string|max:'.EvaluadoOrden::MOTIVO_HECHO_MAX,
         ], [
             'motivo_hecho_evaluacion.required' => 'Indique el motivo o hecho de la evaluación.',
         ]);

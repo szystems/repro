@@ -202,7 +202,9 @@ class EmpresasController extends Controller
 
     private function guardarPreguntasPreempleo(EmpresaFormRequest $request, Empresa $empresa): void
     {
-        if (! $request->exists('preguntas_preempleo') && ! $request->exists('preguntas_puesto_nombre')) {
+        if (! $request->exists('preguntas_preempleo')
+            && ! $request->exists('preguntas_puesto_nombre')
+            && ! $request->exists('preguntas_principal_nombre')) {
             return;
         }
 
@@ -210,7 +212,8 @@ class EmpresasController extends Controller
             $empresa,
             $request->input('preguntas_preempleo', []),
             $request->input('preguntas_puesto_nombre'),
-            $request->input('preguntas_preempleo_puesto', [])
+            $request->input('preguntas_preempleo_puesto', []),
+            $request->input('preguntas_principal_nombre')
         );
     }
 

@@ -302,7 +302,7 @@ function agregarEvaluado(datos = {}) {
                 <div class="col-md-6 mb-2 juego-preguntas-wrap d-none">
                     <label class="form-label">Preguntas de preempleo</label>
                     <select class="form-select juego-preguntas" name="evaluados[${contadorEvaluados}][preguntas_juego]" disabled>
-                        <option value="principal" ${(datos.preguntas_juego || 'principal') !== 'puesto' ? 'selected' : ''}>De la empresa</option>
+                        <option value="principal" ${(datos.preguntas_juego || 'principal') !== 'puesto' ? 'selected' : ''}>Preguntas generales</option>
                         <option value="puesto" ${datos.preguntas_juego === 'puesto' ? 'selected' : ''}>Del puesto</option>
                     </select>
                     <small class="text-muted">Solo en preempleo de polígrafo y VSA.</small>

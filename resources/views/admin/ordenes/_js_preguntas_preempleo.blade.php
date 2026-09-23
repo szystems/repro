@@ -32,14 +32,19 @@ window.ReproPreguntasPreempleo = {
         const empresaId = empresaEl && empresaEl.value
             ? String(empresaEl.value)
             : String(this.empresaFija || '');
-        const nombre = this.porEmpresa[empresaId] || this.porEmpresa[Number(empresaId)] || '';
+        const datos = this.porEmpresa[empresaId] || this.porEmpresa[Number(empresaId)] || null;
+        const nombrePuesto = datos && typeof datos === 'object' ? (datos.puesto || '') : (datos || '');
+        const nombrePrincipal = datos && typeof datos === 'object' && datos.principal
+            ? datos.principal
+            : 'Preguntas generales';
         (root || document).querySelectorAll('.juego-preguntas-wrap').forEach(function(wrap) {
             const select = wrap.querySelector('select');
             if (!select) {
                 return;
             }
+            const opcionPrincipal = select.querySelector('option[value="principal"]');
             const opcionPuesto = select.querySelector('option[value="puesto"]');
-            if (!nombre) {
+            if (!nombrePuesto) {
                 wrap.classList.add('d-none');
                 select.value = 'principal';
                 select.disabled = true;
@@ -47,8 +52,11 @@ window.ReproPreguntasPreempleo = {
             }
             wrap.classList.remove('d-none');
             select.disabled = false;
+            if (opcionPrincipal) {
+                opcionPrincipal.textContent = nombrePrincipal;
+            }
             if (opcionPuesto) {
-                opcionPuesto.textContent = 'Del puesto: ' + nombre;
+                opcionPuesto.textContent = 'Del puesto: ' + nombrePuesto;
             }
         });
         this.mostrarRequerimientos();

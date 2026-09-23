@@ -518,7 +518,8 @@
                                                 <form method="POST" action="{{ route('evaluados.actualizar-motivo-hecho', $evaluado) }}" class="mt-1">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <textarea name="motivo_hecho_evaluacion" class="form-control form-control-sm" rows="2" maxlength="2000" required placeholder="Ej: ascenso a supervisor / hecho a investigar…">{{ old('motivo_hecho_evaluacion', $evaluado->motivo_hecho_evaluacion) }}</textarea>
+                                                    <textarea name="motivo_hecho_evaluacion" class="form-control form-control-sm" rows="6" maxlength="{{ \App\Models\EvaluadoOrden::MOTIVO_HECHO_MAX }}" required placeholder="Ej: ascenso a supervisor / hecho a investigar…">{{ old('motivo_hecho_evaluacion', $evaluado->motivo_hecho_evaluacion) }}</textarea>
+                                                    <small class="text-muted">Cabe un relato de unas dos páginas ({{ number_format(\App\Models\EvaluadoOrden::MOTIVO_HECHO_MAX, 0, ',', '.') }} caracteres). Ese texto va a la casilla laboral del informe.</small>
                                                     <button type="submit" class="btn btn-sm btn-outline-primary mt-1">
                                                         <i class="bi bi-save"></i> Guardar motivo/hecho
                                                     </button>

@@ -8,10 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** Hasta cinco preguntas de preempleo propias de la empresa, y un segundo juego por puesto. */
 class EmpresaPreguntasPreempleo extends Model
 {
+    /** Nombre del primer juego cuando la empresa no escribe uno. */
+    public const ETIQUETA_PRINCIPAL = 'Preguntas generales';
+
     protected $table = 'empresa_preguntas_preempleo';
 
     protected $fillable = [
         'empresa_id',
+        'principal_nombre',
         'p1', 'p2', 'p3', 'p4', 'p5',
         'puesto_nombre',
         'puesto_p1', 'puesto_p2', 'puesto_p3', 'puesto_p4', 'puesto_p5',
@@ -26,11 +30,17 @@ class EmpresaPreguntasPreempleo extends Model
      * @param  array<int|string, mixed>  $principal
      * @param  array<int|string, mixed>  $puesto
      */
-    public static function guardarDesdeRequest(Empresa $empresa, array $principal, ?string $puestoNombre, array $puesto): void
-    {
+    public static function guardarDesdeRequest(
+        Empresa $empresa,
+        array $principal,
+        ?string $puestoNombre,
+        array $puesto,
+        ?string $principalNombre = null
+    ): void {
         $principales = self::cinco($principal);
         $dePuesto = self::cinco($puesto);
         $nombre = trim((string) $puestoNombre);
+        $nombrePrincipal = trim((string) $principalNombre);
 
         $sinPrincipal = self::vacias($principales);
         $sinPuesto = $nombre === '' && self::vacias($dePuesto);
@@ -44,6 +54,7 @@ class EmpresaPreguntasPreempleo extends Model
         static::updateOrCreate(
             ['empresa_id' => $empresa->id],
             [
+                'principal_nombre' => ($nombrePrincipal !== '' && ! $sinPrincipal) ? mb_substr($nombrePrincipal, 0, 100) : null,
                 'p1' => $principales[0],
                 'p2' => $principales[1],
                 'p3' => $principales[2],
@@ -57,6 +68,14 @@ class EmpresaPreguntasPreempleo extends Model
                 'puesto_p5' => $dePuesto[4],
             ]
         );
+    }
+
+    /** Nombre que ve quien arma la orden. Vacío = Preguntas generales. */
+    public function nombrePrincipalVisible(): string
+    {
+        $nombre = trim((string) $this->principal_nombre);
+
+        return $nombre !== '' ? $nombre : self::ETIQUETA_PRINCIPAL;
     }
 
     /** @return list<string> */

@@ -32,6 +32,12 @@ class EvaluadoOrden extends Model
     protected $table = 'evaluados_orden';
 
     /**
+     * Relato de periódica/específica (motivo o hecho). Una hoja y media cabe;
+     * 2,000 caracteres lo cortaba al guardar.
+     */
+    public const MOTIVO_HECHO_MAX = 8000;
+
+    /**
      * Campos asignables en masa
      */
     protected $fillable = [
