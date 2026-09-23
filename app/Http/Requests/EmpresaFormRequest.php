@@ -52,6 +52,8 @@ class EmpresaFormRequest extends FormRequest
             'preguntas_puesto_nombre' => 'nullable|string|max:100',
             'preguntas_preempleo_puesto' => 'nullable|array|max:5',
             'preguntas_preempleo_puesto.*' => 'nullable|string|max:500',
+            'preguntas_periodica' => 'nullable|array|max:5',
+            'preguntas_periodica.*' => 'nullable|string|max:500',
         ];
     }
 
@@ -60,7 +62,8 @@ class EmpresaFormRequest extends FormRequest
         $validator->after(function ($validator) {
             if (! $this->exists('preguntas_preempleo')
                 && ! $this->exists('preguntas_puesto_nombre')
-                && ! $this->exists('preguntas_principal_nombre')) {
+                && ! $this->exists('preguntas_principal_nombre')
+                && ! $this->exists('preguntas_periodica')) {
                 return;
             }
 

@@ -248,6 +248,8 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     });
     Route::middleware(['permission:observacion.editar'])->group(function () {
         Route::patch('evaluados/{evaluado}/observacion', [OrdenesController::class, 'actualizarObservacion'])->name('evaluados.actualizar-observacion');
+        Route::patch('evaluados/{evaluado}/observacion/{entrada}', [OrdenesController::class, 'corregirObservacion'])->name('evaluados.corregir-observacion');
+        Route::patch('evaluados/{evaluado}/observacion-inicial', [OrdenesController::class, 'corregirObservacionInicial'])->name('evaluados.corregir-observacion-inicial');
     });
 
     // Notificaciones

@@ -60,7 +60,9 @@ class InformeWordPreguntasPoligraficas
     }
 
     /**
-     * FORMATOS: periódica/específica dejan preguntas en blanco (editables por caso).
+     * Sin preguntas guardadas, periódica y específica quedan en blanco.
+     * La periódica solo se llena si la empresa tiene las suyas y se copiaron al crear la orden.
+     * Específica no copia nada.
      */
     public static function preguntasEnBlanco(EvaluadoOrden $evaluado): bool
     {
@@ -142,12 +144,13 @@ class InformeWordPreguntasPoligraficas
 
     /**
      * Copia las preguntas de la empresa solo en un evaluado recién creado.
-     * Si la empresa no tiene lista, no guarda nada: el informe sigue con las cinco generales.
-     * Un evaluado que ya tiene filas no se reescribe.
+     * Preempleo sin lista sigue con las cinco generales. Periódica sin lista queda en blanco.
+     * Específica no copia. Un evaluado que ya tiene filas no se reescribe.
      */
     public static function sembrarEnEvaluadoNuevo(EvaluadoOrden $evaluado, int $empresaId, ?string $juego, ?int $userId): void
     {
-        if (! self::aplicaA($evaluado) || ($evaluado->tipo_formulario ?? '') !== 'preempleo') {
+        $tipo = (string) ($evaluado->tipo_formulario ?? '');
+        if (! self::aplicaA($evaluado) || ! in_array($tipo, ['preempleo', 'periodica'], true)) {
             return;
         }
 
@@ -160,9 +163,9 @@ class InformeWordPreguntasPoligraficas
             return;
         }
 
-        $textos = $juego === 'puesto'
-            ? $registro->preguntasPuesto()
-            : $registro->preguntasPrincipales();
+        $textos = $tipo === 'periodica'
+            ? $registro->preguntasPeriodica()
+            : ($juego === 'puesto' ? $registro->preguntasPuesto() : $registro->preguntasPrincipales());
 
         if ($textos === []) {
             return;
