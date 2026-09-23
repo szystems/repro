@@ -5,6 +5,7 @@
     $valoresPuesto = old('preguntas_preempleo_puesto', $registroPreguntas ? $registroPreguntas->espaciosPuesto() : ['', '', '', '', '']);
     $nombrePrincipal = old('preguntas_principal_nombre', $registroPreguntas?->principal_nombre ?? '');
     $nombrePuesto = old('preguntas_puesto_nombre', $registroPreguntas?->puesto_nombre ?? '');
+    $valoresPeriodica = old('preguntas_periodica', $registroPreguntas ? $registroPreguntas->espaciosPeriodica() : ['', '', '', '', '']);
 @endphp
 <div class="card mb-3">
     <div class="card-header">
@@ -14,7 +15,7 @@
         <p class="text-muted small">
             Si las deja vacías, las órdenes nuevas de preempleo usan las cinco preguntas generales.
             Si las escribe, esas salen al final del informe en polígrafo y en VSA.
-            Periódica y específica siguen en blanco. Las órdenes ya creadas no cambian.
+            Las órdenes ya creadas no cambian. La específica siempre queda en blanco.
         </p>
         <h6 class="mb-2">Primer juego</h6>
         <div class="mb-2">
@@ -49,6 +50,20 @@
             <div class="mb-2">
                 <label class="form-label" for="preguntas_preempleo_puesto_{{ $i }}">Pregunta del puesto {{ $i + 1 }}</label>
                 <textarea class="form-control" id="preguntas_preempleo_puesto_{{ $i }}" name="preguntas_preempleo_puesto[{{ $i }}]" rows="2" maxlength="500">{{ $valoresPuesto[$i] ?? '' }}</textarea>
+            </div>
+        @endforeach
+
+        <hr>
+        <h6 class="mb-2">Preguntas de periódica</h6>
+        <p class="text-muted small">
+            Si las deja vacías, las órdenes nuevas de periódica siguen con el espacio en blanco.
+            Si las escribe, esas salen en polígrafo y en VSA. La específica no las usa.
+            Las órdenes ya creadas no cambian.
+        </p>
+        @foreach(range(0, 4) as $i)
+            <div class="mb-2">
+                <label class="form-label" for="preguntas_periodica_{{ $i }}">Pregunta periódica {{ $i + 1 }}</label>
+                <textarea class="form-control" id="preguntas_periodica_{{ $i }}" name="preguntas_periodica[{{ $i }}]" rows="2" maxlength="500">{{ $valoresPeriodica[$i] ?? '' }}</textarea>
             </div>
         @endforeach
     </div>

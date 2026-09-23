@@ -297,6 +297,112 @@ class EmpresaPreguntasPreempleoTest extends TestCase
             ->assertDontSee($secreto);
     }
 
+    public function test_periodica_copia_las_preguntas_de_la_empresa_y_especifica_queda_en_blanco(): void
+    {
+        $admin = $this->admin();
+        $empresa = Empresa::factory()->create();
+
+        $this->actingAs($admin)
+            ->put(route('empresas.update', $empresa->id), $this->datosEmpresa($empresa, [
+                'preguntas_preempleo' => ['¿Solo preempleo?', '', '', '', ''],
+                'preguntas_periodica' => ['¿Pregunta fija de periódica?', '', '', '', ''],
+            ]))
+            ->assertRedirect('show-empresa/'.$empresa->id);
+
+        $registro = EmpresaPreguntasPreempleo::where('empresa_id', $empresa->id)->first();
+        $this->assertSame(['¿Pregunta fija de periódica?'], $registro->preguntasPeriodica());
+
+        $this->actingAs($admin)->post(route('ordenes.store'), [
+            'empresa_id' => $empresa->id,
+            'prioridad' => 'normal',
+            'evaluados' => [
+                [
+                    'nombre' => 'Peri',
+                    'apellidos' => 'Poli',
+                    'dpi' => '8234567890123',
+                    'email' => 'peri.poli@test.com',
+                    'tipo_servicio' => 'poligrafo',
+                    'tipo_formulario' => 'periodica',
+                ],
+                [
+                    'nombre' => 'Peri',
+                    'apellidos' => 'Vsa',
+                    'dpi' => '9234567890123',
+                    'email' => 'peri.vsa@test.com',
+                    'tipo_servicio' => 'vsa',
+                    'tipo_formulario' => 'periodica',
+                ],
+                [
+                    'nombre' => 'Espe',
+                    'apellidos' => 'Blanco',
+                    'dpi' => '1334567890123',
+                    'email' => 'espe.blanco@test.com',
+                    'tipo_servicio' => 'poligrafo',
+                    'tipo_formulario' => 'especifica',
+                ],
+            ],
+        ])->assertRedirect();
+
+        $poli = EvaluadoOrden::where('dpi', '8234567890123')->first();
+        $vsa = EvaluadoOrden::where('dpi', '9234567890123')->first();
+        $espe = EvaluadoOrden::where('dpi', '1334567890123')->first();
+
+        $this->assertSame('¿Pregunta fija de periódica?', InformeWordPreguntasPoligraficas::filas($poli->id, $poli)[0]['pregunta']);
+        $this->assertSame('¿Pregunta fija de periódica?', InformeWordPreguntasPoligraficas::filas($vsa->id, $vsa)[0]['pregunta']);
+        $this->assertNotSame('¿Solo preempleo?', InformeWordPreguntasPoligraficas::filas($poli->id, $poli)[0]['pregunta']);
+        $this->assertDatabaseMissing('evaluador_notas', [
+            'evaluado_orden_id' => $espe->id,
+            'seccion' => InformeWordPreguntasPoligraficas::SECCION_NOTA,
+        ]);
+        $this->assertSame('', InformeWordPreguntasPoligraficas::filas($espe->id, $espe)[0]['pregunta']);
+
+        EmpresaPreguntasPreempleo::guardarDesdeRequest(
+            $empresa,
+            ['¿Solo preempleo?', '', '', '', ''],
+            null,
+            [],
+            null,
+            ['¿Texto cambiado despues?', '', '', '', '']
+        );
+
+        $poli->refresh();
+        $this->assertSame('¿Pregunta fija de periódica?', InformeWordPreguntasPoligraficas::filas($poli->id, $poli)[0]['pregunta']);
+    }
+
+    public function test_periodica_sin_preguntas_de_la_empresa_queda_en_blanco(): void
+    {
+        $admin = $this->admin();
+        $empresa = Empresa::factory()->create();
+        EmpresaPreguntasPreempleo::guardarDesdeRequest(
+            $empresa,
+            ['¿Solo preempleo?', '', '', '', ''],
+            null,
+            [],
+            null,
+            ['', '', '', '', '']
+        );
+
+        $this->actingAs($admin)->post(route('ordenes.store'), [
+            'empresa_id' => $empresa->id,
+            'prioridad' => 'normal',
+            'evaluados' => [[
+                'nombre' => 'Peri',
+                'apellidos' => 'Vacio',
+                'dpi' => '1434567890123',
+                'email' => 'peri.vacio@test.com',
+                'tipo_servicio' => 'poligrafo',
+                'tipo_formulario' => 'periodica',
+            ]],
+        ])->assertRedirect();
+
+        $evaluado = EvaluadoOrden::where('dpi', '1434567890123')->first();
+        $this->assertDatabaseMissing('evaluador_notas', [
+            'evaluado_orden_id' => $evaluado->id,
+            'seccion' => InformeWordPreguntasPoligraficas::SECCION_NOTA,
+        ]);
+        $this->assertSame('', InformeWordPreguntasPoligraficas::filas($evaluado->id, $evaluado)[0]['pregunta']);
+    }
+
     public function test_el_primer_juego_se_puede_nombrar_y_si_no_dice_preguntas_generales(): void
     {
         $admin = $this->admin();
