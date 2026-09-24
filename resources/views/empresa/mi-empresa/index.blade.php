@@ -203,26 +203,17 @@
                 </div>
             </div>
 
-            <!-- Descripción y notas -->
-            @if($empresa->descripcion || $empresa->notas)
+            @if($empresa->descripcion)
             <div class="col-lg-12">
                 <div class="card mb-3">
                     <div class="card-header">
                         <h6 class="card-title mb-0"><i class="bi bi-card-text text-success"></i> Información Adicional</h6>
                     </div>
                     <div class="card-body">
-                        @if($empresa->descripcion)
-                        <div class="mb-3">
+                        <div>
                             <label class="form-label text-muted small">Descripción:</label>
                             <p class="mb-0">{{ $empresa->descripcion }}</p>
                         </div>
-                        @endif
-                        @if($empresa->notas)
-                        <div>
-                            <label class="form-label text-muted small">Notas:</label>
-                            <p class="mb-0">{{ $empresa->notas }}</p>
-                        </div>
-                        @endif
                     </div>
                 </div>
             </div>

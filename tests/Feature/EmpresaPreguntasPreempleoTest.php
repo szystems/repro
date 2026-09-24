@@ -278,6 +278,14 @@ class EmpresaPreguntasPreempleoTest extends TestCase
             ->assertOk()
             ->assertSee($secreto, false);
 
+        $notaInterna = 'Nota interna que el cliente no debe ver';
+        $empresa->update(['notas' => $notaInterna]);
+
+        $this->actingAs($admin)
+            ->get(route('empresas.show', $empresa->id))
+            ->assertOk()
+            ->assertSee($notaInterna);
+
         $cliente = User::factory()->create([
             'role_as' => 1,
             'estado' => 1,
@@ -289,12 +297,14 @@ class EmpresaPreguntasPreempleoTest extends TestCase
         $this->actingAs($cliente)
             ->get(route('empresa.ordenes.show', $orden))
             ->assertOk()
-            ->assertDontSee($secreto);
+            ->assertDontSee($secreto)
+            ->assertDontSee($notaInterna);
 
         $this->actingAs($cliente)
             ->get(route('empresa.mi-empresa'))
             ->assertOk()
-            ->assertDontSee($secreto);
+            ->assertDontSee($secreto)
+            ->assertDontSee($notaInterna);
     }
 
     public function test_periodica_copia_las_preguntas_de_la_empresa_y_especifica_queda_en_blanco(): void

@@ -162,6 +162,7 @@
                                             <h6 class="mb-0">Notas Adicionales</h6>
                                         </div>
                                         <div class="card-body">
+                                            <p class="text-muted small">Solo las ve REPRO. No aparecen en el portal de la empresa.</p>
                                             <div class="row">
                                                 <div class="col-12">
                                                     <textarea name="notas" id="notas" class="form-control" rows="4" placeholder="Información adicional relevante sobre la empresa...">{{ old('notas') }}</textarea>
