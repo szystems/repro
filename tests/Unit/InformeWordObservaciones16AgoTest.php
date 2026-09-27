@@ -30,6 +30,44 @@ class InformeWordObservaciones16AgoTest extends TestCase
 
     private const PNG_1PX = 'iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mP8z8BQz0AEYBxVSF+FABJADveWkH6oAAAAAElFTkSuQmCC';
 
+    public function test_fotos_de_tatuaje_van_al_final_y_no_dentro_de_la_tabla(): void
+    {
+        Storage::fake('local');
+
+        $evaluado = $this->evaluadoConCuestionario();
+        $this->agregarPapeleria($evaluado, ['dpi_archivo']);
+        $this->agregarFotoTatuaje($evaluado);
+
+        $evaluado = $evaluado->fresh(['cuestionario', 'orden', 'documentos']);
+        $path = InformeWordExport::generar($evaluado->orden, $evaluado);
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($path) === true);
+        $documentXml = (string) $zip->getFromName('word/document.xml');
+        $tatuajes = 0;
+        $papeleria = 0;
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $nombre = (string) $zip->getNameIndex($i);
+            if (str_contains($nombre, 'anexo_tatuaje_')) {
+                $tatuajes++;
+            }
+            if (str_contains($nombre, 'anexo_papeleria_')) {
+                $papeleria++;
+            }
+        }
+        $zip->close();
+        @unlink($path);
+
+        $limites = InformeWordXml::limitesTablaPorMarcador($documentXml, 'TATUAJES');
+        $this->assertNotNull($limites);
+        $tabla = substr($documentXml, $limites[0], $limites[1] - $limites[0]);
+
+        $this->assertStringNotContainsString('<w:drawing', $tabla);
+        $this->assertSame(1, $tatuajes);
+        $this->assertSame(1, $papeleria);
+        $this->assertSame(1, substr_count($documentXml, 'DOCUMENTOS ADJUNTOS'));
+        $this->assertSame([], InformeWordXml::problemasEstructura($documentXml));
+    }
+
     public function test_papeleria_anexada_produce_docx_que_word_puede_abrir(): void
     {
         Storage::fake('local');
@@ -354,6 +392,21 @@ class InformeWordObservaciones16AgoTest extends TestCase
             'valor' => $ruta,
             'tipo_campo' => 'file',
             'requerido' => true,
+        ]);
+    }
+
+    private function agregarFotoTatuaje(EvaluadoOrden $evaluado): void
+    {
+        $ruta = "documentos_evaluados/{$evaluado->id}/foto_tatuaje.png";
+        Storage::disk('local')->put($ruta, base64_decode(self::PNG_1PX));
+
+        DocumentoEvaluado::factory()->create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_documento' => 'foto_tatuaje',
+            'ruta_archivo' => $ruta,
+            'nombre_original' => 'tatuaje.png',
+            'mime_type' => 'image/png',
+            'subido_por_tipo' => 'repro',
         ]);
     }
 

@@ -163,7 +163,7 @@
                                     @elseif($documento->es_pdf)
                                         <small class="text-muted">PDF</small>
                                     @elseif($documento->tipo_documento === 'foto_tatuaje')
-                                        <small class="text-muted">Tatuajes</small>
+                                        <small class="text-muted">Al final</small>
                                     @else
                                         <small class="text-muted">—</small>
                                     @endif
