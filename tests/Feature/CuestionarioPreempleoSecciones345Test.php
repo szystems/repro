@@ -172,7 +172,11 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
             ->assertSee('cuantas veces estuvo ausente en su empleo', false)
             ->assertSee('lagunas de tiempo', false)
             ->assertDontSee('Preguntas complementarias de integridad', false)
-            ->assertDontSee('currículum', false);
+            ->assertDontSee('currículum', false)
+            ->assertSee('name="empleos[0][empresa]"', false)
+            ->assertSee('name="empleos[4][empresa]"', false)
+            ->assertDontSee('name="empleos[5][empresa]"', false)
+            ->assertSee('+ Agregar empleo', false);
     }
 
     public function test_deudas_tabla_y_gate(): void

@@ -9,6 +9,8 @@
     'textoVacio' => 'No hay filas. Use el botón para agregar.',
     'permitirAgregar' => true,
     'permitirEliminar' => true,
+    'permitirReordenar' => false,
+    'filasVisibles' => 0,
 ])
 
 @php
@@ -18,6 +20,10 @@
     }
     if (count($filasRender) === 0 && ($minFilas ?? 0) > 0) {
         $filasRender = [[]];
+    }
+    $filasVisibles = (int) $filasVisibles;
+    if ($filasVisibles > count($filasRender)) {
+        $filasRender = array_pad($filasRender, $filasVisibles, []);
     }
     $columnasJson = json_encode($columnas, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
 @endphp
@@ -31,6 +37,7 @@
      data-texto-eliminar="{{ $textoEliminar }}"
      data-permitir-agregar="{{ $permitirAgregar ? '1' : '0' }}"
      data-permitir-eliminar="{{ $permitirEliminar ? '1' : '0' }}"
+     data-permitir-reordenar="{{ $permitirReordenar ? '1' : '0' }}"
      @if($name === 'formacion_academica') data-formacion-academica="1" @endif>
 
     @if($titulo)
@@ -60,8 +67,8 @@
                             @if($col['required'] ?? false)<span class="required">*</span>@endif
                         </th>
                     @endforeach
-                    @if($permitirEliminar)
-                    <th style="width: 90px;" class="text-center">Acción</th>
+                    @if($permitirEliminar || $permitirReordenar)
+                    <th style="width: {{ $permitirReordenar ? '132px' : '90px' }};" class="text-center">Acción</th>
                     @endif
                 </tr>
             </thead>
@@ -74,6 +81,7 @@
                         'index' => $index,
                         'textoEliminar' => $textoEliminar,
                         'permitirEliminar' => $permitirEliminar,
+                        'permitirReordenar' => $permitirReordenar,
                     ])
                 @endforeach
             </tbody>
@@ -111,9 +119,16 @@
                 min-width: 5.5rem;
             }
 
-            .tabla-dinamica-remove:disabled {
+            .tabla-dinamica-remove:disabled,
+            .tabla-dinamica-move:disabled {
                 opacity: 0.45;
                 cursor: not-allowed;
+            }
+
+            .tabla-dinamica-actions-inner {
+                display: flex;
+                gap: 0.25rem;
+                justify-content: center;
             }
 
             /* Selectores mes/año: mismo comportamiento en Android, iOS y escritorio. */
@@ -186,8 +201,8 @@
                     text-align: left;
                 }
 
-                .tabla-dinamica-row .tabla-dinamica-remove {
-                    width: 100%;
+                .tabla-dinamica-row .tabla-dinamica-actions-inner .btn {
+                    flex: 1 1 auto;
                 }
 
                 .tabla-dinamica-row .tabla-dinamica-remove:disabled {

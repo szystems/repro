@@ -188,12 +188,17 @@
 </div>
 
 <x-campo-condicional trigger="tiene_hermanos" show-when="si" id="seccion_hermanos">
+    <p class="text-muted small mb-2">
+        Hay cuatro casillas listas. Registre a todos sus hermanos y, si tiene más, use <strong>Agregar hermano</strong>.
+        Las casillas que no utilice puede dejarlas en blanco.
+    </p>
     <x-tabla-dinamica
         name="hermanos"
         titulo="Detalle de hermanos"
         :columnas="\App\Support\TablaDinamica::columnasHermanos()"
         :filas="$tablasExistentes['hermanos'] ?? []"
         :minFilas="1"
+        :filasVisibles="4"
         textoAgregar="Agregar hermano"
         textoEliminar="Quitar hermano"
     />

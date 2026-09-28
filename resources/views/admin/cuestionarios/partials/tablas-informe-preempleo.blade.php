@@ -95,6 +95,11 @@
                                         <p class="text-muted mb-0">Sin datos registrados.</p>
                                     @endif
                                 @else
+                                    @if($clave === 'laboral')
+                                        <p class="text-muted small mb-2">
+                                            Use las flechas para ordenar los empleos en orden cronológico, del más antiguo al más reciente, antes de generar el informe.
+                                        </p>
+                                    @endif
                                     <x-tabla-dinamica
                                         :name="'informe_tablas['.$clave.']'"
                                         :columnas="$columnas"
@@ -103,6 +108,7 @@
                                         :titulo="null"
                                         :permitirAgregar="true"
                                         :permitirEliminar="true"
+                                        :permitirReordenar="$clave === 'laboral'"
                                         :textoAgregar="'Agregar fila'"
                                     />
                                 @endif

@@ -629,5 +629,50 @@ class InformeWordExportTest extends TestCase
         $this->assertIsArray($media);
         $this->assertNotSame('', $media['bytes'] ?? '');
     }
+
+    public function test_anexo_conserva_la_resolucion_y_la_foto_de_perfil_sigue_reducida(): void
+    {
+        $ruta = sys_get_temp_dir() . '/repro_anexo_nitido_' . uniqid() . '.png';
+        $canvas = imagecreatetruecolor(1600, 1200);
+        $this->assertNotFalse($canvas);
+        imagepng($canvas, $ruta);
+        imagedestroy($canvas);
+
+        $anexo = InformeWordFoto::prepararMediaAnexo($ruta);
+        $perfil = InformeWordFoto::prepararMedia($ruta);
+        $bytesOriginales = (string) file_get_contents($ruta);
+        @unlink($ruta);
+
+        $this->assertIsArray($anexo);
+        $this->assertSame(1600, $anexo['widthPx']);
+        $this->assertSame(1200, $anexo['heightPx']);
+        $this->assertSame($bytesOriginales, $anexo['bytes']);
+
+        $this->assertIsArray($perfil);
+        $this->assertLessThanOrEqual(420, $perfil['widthPx']);
+        $this->assertLessThanOrEqual(560, $perfil['heightPx']);
+    }
+
+    public function test_anexo_reduce_fotos_enormes_sin_bajarlas_a_tamano_de_carnet(): void
+    {
+        if (! function_exists('imagejpeg')) {
+            $this->markTestSkipped('GD sin imagejpeg');
+        }
+
+        $ruta = sys_get_temp_dir() . '/repro_anexo_grande_' . uniqid() . '.jpg';
+        $canvas = imagecreatetruecolor(3000, 1800);
+        $this->assertNotFalse($canvas);
+        imagejpeg($canvas, $ruta, 60);
+        imagedestroy($canvas);
+
+        $anexo = InformeWordFoto::prepararMediaAnexo($ruta);
+        @unlink($ruta);
+
+        $this->assertIsArray($anexo);
+        $this->assertGreaterThanOrEqual(2000, $anexo['widthPx']);
+        $this->assertLessThanOrEqual(InformeWordFoto::MAX_ANEXO_ANCHO_PX, $anexo['widthPx']);
+        $this->assertLessThanOrEqual(InformeWordFoto::MAX_ANEXO_ALTO_PX, $anexo['heightPx']);
+        $this->assertNotSame('', $anexo['bytes']);
+    }
 }
 

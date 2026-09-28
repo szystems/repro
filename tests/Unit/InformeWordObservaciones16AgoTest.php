@@ -68,6 +68,53 @@ class InformeWordObservaciones16AgoTest extends TestCase
         $this->assertSame([], InformeWordXml::problemasEstructura($documentXml));
     }
 
+    public function test_papeleria_en_el_word_conserva_el_ancho_original_de_la_imagen(): void
+    {
+        Storage::fake('local');
+
+        $evaluado = $this->evaluadoConCuestionario();
+        $canvas = imagecreatetruecolor(900, 700);
+        $this->assertNotFalse($canvas);
+        ob_start();
+        imagepng($canvas);
+        $png = ob_get_clean();
+        imagedestroy($canvas);
+        $this->assertIsString($png);
+
+        $ruta = "documentos_evaluados/{$evaluado->id}/dpi_archivo.png";
+        Storage::disk('local')->put($ruta, $png);
+        DocumentoEvaluado::factory()->create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_documento' => 'dpi_archivo',
+            'ruta_archivo' => $ruta,
+            'nombre_original' => 'dpi.png',
+            'mime_type' => 'image/png',
+            'subido_por_tipo' => 'repro',
+        ]);
+        InformeWordAnexosPapeleria::guardarSeleccion($evaluado->id, ['dpi_archivo'], null);
+
+        $evaluado = $evaluado->fresh(['cuestionario', 'orden', 'documentos']);
+        $path = InformeWordExport::generar($evaluado->orden, $evaluado);
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($path) === true);
+        $bytes = false;
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $nombre = (string) $zip->getNameIndex($i);
+            if (str_contains($nombre, 'anexo_papeleria_')) {
+                $bytes = $zip->getFromName($nombre);
+                break;
+            }
+        }
+        $zip->close();
+        @unlink($path);
+
+        $this->assertIsString($bytes);
+        $dimensiones = getimagesizefromstring($bytes);
+        $this->assertIsArray($dimensiones);
+        $this->assertSame(900, $dimensiones[0]);
+        $this->assertSame(700, $dimensiones[1]);
+    }
+
     public function test_papeleria_anexada_produce_docx_que_word_puede_abrir(): void
     {
         Storage::fake('local');

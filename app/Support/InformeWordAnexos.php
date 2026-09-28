@@ -52,7 +52,7 @@ class InformeWordAnexos
 
         foreach ($documentos as $documento) {
             $ruta = Storage::disk('local')->path($documento->ruta_archivo);
-            $media = InformeWordFoto::prepararMedia($ruta);
+            $media = InformeWordFoto::prepararMediaAnexo($ruta);
             if ($media === null) {
                 continue;
             }
@@ -104,7 +104,7 @@ class InformeWordAnexos
 
             if ($documento->es_imagen) {
                 $ruta = Storage::disk('local')->path($documento->ruta_archivo);
-                $media = InformeWordFoto::prepararMedia($ruta);
+                $media = InformeWordFoto::prepararMediaAnexo($ruta);
                 if ($media === null) {
                     $filasTabla[] = self::construirFilaPapeleriaTexto('[Imagen] ' . $etiqueta);
 

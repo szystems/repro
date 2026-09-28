@@ -43,6 +43,38 @@ class CuestionarioPreempleoSeccion2ExtendidaTest extends TestCase
         ]), $this->datosSeccion1Preempleo());
     }
 
+    public function test_seccion_2_muestra_cuatro_casillas_de_hermanos_y_ignora_las_vacias(): void
+    {
+        $this->prepararSeccion1();
+
+        $this->get(route('cuestionario.seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 2,
+        ]))
+            ->assertOk()
+            ->assertSee('name="hermanos[0][nombre]"', false)
+            ->assertSee('name="hermanos[3][nombre]"', false)
+            ->assertDontSee('name="hermanos[4][nombre]"', false)
+            ->assertSee('Agregar hermano', false);
+
+        $payload = array_merge($this->datosSeccion2Preempleo(), $this->datosHermanosPreempleo(), [
+            'hermanos' => array_merge($this->datosHermanosPreempleo()['hermanos'], [
+                ['nombre' => '', 'edad' => '', 'direccion' => '', 'ocupacion' => '', 'telefono' => ''],
+                ['nombre' => '', 'edad' => '', 'direccion' => '', 'ocupacion' => '', 'telefono' => ''],
+                ['nombre' => '', 'edad' => '', 'direccion' => '', 'ocupacion' => '', 'telefono' => ''],
+            ]),
+        ]);
+
+        $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 2,
+        ]), $payload)->assertSessionHasNoErrors();
+
+        $tablas = $this->evaluado->cuestionario()->first()->getTablasPorNumeroSeccion(2);
+        $this->assertCount(1, $tablas['hermanos'] ?? []);
+        $this->assertSame('Ana Pérez', $tablas['hermanos'][0]['nombre'] ?? null);
+    }
+
     public function test_hermanos_gate_y_tabla_valor_json(): void
     {
         $this->prepararSeccion1();

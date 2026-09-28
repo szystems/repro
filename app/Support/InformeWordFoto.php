@@ -24,6 +24,16 @@ class InformeWordFoto
 
     private const MAX_ALTO_PX = 360;
 
+    /**
+     * Tope de los documentos y tatuajes que van al Word. Cubre una página carta a ~200 ppp
+     * sin el recorte de la foto de perfil (420×560), que dejaba ilegibles DPI y constancias.
+     */
+    public const MAX_ANEXO_ANCHO_PX = 2400;
+
+    public const MAX_ANEXO_ALTO_PX = 3200;
+
+    private const JPEG_ANEXO_CALIDAD = 88;
+
     private const EMU_POR_PX = 9525;
 
     /** Una línea de espacio (~12 pt) antes y después de la foto. */
@@ -106,6 +116,134 @@ class InformeWordFoto
         return [
             'bytes' => $bytes,
             'extension' => $extension === 'jpeg' ? 'jpg' : $extension,
+            'widthPx' => $widthPx,
+            'heightPx' => $heightPx,
+        ];
+    }
+
+    /**
+     * Mapa de bits para anexos (tatuajes y papelería). Conserva el archivo original cuando
+     * ya entra en el tope de impresión; solo reduce fotos más grandes, y nunca al tamaño
+     * de la foto de carnet.
+     *
+     * @return array{bytes: string, extension: string, widthPx: int, heightPx: int}|null
+     */
+    public static function prepararMediaAnexo(string $ruta): ?array
+    {
+        if (! is_readable($ruta)) {
+            return null;
+        }
+
+        $tamano = @filesize($ruta);
+        if (! is_int($tamano) || $tamano <= 0 || $tamano > 5_000_000) {
+            return null;
+        }
+
+        $info = @getimagesize($ruta);
+        $widthPx = (int) ($info[0] ?? 0);
+        $heightPx = (int) ($info[1] ?? 0);
+        $extension = strtolower(pathinfo($ruta, PATHINFO_EXTENSION));
+        if ($extension === 'jpeg') {
+            $extension = 'jpg';
+        }
+
+        $formatosDirectos = ['jpg', 'png'];
+        $cabeEnPagina = $widthPx > 0 && $heightPx > 0
+            && $widthPx <= self::MAX_ANEXO_ANCHO_PX
+            && $heightPx <= self::MAX_ANEXO_ALTO_PX;
+
+        if ($cabeEnPagina && in_array($extension, $formatosDirectos, true)) {
+            return self::bytesOriginales($ruta, $extension, $widthPx, $heightPx);
+        }
+
+        $demasiadoGrandeParaGd = $widthPx <= 0 || $heightPx <= 0 || ($widthPx * $heightPx) > 8_000_000;
+        if ($demasiadoGrandeParaGd && in_array($extension, $formatosDirectos, true)) {
+            return self::bytesOriginales($ruta, $extension, max(1, $widthPx), max(1, $heightPx));
+        }
+
+        if (! function_exists('imagecreatetruecolor')) {
+            return in_array($extension, $formatosDirectos, true)
+                ? self::bytesOriginales($ruta, $extension, max(1, $widthPx), max(1, $heightPx))
+                : null;
+        }
+
+        $origen = self::cargarImagen($ruta);
+        if ($origen === null) {
+            return null;
+        }
+
+        $redimensionada = self::redimensionarProporcional($origen, self::MAX_ANEXO_ANCHO_PX, self::MAX_ANEXO_ALTO_PX);
+        \imagedestroy($origen);
+        if ($redimensionada === null) {
+            return null;
+        }
+
+        $codificada = self::codificarAnexo($redimensionada);
+        \imagedestroy($redimensionada);
+
+        return $codificada;
+    }
+
+    /**
+     * @return array{bytes: string, extension: string, widthPx: int, heightPx: int}|null
+     */
+    private static function bytesOriginales(string $ruta, string $extension, int $widthPx, int $heightPx): ?array
+    {
+        $bytes = file_get_contents($ruta);
+        if ($bytes === false || $bytes === '') {
+            return null;
+        }
+
+        return [
+            'bytes' => $bytes,
+            'extension' => $extension,
+            'widthPx' => $widthPx,
+            'heightPx' => $heightPx,
+        ];
+    }
+
+    /**
+     * @return array{bytes: string, extension: string, widthPx: int, heightPx: int}|null
+     */
+    private static function codificarAnexo(\GdImage $imagen): ?array
+    {
+        $widthPx = \imagesx($imagen);
+        $heightPx = \imagesy($imagen);
+        if ($widthPx <= 0 || $heightPx <= 0) {
+            return null;
+        }
+
+        if (function_exists('imagejpeg')) {
+            $plano = \imagecreatetruecolor($widthPx, $heightPx);
+            if ($plano !== false) {
+                $blanco = \imagecolorallocate($plano, 255, 255, 255);
+                \imagefilledrectangle($plano, 0, 0, $widthPx, $heightPx, $blanco);
+                \imagecopy($plano, $imagen, 0, 0, 0, 0, $widthPx, $heightPx);
+                \ob_start();
+                $ok = \imagejpeg($plano, null, self::JPEG_ANEXO_CALIDAD);
+                $bytes = \ob_get_clean();
+                \imagedestroy($plano);
+                if ($ok && is_string($bytes) && $bytes !== '') {
+                    return [
+                        'bytes' => $bytes,
+                        'extension' => 'jpg',
+                        'widthPx' => $widthPx,
+                        'heightPx' => $heightPx,
+                    ];
+                }
+            }
+        }
+
+        \ob_start();
+        $ok = \imagepng($imagen);
+        $bytes = \ob_get_clean();
+        if (! $ok || ! is_string($bytes) || $bytes === '') {
+            return null;
+        }
+
+        return [
+            'bytes' => $bytes,
+            'extension' => 'png',
             'widthPx' => $widthPx,
             'heightPx' => $heightPx,
         ];

@@ -106,7 +106,46 @@ class InformePreempleoVisibilidadTest extends TestCase
             ->get(route('admin.cuestionarios.edit', $this->cuestionario->id))
             ->assertOk()
             ->assertSee('name="informe_tablas[complementaria]', false)
-            ->assertSee('name="informe_tablas[laboral]', false);
+            ->assertSee('name="informe_tablas[laboral]', false)
+            ->assertSee('data-permitir-reordenar="1"', false)
+            ->assertSee('tabla-dinamica-move', false)
+            ->assertSee('orden cronológico', false);
+    }
+
+    public function test_repro_conserva_el_orden_manual_de_los_empleos(): void
+    {
+        $repro = $this->crearRepro();
+
+        $this->actingAs($repro)
+            ->put(route('admin.cuestionarios.update', $this->cuestionario->id), [
+                'informe_tablas' => [
+                    'laboral' => [
+                        [
+                            'empresa' => 'Antigua SA',
+                            'puesto' => 'Auxiliar',
+                            'fechas_laboradas' => '2018-2020',
+                            'ultimo_salario' => '3000',
+                            'motivo_retiro' => 'Renuncia',
+                            'jefe_inmediato' => '',
+                            'contacto_rrhh' => '',
+                        ],
+                        [
+                            'empresa' => 'Reciente SA',
+                            'puesto' => 'Cajero',
+                            'fechas_laboradas' => '2021-2024',
+                            'ultimo_salario' => '4500',
+                            'motivo_retiro' => 'Mejor oferta',
+                            'jefe_inmediato' => '',
+                            'contacto_rrhh' => '',
+                        ],
+                    ],
+                ],
+            ])
+            ->assertRedirect(route('admin.cuestionarios.edit', $this->cuestionario->id));
+
+        $tablas = InformePreempleo::tablasParaAdmin($this->cuestionario->fresh());
+        $this->assertSame('Antigua SA', $tablas['laboral'][0]['empresa'] ?? null);
+        $this->assertSame('Reciente SA', $tablas['laboral'][1]['empresa'] ?? null);
     }
 
     public function test_repro_guarda_override_tabla_informe(): void

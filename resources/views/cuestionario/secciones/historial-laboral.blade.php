@@ -62,7 +62,8 @@
         incluyendo períodos cortos, trabajos temporales, informales o sin constancia laboral.
     </p>
     <p class="mb-2">
-        Si ha tenido más de un empleo, use <strong>+ Agregar empleo</strong> para registrar cada experiencia por separado.
+        Las primeras cinco casillas ya están visibles. Si ha tenido más empleos, use <strong>+ Agregar empleo</strong> para registrar cada experiencia por separado.
+        Las casillas que no utilice puede dejarlas en blanco.
     </p>
     <p class="mb-0">
         Es importante registrar todo el historial, sin omitir ningún empleo, para el proceso de verificación.
@@ -86,6 +87,7 @@
         :columnas="\App\Support\TablaDinamica::columnasEmpleosPreempleo()"
         :filas="$tablasExistentes['empleos'] ?? []"
         :minFilas="1"
+        :filasVisibles="5"
         textoAgregar="Agregar empleo"
         textoEliminar="Quitar empleo"
     />

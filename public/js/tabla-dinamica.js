@@ -188,7 +188,12 @@
         return html;
     }
 
-    function buildTableRow(name, index, columnas, textoEliminar, filaData, permitirEliminar) {
+    function buildMoveButtons() {
+        return '<button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="-1" title="Subir" aria-label="Subir"><i class="fas fa-arrow-up"></i></button>'
+            + '<button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="1" title="Bajar" aria-label="Bajar"><i class="fas fa-arrow-down"></i></button>';
+    }
+
+    function buildTableRow(name, index, columnas, textoEliminar, filaData, permitirEliminar, permitirReordenar) {
         const fila = filaData || {};
         let cells = '';
 
@@ -198,8 +203,15 @@
             cells += '<td data-label="' + escapeHtml(label) + '">' + buildField(name, index, col, value) + '</td>';
         });
 
-        if (permitirEliminar !== false) {
-            cells += '<td class="text-center tabla-dinamica-actions" data-label=""><button type="button" class="btn btn-outline-danger btn-sm tabla-dinamica-remove" title="' + escapeHtml(textoEliminar) + '"><i class="fas fa-trash-alt"></i></button></td>';
+        if (permitirEliminar !== false || permitirReordenar) {
+            cells += '<td class="text-center tabla-dinamica-actions" data-label=""><div class="tabla-dinamica-actions-inner">';
+            if (permitirReordenar) {
+                cells += buildMoveButtons();
+            }
+            if (permitirEliminar !== false) {
+                cells += '<button type="button" class="btn btn-outline-danger btn-sm tabla-dinamica-remove" title="' + escapeHtml(textoEliminar) + '"><i class="fas fa-trash-alt"></i></button>';
+            }
+            cells += '</div></td>';
         }
 
         return '<tr class="tabla-dinamica-row" data-index="' + index + '">' + cells + '</tr>';
@@ -361,6 +373,51 @@
         }
 
         syncRemoveButtons(wrapper);
+        syncMoveButtons(wrapper);
+    }
+
+    function syncMoveButtons(wrapper) {
+        if (wrapper.dataset.permitirReordenar !== '1') {
+            return;
+        }
+
+        const tbody = wrapper.querySelector('.tabla-dinamica-body');
+        const rows = tbody ? Array.from(tbody.querySelectorAll('.tabla-dinamica-row')) : [];
+
+        rows.forEach(function (row, index) {
+            const subir = row.querySelector('.tabla-dinamica-move[data-direccion="-1"]');
+            const bajar = row.querySelector('.tabla-dinamica-move[data-direccion="1"]');
+            if (subir) {
+                subir.disabled = index === 0;
+            }
+            if (bajar) {
+                bajar.disabled = index === rows.length - 1;
+            }
+        });
+    }
+
+    function moveRow(wrapper, row, direction) {
+        const tbody = wrapper.querySelector('.tabla-dinamica-body');
+        if (!tbody || !row) {
+            return;
+        }
+
+        const rows = Array.from(tbody.querySelectorAll('.tabla-dinamica-row'));
+        const index = rows.indexOf(row);
+        const destino = index + direction;
+        if (index < 0 || destino < 0 || destino >= rows.length) {
+            return;
+        }
+
+        if (direction < 0) {
+            tbody.insertBefore(row, rows[destino]);
+        } else {
+            tbody.insertBefore(rows[destino], row);
+        }
+
+        reindexWrapper(wrapper);
+        syncWrapperFields(wrapper);
+        notifyChanged(wrapper);
     }
 
     function addRow(wrapper) {
@@ -374,9 +431,10 @@
         const tbody = wrapper.querySelector('.tabla-dinamica-body');
         const index = tbody ? tbody.querySelectorAll('.tabla-dinamica-row').length : 0;
         const permitirEliminar = wrapper.dataset.permitirEliminar !== '0';
+        const permitirReordenar = wrapper.dataset.permitirReordenar === '1';
 
         if (tbody) {
-            tbody.insertAdjacentHTML('beforeend', buildTableRow(name, index, columnas, textoEliminar, {}, permitirEliminar));
+            tbody.insertAdjacentHTML('beforeend', buildTableRow(name, index, columnas, textoEliminar, {}, permitirEliminar, permitirReordenar));
         }
 
         reindexWrapper(wrapper);
@@ -425,6 +483,13 @@
         }
 
         wrapper.addEventListener('click', function (event) {
+            const moveBtn = event.target.closest('.tabla-dinamica-move');
+            if (moveBtn && wrapper.contains(moveBtn) && !moveBtn.disabled) {
+                const row = moveBtn.closest('.tabla-dinamica-row');
+                moveRow(wrapper, row, parseInt(moveBtn.dataset.direccion || '0', 10));
+                return;
+            }
+
             if (wrapper.dataset.permitirEliminar === '0') {
                 return;
             }
