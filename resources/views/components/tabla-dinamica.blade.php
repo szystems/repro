@@ -38,6 +38,7 @@
      data-permitir-agregar="{{ $permitirAgregar ? '1' : '0' }}"
      data-permitir-eliminar="{{ $permitirEliminar ? '1' : '0' }}"
      data-permitir-reordenar="{{ $permitirReordenar ? '1' : '0' }}"
+     data-filas-visibles="{{ $filasVisibles }}"
      @if($name === 'formacion_academica') data-formacion-academica="1" @endif>
 
     @if($titulo)

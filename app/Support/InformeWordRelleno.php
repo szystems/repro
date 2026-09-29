@@ -1300,8 +1300,8 @@ class InformeWordRelleno
     }
 
     /**
-     * Formulario y Word peri/espe: una fila = último nivel elegido.
-     * Si REPRO editó la tabla académica, no se filtra el override (J16).
+     * Conserva los niveles completos hasta el último grado (p. ej. diversificado y universitario).
+     * Peri/espe arman después una sola celda con el nivel más alto. El override de REPRO no se filtra (J16).
      *
      * @param  list<array<string, mixed>>  $filasAcademicas
      * @return list<array<string, mixed>>

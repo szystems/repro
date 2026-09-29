@@ -12,11 +12,11 @@
         // Mismo mapa que HistorialAcademico::mapaNivelesVisibles() (por si el blade no lo inyectó).
         return {
             primaria: ['primaria'],
-            basico: ['basico'],
-            diversificado: ['diversificado'],
-            tecnico: ['tecnico'],
-            universitario: ['universitario'],
-            postgrado: ['postgrado']
+            basico: ['primaria', 'basico'],
+            diversificado: ['primaria', 'basico', 'diversificado'],
+            tecnico: ['primaria', 'basico', 'diversificado', 'tecnico'],
+            universitario: ['primaria', 'basico', 'diversificado', 'tecnico', 'universitario'],
+            postgrado: ['primaria', 'basico', 'diversificado', 'tecnico', 'universitario', 'postgrado']
         };
     }
 

@@ -644,6 +644,9 @@
 
                     if (!result.valid) {
                         e.preventDefault();
+                        if (window.TablaDinamica && typeof window.TablaDinamica.ensureFilasVisiblesAll === 'function') {
+                            window.TablaDinamica.ensureFilasVisiblesAll();
+                        }
                         cuestionarioHelpers.hideLoading();
                         cuestionarioHelpers.showAlert(result.message || 'Revise los campos marcados en rojo.', 'danger');
                         if (result.firstError && result.firstError.scrollIntoView) {

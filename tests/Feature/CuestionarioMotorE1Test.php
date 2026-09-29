@@ -61,6 +61,12 @@ class CuestionarioMotorE1Test extends TestCase
         $this->assertFileExists(public_path('js/tabla-dinamica.js'));
         $this->assertFileExists(public_path('js/campos-condicionales.js'));
         $this->assertFileExists(public_path('js/cuestionario-autosave.js'));
+        $js = (string) file_get_contents(public_path('js/tabla-dinamica.js'));
+        $this->assertStringContainsString('function ensureFilasVisibles', $js);
+        $layout = (string) file_get_contents(resource_path('views/layouts/cuestionario.blade.php'));
+        $this->assertStringContainsString('ensureFilasVisiblesAll', $layout);
+        $formacion = (string) file_get_contents(public_path('js/formacion-academica.js'));
+        $this->assertStringContainsString("universitario: ['primaria', 'basico', 'diversificado', 'tecnico', 'universitario']", $formacion);
     }
 
     public function test_flujo_integrado_precarga_autosave_condicionales_y_tabla_dinamica(): void

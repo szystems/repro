@@ -146,7 +146,7 @@ class CuestionarioPeriodicaTest extends TestCase
             ->assertSee('Tabla de información laboral', false)
             ->assertSee('Formación académica', false)
             ->assertSee('Detalle por nivel académico', false)
-            ->assertSee('Complete solo el último grado que seleccionó arriba', false)
+            ->assertSee('por ejemplo, diversificado si el último grado es universitario', false)
             ->assertDontSee('desde primaria hasta el último nivel', false);
     }
 

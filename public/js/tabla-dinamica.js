@@ -420,6 +420,34 @@
         notifyChanged(wrapper);
     }
 
+    function filasVisiblesObjetivo(wrapper) {
+        return parseInt(wrapper.dataset.filasVisibles || '0', 10) || 0;
+    }
+
+    /**
+     * Vuelve a mostrar las casillas en blanco (empleos, hermanos).
+     * La validación del envío las quita para no exigirlas; si el envío se cancela, hay que reponerlas.
+     */
+    function ensureFilasVisibles(wrapper) {
+        const objetivo = filasVisiblesObjetivo(wrapper);
+        if (objetivo <= 0 || wrapper.dataset.permitirAgregar === '0') {
+            return;
+        }
+
+        const tbody = wrapper.querySelector('.tabla-dinamica-body');
+        if (!tbody) {
+            return;
+        }
+
+        while (tbody.querySelectorAll('.tabla-dinamica-row').length < objetivo) {
+            addRow(wrapper);
+        }
+    }
+
+    function ensureFilasVisiblesAll() {
+        document.querySelectorAll('[data-tabla-dinamica]').forEach(ensureFilasVisibles);
+    }
+
     function addRow(wrapper) {
         if (wrapper.dataset.permitirAgregar === '0') {
             return;
@@ -514,6 +542,7 @@
 
         reindexWrapper(wrapper);
         syncWrapperFields(wrapper);
+        ensureFilasVisibles(wrapper);
     }
 
     document.addEventListener('input', function (event) {
@@ -563,7 +592,10 @@
                 return;
             }
 
-            event.target.querySelectorAll('[data-tabla-dinamica]').forEach(syncWrapperFields);
+            event.target.querySelectorAll('[data-tabla-dinamica]').forEach(function (wrapper) {
+                syncWrapperFields(wrapper);
+                ensureFilasVisibles(wrapper);
+            });
         });
 
         const cuestionarioForm = document.getElementById('cuestionarioForm');
@@ -585,6 +617,7 @@
         reindex: reindexWrapper,
         buildRow: buildTableRow,
         removeEmptyRowsAll: removeEmptyRowsAll,
+        ensureFilasVisiblesAll: ensureFilasVisiblesAll,
         prepararFechasLaboradasParaEnvio: prepararFechasLaboradasParaEnvio,
     };
 })();

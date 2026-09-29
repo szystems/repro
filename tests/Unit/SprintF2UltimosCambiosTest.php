@@ -17,10 +17,10 @@ class SprintF2UltimosCambiosTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_niveles_academicos_visibles_universitario_son_dos(): void
+    public function test_niveles_academicos_visibles_universitario_incluyen_diversificado(): void
     {
         $this->assertSame(
-            ['universitario'],
+            ['primaria', 'basico', 'diversificado', 'tecnico', 'universitario'],
             HistorialAcademico::nivelesVisibles('universitario')
         );
     }

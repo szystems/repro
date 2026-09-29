@@ -130,6 +130,53 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
         $response->assertSessionHasNoErrors();
     }
 
+    public function test_formacion_academica_universitario_guarda_diversificado(): void
+    {
+        $this->avanzarHastaSeccion(2);
+
+        $response = $this->post(route('cuestionario.guardar-seccion', [
+            'token' => $this->evaluado->token_unico,
+            'numero' => 3,
+        ]), array_merge($this->datosSeccion3Preempleo(), [
+            'ultimo_nivel_academico' => 'universitario',
+            'formacion_academica' => [
+                [
+                    'nivel' => 'primaria',
+                    'estado' => '',
+                    'carrera' => '',
+                    'institucion' => '',
+                    'anio' => '',
+                    'respaldo' => '',
+                ],
+                [
+                    'nivel' => 'diversificado',
+                    'estado' => 'completo',
+                    'carrera' => 'Bachillerato en Computación',
+                    'institucion' => 'Instituto Central',
+                    'anio' => '2010',
+                    'respaldo' => 'si',
+                ],
+                [
+                    'nivel' => 'universitario',
+                    'estado' => 'completo',
+                    'carrera' => 'Administración',
+                    'institucion' => 'Universidad de San Carlos',
+                    'anio' => '2015',
+                    'respaldo' => 'si',
+                ],
+            ],
+        ], $this->datosEmpleosPreempleo()));
+
+        $response->assertSessionHasNoErrors();
+
+        $cuestionario = $this->evaluado->cuestionario()->first();
+        $tablas = $cuestionario->getTablasPorNumeroSeccion(3);
+        $niveles = array_column($tablas['formacion_academica'] ?? [], 'nivel');
+
+        $this->assertSame(['diversificado', 'universitario'], $niveles);
+        $this->assertSame('Instituto Central', $tablas['formacion_academica'][0]['institucion'] ?? null);
+    }
+
     public function test_integridad_laboral_marcada_como_interna(): void
     {
         $this->avanzarHastaSeccion(2);
@@ -176,7 +223,10 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
             ->assertSee('name="empleos[0][empresa]"', false)
             ->assertSee('name="empleos[4][empresa]"', false)
             ->assertDontSee('name="empleos[5][empresa]"', false)
-            ->assertSee('+ Agregar empleo', false);
+            ->assertSee('data-filas-visibles="5"', false)
+            ->assertSee('+ Agregar empleo', false)
+            ->assertSee('por ejemplo, diversificado si el último grado es universitario', false)
+            ->assertSee('"universitario":["primaria","basico","diversificado","tecnico","universitario"]', false);
     }
 
     public function test_deudas_tabla_y_gate(): void

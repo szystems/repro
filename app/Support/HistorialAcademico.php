@@ -16,15 +16,17 @@ class HistorialAcademico
     ];
 
     /**
-     * 27-ago noche: el Word solo lleva el último grado; el candidato llena esa fila nada más.
+     * Cada último grado incluye ese nivel y los anteriores (primaria … seleccionado).
+     * Así, universitario también muestra diversificado. Las filas en blanco no se guardan.
      *
      * @return array<string, list<string>>
      */
     public static function mapaNivelesVisibles(): array
     {
+        $claves = array_keys(self::NIVELES);
         $mapa = [];
-        foreach (array_keys(self::NIVELES) as $clave) {
-            $mapa[$clave] = [$clave];
+        foreach ($claves as $indice => $clave) {
+            $mapa[$clave] = array_slice($claves, 0, $indice + 1);
         }
 
         return $mapa;
@@ -50,7 +52,7 @@ class HistorialAcademico
 
     public static function textoAyudaFilas(): string
     {
-        return 'Complete solo el último grado que seleccionó arriba. El informe Word muestra únicamente ese nivel.';
+        return 'Incluya los niveles anteriores que correspondan (por ejemplo, diversificado si el último grado es universitario). Puede dejar en blanco los que no apliquen; complete el último grado.';
     }
 
     /**
@@ -128,14 +130,39 @@ class HistorialAcademico
     }
 
     /**
-     * Reconstruye filas enviadas por el POST para validación (una por nivel visible).
+     * Reconstruye filas del POST. Exige el último grado y conserva los anteriores solo si traen datos.
      *
      * @param  list<array<string, string>>  $filasInput
      * @return list<array<string, string>>
      */
     public static function filasParaValidacion(?string $ultimoNivel, array $filasInput): array
     {
-        return self::filasParaFormulario($ultimoNivel, $filasInput);
+        $filas = self::filasParaFormulario($ultimoNivel, $filasInput);
+        if ($filas === []) {
+            return [];
+        }
+
+        $ultimoIndice = count($filas) - 1;
+
+        return array_values(array_filter(
+            $filas,
+            static function (array $fila, int $indice) use ($ultimoIndice): bool {
+                return $indice === $ultimoIndice || ! self::filaVacia($fila);
+            },
+            ARRAY_FILTER_USE_BOTH
+        ));
+    }
+
+    /** @param  array<string, string>  $fila */
+    public static function filaVacia(array $fila): bool
+    {
+        foreach (['estado', 'carrera', 'institucion', 'anio', 'respaldo'] as $campo) {
+            if (trim((string) ($fila[$campo] ?? '')) !== '') {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static function etiquetaNivel(?string $nivel): string
