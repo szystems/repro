@@ -52,6 +52,7 @@
                   novalidate>
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="client_save_seq" id="client_save_seq" value="0">
                 
                 {{-- Progreso y Estado --}}
                 <div class="row mb-4">
@@ -427,10 +428,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    let saveSeq = 0;
+
+    function asignarSecuenciaGuardado() {
+        saveSeq += 1;
+        const input = document.getElementById('client_save_seq');
+        if (input) {
+            input.value = String(saveSeq);
+        }
+    }
+
     function guardarBorrador() {
         if (window.TablaDinamica && typeof window.TablaDinamica.syncAll === 'function') {
             window.TablaDinamica.syncAll();
         }
+        asignarSecuenciaGuardado();
 
         const formData = new FormData(form);
         formData.append('_method', 'PUT');
@@ -460,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            if (data.success) {
+            if (data.success && !data.stale) {
                 formaCambiada = false;
                 mostrarNotificacion('Borrador guardado correctamente', 'success');
             }
@@ -670,6 +682,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     form.addEventListener('submit', function() {
+        asignarSecuenciaGuardado();
         if (window.TablaDinamica && typeof window.TablaDinamica.removeEmptyRowsAll === 'function') {
             window.TablaDinamica.removeEmptyRowsAll();
         } else if (window.TablaDinamica && typeof window.TablaDinamica.syncAll === 'function') {

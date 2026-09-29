@@ -31,7 +31,7 @@
         </div>
         <div class="card-body">
             <div class="border rounded p-3 bg-light informe-preliminar-empresa">
-                {!! $evaluado->texto_informe_preliminar !!}
+                {!! \App\Support\InformePreliminarHtml::normalizar($evaluado->texto_informe_preliminar) !!}
             </div>
             <style>
                 .informe-preliminar-empresa table { border-collapse: collapse; width: 100%; }

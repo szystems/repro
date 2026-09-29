@@ -31,6 +31,20 @@ class InformeWordPlantillasV2Test extends TestCase
         ];
     }
 
+    public function test_las_plantillas_v2_rotulan_igss(): void
+    {
+        foreach (glob(resource_path('templates/*-v2.docx')) ?: [] as $path) {
+            $zip = new ZipArchive();
+            $this->assertTrue($zip->open($path) === true, basename($path));
+            $xml = $zip->getFromName('word/document.xml');
+            $zip->close();
+            $this->assertIsString($xml);
+            $plano = html_entity_decode(strip_tags($xml), ENT_QUOTES | ENT_XML1, 'UTF-8');
+            $this->assertStringContainsString('IGSS:', $plano, basename($path));
+            $this->assertStringNotContainsString('Iggs', $plano, basename($path));
+        }
+    }
+
     /** @dataProvider matrizServicios */
     public function test_resuelve_plantilla_v2_por_servicio(string $servicio, string $formulario, string $archivo): void
     {
@@ -70,7 +84,10 @@ class InformeWordPlantillasV2Test extends TestCase
         @unlink($path);
 
         $this->assertIsString($xml);
+        $plano = html_entity_decode(strip_tags($xml), ENT_QUOTES | ENT_XML1, 'UTF-8');
         $this->assertStringContainsString('DATOS GENERALES', $xml);
+        $this->assertStringContainsString('IGSS:', $plano);
+        $this->assertStringNotContainsString('Iggs', $plano);
         $this->assertStringContainsString('Carlos', $xml);
         $this->assertStringContainsString('V2 Prueba', $xml);
         $this->assertStringContainsString('INFORME POLIGR', $xml);

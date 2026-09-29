@@ -193,8 +193,7 @@ class UsersController extends Controller
         $user->name = $request->input('name');
         $user->email = $request->input('email');
 
-        // Generar contraseña temporal
-        $tempPassword = 'Repro'.rand(1111,9999);
+        $tempPassword = $this->contrasenaEnAlta($request);
         $user->password = Hash::make($tempPassword);
 
         $user->telefono = $request->input('telefono');
@@ -253,12 +252,20 @@ class UsersController extends Controller
         } catch (\Exception $e) {
             CorreoEnvioSupport::registrarFallo($e, 'user_mail_repro');
 
-            return redirect('users')
-                ->with('status', __('Usuario agregado correctamente'))
-                ->with('warning', CorreoEnvioSupport::mensajeFlashFallo());
+            return $this->redirigirConClave(
+                redirect('users')
+                    ->with('status', __('Usuario agregado correctamente'))
+                    ->with('warning', CorreoEnvioSupport::mensajeFlashFallo()),
+                $tempPassword,
+                $user->name
+            );
         }
 
-        return redirect('users')->with('status', __('Usuario agregado correctamente'));
+        return $this->redirigirConClave(
+            redirect('users')->with('status', __('Usuario agregado correctamente')),
+            $tempPassword,
+            $user->name
+        );
     }
 
     public function edituser($id)
@@ -470,12 +477,10 @@ class UsersController extends Controller
             }
         }
 
-        // Resetear contraseña si se solicita
-        if ($request->has('reset_password') && $currentUser->role_as >= 2) {
-            $tempPassword = 'Repro'.rand(1111,9999);
+        $tempPassword = $this->contrasenaEnEdicion($request, $currentUser, $user);
+        if ($tempPassword !== null) {
             $user->password = Hash::make($tempPassword);
 
-            // Enviar email con nueva contraseña
             try {
                 Mail::to($user->email)->send(new UserResetPasswordMail($user, $tempPassword));
             } catch (\Exception $e) {
@@ -489,7 +494,11 @@ class UsersController extends Controller
 
         $user->update();
 
-        return redirect('show-user/'.$id)->with('status', __('Usuario actualizado correctamente.'));
+        $respuesta = redirect('show-user/'.$id)->with('status', __('Usuario actualizado correctamente.'));
+
+        return $tempPassword !== null
+            ? $this->redirigirConClave($respuesta, $tempPassword, $user->name)
+            : $respuesta;
     }
 
     public function destroyuser($id)
@@ -665,5 +674,40 @@ class UsersController extends Controller
         $user->save();
 
         return redirect()->back()->with('status', 'Contraseña actualizada correctamente');
+    }
+
+    private function contrasenaEnAlta(UserFormRequest $request): string
+    {
+        if ($request->boolean('asignar_password')) {
+            return (string) $request->input('password');
+        }
+
+        return 'Repro'.random_int(1111, 9999);
+    }
+
+    private function contrasenaEnEdicion(UserFormRequest $request, User $currentUser, User $user): ?string
+    {
+        $puedeAsignar = (int) $currentUser->id !== (int) $user->id
+            && (int) $currentUser->role_as >= 2;
+        if (! $puedeAsignar) {
+            return null;
+        }
+
+        if ($request->boolean('asignar_password')) {
+            return (string) $request->input('password');
+        }
+
+        if ($request->has('reset_password')) {
+            return 'Repro'.random_int(1111, 9999);
+        }
+
+        return null;
+    }
+
+    private function redirigirConClave($respuesta, string $clave, string $nombre)
+    {
+        return $respuesta
+            ->with('clave_asignada', $clave)
+            ->with('clave_asignada_nombre', $nombre);
     }
 }

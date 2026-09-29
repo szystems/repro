@@ -261,4 +261,40 @@ class CuestionarioEvaluadorNotasTest extends TestCase
             $this->cuestionario->evaluadoOrden->fresh()->texto_informe_preliminar
         );
     }
+
+    public function test_un_autoguardado_viejo_no_pisa_el_relato_mas_reciente(): void
+    {
+        $repro = $this->crearRepro();
+
+        $this->actingAs($repro)
+            ->putJson(route('admin.cuestionarios.update', $this->cuestionario->id), [
+                'guardar_borrador' => 1,
+                'client_save_seq' => 2,
+                'evaluador_notas' => [
+                    'word_laboral' => 'Relato que sí debe quedar.',
+                ],
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->actingAs($repro)
+            ->putJson(route('admin.cuestionarios.update', $this->cuestionario->id), [
+                'guardar_borrador' => 1,
+                'client_save_seq' => 1,
+                'evaluador_notas' => [
+                    'word_laboral' => 'Relato viejo que no debe pisar.',
+                ],
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true, 'stale' => true]);
+
+        $this->assertDatabaseHas('evaluador_notas', [
+            'evaluado_orden_id' => $this->cuestionario->evaluado_orden_id,
+            'seccion' => 'word_laboral',
+            'contenido' => 'Relato que sí debe quedar.',
+        ]);
+        $this->assertDatabaseMissing('evaluador_notas', [
+            'contenido' => 'Relato viejo que no debe pisar.',
+        ]);
+    }
 }

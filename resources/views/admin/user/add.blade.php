@@ -364,15 +364,24 @@
 
                                             <div class="card">
                                                 <div class="card-header bg-warning">
-                                                    <h6 class="mb-0"><i class="bi bi-key"></i> Nota sobre la contraseña</h6>
+                                                    <h6 class="mb-0"><i class="bi bi-key"></i> Contraseña de acceso</h6>
                                                 </div>
                                                 <div class="card-body">
-                                                    <p class="small">
-                                                        El sistema generará automáticamente una contraseña temporal para el nuevo usuario.
+                                                    <p class="small mb-2">
+                                                        Si el correo de activación no llega, defina la contraseña aquí y entréguela por otro medio.
+                                                        Si no la define, el sistema genera una. En ambos casos se muestra una sola vez al guardar y también se intenta enviar por correo.
                                                     </p>
-                                                    <p class="small">
-                                                        Esta contraseña será enviada al correo electrónico que ingrese en el formulario.
-                                                    </p>
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input" type="checkbox" value="1" id="asignar_password" name="asignar_password" {{ old('asignar_password') ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="asignar_password">Definir la contraseña ahora</label>
+                                                    </div>
+                                                    <label for="password" class="form-label">Contraseña</label>
+                                                    <input type="password" name="password" id="password" class="form-control mb-2" minlength="8" autocomplete="new-password" value="">
+                                                    @if ($errors->has('password'))
+                                                        <div class="text-danger mb-2">{{ $errors->first('password') }}</div>
+                                                    @endif
+                                                    <label for="password_confirmation" class="form-label">Confirmar contraseña</label>
+                                                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" minlength="8" autocomplete="new-password" value="">
                                                 </div>
                                             </div>
                                         </div>

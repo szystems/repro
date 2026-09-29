@@ -1109,11 +1109,11 @@
                                                     @csrf
                                                     @method('PATCH')
                                                     <div id="editor-preliminar-{{ $evaluado->id }}" class="editor-informe-preliminar" style="min-height: 150px; max-height: 400px; overflow-y: auto;">
-                                                        {!! $evaluado->texto_informe_preliminar !!}
+                                                        {!! \App\Support\InformePreliminarHtml::normalizar($evaluado->texto_informe_preliminar) !!}
                                                     </div>
                                                     <input type="hidden" name="texto_informe_preliminar"
                                                            id="hidden-preliminar-{{ $evaluado->id }}"
-                                                           value="{{ $evaluado->texto_informe_preliminar }}">
+                                                           value="{{ \App\Support\InformePreliminarHtml::normalizar($evaluado->texto_informe_preliminar) }}">
                                                     <div class="repro-colores-preliminar" role="group" aria-label="Colores del informe">
                                                         <span class="repro-colores-label">Color de letra:</span>
                                                         <button type="button" class="repro-swatch-color" data-color="#000000" title="Negro" aria-label="Color negro" style="background:#000000;"></button>
@@ -1591,6 +1591,8 @@ function copiarEnlaceEvaluado(url) {
 (function () {
     const Delta = Quill.import('delta');
     const BlockEmbed = Quill.import('blots/block/embed');
+    Quill.register(Quill.import('attributors/style/color'), true);
+    Quill.register(Quill.import('attributors/style/background'), true);
     const HTML_TABLA_VACIA = '<thead><tr><th>Resultado:</th><th>Observaciones:</th></tr></thead>'
         + '<tbody><tr><td><br></td><td><br></td></tr></tbody>';
     let rangoTabla = null;

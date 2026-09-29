@@ -2092,6 +2092,8 @@ class OrdenesController extends Controller
             return $html;
         }
 
+        $html = \App\Support\InformePreliminarHtml::normalizar($html) ?? $html;
+
         $tagsPermitidos = '<p><br><b><strong><i><em><u><s><strike><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><pre><code><span><div><a><table><thead><tbody><tr><th><td>';
         $limpio = strip_tags($html, $tagsPermitidos);
 

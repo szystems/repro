@@ -404,15 +404,30 @@
                                                     <h6 class="mb-0"><i class="bi bi-key"></i> Restablecer contraseña</h6>
                                                 </div>
                                                 <div class="card-body">
+                                                    <p class="small mb-2">
+                                                        Si el correo no llega, escriba la contraseña y entréguela por otro medio.
+                                                        Solo cambia si marca una de las opciones. Al guardar se muestra una sola vez.
+                                                    </p>
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input" type="checkbox" value="1" id="asignar_password" name="asignar_password" {{ old('asignar_password') ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="asignar_password">Asignar esta contraseña</label>
+                                                    </div>
+                                                    <label for="password" class="form-label">Nueva contraseña</label>
+                                                    <input type="password" name="password" id="password" class="form-control mb-2" minlength="8" autocomplete="new-password" value="">
+                                                    @if ($errors->has('password'))
+                                                        <div class="text-danger mb-2">{{ $errors->first('password') }}</div>
+                                                    @endif
+                                                    <label for="password_confirmation" class="form-label">Confirmar contraseña</label>
+                                                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control mb-3" minlength="8" autocomplete="new-password" value="">
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="checkbox" value="1" id="reset_password" name="reset_password">
                                                         <label class="form-check-label" for="reset_password">
                                                             Generar nueva contraseña
                                                         </label>
                                                     </div>
-                                                    <p class="small text-muted mt-2">
-                                                        Al marcar esta opción, se generará una nueva contraseña para el usuario
-                                                        y se enviará a su correo electrónico.
+                                                    <p class="small text-muted mt-2 mb-0">
+                                                        Si asigna una contraseña, se usa esa. Si solo marca generar, el sistema crea una.
+                                                        También se intenta enviar al correo del usuario.
                                                     </p>
                                                 </div>
                                             </div>

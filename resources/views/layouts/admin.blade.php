@@ -186,6 +186,17 @@
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
                     @include('shared.partials.alerta-correo')
+                    @if(session('clave_asignada'))
+                    <div class="alert alert-warning alert-dismissible fade show mx-3 mt-3 mb-0" role="alert">
+                        <strong>Contraseña de {{ session('clave_asignada_nombre') }}</strong>
+                        <p class="mb-2">Anótela o cópiela ahora. Si el correo de activación no llega, entréguela por otro medio. Esta pantalla no la volverá a mostrar.</p>
+                        <input type="text" readonly class="form-control" id="clave-asignada" value="{{ session('clave_asignada') }}">
+                        @if(session('warning'))
+                            <p class="mb-0 mt-2">{{ session('warning') }}</p>
+                        @endif
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    @endif
                     @yield('content')
                 </div>
 

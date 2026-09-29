@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Cuestionario;
 use App\Support\CamposInternosPreempleo;
+use App\Support\CuestionarioGuardadoSecuencia;
 use App\Support\CuestionariosIndexSupport;
 use App\Support\CuestionarioFotoCandidato;
 use App\Support\CuestionarioPrecarga;
@@ -23,7 +24,9 @@ use App\Support\TablaDinamica;
 use App\Models\CuestionarioRespuesta;
 use App\Models\EvaluadoOrden;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -153,11 +156,29 @@ class CuestionariosController extends Controller
             'respuestas_tablas' => 'nullable|array',
             'foto_candidato' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'resultado_informe' => 'nullable|string|max:40',
+            'client_save_seq' => 'nullable|integer|min:0|max:2000000000',
         ]);
 
         if (($request->has('evaluador_notas') || $request->has('informe_tablas') || $request->has('informe_tablas_restaurar'))
             && ! EvaluadorNotasSupport::puedeGestionar(Auth::user())) {
             abort(403, 'No autorizado para editar notas internas del evaluador.');
+        }
+
+        $saveSeq = $request->input('client_save_seq');
+        $aplicaSecuencia = is_numeric($saveSeq) && (int) $saveSeq >= 1;
+        $lock = null;
+        if ($aplicaSecuencia) {
+            $lock = Cache::lock('cuestionario-save-lock:'.$cuestionario->id.':'.Auth::id(), 25);
+            try {
+                $lock->block(20);
+            } catch (LockTimeoutException) {
+                // Si el candado no se obtiene, igual se compara la secuencia.
+            }
+            if (CuestionarioGuardadoSecuencia::esObsoleta($cuestionario->id, (int) Auth::id(), $saveSeq)) {
+                $lock?->release();
+
+                return $this->respuestaGuardadoObsoleto($request, $cuestionario);
+            }
         }
 
         DB::beginTransaction();
@@ -331,6 +352,11 @@ class CuestionariosController extends Controller
 
             DB::commit();
 
+            if ($aplicaSecuencia) {
+                CuestionarioGuardadoSecuencia::registrar($cuestionario->id, (int) Auth::id(), $saveSeq);
+            }
+            $lock?->release();
+
             if ($request->has('guardar_borrador') && $request->expectsJson()) {
                 return response()->json(['success' => true]);
             }
@@ -348,6 +374,7 @@ class CuestionariosController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            $lock?->release();
             Log::error('Error al actualizar cuestionario', [
                 'cuestionario_id' => $id,
                 'user_id' => Auth::id(),
@@ -357,6 +384,17 @@ class CuestionariosController extends Controller
                 ->withErrors(['error' => 'Error al actualizar el cuestionario.'])
                 ->withInput();
         }
+    }
+
+    private function respuestaGuardadoObsoleto(Request $request, Cuestionario $cuestionario): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+    {
+        if ($request->has('guardar_borrador') && $request->expectsJson()) {
+            return response()->json(['success' => true, 'stale' => true]);
+        }
+
+        return redirect()
+            ->route('admin.cuestionarios.edit', $cuestionario->id)
+            ->with('success', 'Se conservó el guardado más reciente del cuestionario.');
     }
 
     /** @param  array<string, mixed>  $tablasPorSlug */

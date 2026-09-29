@@ -1582,74 +1582,57 @@ class InformeWordRelleno
         }
 
         return InformeWordXml::reemplazarTablaPorMarcador($xml, $marcador, function (string $tabla) use ($deudas): string {
-            $filasDetect = InformeWordXml::filasTabla($tabla);
-            $encabezado = isset($filasDetect[1]) ? InformeWordXml::textoFila($filasDetect[1]) : '';
-            $primeraDatos = str_contains($encabezado, 'Entidad') ? 2 : 3;
-            $ordenSocio = str_contains($encabezado, 'Estatus') && str_contains($encabezado, 'Atraso');
-
-            foreach (array_values($deudas) as $indice => $deuda) {
-                $fila = $indice + $primeraDatos;
-                if ($fila > 10) {
-                    break;
+            $filas = InformeWordXml::filasTabla($tabla);
+            $indiceEncabezado = null;
+            $indiceTotales = null;
+            foreach ($filas as $indice => $filaXml) {
+                $textoFila = InformeWordXml::textoFila($filaXml);
+                if ($indiceEncabezado === null && str_contains($textoFila, 'Entidad')) {
+                    $indiceEncabezado = $indice;
                 }
-
-                $estatus = $deuda['estatus'] ?? '';
-                if ($estatus === 'al_dia') {
-                    $estatus = 'Al día';
-                } elseif ($estatus === 'atrasado' || $estatus === 'en_mora') {
-                    $estatus = 'Atrasado';
-                } elseif ($estatus === 'pagado') {
-                    $estatus = 'Pagado';
+                if ($indiceTotales === null && str_contains($textoFila, 'TOTALES:')) {
+                    $indiceTotales = $indice;
                 }
-
-                $valores = $ordenSocio
-                    ? [
-                        self::texto($deuda['entidad'] ?? ''),
-                        self::moneda($deuda['monto'] ?? ''),
-                        self::moneda($deuda['saldo'] ?? ''),
-                        self::moneda($deuda['cuota'] ?? ''),
-                        self::texto($estatus),
-                        self::texto($deuda['meses_atraso'] ?? ''),
-                        self::texto($deuda['motivo'] ?? ''),
-                        self::texto($deuda['antiguedad'] ?? ''),
-                    ]
-                    : [
-                        self::texto($deuda['entidad'] ?? ''),
-                        self::moneda($deuda['monto'] ?? ''),
-                        self::moneda($deuda['saldo'] ?? ''),
-                        self::moneda($deuda['cuota'] ?? ''),
-                        self::texto($deuda['motivo'] ?? ''),
-                        self::texto($deuda['antiguedad'] ?? ''),
-                        self::texto($estatus),
-                        self::texto($deuda['meses_atraso'] ?? ''),
-                    ];
-
-                $tabla = InformeWordXml::reemplazarFilaEnTabla($tabla, $fila, $valores);
             }
 
-            $filas = InformeWordXml::filasTabla($tabla);
-            $indiceTotales = null;
-            foreach ($filas as $indice => $fila) {
-                if (str_contains(InformeWordXml::textoFila($fila), 'TOTALES:')) {
-                    $indiceTotales = $indice;
+            $primeraDatos = $indiceEncabezado !== null ? $indiceEncabezado + 1 : 3;
+            $plantilla = null;
+            $limitePlantilla = $indiceTotales ?? count($filas);
+            for ($indice = $primeraDatos; $indice < $limitePlantilla; $indice++) {
+                if (isset($filas[$indice])) {
+                    $plantilla = $filas[$indice];
                     break;
                 }
+            }
+            if ($plantilla === null) {
+                return $tabla;
+            }
+
+            $textoEncabezado = $indiceEncabezado !== null
+                ? InformeWordXml::textoFila($filas[$indiceEncabezado])
+                : '';
+            $ordenSocio = str_contains($textoEncabezado, 'Estatus')
+                && str_contains($textoEncabezado, 'Motivo')
+                && strpos($textoEncabezado, 'Estatus') < strpos($textoEncabezado, 'Motivo');
+
+            $nuevas = array_slice($filas, 0, $primeraDatos);
+            foreach (array_values($deudas) as $deuda) {
+                if (! is_array($deuda)) {
+                    continue;
+                }
+                $nuevas[] = InformeWordXml::establecerFila($plantilla, self::celdasDeuda($deuda, $ordenSocio));
             }
 
             if ($indiceTotales !== null) {
-                if ($deudas !== []) {
-                    $tabla = InformeWordXml::reemplazarFilaEnTabla($tabla, $indiceTotales, [
-                        self::formatoQuetzales(self::sumarMoneda($deudas, 'monto')),
-                        self::formatoQuetzales(self::sumarMoneda($deudas, 'saldo')),
-                        self::formatoQuetzales(self::sumarMoneda($deudas, 'cuota')),
-                    ], 1);
-                }
-
-                $tabla = InformeWordXml::podarFilasDatosVacias($tabla, 3, $indiceTotales);
-            } else {
-                $tabla = InformeWordXml::podarFilasDatosVacias($tabla, 3);
+                $nuevas[] = InformeWordXml::establecerFila($filas[$indiceTotales], [
+                    self::formatoQuetzales(self::sumarMoneda($deudas, 'monto')),
+                    self::formatoQuetzales(self::sumarMoneda($deudas, 'saldo')),
+                    self::formatoQuetzales(self::sumarMoneda($deudas, 'cuota')),
+                ], 1);
+                $nuevas = array_merge($nuevas, array_slice($filas, $indiceTotales + 1));
             }
 
+            $tabla = InformeWordXml::reconstruirTabla($tabla, $nuevas);
             $tabla = InformeWordXml::ajustarAnchosColumnas($tabla, [
                 1 => 1900,
                 2 => 1900,
@@ -1660,6 +1643,44 @@ class InformeWordRelleno
 
             return InformeWordXml::reemplazarMarcadores($tabla, ['xxxxxx' => '']);
         });
+    }
+
+    /**
+     * @param  array<string, mixed>  $deuda
+     * @return list<string>
+     */
+    private static function celdasDeuda(array $deuda, bool $ordenSocio): array
+    {
+        $estatus = $deuda['estatus'] ?? '';
+        if ($estatus === 'al_dia') {
+            $estatus = 'Al día';
+        } elseif ($estatus === 'atrasado' || $estatus === 'en_mora') {
+            $estatus = 'Atrasado';
+        } elseif ($estatus === 'pagado') {
+            $estatus = 'Pagado';
+        }
+
+        return $ordenSocio
+            ? [
+                self::texto($deuda['entidad'] ?? ''),
+                self::moneda($deuda['monto'] ?? ''),
+                self::moneda($deuda['saldo'] ?? ''),
+                self::moneda($deuda['cuota'] ?? ''),
+                self::texto($estatus),
+                self::texto($deuda['meses_atraso'] ?? ''),
+                self::texto($deuda['motivo'] ?? ''),
+                self::texto($deuda['antiguedad'] ?? ''),
+            ]
+            : [
+                self::texto($deuda['entidad'] ?? ''),
+                self::moneda($deuda['monto'] ?? ''),
+                self::moneda($deuda['saldo'] ?? ''),
+                self::moneda($deuda['cuota'] ?? ''),
+                self::texto($deuda['motivo'] ?? ''),
+                self::texto($deuda['antiguedad'] ?? ''),
+                self::texto($estatus),
+                self::texto($deuda['meses_atraso'] ?? ''),
+            ];
     }
 
     private static function rellenarNarrativaEconomica(string $xml, string $texto): string

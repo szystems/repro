@@ -50,6 +50,46 @@ class InformeWordSprintMTest extends TestCase
         $this->assertStringNotContainsString('Examinador SprintM Poligrafista Certificado', $plano);
     }
 
+    public function test_seis_deudas_salen_todas_en_el_word(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
+            'nombre' => 'Candidato',
+            'apellidos' => 'SeisDeudas',
+        ]);
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 6,
+            'total_secciones' => 6,
+            'completado' => true,
+        ]);
+        $deudas = [];
+        for ($i = 1; $i <= 6; $i++) {
+            $deudas[] = [
+                'entidad' => 'Acreedor '.$i,
+                'monto' => '1000',
+                'saldo' => '500',
+                'cuota' => '100',
+            ];
+        }
+        CuestionarioRespuesta::guardarTabla($cuestionario->id, 'situacion_economica', 'deudas', $deudas);
+
+        $tabla = $this->tabla($this->xmlDe($orden, $evaluado), 'ASPECTO ECONÓMICO');
+        $plano = $this->textoPlano($tabla);
+        for ($i = 1; $i <= 6; $i++) {
+            $this->assertStringContainsString('Acreedor '.$i, $plano);
+        }
+        $this->assertStringContainsString('TOTALES:', $plano);
+        $this->assertTrue(
+            str_contains($plano, '6,000.00') || str_contains($plano, '6000'),
+            'El total de las seis deudas no apareció: '.$plano
+        );
+    }
+
     public function test_totales_de_deudas_suman_montos_con_coma(): void
     {
         $xml = $this->xmlVsaPeriodicaConDeudas();

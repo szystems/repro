@@ -49,7 +49,12 @@ class UserFormRequest extends FormRequest
             // Roles (nuevo sistema)
             'roles' => 'array|nullable',
             'roles.*' => 'exists:roles,name',
+            'asignar_password' => 'nullable|boolean',
         ];
+
+        if ($this->boolean('asignar_password')) {
+            $rules['password'] = ['required', 'string', 'min:8', 'confirmed'];
+        }
 
         // Determinar el nivel para validación condicional
         $level = 1;
@@ -98,6 +103,9 @@ class UserFormRequest extends FormRequest
             'empresa_id.exists' => 'La empresa seleccionada no existe o está inactiva',
             'roles.array' => 'Los roles deben ser un array',
             'roles.*.exists' => 'Uno o más roles seleccionados no existen',
+            'password.required' => 'Escriba la contraseña o desmarque la opción de asignarla.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed' => 'La confirmación de la contraseña no coincide.',
         ];
     }
 }

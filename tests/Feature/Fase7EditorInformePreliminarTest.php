@@ -152,6 +152,8 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $response->assertSee('Color de letra');
         $response->assertSee('repro-swatch-color');
         $response->assertSee('reproTabla');
+        $response->assertSee('attributors/style/color', false);
+        $response->assertSee('attributors/style/background', false);
         $response->assertSee('foreColor');
         $response->assertSee('permitirPortapapelesEnTabla');
     }
@@ -160,7 +162,9 @@ class Fase7EditorInformePreliminarTest extends TestCase
     public function q_q1_conserva_color_y_tablas_y_limpia_xss(): void
     {
         $html = '<p><span style="color: rgb(255, 0, 0); font-weight: bold; background-image: url(javascript:alert(1))">Rojo</span></p>'
-            .'<table><tr><td onclick="alert(1)">Celda</td></tr></table>'
+            .'<p><font color="#e60000"><b>Negrita roja</b></font></p>'
+            .'<p><span class="ql-color-#0033cc ql-bg-#ffff00">Clase</span></p>'
+            .'<table><tr><td onclick="alert(1)"><b style="font-weight: bold">Celda</b></td></tr></table>'
             .'<img src=x onerror=alert(1)>';
 
         $response = $this->actingAs($this->admin)
@@ -174,6 +178,13 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $this->assertStringContainsString('<table>', $guardado);
         $this->assertStringContainsString('Celda', $guardado);
         $this->assertStringContainsString('color: rgb(255, 0, 0)', $guardado);
+        $this->assertStringContainsString('<b>Negrita roja</b>', $guardado);
+        $this->assertStringContainsString('color: #e60000', $guardado);
+        $this->assertStringContainsString('color: #0033cc', $guardado);
+        $this->assertStringContainsString('background-color: #ffff00', $guardado);
+        $this->assertStringContainsString('font-weight: bold', $guardado);
+        $this->assertStringNotContainsString('<font', $guardado);
+        $this->assertStringNotContainsString('ql-color', $guardado);
         $this->assertStringNotContainsString('onclick', $guardado);
         $this->assertStringNotContainsString('<img', $guardado);
         $this->assertStringNotContainsString('javascript', $guardado);
