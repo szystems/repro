@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Cuestionario;
+use App\Support\CuestionarioGuardadoSecuencia;
 use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\EvaluadorNota;
@@ -296,5 +297,47 @@ class CuestionarioEvaluadorNotasTest extends TestCase
         $this->assertDatabaseMissing('evaluador_notas', [
             'contenido' => 'Relato viejo que no debe pisar.',
         ]);
+    }
+
+    public function test_al_reabrir_el_informe_el_siguiente_guardado_si_queda(): void
+    {
+        $repro = $this->crearRepro();
+        CuestionarioGuardadoSecuencia::registrar($this->cuestionario->id, $repro->id, 4);
+
+        $this->actingAs($repro)
+            ->get(route('admin.cuestionarios.edit', $this->cuestionario->id))
+            ->assertOk()
+            ->assertSee('id="client_save_seq" value="4"', false);
+
+        $this->actingAs($repro)
+            ->putJson(route('admin.cuestionarios.update', $this->cuestionario->id), [
+                'guardar_borrador' => 1,
+                'client_save_seq' => 1,
+                'resultado_informe' => 'aprobado',
+                'evaluador_notas' => [
+                    'word_laboral' => 'Este intento viejo no debe quedar.',
+                ],
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true, 'stale' => true, 'seq' => 4]);
+
+        $this->actingAs($repro)
+            ->putJson(route('admin.cuestionarios.update', $this->cuestionario->id), [
+                'guardar_borrador' => 1,
+                'client_save_seq' => 5,
+                'resultado_informe' => 'no_aprobado',
+                'evaluador_notas' => [
+                    'word_laboral' => 'Pregunta que sí queda al reabrir.',
+                ],
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true, 'seq' => 5]);
+
+        $this->assertDatabaseHas('evaluador_notas', [
+            'evaluado_orden_id' => $this->cuestionario->evaluado_orden_id,
+            'seccion' => 'word_laboral',
+            'contenido' => 'Pregunta que sí queda al reabrir.',
+        ]);
+        $this->assertSame('no_aprobado', $this->cuestionario->evaluadoOrden->fresh()->resultado);
     }
 }

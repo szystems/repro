@@ -52,7 +52,7 @@
                   novalidate>
                 @csrf
                 @method('PUT')
-                <input type="hidden" name="client_save_seq" id="client_save_seq" value="0">
+                <input type="hidden" name="client_save_seq" id="client_save_seq" value="{{ \App\Support\CuestionarioGuardadoSecuencia::actual($cuestionario->id, (int) auth()->id()) }}">
                 
                 {{-- Progreso y Estado --}}
                 <div class="row mb-4">
@@ -428,7 +428,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    let saveSeq = 0;
+    const seqInputInicial = document.getElementById('client_save_seq');
+    let saveSeq = parseInt(seqInputInicial && seqInputInicial.value ? seqInputInicial.value : '0', 10) || 0;
+
+    function adoptarSecuenciaServidor(data) {
+        const recibida = data ? parseInt(data.seq, 10) : 0;
+        if (!recibida || recibida <= saveSeq) {
+            return;
+        }
+        saveSeq = recibida;
+        const input = document.getElementById('client_save_seq');
+        if (input) {
+            input.value = String(saveSeq);
+        }
+    }
 
     function asignarSecuenciaGuardado() {
         saveSeq += 1;
@@ -472,6 +485,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
+            adoptarSecuenciaServidor(data);
             if (data.success && !data.stale) {
                 formaCambiada = false;
                 mostrarNotificacion('Borrador guardado correctamente', 'success');

@@ -358,7 +358,10 @@ class CuestionariosController extends Controller
             $lock?->release();
 
             if ($request->has('guardar_borrador') && $request->expectsJson()) {
-                return response()->json(['success' => true]);
+                return response()->json([
+                    'success' => true,
+                    'seq' => CuestionarioGuardadoSecuencia::actual($cuestionario->id, (int) Auth::id()),
+                ]);
             }
 
             $mensaje = match (true) {
@@ -389,7 +392,11 @@ class CuestionariosController extends Controller
     private function respuestaGuardadoObsoleto(Request $request, Cuestionario $cuestionario): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
     {
         if ($request->has('guardar_borrador') && $request->expectsJson()) {
-            return response()->json(['success' => true, 'stale' => true]);
+            return response()->json([
+                'success' => true,
+                'stale' => true,
+                'seq' => CuestionarioGuardadoSecuencia::actual($cuestionario->id, (int) Auth::id()),
+            ]);
         }
 
         return redirect()

@@ -20,6 +20,11 @@ class CuestionarioGuardadoSecuencia
         return $incoming < (int) Cache::get(self::clave($cuestionarioId, $userId), 0);
     }
 
+    public static function actual(int $cuestionarioId, int $userId): int
+    {
+        return (int) Cache::get(self::clave($cuestionarioId, $userId), 0);
+    }
+
     public static function registrar(int $cuestionarioId, int $userId, mixed $seq): void
     {
         $incoming = self::normalizar($seq);
