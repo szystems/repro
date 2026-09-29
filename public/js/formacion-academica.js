@@ -13,10 +13,10 @@
         return {
             primaria: ['primaria'],
             basico: ['primaria', 'basico'],
-            diversificado: ['primaria', 'basico', 'diversificado'],
-            tecnico: ['primaria', 'basico', 'diversificado', 'tecnico'],
-            universitario: ['primaria', 'basico', 'diversificado', 'tecnico', 'universitario'],
-            postgrado: ['primaria', 'basico', 'diversificado', 'tecnico', 'universitario', 'postgrado']
+            diversificado: ['basico', 'diversificado'],
+            tecnico: ['diversificado', 'tecnico'],
+            universitario: ['diversificado', 'universitario'],
+            postgrado: ['diversificado', 'universitario', 'postgrado']
         };
     }
 

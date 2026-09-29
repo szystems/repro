@@ -40,7 +40,8 @@ class SituacionLaboralPeriodicaRequest extends FormRequest
         $this->merge([
             'formacion_academica' => HistorialAcademico::filasParaValidacion(
                 $this->input('ultimo_nivel_academico'),
-                $this->input('formacion_academica')
+                $this->input('formacion_academica'),
+                $this->tipoFormulario()
             ),
         ]);
     }

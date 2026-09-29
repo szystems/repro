@@ -20,7 +20,7 @@ class SprintF2UltimosCambiosTest extends TestCase
     public function test_niveles_academicos_visibles_universitario_incluyen_diversificado(): void
     {
         $this->assertSame(
-            ['primaria', 'basico', 'diversificado', 'tecnico', 'universitario'],
+            ['diversificado', 'universitario'],
             HistorialAcademico::nivelesVisibles('universitario')
         );
     }

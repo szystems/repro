@@ -16,32 +16,47 @@ class HistorialAcademico
     ];
 
     /**
-     * Cada último grado incluye ese nivel y los anteriores (primaria … seleccionado).
-     * Así, universitario también muestra diversificado. Las filas en blanco no se guardan.
+     * Preempleo y socioeconómico: filas de la regla de Stephany.
+     * Periódica y específica: solo el último grado cursado.
      *
      * @return array<string, list<string>>
      */
-    public static function mapaNivelesVisibles(): array
+    public static function mapaNivelesVisibles(?string $tipoFormulario = null): array
     {
-        $claves = array_keys(self::NIVELES);
-        $mapa = [];
-        foreach ($claves as $indice => $clave) {
-            $mapa[$clave] = array_slice($claves, 0, $indice + 1);
+        if (self::soloUltimoGrado($tipoFormulario)) {
+            $mapa = [];
+            foreach (array_keys(self::NIVELES) as $clave) {
+                $mapa[$clave] = [$clave];
+            }
+
+            return $mapa;
         }
 
-        return $mapa;
+        return [
+            'primaria' => ['primaria'],
+            'basico' => ['primaria', 'basico'],
+            'diversificado' => ['basico', 'diversificado'],
+            'tecnico' => ['diversificado', 'tecnico'],
+            'universitario' => ['diversificado', 'universitario'],
+            'postgrado' => ['diversificado', 'universitario', 'postgrado'],
+        ];
+    }
+
+    public static function soloUltimoGrado(?string $tipoFormulario): bool
+    {
+        return in_array($tipoFormulario, ['periodica', 'especifica'], true);
     }
 
     /**
      * @return list<string>
      */
-    public static function nivelesVisibles(?string $ultimoNivel): array
+    public static function nivelesVisibles(?string $ultimoNivel, ?string $tipoFormulario = null): array
     {
         if ($ultimoNivel === null || $ultimoNivel === '' || $ultimoNivel === 'ninguno') {
             return [];
         }
 
-        $mapa = self::mapaNivelesVisibles();
+        $mapa = self::mapaNivelesVisibles($tipoFormulario);
 
         if (isset($mapa[$ultimoNivel])) {
             return $mapa[$ultimoNivel];
@@ -50,16 +65,20 @@ class HistorialAcademico
         return [$ultimoNivel];
     }
 
-    public static function textoAyudaFilas(): string
+    public static function textoAyudaFilas(?string $tipoFormulario = null): string
     {
-        return 'Incluya los niveles anteriores que correspondan (por ejemplo, diversificado si el último grado es universitario). Puede dejar en blanco los que no apliquen; complete el último grado.';
+        if (self::soloUltimoGrado($tipoFormulario)) {
+            return 'Complete solo el último grado que seleccionó arriba.';
+        }
+
+        return 'Complete las filas de la regla para ese último grado. Universitario incluye diversificado; posgrado incluye universitario y diversificado. Puede dejar en blanco la fila que no aplique; complete el último grado.';
     }
 
     /**
      * @param  list<array<string, string>>  $filasExistentes
      * @return list<array<string, string>>
      */
-    public static function filasParaFormulario(?string $ultimoNivel, array $filasExistentes = []): array
+    public static function filasParaFormulario(?string $ultimoNivel, array $filasExistentes = [], ?string $tipoFormulario = null): array
     {
         $indexadas = [];
         foreach ($filasExistentes as $fila) {
@@ -69,7 +88,7 @@ class HistorialAcademico
         }
 
         $filas = [];
-        foreach (self::nivelesVisibles($ultimoNivel) as $clave) {
+        foreach (self::nivelesVisibles($ultimoNivel, $tipoFormulario) as $clave) {
             $filas[] = array_merge([
                 'nivel' => $clave,
                 'estado' => '',
@@ -87,9 +106,9 @@ class HistorialAcademico
      * @param  list<array<string, string>>  $filas
      * @return list<array<string, string>>
      */
-    public static function filasParaAlmacenamiento(?string $ultimoNivel, array $filas): array
+    public static function filasParaAlmacenamiento(?string $ultimoNivel, array $filas, ?string $tipoFormulario = null): array
     {
-        $visibles = self::nivelesVisibles($ultimoNivel);
+        $visibles = self::nivelesVisibles($ultimoNivel, $tipoFormulario);
         if ($visibles === []) {
             return [];
         }
@@ -135,21 +154,18 @@ class HistorialAcademico
      * @param  list<array<string, string>>  $filasInput
      * @return list<array<string, string>>
      */
-    public static function filasParaValidacion(?string $ultimoNivel, array $filasInput): array
+    public static function filasParaValidacion(?string $ultimoNivel, array $filasInput, ?string $tipoFormulario = null): array
     {
-        $filas = self::filasParaFormulario($ultimoNivel, $filasInput);
+        $filas = self::filasParaFormulario($ultimoNivel, $filasInput, $tipoFormulario);
         if ($filas === []) {
             return [];
         }
 
-        $ultimoIndice = count($filas) - 1;
-
         return array_values(array_filter(
             $filas,
-            static function (array $fila, int $indice) use ($ultimoIndice): bool {
-                return $indice === $ultimoIndice || ! self::filaVacia($fila);
-            },
-            ARRAY_FILTER_USE_BOTH
+            static function (array $fila) use ($ultimoNivel): bool {
+                return ($fila['nivel'] ?? '') === $ultimoNivel || ! self::filaVacia($fila);
+            }
         ));
     }
 

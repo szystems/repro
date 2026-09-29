@@ -66,7 +66,7 @@ class CuestionarioMotorE1Test extends TestCase
         $layout = (string) file_get_contents(resource_path('views/layouts/cuestionario.blade.php'));
         $this->assertStringContainsString('ensureFilasVisiblesAll', $layout);
         $formacion = (string) file_get_contents(public_path('js/formacion-academica.js'));
-        $this->assertStringContainsString("universitario: ['primaria', 'basico', 'diversificado', 'tecnico', 'universitario']", $formacion);
+        $this->assertStringContainsString("universitario: ['diversificado', 'universitario']", $formacion);
     }
 
     public function test_flujo_integrado_precarga_autosave_condicionales_y_tabla_dinamica(): void

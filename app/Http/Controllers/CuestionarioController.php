@@ -665,7 +665,8 @@ class CuestionarioController extends Controller
             } elseif (isset($tablas['formacion_academica'])) {
                 $tablas['formacion_academica'] = HistorialAcademico::filasParaAlmacenamiento(
                     $datosValidados['ultimo_nivel_academico'] ?? null,
-                    $tablas['formacion_academica']
+                    $tablas['formacion_academica'],
+                    $cuestionario->tipo_formulario
                 );
             }
         }

@@ -37,7 +37,8 @@ class HistorialLaboralRequest extends FormRequest
         $this->merge([
             'formacion_academica' => HistorialAcademico::filasParaValidacion(
                 $this->input('ultimo_nivel_academico'),
-                $filas
+                $filas,
+                $this->resolverTipoFormularioCuestionario()
             ),
         ]);
     }

@@ -225,8 +225,10 @@ class CuestionarioPreempleoSecciones345Test extends TestCase
             ->assertDontSee('name="empleos[5][empresa]"', false)
             ->assertSee('data-filas-visibles="5"', false)
             ->assertSee('+ Agregar empleo', false)
-            ->assertSee('por ejemplo, diversificado si el último grado es universitario', false)
-            ->assertSee('"universitario":["primaria","basico","diversificado","tecnico","universitario"]', false);
+            ->assertSee('Universitario incluye diversificado', false)
+            ->assertSee('Técnico (opcional)', false)
+            ->assertSee('"universitario":["diversificado","universitario"]', false)
+            ->assertDontSee('"universitario":["primaria","basico","diversificado","tecnico","universitario"]', false);
     }
 
     public function test_deudas_tabla_y_gate(): void

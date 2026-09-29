@@ -10,7 +10,8 @@
     use App\Support\HistorialLaboralIntegridad;
     $resp = $respuestasExistentes ?? [];
     $ultimoNivel = old('ultimo_nivel_academico', $resp['ultimo_nivel_academico'] ?? 'ninguno');
-    $filasAcademicas = HistorialAcademico::filasParaFormulario($ultimoNivel, $tablasExistentes['formacion_academica'] ?? []);
+    $tipoAcademico = $cuestionario->tipo_formulario ?? 'preempleo';
+    $filasAcademicas = HistorialAcademico::filasParaFormulario($ultimoNivel, $tablasExistentes['formacion_academica'] ?? [], $tipoAcademico);
 @endphp
 
 <h5 class="mt-2 mb-3">Formación académica</h5>
@@ -19,7 +20,7 @@
     <select class="form-control @error('ultimo_nivel_academico') is-invalid @enderror" id="ultimo_nivel_academico" name="ultimo_nivel_academico" required>
         <option value="ninguno" {{ $ultimoNivel === 'ninguno' ? 'selected' : '' }}>Ninguno</option>
         @foreach(HistorialAcademico::NIVELES as $k => $et)
-            <option value="{{ $k }}" {{ $ultimoNivel === $k ? 'selected' : '' }}>{{ $et }}</option>
+            <option value="{{ $k }}" {{ $ultimoNivel === $k ? 'selected' : '' }}>{{ $k === 'tecnico' ? 'Técnico (opcional)' : $et }}</option>
         @endforeach
     </select>
     @error('ultimo_nivel_academico')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -27,7 +28,7 @@
 
 <x-campo-condicional trigger="ultimo_nivel_academico" hide-when="ninguno" id="seccion_formacion_academica">
     <p class="text-muted small mb-2">
-        {{ HistorialAcademico::textoAyudaFilas() }}
+        {{ HistorialAcademico::textoAyudaFilas($tipoAcademico) }}
     </p>
     <x-tabla-dinamica
         name="formacion_academica"
@@ -48,7 +49,7 @@
 @push('scripts')
 <script>
         window.formacionAcademicaNiveles = @json(HistorialAcademico::NIVELES);
-        window.formacionAcademicaVisibles = @json(HistorialAcademico::mapaNivelesVisibles());
+        window.formacionAcademicaVisibles = @json(HistorialAcademico::mapaNivelesVisibles($tipoAcademico));
 </script>
 <script src="{{ \App\Support\PublicAsset::url('js/formacion-academica.js') }}"></script>
 @endpush

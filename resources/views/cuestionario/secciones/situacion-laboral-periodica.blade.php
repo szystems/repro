@@ -8,7 +8,7 @@
     $esEspecifica = $tipoForm === 'especifica';
     $campoAdicional = HistorialLaboralPeriodico::CAMPO_INFORMACION_ADICIONAL;
     $ultimoNivel = old('ultimo_nivel_academico', $resp['ultimo_nivel_academico'] ?? 'ninguno');
-    $filasAcademicas = HistorialAcademico::filasParaFormulario($ultimoNivel, $tablasExistentes['formacion_academica'] ?? []);
+    $filasAcademicas = HistorialAcademico::filasParaFormulario($ultimoNivel, $tablasExistentes['formacion_academica'] ?? [], $tipoForm);
     $labelPregunta1 = HistorialLaboralPeriodico::labelPregunta1($esEspecifica);
 @endphp
 
@@ -40,7 +40,7 @@
 @else
     <x-campo-condicional trigger="ultimo_nivel_academico" hide-when="ninguno" id="seccion_formacion_academica">
         <p class="text-muted small mb-2">
-            {{ HistorialAcademico::textoAyudaFilas() }}
+            {{ HistorialAcademico::textoAyudaFilas($tipoForm) }}
         </p>
         <x-tabla-dinamica
             name="formacion_academica"
@@ -61,7 +61,7 @@
     @push('scripts')
     <script>
         window.formacionAcademicaNiveles = @json(HistorialAcademico::NIVELES);
-        window.formacionAcademicaVisibles = @json(HistorialAcademico::mapaNivelesVisibles());
+        window.formacionAcademicaVisibles = @json(HistorialAcademico::mapaNivelesVisibles($tipoForm));
     </script>
     <script src="{{ \App\Support\PublicAsset::url('js/formacion-academica.js') }}"></script>
     @endpush
