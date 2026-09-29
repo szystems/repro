@@ -81,6 +81,7 @@ class InformeWordExport
         }
 
         InformeWordZip::reemplazarEntrada($zip, 'word/document.xml', $xml);
+        self::aplicarHelveticaAlEditar($zip);
         $coreXml = InformeWordZip::leerEntrada($zip, 'docProps/core.xml');
         if (is_string($coreXml) && $coreXml !== '') {
             InformeWordZip::reemplazarEntrada(
@@ -149,6 +150,19 @@ class InformeWordExport
             && InformeWordXml::problemasEstructura($documentXml) === []
             && InformeWordXml::relacionesFaltantes($documentXml, $relsXml) === []
             && InformeWordXml::esValido($contentTypes);
+    }
+
+    private static function aplicarHelveticaAlEditar(PhpWordZipArchive $zip): void
+    {
+        $styles = InformeWordZip::leerEntrada($zip, 'word/styles.xml');
+        if (is_string($styles) && $styles !== '') {
+            InformeWordZip::reemplazarEntrada($zip, 'word/styles.xml', InformeWordXml::helveticaEnEstilos($styles));
+        }
+
+        $theme = InformeWordZip::leerEntrada($zip, 'word/theme/theme1.xml');
+        if (is_string($theme) && $theme !== '') {
+            InformeWordZip::reemplazarEntrada($zip, 'word/theme/theme1.xml', InformeWordXml::helveticaEnTema($theme));
+        }
     }
 
     private static function aplicarFotoEvaluadoEnDocumento(string $documentXml, EvaluadoOrden $evaluado, PhpWordZipArchive $zip): string

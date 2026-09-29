@@ -525,6 +525,83 @@ class InformeWordExportTest extends TestCase
         $this->assertStringNotContainsString('XXXXXXXX', $xml);
         $this->assertStringContainsString('Stefanie', $xml);
         $this->assertStringContainsString('9245', $xml);
+
+        $limites = InformeWordXml::limitesTablaPorMarcador($xml, 'DATOS GENERALES');
+        $this->assertNotNull($limites);
+        $datos = substr($xml, $limites[0], $limites[1] - $limites[0]);
+        $filas = InformeWordXml::filasTabla($datos);
+        $celdas = InformeWordXml::celdasFila($filas[15] ?? '');
+        $licencia = trim(html_entity_decode(strip_tags($celdas[1] ?? ''), ENT_QUOTES | ENT_XML1, 'UTF-8'));
+        $this->assertSame('Tipo B vigente.', $licencia);
+    }
+
+    public function test_al_editar_el_word_la_fuente_por_defecto_es_helvetica(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_servicio' => 'poligrafo',
+            'tipo_formulario' => 'preempleo',
+        ]);
+        Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 1,
+            'total_secciones' => 6,
+            'completado' => true,
+        ]);
+
+        $path = InformeWordExport::generar($orden, $evaluado->fresh(['cuestionario']));
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($path) === true);
+        $styles = $zip->getFromName('word/styles.xml');
+        $theme = $zip->getFromName('word/theme/theme1.xml');
+        $zip->close();
+        @unlink($path);
+
+        $this->assertIsString($styles);
+        $this->assertIsString($theme);
+        $this->assertStringNotContainsString('Calibri', $styles);
+        $this->assertStringNotContainsString('Calibri', $theme);
+        $this->assertStringContainsString('w:ascii="Helvetica"', $styles);
+        $this->assertStringContainsString('typeface="Helvetica"', $theme);
+    }
+
+    public function test_hoja_uno_sin_tipo_de_licencia_muestra_si_o_no(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_servicio' => 'vsa',
+            'tipo_formulario' => 'preempleo',
+            'nombre' => 'Ana',
+            'apellidos' => 'Sin Tipo',
+        ]);
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 1,
+            'total_secciones' => 6,
+            'completado' => true,
+        ]);
+        CuestionarioRespuesta::guardarRespuestas($cuestionario->id, 'datos_personales', [
+            'licencia_conducir' => 'no',
+        ]);
+
+        $path = InformeWordExport::generar($orden, $evaluado->fresh(['cuestionario']));
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($path) === true);
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        @unlink($path);
+        $this->assertIsString($xml);
+
+        $limites = InformeWordXml::limitesTablaPorMarcador($xml, 'DATOS GENERALES');
+        $this->assertNotNull($limites);
+        $filas = InformeWordXml::filasTabla(substr($xml, $limites[0], $limites[1] - $limites[0]));
+        $celdas = InformeWordXml::celdasFila($filas[15] ?? '');
+        $licencia = trim(html_entity_decode(strip_tags($celdas[1] ?? ''), ENT_QUOTES | ENT_XML1, 'UTF-8'));
+        $this->assertSame('No', $licencia);
     }
 
     public function test_resultado_poligrafico_no_aprobado_marca_di(): void

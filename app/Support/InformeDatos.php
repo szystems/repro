@@ -78,6 +78,7 @@ class InformeDatos
         }
 
         $encabezado['estado_civil'] = self::etiquetaEstadoCivil((string) ($encabezado['estado_civil'] ?? ''));
+        $encabezado['licencia'] = self::licenciaParaHojaUno($evaluado, $tablas, (string) ($encabezado['licencia'] ?? ''));
 
         return self::sinGuionesDeRelleno($encabezado);
     }
@@ -257,6 +258,48 @@ class InformeDatos
         }
 
         return $encabezado;
+    }
+
+    /**
+     * Hoja 1: si en información complementaria escribieron el tipo y la vigencia,
+     * eso va en la celda de licencia. Si no, se muestra Sí / No, no el código crudo.
+     *
+     * @param  array<string, mixed>  $tablas
+     */
+    private static function licenciaParaHojaUno(EvaluadoOrden $evaluado, array $tablas, string $actual): string
+    {
+        $tipo = self::tipoLicenciaComplementaria($tablas);
+        if ($tipo === '' && $evaluado->cuestionario) {
+            $tipo = trim((string) ($evaluado->cuestionario->obtenerRespuestasSeccion(5)['comp_licencia_conducir'] ?? ''));
+        }
+        if ($tipo !== '' && $tipo !== '—') {
+            return $tipo;
+        }
+
+        return DatosPersonalesCampos::etiquetaLicencia($actual);
+    }
+
+    /** @param  array<string, mixed>  $tablas */
+    private static function tipoLicenciaComplementaria(array $tablas): string
+    {
+        $filas = is_array($tablas['complementaria'] ?? null) ? $tablas['complementaria'] : [];
+        foreach ($filas as $fila) {
+            if (! is_array($fila)) {
+                continue;
+            }
+
+            $pregunta = mb_strtolower(trim((string) ($fila['pregunta'] ?? '')));
+            if (! str_contains($pregunta, 'tipo de licencia')) {
+                continue;
+            }
+
+            $respuesta = trim((string) ($fila['respuesta'] ?? ''));
+            if ($respuesta !== '' && $respuesta !== '—') {
+                return $respuesta;
+            }
+        }
+
+        return '';
     }
 
     /** Claves del formulario (`casado`) → texto del informe (`Casado(a)`). */

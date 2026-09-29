@@ -899,6 +899,46 @@ class InformeWordXml
         return preg_replace('/<w:r>/', '<w:r><w:rPr>'.$color.'</w:rPr>', $filaXml) ?? $filaXml;
     }
 
+    /**
+     * Al escribir en el Word, el estilo y el tema usan Calibri. Helvetica queda como
+     * fuente de esos estilos para que lo que se edita no cambie de letra.
+     */
+    public static function helveticaEnEstilos(string $xml): string
+    {
+        return str_replace(
+            [
+                'w:ascii="Calibri Light"',
+                'w:hAnsi="Calibri Light"',
+                'w:eastAsia="Calibri Light"',
+                'w:cs="Calibri Light"',
+                'w:ascii="Calibri"',
+                'w:hAnsi="Calibri"',
+                'w:eastAsia="Calibri"',
+                'w:cs="Calibri"',
+            ],
+            [
+                'w:ascii="Helvetica"',
+                'w:hAnsi="Helvetica"',
+                'w:eastAsia="Helvetica"',
+                'w:cs="Helvetica"',
+                'w:ascii="Helvetica"',
+                'w:hAnsi="Helvetica"',
+                'w:eastAsia="Helvetica"',
+                'w:cs="Helvetica"',
+            ],
+            $xml
+        );
+    }
+
+    public static function helveticaEnTema(string $xml): string
+    {
+        return str_replace(
+            ['typeface="Calibri Light"', 'typeface="Calibri"'],
+            ['typeface="Helvetica"', 'typeface="Helvetica"'],
+            $xml
+        );
+    }
+
     public static function forzarTamanoFuenteTabla(string $tablaXml, int $halfPoints): string
     {
         $tablaXml = preg_replace_callback(
