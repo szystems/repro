@@ -1200,6 +1200,51 @@ class CalendarioTest extends TestCase
             ->assertDontSee('Luis');
     }
 
+    public function test_filtros_entrevisto_e_informe_final(): void
+    {
+        $persona = $this->usuarioRepro();
+        $otro = $this->usuarioRepro();
+
+        $this->crearEvaluado([
+            'nombre' => 'Rosa',
+            'apellidos' => 'Entrevistada',
+            'entrevistador_id' => $persona->id,
+            'informe_final_responsable_id' => $otro->id,
+            'estado_programacion' => 'programado',
+            'fecha_programada' => '2026-03-19 09:00:00',
+        ]);
+        $this->crearEvaluado([
+            'nombre' => 'Pedro',
+            'apellidos' => 'Informe',
+            'entrevistador_id' => $otro->id,
+            'informe_final_responsable_id' => $persona->id,
+            'estado_programacion' => 'programado',
+            'fecha_programada' => '2026-03-19 10:00:00',
+        ]);
+
+        $admin = $this->usuarioAdmin();
+
+        $this->actingAs($admin)
+            ->get('/calendario?entrevistador_id='.$persona->id.'&mes=3&anio=2026')
+            ->assertOk()
+            ->assertSee('name="entrevistador_id"', false)
+            ->assertSee('Rosa')
+            ->assertDontSee('Pedro');
+
+        $this->actingAs($admin)
+            ->get('/calendario?informe_final_id='.$persona->id.'&mes=3&anio=2026')
+            ->assertOk()
+            ->assertSee('name="informe_final_id"', false)
+            ->assertSee('Pedro')
+            ->assertDontSee('Rosa');
+
+        $this->actingAs($admin)
+            ->get('/calendario/dia/2026-03-19?entrevistador_id='.$persona->id)
+            ->assertOk()
+            ->assertSee('name="informe_final_id"', false)
+            ->assertViewHas('citas', fn ($citas) => $citas->pluck('nombre')->all() === ['Rosa']);
+    }
+
     public function test_empresa_no_descarga_excel_calendario(): void
     {
         $this->actingAs($this->usuarioEmpresa())

@@ -63,6 +63,24 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
+                                <label class="form-label">Entrevistó</label>
+                                <select name="entrevistador_id" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    @foreach($poligrafistas as $pol)
+                                        <option value="{{ $pol->id }}" {{ ($entrevistadorId ?? null) == $pol->id ? 'selected' : '' }}>{{ $pol->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Informe final</label>
+                                <select name="informe_final_id" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    @foreach($poligrafistas as $pol)
+                                        <option value="{{ $pol->id }}" {{ ($informeFinalId ?? null) == $pol->id ? 'selected' : '' }}>{{ $pol->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
                                 <label class="form-label">Tipo de servicio</label>
                                 <select name="tipo_servicio" class="form-select form-select-sm">
                                     <option value="">Todos</option>
@@ -111,6 +129,8 @@
                 'sede_id' => $sedeId,
                 'poligrafista_id' => $poligrafistaId,
                 'encargado_id' => $encargadoId ?? null,
+                'entrevistador_id' => $entrevistadorId ?? null,
+                'informe_final_id' => $informeFinalId ?? null,
                 'tipo_servicio' => $tipoServicio,
                 'empresa_id' => $empresaId ?? null,
             ]));
@@ -178,6 +198,8 @@
                                                 'sede_id' => $sedeId,
                                                 'poligrafista_id' => $poligrafistaId,
                                                 'encargado_id' => $encargadoId ?? null,
+                                                'entrevistador_id' => $entrevistadorId ?? null,
+                                                'informe_final_id' => $informeFinalId ?? null,
                                                 'tipo_servicio' => $tipoServicio,
                                                 'empresa_id' => $empresaId ?? null,
                                             ]));

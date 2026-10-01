@@ -49,6 +49,8 @@ class CalendarioController extends Controller
         $sedeId         = $filtros['sedeId'];
         $poligrafistaId = $filtros['poligrafistaId'];
         $encargadoId    = $filtros['encargadoId'];
+        $entrevistadorId = $filtros['entrevistadorId'];
+        $informeFinalId = $filtros['informeFinalId'];
         $tipoServicio   = $filtros['tipoServicio'];
         $empresaId      = $filtros['empresaId'];
 
@@ -143,7 +145,7 @@ class CalendarioController extends Controller
         return view('admin.calendario.index', compact(
             'fecha', 'inicioMes', 'finMes', 'citasPorDia',
             'sedes', 'poligrafistas', 'empresas',
-            'sedeId', 'poligrafistaId', 'encargadoId', 'tipoServicio', 'empresaId',
+            'sedeId', 'poligrafistaId', 'encargadoId', 'entrevistadorId', 'informeFinalId', 'tipoServicio', 'empresaId',
             'fechaDesde', 'fechaHasta', 'inicioHist', 'finHist',
             'mes', 'anio',
             'historial'
@@ -201,6 +203,8 @@ class CalendarioController extends Controller
         $sedeId         = $filtros['sedeId'];
         $poligrafistaId = $filtros['poligrafistaId'];
         $encargadoId    = $filtros['encargadoId'];
+        $entrevistadorId = $filtros['entrevistadorId'];
+        $informeFinalId = $filtros['informeFinalId'];
         $tipoServicio   = $filtros['tipoServicio'];
         $empresaId      = $filtros['empresaId'];
 
@@ -266,7 +270,7 @@ class CalendarioController extends Controller
         return view('admin.calendario.dia', compact(
             'fechaCarbon', 'fecha', 'citas', 'slots',
             'sedes', 'poligrafistas', 'empresas', 'evaluadosPendientes',
-            'sedeId', 'poligrafistaId', 'encargadoId', 'tipoServicio', 'empresaId',
+            'sedeId', 'poligrafistaId', 'encargadoId', 'entrevistadorId', 'informeFinalId', 'tipoServicio', 'empresaId',
             'citasHistoricas'
         ));
     }
@@ -405,7 +409,7 @@ class CalendarioController extends Controller
     }
 
     /**
-     * @return array{sedeId: ?string, poligrafistaId: ?string, encargadoId: ?string, tipoServicio: ?string, empresaId: ?string, fechaDesde: ?string, fechaHasta: ?string}
+     * @return array{sedeId: ?string, poligrafistaId: ?string, encargadoId: ?string, entrevistadorId: ?string, informeFinalId: ?string, tipoServicio: ?string, empresaId: ?string, fechaDesde: ?string, fechaHasta: ?string}
      */
     private function filtrosDesdeRequest(Request $request): array
     {
@@ -420,6 +424,8 @@ class CalendarioController extends Controller
             'sedeId' => $request->input('sede_id') ?: null,
             'poligrafistaId' => $request->input('poligrafista_id') ?: null,
             'encargadoId' => $request->input('encargado_id') ?: null,
+            'entrevistadorId' => $request->input('entrevistador_id') ?: null,
+            'informeFinalId' => $request->input('informe_final_id') ?: null,
             'tipoServicio' => $request->input('tipo_servicio') ?: null,
             'empresaId' => $request->input('empresa_id') ?: null,
             'fechaDesde' => $fechaDesde,
@@ -460,6 +466,12 @@ class CalendarioController extends Controller
         }
         if (!empty($filtros['encargadoId'])) {
             $query->where('responsable_id', $filtros['encargadoId']);
+        }
+        if (!empty($filtros['entrevistadorId'])) {
+            $query->where('entrevistador_id', $filtros['entrevistadorId']);
+        }
+        if (!empty($filtros['informeFinalId'])) {
+            $query->where('informe_final_responsable_id', $filtros['informeFinalId']);
         }
         if (!empty($filtros['tipoServicio'])) {
             $query->where('tipo_servicio', $filtros['tipoServicio']);
