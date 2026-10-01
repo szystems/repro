@@ -72,6 +72,7 @@ class EmpresaCrearOrdenTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('ordenes.store'), [
             'empresa_id' => $empresa->id,
+            'sede_id'    => Sede::factory()->create(['estado' => 1])->id,
             'evaluados'  => [$this->payloadEvaluado()],
         ]);
 
@@ -96,6 +97,7 @@ class EmpresaCrearOrdenTest extends TestCase
 
         $this->actingAs($user)->post(route('ordenes.store'), [
             'empresa_id'             => $empresa->id,
+            'sede_id'                => Sede::factory()->create(['estado' => 1])->id,
             'prioridad'              => 'urgente',
             'observaciones_internas' => 'secreto',
             'evaluados'              => [$this->payloadEvaluado()],
@@ -157,6 +159,7 @@ class EmpresaCrearOrdenTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('ordenes.store'), [
             'empresa_id' => $empresa->id,
+            'sede_id'    => $sede->id,
             'evaluados'  => [$payload],
         ]);
 

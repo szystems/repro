@@ -411,6 +411,74 @@ class Phase8CEstadosUXTest extends TestCase
         Mail::assertNotQueued(NuevaOrdenSedeMail::class);
     }
 
+    public function test_cliente_no_puede_crear_orden_sin_sede_responsable(): void
+    {
+        Mail::fake();
+
+        $empresa = Empresa::factory()->create();
+        $cliente = $this->crearEmpresa($empresa);
+
+        $response = $this->actingAs($cliente)->post(route('ordenes.store'), [
+            'empresa_id' => $empresa->id,
+            'evaluados' => [
+                [
+                    'nombre' => 'Test',
+                    'apellidos' => 'Sin Sede',
+                    'dpi' => '1234567890123',
+                    'email' => 'cliente-sin-sede@test.com',
+                    'tipo_servicio' => 'poligrafo',
+                    'tipo_formulario' => 'preempleo',
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors(['sede_id' => 'Seleccione la sede responsable de REPRO.']);
+        $this->assertDatabaseMissing('evaluados_orden', ['email' => 'cliente-sin-sede@test.com']);
+    }
+
+    public function test_formulario_cliente_marca_sede_responsable_obligatoria(): void
+    {
+        Sede::factory()->create(['estado' => 1]);
+        $cliente = $this->crearEmpresa();
+
+        $this->actingAs($cliente)->get(route('ordenes.create'))
+            ->assertOk()
+            ->assertSee('Seleccione la sede...')
+            ->assertDontSee('Sin sede asignada');
+    }
+
+    public function test_nueva_orden_cliente_avisa_a_todos_los_usuarios_de_la_sede_en_un_correo(): void
+    {
+        Mail::fake();
+
+        $sede = Sede::factory()->create(['nombre' => 'PROCESO VIRTUAL']);
+        $empresa = Empresa::factory()->create();
+        $cliente = $this->crearEmpresa($empresa);
+        $reproA = $this->crearRepro($sede);
+        $reproB = $this->crearRepro($sede);
+        $otraSede = $this->crearRepro(Sede::factory()->create());
+
+        $this->actingAs($cliente)->post(route('ordenes.store'), [
+            'empresa_id' => $empresa->id,
+            'sede_id' => $sede->id,
+            'evaluados' => [
+                [
+                    'nombre' => 'Test',
+                    'apellidos' => 'Virtual',
+                    'dpi' => '1234567890123',
+                    'email' => 'eval-virtual@test.com',
+                    'tipo_servicio' => 'poligrafo',
+                    'tipo_formulario' => 'preempleo',
+                ],
+            ],
+        ])->assertSessionHasNoErrors();
+
+        Mail::assertQueued(NuevaOrdenSedeMail::class, 1);
+        Mail::assertQueued(NuevaOrdenSedeMail::class, fn ($mail) => $mail->hasTo($reproA->email)
+            && $mail->hasTo($reproB->email)
+            && ! $mail->hasTo($otraSede->email));
+    }
+
     public function test_resultado_preliminar_existe_en_catalogo_de_estados(): void
     {
         $estados = EvaluadoOrden::estadosEvaluacionDisponibles();

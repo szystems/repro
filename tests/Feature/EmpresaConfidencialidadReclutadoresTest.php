@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Empresa;
 use App\Models\Orden;
 use App\Models\Role;
+use App\Models\Sede;
 use App\Models\User;
 use App\Support\EmpresaPermisosSupport;
 use App\Support\EmpresaVisibilidadReclutadoresSupport;
@@ -193,6 +194,7 @@ class EmpresaConfidencialidadReclutadoresTest extends TestCase
         $this->actingAs($this->reclutadorA->fresh())
             ->post(route('ordenes.store'), [
                 'empresa_id' => $this->empresa->id,
+                'sede_id' => Sede::factory()->create(['estado' => 1])->id,
                 'evaluados' => [[
                     'nombre' => 'Carla',
                     'apellidos' => 'Méndez',

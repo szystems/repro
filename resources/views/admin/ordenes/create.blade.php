@@ -104,11 +104,16 @@
                                     <label class="form-label">
                                         Sede Responsable
                                         @if(Auth::user()->role_as == 1)
+                                            <span class="text-danger">*</span>
                                             <small class="text-muted">(sede de REPRO que trabajará la orden)</small>
                                         @endif
                                     </label>
-                                    <select class="form-select @error('sede_id') is-invalid @enderror" name="sede_id">
+                                    <select class="form-select @error('sede_id') is-invalid @enderror" name="sede_id" @if(Auth::user()->role_as == 1) required @endif>
+                                        @if(Auth::user()->role_as == 1)
+                                        <option value="">Seleccione la sede...</option>
+                                        @else
                                         <option value="">Sin sede asignada</option>
+                                        @endif
                                         @foreach($sedes as $sede)
                                         <option value="{{ $sede->id }}" {{ old('sede_id') == $sede->id ? 'selected' : '' }}>
                                             {{ $sede->nombre }}

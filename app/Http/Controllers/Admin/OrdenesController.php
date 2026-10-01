@@ -256,7 +256,7 @@ class OrdenesController extends Controller
         // Validación manual temporal
         $validated = $request->validate([
             'empresa_id' => 'required|exists:empresas,id',
-            'sede_id' => 'nullable|exists:sedes,id,estado,1',
+            'sede_id' => (Auth::user()->role_as == 1 ? 'required' : 'nullable').'|exists:sedes,id,estado,1',
             'observaciones_internas' => 'nullable|string|max:500',
             'prioridad' => 'nullable|in:baja,normal,alta,urgente',
             'fecha_limite' => 'nullable|date|after:today',
@@ -280,6 +280,8 @@ class OrdenesController extends Controller
             'evaluados.*.poligrafista_id' => 'nullable|exists:users,id',
             'reclutador_id' => 'nullable|exists:users,id',
             'confidencial' => 'nullable|boolean',
+        ], [
+            'sede_id.required' => 'Seleccione la sede responsable de REPRO.',
         ]);
 
         // Validar que no haya DPI+servicio duplicados en la misma orden
@@ -1342,15 +1344,21 @@ class OrdenesController extends Controller
         }
 
         try {
-            $usuarios = User::where('sede_id', $orden->sede_id)
+            $correos = User::where('sede_id', $orden->sede_id)
                 ->where('estado', 1)
                 ->where('role_as', '>=', 2)
-                ->get();
+                ->pluck('email')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
 
-            foreach ($usuarios as $usuario) {
-                Mail::to($usuario->email)->queue(new \App\Mail\NuevaOrdenSedeMail($orden));
+            // Un solo correo con todos los destinatarios: Resend limita envíos por segundo
+            // y con cola sync un fallo a media lista dejaba sin aviso al resto de la sede.
+            if ($correos !== []) {
+                Mail::to($correos)->queue(new \App\Mail\NuevaOrdenSedeMail($orden));
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             CorreoEnvioSupport::registrarFallo($e, 'nueva_orden_sede');
         }
     }
