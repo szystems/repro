@@ -247,6 +247,9 @@ class InformeWordExport
         if ($evaluado->texto_informe_preliminar) {
             $section->addTextBreak(1);
             $section->addText('Informe preliminar', ['bold' => true, 'size' => 11, 'underline' => 'single']);
+            if ($evaluado->informe_preliminar_at) {
+                $section->addText('Generado el '.$evaluado->informe_preliminar_at->format('d/m/Y H:i'));
+            }
             $section->addText($evaluado->texto_informe_preliminar);
         }
 

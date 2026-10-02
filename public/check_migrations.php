@@ -28,7 +28,7 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
     echo "  batch {$r['batch']} | {$r['migration']}\n";
 }
 echo "\n=== COLUMNAS ===\n\n";
-foreach ([['evaluados_orden','sede_region_empresa'],['evaluados_orden','texto_informe_preliminar'],['configs','dias_vigencia_token'],['configs','nombre_empresa']] as [$t,$c]) {
+foreach ([['evaluados_orden','sede_region_empresa'],['evaluados_orden','texto_informe_preliminar'],['evaluados_orden','informe_preliminar_at'],['configs','dias_vigencia_token'],['configs','nombre_empresa']] as [$t,$c]) {
     $s = $pdo->query("SHOW COLUMNS FROM `{$t}` LIKE '{$c}'");
     $r = $s->fetch();
     echo str_pad("  {$t}.{$c}", 50) . ($r ? "OK ({$r['Type']})" : "!!! FALTA") . "\n";

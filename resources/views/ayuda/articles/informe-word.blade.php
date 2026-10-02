@@ -30,6 +30,7 @@
 
     <h5>Informe preliminar (cliente) y 1ª hoja</h5>
     <p>Al guardar el cuestionario, el sistema copia el <strong>resultado y observaciones de la primera hoja</strong> al informe preliminar HTML de la ficha de orden (lo que ve el cliente cuando REPRO lo libera). Si REPRO editó el preliminar a mano en la ficha, ese texto <strong>no se sobrescribe</strong> al guardar de nuevo el cuestionario.</p>
+    <p>En <strong>polígrafo y VSA</strong> esa tabla es el preliminar. La primera vez que queda texto, la ficha guarda la fecha y hora («Generado el…») y no la cambia si después se corrige el texto. En <strong>socioeconómico</strong> el preliminar es el archivo: al subirlo queda la fecha y hora junto a «Subido».</p>
 
     <div class="alert alert-warning">
         <i class="bi bi-exclamation-triangle me-2"></i>

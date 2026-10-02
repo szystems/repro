@@ -11,6 +11,7 @@ use App\Support\InformePreliminarDesdeWord;
 use App\Support\InformeWordBloquesEvaluador;
 use App\Support\InformeWordResultado;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class InformePreliminarDesdeWordTest extends TestCase
@@ -80,5 +81,51 @@ class InformePreliminarDesdeWordTest extends TestCase
         $html = $evaluado->fresh()->texto_informe_preliminar;
         $this->assertStringContainsString('texto corregido en revisión', (string) $html);
         $this->assertStringNotContainsString('texto inicial', (string) $html);
+    }
+
+    public function test_la_primera_copia_guarda_fecha_y_hora_y_una_correccion_no_la_cambia(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-02 10:31:00'));
+        $evaluado = $this->evaluadoPoli(['resultado' => 'aprobado_excepcion']);
+        $autor = User::factory()->create();
+        EvaluadorNotasSupport::guardarDesdeRequest($evaluado->id, [
+            InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => 'primera redacción',
+        ], $autor->id);
+
+        InformePreliminarDesdeWord::sincronizarDesdeWord($evaluado);
+
+        $this->assertSame(
+            '2026-10-02 10:31:00',
+            $evaluado->fresh()->informe_preliminar_at?->format('Y-m-d H:i:s')
+        );
+
+        $this->travelTo(Carbon::parse('2026-10-02 16:05:00'));
+        EvaluadorNotasSupport::guardarDesdeRequest($evaluado->id, [
+            InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => 'corrección de la tarde',
+        ], $autor->id);
+        InformePreliminarDesdeWord::sincronizarDesdeWord($evaluado->fresh());
+
+        $fresco = $evaluado->fresh();
+        $this->assertStringContainsString('corrección de la tarde', (string) $fresco->texto_informe_preliminar);
+        $this->assertSame('2026-10-02 10:31:00', $fresco->informe_preliminar_at?->format('Y-m-d H:i:s'));
+    }
+
+    public function test_no_inventa_fecha_si_el_texto_ya_existia(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-02 10:31:00'));
+        $evaluado = $this->evaluadoPoli([
+            'resultado' => 'aprobado',
+            'texto_informe_preliminar' => '<table><tr><td>Aprobado</td></tr></table>',
+            'informe_preliminar_editado_manual' => false,
+            'informe_preliminar_at' => null,
+        ]);
+        $autor = User::factory()->create();
+        EvaluadorNotasSupport::guardarDesdeRequest($evaluado->id, [
+            InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => 'sigue el mismo preliminar',
+        ], $autor->id);
+
+        InformePreliminarDesdeWord::sincronizarDesdeWord($evaluado);
+
+        $this->assertNull($evaluado->fresh()->informe_preliminar_at);
     }
 }

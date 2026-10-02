@@ -8,6 +8,7 @@ use App\Models\Orden;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
@@ -189,5 +190,87 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $this->assertStringNotContainsString('<img', $guardado);
         $this->assertStringNotContainsString('javascript', $guardado);
         $this->assertStringNotContainsString('background-image', $guardado);
+    }
+
+    /** @test */
+    public function co6_guarda_la_hora_de_la_tabla_y_la_muestra_en_la_ficha(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-02 10:31:00'));
+
+        $this->actingAs($this->admin)
+            ->patch(route('evaluados.guardar-informe-preliminar', $this->evaluado->id), [
+                'texto_informe_preliminar' => '<p>Tabla de resultado</p>',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame(
+            '2026-10-02 10:31:00',
+            $this->evaluado->fresh()->informe_preliminar_at?->format('Y-m-d H:i:s')
+        );
+
+        $this->travelTo(Carbon::parse('2026-10-02 15:00:00'));
+
+        $this->actingAs($this->admin)
+            ->patch(route('evaluados.guardar-informe-preliminar', $this->evaluado->id), [
+                'texto_informe_preliminar' => '<p>Tabla corregida</p>',
+            ])
+            ->assertRedirect();
+
+        $fresco = $this->evaluado->fresh();
+        $this->assertStringContainsString('Tabla corregida', (string) $fresco->texto_informe_preliminar);
+        $this->assertSame('2026-10-02 10:31:00', $fresco->informe_preliminar_at?->format('Y-m-d H:i:s'));
+
+        $this->actingAs($this->admin)
+            ->get(route('ordenes.show', $this->orden->id))
+            ->assertOk()
+            ->assertSee('Generado el 02/10/2026 10:31', false);
+
+        $this->actingAs($this->admin)
+            ->patch(route('evaluados.guardar-informe-preliminar', $this->evaluado->id), [
+                'texto_informe_preliminar' => null,
+            ])
+            ->assertRedirect();
+
+        $this->assertNull($this->evaluado->fresh()->informe_preliminar_at);
+    }
+
+    /** @test */
+    public function co6_no_inventa_fecha_en_un_preliminar_que_ya_existia(): void
+    {
+        $this->evaluado->update([
+            'texto_informe_preliminar' => '<p>Ya existía</p>',
+            'informe_preliminar_at' => null,
+        ]);
+        $this->travelTo(Carbon::parse('2026-10-02 10:31:00'));
+
+        $this->actingAs($this->admin)
+            ->patch(route('evaluados.guardar-informe-preliminar', $this->evaluado->id), [
+                'texto_informe_preliminar' => '<p>Ya existía, editado</p>',
+            ])
+            ->assertRedirect();
+
+        $this->assertNull($this->evaluado->fresh()->informe_preliminar_at);
+    }
+
+    /** @test */
+    public function co6_el_cliente_ve_la_fecha_de_la_tabla_y_la_del_archivo(): void
+    {
+        $this->orden->update([
+            'resultados_visibles_empresa' => true,
+            'estado' => 'entregado',
+        ]);
+        $this->evaluado->update([
+            'cuestionario_completado' => true,
+            'texto_informe_preliminar' => '<p>Informe de polígrafo</p>',
+            'informe_preliminar_at' => '2026-10-02 10:31:00',
+            'archivo_resultado_preliminar' => 'resultados/1/prelim.pdf',
+            'resultado_preliminar_at' => '2026-10-02 11:05:00',
+        ]);
+
+        $this->actingAs($this->empresaUser)
+            ->get(route('empresa.cuestionarios.show', $this->evaluado))
+            ->assertOk()
+            ->assertSee('Fecha y hora: 02/10/2026 10:31', false)
+            ->assertSee('Subido el 02/10/2026 11:05', false);
     }
 }

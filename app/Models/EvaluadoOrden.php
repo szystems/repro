@@ -81,6 +81,7 @@ class EvaluadoOrden extends Model
         'archivo_resultado_preliminar',
         'texto_informe_preliminar',
         'informe_preliminar_editado_manual',
+        'informe_preliminar_at',
         'archivo_resultado_final',
         'resultado_preliminar_at',
         'resultado_final_at',
@@ -104,6 +105,7 @@ class EvaluadoOrden extends Model
         'notificado_at',
         'resultado_preliminar_at',
         'resultado_final_at',
+        'informe_preliminar_at',
         'created_at',
         'updated_at',
     ];
@@ -128,6 +130,7 @@ class EvaluadoOrden extends Model
             'notificado_at' => 'datetime',
             'resultado_preliminar_at' => 'datetime',
             'resultado_final_at' => 'datetime',
+            'informe_preliminar_at' => 'datetime',
             // H-09: PII cifrado en base de datos
             'observaciones' => 'encrypted',
             'notas_poligrafo' => 'encrypted',
@@ -857,6 +860,26 @@ class EvaluadoOrden extends Model
         $textoPreliminar = trim(strip_tags((string) ($this->texto_informe_preliminar ?? '')));
 
         return $textoPreliminar !== '';
+    }
+
+    /**
+     * Hora en que el texto del preliminar (tabla de polígrafo y VSA) quedó
+     * registrado por primera vez. No se rellena en textos que ya existían
+     * sin esa hora. Borrar el texto la limpia.
+     */
+    public function fechaAlGuardarInformePreliminar(?string $textoNuevo): ?\Illuminate\Support\Carbon
+    {
+        $tendraTexto = trim(strip_tags((string) $textoNuevo)) !== '';
+        if (! $tendraTexto) {
+            return null;
+        }
+
+        $teniaTexto = trim(strip_tags((string) ($this->texto_informe_preliminar ?? ''))) !== '';
+        if (! $teniaTexto) {
+            return now();
+        }
+
+        return $this->informe_preliminar_at;
     }
 
     /**

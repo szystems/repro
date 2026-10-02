@@ -292,6 +292,9 @@
                 @if(($mostrarInformePreliminar ?? true) && $evaluado->texto_informe_preliminar)
                     <div class="notas-box" style="margin-top: 6px; padding: 8px; border-left: 3px solid #17a2b8; background:#f6fbfd;">
                         <strong style="color:#17a2b8;">Informe Preliminar:</strong>
+                        @if($evaluado->informe_preliminar_at)
+                            <small style="color:#666;">{{ $evaluado->informe_preliminar_at->format('d/m/Y H:i') }}</small>
+                        @endif
                         <div style="margin-top: 4px; font-size: 10px; line-height: 1.4;">
                             {!! \App\Support\InformePreliminarHtml::normalizar($evaluado->texto_informe_preliminar) !!}
                         </div>

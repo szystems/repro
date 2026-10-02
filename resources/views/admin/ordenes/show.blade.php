@@ -1101,6 +1101,9 @@
                                                     @else
                                                         <span class="badge bg-secondary ms-2">Sin redactar</span>
                                                     @endif
+                                                    @if($evaluado->informe_preliminar_at)
+                                                        <small class="text-muted fw-normal ms-2">Generado el {{ $evaluado->informe_preliminar_at->format('d/m/Y H:i') }}</small>
+                                                    @endif
                                                 </h6>
                                             </div>
                                             <div class="card-body">

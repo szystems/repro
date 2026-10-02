@@ -836,6 +836,7 @@ class OrdenesController extends Controller
         $evaluado->update([
             'texto_informe_preliminar' => $textoLimpio,
             'informe_preliminar_editado_manual' => true,
+            'informe_preliminar_at' => $evaluado->fechaAlGuardarInformePreliminar($textoLimpio),
         ]);
 
         // Auto-liberar resultados para el cliente al guardar el informe preliminar

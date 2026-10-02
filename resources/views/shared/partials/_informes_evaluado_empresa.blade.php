@@ -30,6 +30,9 @@
             </h6>
         </div>
         <div class="card-body">
+            @if($evaluado->informe_preliminar_at)
+                <p class="text-muted small mb-2">Fecha y hora: {{ $evaluado->informe_preliminar_at->format('d/m/Y H:i') }}</p>
+            @endif
             <div class="border rounded p-3 bg-light informe-preliminar-empresa">
                 {!! \App\Support\InformePreliminarHtml::normalizar($evaluado->texto_informe_preliminar) !!}
             </div>
@@ -51,7 +54,12 @@
             </h6>
         </div>
         <div class="card-body py-2">
-            <p class="text-muted small mb-2 mb-md-0">Documento preliminar de la evaluación preparado por REPRO.</p>
+            <p class="text-muted small mb-2 mb-md-0">
+                Documento preliminar de la evaluación preparado por REPRO.
+                @if($evaluado->resultado_preliminar_at)
+                    Subido el {{ $evaluado->resultado_preliminar_at->format('d/m/Y H:i') }}.
+                @endif
+            </p>
             <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado, 'preliminar']) }}" class="btn btn-outline-info btn-sm" target="_blank">
                 <i class="bi bi-download"></i> Descargar Informe Preliminar
             </a>

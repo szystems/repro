@@ -31,6 +31,7 @@ class InformePreliminarDesdeWord
         $evaluado->update([
             'texto_informe_preliminar' => $html,
             'informe_preliminar_editado_manual' => false,
+            'informe_preliminar_at' => $evaluado->fechaAlGuardarInformePreliminar($html),
         ]);
     }
 
