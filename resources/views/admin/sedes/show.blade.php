@@ -140,6 +140,21 @@
                     </div>
                 </div>
 
+                <div class="card mt-1 mb-3">
+                    <div class="card-header">
+                        <span class="card-title mb-0"><i class="bi bi-person-badge"></i> Personal asignado ({{ $personal->count() }})</span>
+                    </div>
+                    <div class="card-body py-2">
+                        @forelse($personal as $persona)
+                            <a href="{{ url('edit-user/'.$persona->id) }}" class="badge bg-light text-dark border me-1 mb-1 text-decoration-none" title="{{ $persona->email }}">
+                                <i class="bi bi-person"></i> {{ $persona->name }}
+                            </a>
+                        @empty
+                            <span class="text-muted small">Nadie tiene esta sede asignada. Se asigna en Usuarios → Editar → Sede Asignada.</span>
+                        @endforelse
+                    </div>
+                </div>
+
                 {{-- Búsqueda y tabla de candidatos --}}
                 <div class="card mt-1">
                     <div class="card-header d-flex justify-content-between align-items-center">

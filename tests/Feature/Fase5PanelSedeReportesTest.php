@@ -303,6 +303,22 @@ class Fase5PanelSedeReportesTest extends TestCase
     // R6 — WhatsApp dropdown en sidebar
     // =========================================================
 
+    public function test_detalle_sede_muestra_personal_asignado(): void
+    {
+        $otraSede = Sede::factory()->create();
+        User::factory()->create(['role_as' => 2, 'estado' => 1, 'sede_id' => $this->sede->id, 'name' => 'Asignada Activa']);
+        User::factory()->create(['role_as' => 2, 'estado' => 0, 'sede_id' => $this->sede->id, 'name' => 'Asignada Inactiva']);
+        User::factory()->create(['role_as' => 2, 'estado' => 1, 'sede_id' => $otraSede->id, 'name' => 'De Otra Sede']);
+
+        $this->actingAs($this->admin)
+            ->get(route('sedes.show', $this->sede->id))
+            ->assertOk()
+            ->assertSee('Personal asignado (1)')
+            ->assertSee('Asignada Activa')
+            ->assertDontSee('Asignada Inactiva')
+            ->assertDontSee('De Otra Sede');
+    }
+
     public function test_r6_sidebar_admin_muestra_whatsapp_dropdown(): void
     {
         Sede::factory()->create([

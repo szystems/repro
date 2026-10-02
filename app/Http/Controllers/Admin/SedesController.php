@@ -7,6 +7,7 @@ use App\Http\Requests\SedeFormRequest;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Models\Sede;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -93,7 +94,14 @@ class SedesController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.sedes.show', compact('sede', 'stats', 'candidatos', 'search'));
+        $personal = User::where('sede_id', $sede->id)
+            ->where('estado', 1)
+            ->where('role_as', '>=', 2)
+            ->whereNotIn('id', config('app.personal_oculto_ids', []))
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        return view('admin.sedes.show', compact('sede', 'stats', 'candidatos', 'search', 'personal'));
     }
 
     /** Formulario para editar una sede. */
