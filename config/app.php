@@ -69,6 +69,9 @@ return [
 
     'timezone' => 'America/Guatemala',
 
+    // Cuentas técnicas (Szystems) que no son personal de REPRO: no salen en los filtros del calendario.
+    'personal_oculto_ids' => array_map('intval', array_filter(explode(',', (string) env('PERSONAL_OCULTO_IDS', '1')))),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

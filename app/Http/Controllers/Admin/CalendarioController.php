@@ -92,7 +92,7 @@ class CalendarioController extends Controller
 
         // Datos para filtros
         $sedes         = Sede::activas()->orderBy('nombre')->get();
-        $poligrafistas = User::poligrafistas()->get();
+        $poligrafistas = User::poligrafistas()->whereNotIn('id', config('app.personal_oculto_ids', []))->get();
         $empresas      = Empresa::query()->where('estado', 1)->orderBy('nombre')->get();
 
         // P-P2: el historial lista todos los programados del periodo (no solo informe final),
@@ -252,7 +252,7 @@ class CalendarioController extends Controller
 
         // Datos para filtros y modal de programación
         $sedes         = Sede::activas()->orderBy('nombre')->get();
-        $poligrafistas = User::poligrafistas()->get();
+        $poligrafistas = User::poligrafistas()->whereNotIn('id', config('app.personal_oculto_ids', []))->get();
         $empresas      = Empresa::query()->where('estado', 1)->orderBy('nombre')->get();
 
         // Evaluados disponibles para programar: excluye solo estados terminales (no filtra por fecha_programada,

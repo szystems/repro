@@ -1245,6 +1245,21 @@ class CalendarioTest extends TestCase
             ->assertViewHas('citas', fn ($citas) => $citas->pluck('nombre')->all() === ['Rosa']);
     }
 
+    public function test_cuentas_tecnicas_no_salen_en_filtros_de_personal(): void
+    {
+        $tecnica = $this->usuarioRepro();
+        $tecnica->update(['name' => 'Cuenta Tecnica Oculta']);
+        $personal = $this->usuarioRepro();
+        $personal->update(['name' => 'Personal Visible']);
+        config(['app.personal_oculto_ids' => [$tecnica->id]]);
+
+        $this->actingAs($this->usuarioAdmin())
+            ->get('/calendario')
+            ->assertOk()
+            ->assertSee('Personal Visible')
+            ->assertDontSee('Cuenta Tecnica Oculta');
+    }
+
     public function test_empresa_no_descarga_excel_calendario(): void
     {
         $this->actingAs($this->usuarioEmpresa())
