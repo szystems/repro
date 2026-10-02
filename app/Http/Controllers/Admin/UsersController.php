@@ -73,7 +73,7 @@ class UsersController extends Controller
         $role_filter = $request->input('role_filter');
         $empresa_filter = $request->input('empresa_filter');
 
-        $users = $this->buildUsersQuery($request->all())->with('empresa')->paginate(20);
+        $users = $this->buildUsersQuery($request->all())->with(['empresa', 'sede'])->paginate(20);
         $filterUsers = User::select('name', 'email')->where('estado', 1)->orderBy('name')->get();
         $empresas = Empresa::where('estado', 1)->orderBy('nombre', 'asc')->get();
 

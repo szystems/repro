@@ -15,9 +15,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // Enviar recordatorios de cuestionarios próximos a expirar
+        // Recordatorios al candidato: 1 y 3 días después del alta (ninguno antes de vencer).
         // Se ejecuta diariamente a las 8:00 AM
-        $schedule->command('notificaciones:recordatorios --dias=3,1 --despues-alta=1')
+        $schedule->command('notificaciones:recordatorios --dias=0 --despues-alta=1,3')
             ->dailyAt('08:00')
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/recordatorios.log'));

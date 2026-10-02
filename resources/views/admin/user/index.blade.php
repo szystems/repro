@@ -69,7 +69,7 @@
                                             <td width="40%">Usuario</td>
                                             <td align="center" width="10%">Tipo</td>
                                             @if(Auth::user()->role_as >= 2)
-                                            <td align="center" width="15%">Empresa</td>
+                                            <td align="center" width="15%">Empresa / Sede</td>
                                             @endif
                                             <td align="center" width="10%">Fecha de Nac.</td>
                                             <td width="20%">Contacto</td>
@@ -165,6 +165,10 @@
                                                 @if($user->role_as == 1 && isset($user->empresa))
                                                     <span class="badge bg-light text-dark">
                                                         {{ $user->empresa->nombre }}
+                                                    </span>
+                                                @elseif($user->role_as >= 2 && $user->sede)
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="bi bi-geo-alt"></i> {{ $user->sede->nombre }}
                                                     </span>
                                                 @else
                                                     <span class="text-muted">-</span>

@@ -24,7 +24,7 @@ class EnviarRecordatoriosCuestionario extends Command
      */
     protected $signature = 'notificaciones:recordatorios 
                             {--dias=3,1 : Días antes de expiración para enviar recordatorios (separados por coma)}
-                            {--despues-alta=1 : Días después del alta del evaluado (0 desactiva)}
+                            {--despues-alta=1 : Días después del alta del evaluado (separados por coma; 0 desactiva)}
                             {--forzar : Enviar incluso si ya se envió un recordatorio hoy}';
 
     /**
@@ -50,8 +50,12 @@ class EnviarRecordatoriosCuestionario extends Command
         $enviados = 0;
         $errores = 0;
 
-        $diasDespuesAlta = (int) $this->option('despues-alta');
-        if ($diasDespuesAlta > 0) {
+        $diasAlta = collect(explode(',', (string) $this->option('despues-alta')))
+            ->map(fn($d) => (int) trim($d))
+            ->filter(fn($d) => $d > 0)
+            ->values();
+
+        foreach ($diasAlta as $diasDespuesAlta) {
             $this->line("");
             $this->info("📅 Procesando evaluados dados de alta hace {$diasDespuesAlta} día(s)...");
 

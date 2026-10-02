@@ -266,6 +266,43 @@ class NotificacionesEmailTest extends TestCase
         });
     }
 
+    public function test_recordatorios_solo_salen_1_y_3_dias_despues_del_alta(): void
+    {
+        Mail::fake();
+
+        $orden = Orden::factory()->create(['empresa_id' => Empresa::factory()->create(['estado' => 1])->id]);
+        $crear = fn (string $email, int $diasAlta, int $diasExpira) => EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'email' => $email,
+            'cuestionario_completado' => false,
+            'token_unico' => 'token-'.$email,
+            'token_expira_at' => now()->addDays($diasExpira),
+            'created_at' => now()->subDays($diasAlta),
+        ]);
+        $crear('dia1@test.com', 1, 14);
+        $crear('dia2@test.com', 2, 13);
+        $crear('dia3@test.com', 3, 12);
+        $crear('vence.manana@test.com', 14, 1);
+        $crear('vence.3dias@test.com', 12, 3);
+
+        $this->artisan('notificaciones:recordatorios --dias=0 --despues-alta=1,3')
+            ->assertExitCode(0);
+
+        Mail::assertQueued(RecordatorioCuestionarioMail::class, 2);
+        Mail::assertQueued(RecordatorioCuestionarioMail::class, fn ($m) => $m->hasTo('dia1@test.com'));
+        Mail::assertQueued(RecordatorioCuestionarioMail::class, fn ($m) => $m->hasTo('dia3@test.com'));
+    }
+
+    public function test_programacion_diaria_usa_recordatorios_despues_del_alta(): void
+    {
+        $comandos = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+            ->pluck('command')
+            ->filter(fn ($c) => str_contains((string) $c, 'notificaciones:recordatorios'));
+
+        $this->assertCount(1, $comandos);
+        $this->assertStringContainsString('--dias=0 --despues-alta=1,3', $comandos->first());
+    }
+
     public function test_recordatorio_alta_omite_si_ya_completaron(): void
     {
         Mail::fake();

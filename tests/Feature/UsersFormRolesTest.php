@@ -35,6 +35,20 @@ class UsersFormRolesTest extends TestCase
         $response->assertSee('Usuario Empresa');
     }
 
+    public function test_listado_usuarios_muestra_sede_del_personal_repro(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first()->id);
+        $sede = \App\Models\Sede::factory()->create(['nombre' => 'Sede Listado Prueba']);
+        User::factory()->create(['role_as' => 2, 'estado' => 1, 'sede_id' => $sede->id, 'name' => 'Personal Con Sede']);
+
+        $this->actingAs($admin)->get('/users?role_filter=2')
+            ->assertOk()
+            ->assertSee('Empresa / Sede')
+            ->assertSee('Personal Con Sede')
+            ->assertSee('Sede Listado Prueba');
+    }
+
     /** @test */
     public function test_formulario_crear_usuario_muestra_roles_custom_tambien(): void
     {
