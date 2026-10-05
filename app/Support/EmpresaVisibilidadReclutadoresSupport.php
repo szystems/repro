@@ -94,8 +94,12 @@ class EmpresaVisibilidadReclutadoresSupport
 
     public static function filtrarQueryOrdenesEmpresa(Builder $query, User $user): Builder
     {
-        if ((int) $user->role_as !== 1 || ! $user->empresa_id) {
+        if ((int) $user->role_as !== 1) {
             return $query;
+        }
+
+        if (! $user->empresa_id) {
+            return $query->whereRaw('0 = 1');
         }
 
         $query->where('empresa_id', $user->empresa_id);
@@ -105,8 +109,12 @@ class EmpresaVisibilidadReclutadoresSupport
 
     public static function filtrarQueryEvaluadosEmpresa(Builder $query, User $user): Builder
     {
-        if ((int) $user->role_as !== 1 || ! $user->empresa_id) {
+        if ((int) $user->role_as !== 1) {
             return $query;
+        }
+
+        if (! $user->empresa_id) {
+            return $query->whereRaw('0 = 1');
         }
 
         return $query->whereHas('orden', function (Builder $q) use ($user) {

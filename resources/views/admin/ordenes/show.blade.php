@@ -81,7 +81,7 @@
                         <div class="card-title">Detalles de la Orden</div>
                         <div class="card-options">
                             @include('partials._ayuda_contextual')
-                            <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm me-1">
+                            <a href="{{ route(\App\Support\OrdenPortalSupport::ruta(Auth::user(), 'index')) }}" class="btn btn-outline-secondary btn-sm me-1">
                                 <i class="bi bi-arrow-left"></i> Volver
                             </a>
                             <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-danger btn-sm me-1" target="_blank">

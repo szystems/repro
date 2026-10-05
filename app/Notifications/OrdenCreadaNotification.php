@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Orden;
+use App\Support\OrdenPortalSupport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -27,9 +28,7 @@ class OrdenCreadaNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
-        $url = $notifiable->role_as === 1
-            ? route('empresa.ordenes.show', $this->orden)
-            : route('ordenes.show', $this->orden);
+        $url = OrdenPortalSupport::urlDetalle($notifiable, $this->orden);
 
         $servicios = $this->orden->evaluados->pluck('tipo_servicio')->filter()->unique()->map(fn($s) => ucfirst($s))->join(', ');
         $empresa = $this->orden->empresa?->nombre ?? 'Sin empresa';

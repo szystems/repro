@@ -48,8 +48,8 @@
 
                 <!-- Módulo de Órdenes -->
                 <li class="menu-category">Órdenes</li>
-                <li class="{{ Request::is('ordenes') && !Request::is('ordenes/create') ? 'active-page-link':''  }}">
-                    <a href="{{ route('ordenes.index') }}">
+                <li class="{{ (Request::is('ordenes') && !Request::is('ordenes/create')) || Request::is('empresa/ordenes') ? 'active-page-link':''  }}">
+                    <a href="{{ route(\App\Support\OrdenPortalSupport::ruta(Auth::user(), 'index')) }}">
                         <i class="bi bi-file-earmark-text"></i>
                         <span class="menu-text">Mis Órdenes</span>
                     </a>

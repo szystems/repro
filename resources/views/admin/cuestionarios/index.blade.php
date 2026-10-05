@@ -331,7 +331,7 @@
                                     <tr>
                                         <td class="font-weight-bold">#{{ $evaluado->id }}</td>
                                         <td>
-                                            <a href="{{ route('ordenes.show', $orden) }}"
+                                            <a href="{{ \App\Support\OrdenPortalSupport::urlDetalle(Auth::user(), $orden) }}"
                                                class="text-decoration-none"
                                                title="Ver orden {{ $orden->codigo_orden }}">
                                                 <span class="badge bg-dark">
