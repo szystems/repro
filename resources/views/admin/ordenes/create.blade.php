@@ -30,7 +30,7 @@
                         <div class="card-title">Datos de la Orden</div>
                         <div class="card-options">
                             @include('partials._ayuda_contextual')
-                            <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <a href="{{ route(\App\Support\OrdenPortalSupport::ruta(Auth::user(), 'index')) }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="bi bi-arrow-left"></i> Volver
                             </a>
                         </div>
@@ -189,7 +189,7 @@
 
                             <!-- Botones -->
                             <div class="d-flex justify-content-end mt-4">
-                                <a href="{{ route('ordenes.index') }}"
+                                <a href="{{ route(\App\Support\OrdenPortalSupport::ruta(Auth::user(), 'index')) }}"
                                    class="btn btn-outline-secondary me-2" id="btn-cancelar">
                                     <i class="bi bi-x-circle"></i> Cancelar
                                 </a>

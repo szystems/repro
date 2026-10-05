@@ -398,11 +398,11 @@
                                 </span>
                             </button>
                             
-                            <a href="{{ route('ordenes.show', $orden) }}" class="btn btn-outline-secondary w-100 mb-2" id="btn-ver-orden">
+                            <a href="{{ \App\Support\OrdenPortalSupport::urlDetalle(Auth::user(), $orden) }}" class="btn btn-outline-secondary w-100 mb-2" id="btn-ver-orden">
                                 <i class="bi bi-eye"></i> Ver Orden
                             </a>
                             
-                            <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary w-100">
+                            <a href="{{ route(\App\Support\OrdenPortalSupport::ruta(Auth::user(), 'index')) }}" class="btn btn-outline-secondary w-100">
                                 <i class="bi bi-arrow-left"></i> Volver al Listado
                             </a>
 

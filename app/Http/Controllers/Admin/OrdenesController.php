@@ -49,6 +49,10 @@ class OrdenesController extends Controller
      */
     public function index(Request $request)
     {
+        if ($redir = $this->redirigirEmpresaSinCompania()) {
+            return $redir;
+        }
+
         FormularioAutoTransiciones::aplicarAlAcceder();
 
         $ordenes = $this->queryOrdenesListado($request)
@@ -81,6 +85,10 @@ class OrdenesController extends Controller
      */
     public function excel(Request $request)
     {
+        if ($redir = $this->redirigirEmpresaSinCompania()) {
+            return $redir;
+        }
+
         ExportacionesSupport::asegurarPuedeExportarInformes(Auth::user());
 
         $ordenes = $this->queryOrdenesListado($request)->get();
@@ -408,6 +416,10 @@ class OrdenesController extends Controller
      */
     public function show(Orden $orden)
     {
+        if ($redir = $this->redirigirEmpresaSinCompania()) {
+            return $redir;
+        }
+
         if (!$this->usuarioPuedeVerOrden($orden)) {
             abort(403);
         }
@@ -1362,6 +1374,21 @@ class OrdenesController extends Controller
         } catch (\Throwable $e) {
             CorreoEnvioSupport::registrarFallo($e, 'nueva_orden_sede');
         }
+    }
+
+    /**
+     * Usuario empresa sin compañía: no mostrar el 403 genérico ni el padrón completo.
+     */
+    private function redirigirEmpresaSinCompania(): ?\Illuminate\Http\RedirectResponse
+    {
+        $user = Auth::user();
+        if ((int) $user->role_as === 1 && ! $user->empresa_id) {
+            return redirect()
+                ->route('dashboard')
+                ->with('error', 'Su usuario no tiene una empresa asociada. Contacte al administrador.');
+        }
+
+        return null;
     }
 
     /**

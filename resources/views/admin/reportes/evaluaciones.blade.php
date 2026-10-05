@@ -223,7 +223,7 @@
                                 @forelse($evaluados as $evaluado)
                                     <tr>
                                         <td>
-                                            <a href="{{ route('ordenes.show', $evaluado->orden_id) }}" class="text-primary fw-bold">
+                                            <a href="{{ \App\Support\OrdenPortalSupport::urlDetalle(Auth::user(), $evaluado->orden_id) }}" class="text-primary fw-bold">
                                                 {{ $evaluado->orden->codigo_orden ?? 'N/A' }}
                                             </a>
                                         </td>
@@ -331,7 +331,7 @@
                                         </td>
                                         <td class="text-center">
                                             @if($evaluado->orden_id)
-                                                <a href="{{ route('ordenes.show', $evaluado->orden_id) }}#heading-evaluado-{{ $evaluado->id }}"
+                                                <a href="{{ \App\Support\OrdenPortalSupport::urlDetalle(Auth::user(), $evaluado->orden_id, '#heading-evaluado-'.$evaluado->id) }}"
                                                    class="btn btn-sm btn-outline-secondary"
                                                    title="Ver papelería y documentos del candidato">
                                                     <i class="bi bi-folder2-open"></i>

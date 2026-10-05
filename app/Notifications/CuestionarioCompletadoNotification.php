@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\EvaluadoOrden;
+use App\Support\OrdenPortalSupport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -27,9 +28,7 @@ class CuestionarioCompletadoNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
-        $url = $notifiable->role_as === 1
-            ? route('empresa.ordenes.show', $this->evaluado->orden_id)
-            : route('ordenes.show', $this->evaluado->orden_id);
+        $url = OrdenPortalSupport::urlDetalle($notifiable, $this->evaluado->orden_id);
 
         return [
             'tipo' => 'cuestionario_completado',

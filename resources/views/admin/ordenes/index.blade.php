@@ -1,5 +1,8 @@
 @extends(session('layout', 'layouts.admin'))
 @section('content')
+@php
+    $rutaListadoOrdenes = \App\Support\OrdenPortalSupport::ruta(Auth::user(), 'index');
+@endphp
 
 <!-- Content wrapper scroll start -->
 <div class="content-wrapper-scroll">
@@ -34,7 +37,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <form action="{{ route('ordenes.index') }}" method="GET">
+                        <form action="{{ route($rutaListadoOrdenes) }}" method="GET">
                             <div class="row">
                                 <div class="col-md-3 mb-2">
                                     <label class="form-label">Buscar por código o empresa</label>
@@ -133,7 +136,7 @@
                                     <label class="form-label">&nbsp;</label>
                                     <div class="d-flex gap-1">
                                         <button type="submit" class="btn btn-info flex-grow-1"><i class="bi bi-search"></i> Buscar</button>
-                                        <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+                                        <a href="{{ route($rutaListadoOrdenes) }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
                                     </div>
                                 </div>
                             </div>
@@ -294,7 +297,7 @@
                                         @endif
                                         <td>
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <a href="{{ route('ordenes.show', $orden) }}" class="btn btn-outline-info" title="Ver detalles">
+                                                <a href="{{ \App\Support\OrdenPortalSupport::urlDetalle(Auth::user(), $orden) }}" class="btn btn-outline-info" title="Ver detalles">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
                                                 <a href="{{ route('ordenes.pdf', $orden) }}" class="btn btn-outline-danger" title="Imprimir PDF" target="_blank">
