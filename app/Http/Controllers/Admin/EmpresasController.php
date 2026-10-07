@@ -175,16 +175,21 @@ class EmpresasController extends Controller
             $empresa->estado = $request->input('estado');
         }
 
-        // Subir logo si se proporciona uno nuevo
+        // El archivo nuevo se guarda antes de borrar el anterior: si el registro
+        // no se actualiza, el logo que ya veía el cliente sigue en disco.
+        $logoAnterior = $empresa->logo;
         if($request->hasFile('logo')) {
             $empresa->logo = PerfilImagenSupport::guardar(
                 $request->file('logo'),
-                'empresas',
-                $empresa->logo
+                'empresas'
             );
         }
 
-        $empresa->update();
+        $empresa->save();
+
+        if ($request->hasFile('logo') && $logoAnterior && $logoAnterior !== $empresa->logo) {
+            PerfilImagenSupport::borrar('empresas', $logoAnterior);
+        }
         $this->guardarPreguntasPreempleo($request, $empresa);
 
         return redirect('show-empresa/'.$id)->with('status', 'Información de empresa actualizada correctamente');

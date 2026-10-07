@@ -204,11 +204,14 @@
                                                     <img id="preview" src="{{ asset('assets/imgs/placeholder-image.png') }}" alt="Sin logo" class="img-fluid rounded border" style="max-height: 200px;">
                                                 @endif
                                             </div>
-                                            <input type="file" name="logo" id="logo" class="form-control" accept="image/*" style="display: none;">
+                                            <input type="file" name="logo" id="logo" class="form-control @error('logo') is-invalid @enderror" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp" style="display: none;">
                                             <label for="logo" class="btn btn-outline-primary">
                                                 <i class="bi bi-upload"></i> Cambiar Logo
                                             </label>
-                                            <p class="text-muted small mt-2">Formatos permitidos: JPG, PNG, GIF. Máximo 2MB.</p>
+                                            @error('logo')
+                                                <div class="text-danger small mt-2">{{ $message }}</div>
+                                            @enderror
+                                            <p id="logoAviso" class="text-muted small mt-2">Formatos: JPG, PNG, GIF o WEBP. Máximo 2 MB. Pulse Guardar cambios para conservarlo.</p>
                                         </div>
                                     </div>
 
@@ -261,13 +264,29 @@
         // Vista previa de la imagen
         $("#logo").change(function() {
             const file = this.files[0];
-            if (file) {
-                let reader = new FileReader();
-                reader.onload = function(event) {
-                    $("#preview").attr("src", event.target.result);
-                };
-                reader.readAsDataURL(file);
+            const aviso = $("#logoAviso");
+            if (!file) {
+                return;
             }
+
+            const permitidos = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+            if (permitidos.indexOf(file.type) === -1) {
+                this.value = "";
+                aviso.text("Use JPG, PNG, GIF o WEBP. Ese archivo no se guarda.");
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                this.value = "";
+                aviso.text("El logo no puede pesar más de 2 MB.");
+                return;
+            }
+
+            aviso.text("Vista previa. Pulse Guardar cambios para conservar el logo.");
+            let reader = new FileReader();
+            reader.onload = function(event) {
+                $("#preview").attr("src", event.target.result);
+            };
+            reader.readAsDataURL(file);
         });
 
         // Validación del formulario

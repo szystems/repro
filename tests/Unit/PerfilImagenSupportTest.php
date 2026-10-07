@@ -15,8 +15,10 @@ class PerfilImagenSupportTest extends TestCase
 
         $this->assertNotSame('foto.jpg', $nombre);
         $this->assertFileExists(public_path('assets/imgs/users/'.$nombre));
+        $this->assertFileExists(storage_path('app/public/assets/imgs/users/'.$nombre));
 
         PerfilImagenSupport::borrar('users', $nombre);
         $this->assertFileDoesNotExist(public_path('assets/imgs/users/'.$nombre));
+        $this->assertFileDoesNotExist(storage_path('app/public/assets/imgs/users/'.$nombre));
     }
 }
