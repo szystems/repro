@@ -11,8 +11,9 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Email enviado a la empresa cuando los resultados de una orden
- * son marcados como visibles por REPRO.
+ * Aviso a la empresa cuando REPRO libera un resultado.
+ * El preliminar y el informe final usan textos distintos para que el cliente
+ * no confunda las dos etapas.
  */
 class ResultadosDisponiblesMail extends Mailable implements ShouldQueue
 {
@@ -20,27 +21,30 @@ class ResultadosDisponiblesMail extends Mailable implements ShouldQueue
 
     public Orden $orden;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct(Orden $orden)
+    public bool $preliminar = false;
+
+    public function __construct(Orden $orden, bool $preliminar = false)
     {
         $this->orden = $orden;
+        $this->preliminar = $preliminar;
     }
 
-    /**
-     * Get the message envelope.
-     */
+    public function esPreliminar(): bool
+    {
+        return $this->preliminar ?? false;
+    }
+
     public function envelope(): Envelope
     {
+        $asunto = $this->esPreliminar()
+            ? "REPRO - Resultado preliminar disponible: Orden {$this->orden->codigo_orden}"
+            : "REPRO - Informe final disponible: Orden {$this->orden->codigo_orden}";
+
         return new Envelope(
-            subject: "REPRO - Resultados disponibles: Orden {$this->orden->codigo_orden}",
+            subject: $asunto,
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
@@ -50,13 +54,12 @@ class ResultadosDisponiblesMail extends Mailable implements ShouldQueue
                 'empresa' => $this->orden->empresa->nombre ?? 'N/A',
                 'cantidadEvaluados' => $this->orden->evaluados->count(),
                 'evaluados' => $this->orden->evaluados,
+                'preliminar' => $this->esPreliminar(),
             ],
         );
     }
 
     /**
-     * Get the attachments for the message.
-     *
      * @return array<int, \Illuminate\Mail\Mailables\Attachment>
      */
     public function attachments(): array

@@ -200,11 +200,11 @@
                             <div class="mb-3">
                                 <label for="logo" class="form-label">Cambiar Logo</label>
                                 <input type="file" class="form-control @error('logo') is-invalid @enderror" 
-                                       id="logo" name="logo" accept="image/*">
+                                       id="logo" name="logo" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp">
                                 @error('logo')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text">Formatos: JPG, PNG, GIF. Máx: 2MB</div>
+                                <div class="form-text">Formatos: JPG, PNG, GIF o WEBP. Máximo 2 MB. Se guarda al pulsar Guardar cambios.</div>
                             </div>
                         </div>
                     </div>

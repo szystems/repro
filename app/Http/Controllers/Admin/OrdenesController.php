@@ -856,7 +856,7 @@ class OrdenesController extends Controller
         $correoOk = true;
         if (!$orden->resultados_visibles_empresa) {
             $orden->update(['resultados_visibles_empresa' => true]);
-            $correoOk = $this->notificarResultadosDisponibles($orden);
+            $correoOk = $this->notificarResultadosDisponibles($orden, true);
         }
 
         // Notificar que hay un resultado preliminar disponible
@@ -884,7 +884,7 @@ class OrdenesController extends Controller
 
         $correoOk = true;
         if ($nuevoEstado) {
-            $correoOk = $this->notificarResultadosDisponibles($orden);
+            $correoOk = $this->notificarResultadosDisponibles($orden, ! $this->ordenTieneInformeFinal($orden));
         }
 
         $mensaje = $nuevoEstado
@@ -902,8 +902,9 @@ class OrdenesController extends Controller
 
     /**
      * Enviar notificación por email cuando resultados están disponibles.
+     * $preliminar distingue el aviso del informe final para el cliente.
      */
-    private function notificarResultadosDisponibles(Orden $orden): bool
+    private function notificarResultadosDisponibles(Orden $orden, bool $preliminar = false): bool
     {
         try {
             $orden->load(['empresa', 'evaluados']);
@@ -917,7 +918,7 @@ class OrdenesController extends Controller
             $usuariosEmpresa = DestinatariosCorreoEmpresaSupport::usuariosResultados($orden);
 
             foreach ($emailsEmpresa as $email) {
-                Mail::to($email)->send(new \App\Mail\ResultadosDisponiblesMail($orden));
+                Mail::to($email)->send(new \App\Mail\ResultadosDisponiblesMail($orden, $preliminar));
             }
 
             // Notificación in-app a admins y colaboradores REPRO (Fase 18 — Prioridad 3)
@@ -927,10 +928,10 @@ class OrdenesController extends Controller
 
             foreach ($orden->evaluados as $evaluado) {
                 foreach ($usuariosEmpresa as $usuario) {
-                    $usuario->notify(new ResultadosDisponiblesNotification($evaluado));
+                    $usuario->notify(new ResultadosDisponiblesNotification($evaluado, $preliminar));
                 }
                 foreach ($usuariosRepro as $usuario) {
-                    $usuario->notify(new ResultadosDisponiblesNotification($evaluado));
+                    $usuario->notify(new ResultadosDisponiblesNotification($evaluado, $preliminar));
                 }
             }
 
@@ -939,6 +940,7 @@ class OrdenesController extends Controller
                 'empresa'       => $empresa->nombre,
                 'emails'        => $emailsEmpresa->all(),
                 'repro_notif'   => $usuariosRepro->count(),
+                'preliminar'    => $preliminar,
             ]);
 
             return true;
@@ -947,6 +949,15 @@ class OrdenesController extends Controller
 
             return false;
         }
+    }
+
+    private function ordenTieneInformeFinal(Orden $orden): bool
+    {
+        $orden->loadMissing('evaluados');
+
+        return $orden->evaluados->contains(
+            fn ($evaluado) => filled($evaluado->archivo_resultado_final)
+        );
     }
 
     /**
@@ -1727,7 +1738,7 @@ class OrdenesController extends Controller
             $orden->unsetRelation('evaluados');
             $orden->recalcularEstado();
             $orden->refresh();
-            $this->notificarResultadosDisponibles($orden);
+            $this->notificarResultadosDisponibles($orden, false);
 
             return RedirectFichaOrden::evaluado($evaluado, 'Archivo de resultado final subido. Los resultados han sido liberados automáticamente al cliente.');
         }
@@ -1738,7 +1749,7 @@ class OrdenesController extends Controller
             // hasta que recalcularEstado() la marque como 'entregado' cuando corresponda.
             if (!$orden->resultados_visibles_empresa) {
                 $orden->update(['resultados_visibles_empresa' => true]);
-                $this->notificarResultadosDisponibles($orden);
+                $this->notificarResultadosDisponibles($orden, true);
             }
             // Fase 18 (respuesta cliente #2): 'en_proceso' es 100% MANUAL, no automático al subir preliminar.
             // Notificar a admin y empresa que hay un resultado preliminar
