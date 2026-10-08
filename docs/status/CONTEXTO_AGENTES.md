@@ -1,8 +1,8 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 23 de septiembre de 2026  
-**Estado:** Word papelería ✅ ella confirmó que pega; columna del nombre de archivo quitada (`b7140ee4`) · permisos+foto `9466f5bf` ✅ · **Resend Pro ⏸ Otto** · portal `https://portal.reprogt.com` · sitio estático local sin git (ver abajo) · iPage 503  
+**Fecha de Contexto:** 8 de octubre de 2026  
+**Estado:** Correo preliminar y fecha/hora ✅ ella lo confirmó · aviso amarillo de correo corregido en prod (`77742e05`) · logos nuevos sí se guardan (Arium, Global OC, Iberia, 8-oct 11:43) · logos viejos hay que volver a subirlos · **Resend Pro ⏸ Otto** · portal `https://portal.reprogt.com` · iPage 503  
 
 **Plan activo:** `docs/repro/cambios septiembre/20'09'2026/PLAN_SPRINT_T_OBSERVACIONES_20-09-2026.md`  
 **Plan S (correos reclutador):** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md` · merge prod ~`3f6092a6`  
@@ -37,6 +37,39 @@
 **Feedback 12-ago:** `docs/repro/cambios agosto/ultimos cambios 12-08-2026/`  
 **Producción:** https://portal.reprogt.com  
 **Repo:** https://github.com/szystems/repro · branch `master`
+
+---
+
+## ✅ 8-oct-2026 — correo del preliminar y logos (prod · ella sigue subiendo los viejos)
+
+**Prod:** `master` `77742e05` (PR #15) sobre `f2eb0766` (PR #14, correo preliminar + persistencia de logo). Portal `https://portal.reprogt.com`. El push de `master` de hoy sí lo publicó Coolify. No codear más salvo que un logo **recién guardado** no aparezca.
+
+**No** `migrate:fresh`. No resetear claves de Stephany. No regenerar Word NEVERIA / CORALSA / PERCO. No tocar otras apps de Coolify.
+
+### Lo que ella ya confirmó (WhatsApp 8-oct, mañana)
+
+| Qué | Estado |
+|-----|--------|
+| Correo al guardar el preliminar | ✅ Dice «Resultado preliminar disponible», no el informe final. Avisa que el informe final se completa a la brevedad. Orden de prueba ORD-2026-1102. |
+| Fecha y hora del preliminar | ✅ Se ve en la ficha («Generado el»). No inventarla en preliminares viejos. |
+| Aviso amarillo «el correo no se pudo enviar» | ✅ Corregido en prod. Salía aunque el correo sí llegaba y había cupo. |
+| Logos que subió el 8-oct ~11:43 | ✅ Corporación Arium, Global OC y Acumuladores Iberia: PNG en el servidor, HTTP 200, se ven en el listado. |
+
+### Aviso amarillo
+
+Al guardar el preliminar, un solo `try` cubría el envío, la campana y el contador diario. Si la campana o `ContarCorreoEnviado` fallaban, el portal decía que el correo no salió. El texto además sugería el límite diario. Ahora el aviso amarillo solo aparece si falla el envío. El cupo de Resend sigue en el banner rojo, no en ese flash. No decirle que se acabó el cupo si el correo llegó.
+
+### Logos
+
+Los subidos antes del 7-oct estaban en `public/assets/imgs` del contenedor, no en el volumen `/var/www/storage`. Al publicar la versión que enlaza esa carpeta al volumen, esos archivos ya no están. El nombre sigue en `empresas.logo`. La ficha dice **Subir logo** y «el archivo ya no está en el servidor». No hay bloqueo de subida: los tres de hoy se guardaron y se ven. El resto se arregla eligiéndolos de nuevo y pulsando **Guardar cambios** (JPG, PNG, GIF o WEBP, máximo 2 MB).
+
+`PerfilImagenSupport` escribe en `storage/app/public/assets/imgs`. `docker/coolify/start.sh` deja `public/assets/imgs` como enlace a esa carpeta. Nginx sirve esa URL. No borrar `public/assets` en pruebas.
+
+### Auto-deploy
+
+Coolify reacciona al **push** de `master`. Un merge solo por la API, sin push, no actualiza el portal. Confirmar en el HTML vivo, no solo en el commit.
+
+**Siguiente:** nada, hasta que ella escriba. Si un logo viejo no se ve, es re-subida. Si uno guardado hoy no se ve, ahí sí hay bug.
 
 ---
 
