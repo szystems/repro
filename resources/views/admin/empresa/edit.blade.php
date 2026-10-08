@@ -198,10 +198,10 @@
                                         </div>
                                         <div class="card-body text-center">
                                             <div class="mb-3">
-                                                @if ($empresa->logo)
-                                                    <img id="preview" src="{{ asset('assets/imgs/empresas/'.$empresa->logo) }}" alt="Logo actual" class="img-fluid rounded border" style="max-height: 200px;">
-                                                @else
-                                                    <img id="preview" src="{{ asset('assets/imgs/placeholder-image.png') }}" alt="Sin logo" class="img-fluid rounded border" style="max-height: 200px;">
+                                                @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                                                <img id="preview" src="{{ $logoUrl ?: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' }}" alt="{{ $logoUrl ? 'Logo actual' : 'Sin logo' }}" class="img-fluid rounded border" style="max-height: 200px;">
+                                                @if ($empresa->logo && ! $logoUrl)
+                                                    <p class="text-warning small mt-2 mb-0">El archivo de este logo ya no está en el servidor. Selecciónelo de nuevo y pulse Guardar cambios.</p>
                                                 @endif
                                             </div>
                                             <input type="file" name="logo" id="logo" class="form-control @error('logo') is-invalid @enderror" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp" style="display: none;">

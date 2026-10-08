@@ -185,10 +185,13 @@
                             <h6 class="card-title mb-0"><i class="bi bi-image text-success"></i> Logo de la Empresa</h6>
                         </div>
                         <div class="card-body text-center">
-                            @if ($empresa->logo)
-                                <img src="{{ asset('assets/imgs/empresas/'.$empresa->logo) }}" 
+                            @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                            @if ($logoUrl)
+                                <img src="{{ $logoUrl }}" 
                                      alt="Logo actual" class="img-thumbnail mb-3" style="max-height: 150px;">
                                 <p class="text-muted small mb-3">Logo actual</p>
+                            @elseif ($empresa->logo)
+                                <p class="text-warning small mb-3">El archivo de este logo ya no está en el servidor. Selecciónelo de nuevo y pulse Guardar cambios.</p>
                             @else
                                 <div class="avatar avatar-xl mb-3 mx-auto">
                                     <div class="avatar-title bg-success-subtle text-success rounded" style="font-size: 3rem;">

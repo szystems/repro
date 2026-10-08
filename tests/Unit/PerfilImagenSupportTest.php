@@ -21,4 +21,10 @@ class PerfilImagenSupportTest extends TestCase
         $this->assertFileDoesNotExist(public_path('assets/imgs/users/'.$nombre));
         $this->assertFileDoesNotExist(storage_path('app/public/assets/imgs/users/'.$nombre));
     }
+
+    public function test_un_nombre_sin_archivo_no_tiene_url(): void
+    {
+        $this->assertNull(PerfilImagenSupport::url('empresas', 'logo-que-no-existe.png'));
+        $this->assertNull(PerfilImagenSupport::url('empresas', '../secreto.png'));
+    }
 }

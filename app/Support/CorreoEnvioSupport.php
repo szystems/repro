@@ -106,7 +106,7 @@ class CorreoEnvioSupport
 
     public static function mensajeFlashFallo(): string
     {
-        return 'El cambio quedó en el portal, pero el correo no se pudo enviar. Si es el límite diario del servicio, se reanuda mañana.';
+        return 'El cambio quedó en el portal, pero el correo no se pudo enviar.';
     }
 
     public static function activa(): bool

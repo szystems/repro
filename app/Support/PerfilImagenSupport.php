@@ -37,6 +37,7 @@ class PerfilImagenSupport
             throw new RuntimeException('No se pudo guardar la imagen.');
         }
 
+        @chmod($destino, 0644);
         self::publicar($subdir, $filename);
 
         if ($anterior && $anterior !== $filename) {
@@ -76,6 +77,28 @@ class PerfilImagenSupport
         return self::directorioPersistente($subdir).'/'.$filename;
     }
 
+    /**
+     * URL pública solo si el archivo sigue en disco. Un nombre en la base
+     * sin archivo (se perdió al recrear el contenedor) no debe pintarse roto.
+     */
+    public static function url(string $subdir, ?string $filename): ?string
+    {
+        if (! self::nombreSeguro($filename)) {
+            return null;
+        }
+
+        $publico = public_path('assets/imgs/'.$subdir.'/'.$filename);
+        if (! is_file($publico)) {
+            self::reponerDesdeVolumen($subdir, $filename);
+        }
+
+        if (! is_file($publico)) {
+            return null;
+        }
+
+        return asset('assets/imgs/'.$subdir.'/'.$filename);
+    }
+
     private static function publicar(string $subdir, string $filename): void
     {
         $origen = self::rutaPersistente($subdir, $filename);
@@ -93,6 +116,7 @@ class PerfilImagenSupport
         if (! @copy($origen, $destino)) {
             throw new RuntimeException('No se pudo publicar la imagen.');
         }
+        @chmod($destino, 0644);
     }
 
     /**

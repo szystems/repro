@@ -100,6 +100,28 @@ class EmpresaLogoPersistenteTest extends TestCase
         $this->assertFileExists(PerfilImagenSupport::rutaPersistente('empresas', $empresa->logo));
     }
 
+    public function test_el_listado_no_pinta_un_logo_cuyo_archivo_ya_no_existe(): void
+    {
+        $admin = $this->admin();
+        $empresa = Empresa::factory()->create([
+            'logo' => 'logo-perdido.png',
+            'nombre' => 'Empresa Sin Archivo',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('empresas.index'))
+            ->assertOk()
+            ->assertSee('Empresa Sin Archivo')
+            ->assertDontSee('assets/imgs/empresas/logo-perdido.png', false)
+            ->assertSee('Subir logo', false);
+
+        $this->actingAs($admin)
+            ->get(url('edit-empresa/'.$empresa->id))
+            ->assertOk()
+            ->assertSee('ya no está en el servidor', false)
+            ->assertDontSee('assets/imgs/empresas/logo-perdido.png', false);
+    }
+
     private function directorioPublicoReal(): void
     {
         $publico = public_path('assets/imgs');

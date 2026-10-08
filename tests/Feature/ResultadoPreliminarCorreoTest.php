@@ -93,4 +93,46 @@ class ResultadoPreliminarCorreoTest extends TestCase
                 && str_contains($mail->render(), 'El <strong>informe final</strong> se estará completando a la brevedad posible.');
         });
     }
+
+    public function test_si_la_campana_falla_no_dice_que_el_correo_no_salio(): void
+    {
+        $this->app->bind(\Illuminate\Notifications\Channels\DatabaseChannel::class, function () {
+            return new class extends \Illuminate\Notifications\Channels\DatabaseChannel
+            {
+                public function send($notifiable, \Illuminate\Notifications\Notification $notification)
+                {
+                    throw new \RuntimeException('campana rota');
+                }
+            };
+        });
+
+        $evaluado = $this->orden->evaluados()->first();
+
+        $this->actingAs($this->admin)
+            ->patch(route('evaluados.guardar-informe-preliminar', $evaluado), [
+                'texto_informe_preliminar' => '<p>Informe</p>',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success')
+            ->assertSessionMissing('warning');
+
+        Mail::assertQueued(ResultadosDisponiblesMail::class);
+    }
+
+    public function test_si_el_correo_falla_el_aviso_sigue_apareciendo(): void
+    {
+        $pending = \Mockery::mock();
+        $pending->shouldReceive('send')->once()->andThrow(new \RuntimeException('smtp rechazó el mensaje'));
+        Mail::shouldReceive('to')->once()->andReturn($pending);
+
+        $evaluado = $this->orden->evaluados()->first();
+
+        $this->actingAs($this->admin)
+            ->patch(route('evaluados.guardar-informe-preliminar', $evaluado), [
+                'texto_informe_preliminar' => '<p>Informe</p>',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success')
+            ->assertSessionHas('warning', 'El cambio quedó en el portal, pero el correo no se pudo enviar.');
+    }
 }

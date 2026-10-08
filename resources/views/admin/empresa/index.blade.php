@@ -127,15 +127,19 @@
                                     @forelse ($empresas as $empresa)
                                         <tr>
                                             <td>
-                                                <div class="d-flex align-items-center justify-content-center">
-                                                    @if ($empresa->logo)
-                                                        <img src="{{ asset('assets/imgs/empresas/'.$empresa->logo) }}" alt="Logo" class="img-thumbnail rounded" style="height: 50px;" />
+                                                <div class="d-flex flex-column align-items-center justify-content-center">
+                                                    @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                                                    @if ($logoUrl)
+                                                        <img src="{{ $logoUrl }}" alt="Logo" class="img-thumbnail rounded" style="height: 50px;" />
                                                     @else
                                                         <div class="avatar avatar-md">
                                                             <div class="avatar-title bg-light text-secondary rounded">
                                                                 <i class="bi bi-building" style="font-size: 1.5rem;"></i>
                                                             </div>
                                                         </div>
+                                                        @if ($empresa->logo)
+                                                            <a href="{{ url('edit-empresa/'.$empresa->id) }}" class="small">Subir logo</a>
+                                                        @endif
                                                     @endif
                                                 </div>
                                             </td>

@@ -906,48 +906,78 @@ class OrdenesController extends Controller
      */
     private function notificarResultadosDisponibles(Orden $orden, bool $preliminar = false): bool
     {
+        $orden->load(['empresa', 'evaluados']);
+        $empresa = $orden->empresa;
+
+        if (! $empresa) {
+            $this->avisarResultadosEnPortal($orden, $preliminar);
+
+            return true;
+        }
+
         try {
-            $orden->load(['empresa', 'evaluados']);
-            $empresa = $orden->empresa;
-
-            if (!$empresa) {
-                return true;
-            }
-
             $emailsEmpresa = DestinatariosCorreoEmpresaSupport::emailsResultados($orden);
-            $usuariosEmpresa = DestinatariosCorreoEmpresaSupport::usuariosResultados($orden);
 
             foreach ($emailsEmpresa as $email) {
                 Mail::to($email)->send(new \App\Mail\ResultadosDisponiblesMail($orden, $preliminar));
             }
 
-            // Notificación in-app a admins y colaboradores REPRO (Fase 18 — Prioridad 3)
-            $usuariosRepro = \App\Models\User::where('role_as', '>=', 2)
+            Log::info('Notificación de resultados enviada', [
+                'orden_id' => $orden->id,
+                'empresa' => $empresa->nombre,
+                'emails' => $emailsEmpresa->all(),
+                'preliminar' => $preliminar,
+            ]);
+        } catch (\Throwable $e) {
+            CorreoEnvioSupport::registrarFallo($e, 'resultados_disponibles');
+            $this->avisarResultadosEnPortal($orden, $preliminar);
+
+            return false;
+        }
+
+        $this->avisarResultadosEnPortal($orden, $preliminar);
+
+        return true;
+    }
+
+    /**
+     * Campana del portal. Si falla, el correo ya enviado no se reporta como fallo.
+     */
+    private function avisarResultadosEnPortal(Orden $orden, bool $preliminar): void
+    {
+        try {
+            $orden->loadMissing('evaluados');
+            $usuariosEmpresa = DestinatariosCorreoEmpresaSupport::usuariosResultados($orden);
+            $usuariosRepro = User::where('role_as', '>=', 2)
                 ->where('estado', 1)
                 ->get();
 
             foreach ($orden->evaluados as $evaluado) {
                 foreach ($usuariosEmpresa as $usuario) {
-                    $usuario->notify(new ResultadosDisponiblesNotification($evaluado, $preliminar));
+                    $this->avisarUsuarioResultado($usuario, $evaluado, $preliminar);
                 }
                 foreach ($usuariosRepro as $usuario) {
-                    $usuario->notify(new ResultadosDisponiblesNotification($evaluado, $preliminar));
+                    $this->avisarUsuarioResultado($usuario, $evaluado, $preliminar);
                 }
             }
-
-            Log::info('Notificación de resultados enviada', [
-                'orden_id'      => $orden->id,
-                'empresa'       => $empresa->nombre,
-                'emails'        => $emailsEmpresa->all(),
-                'repro_notif'   => $usuariosRepro->count(),
-                'preliminar'    => $preliminar,
+        } catch (\Throwable $e) {
+            Log::error('Campana de resultados no registrada', [
+                'orden_id' => $orden->id,
+                'error' => $e->getMessage(),
             ]);
+        }
+    }
 
-            return true;
-        } catch (\Exception $e) {
-            CorreoEnvioSupport::registrarFallo($e, 'resultados_disponibles');
-
-            return false;
+    private function avisarUsuarioResultado(User $usuario, EvaluadoOrden $evaluado, bool $preliminar): void
+    {
+        try {
+            $usuario->notify(new ResultadosDisponiblesNotification($evaluado, $preliminar));
+        } catch (\Throwable $e) {
+            Log::error('Campana de resultados no registrada', [
+                'orden_id' => $evaluado->orden_id,
+                'user_id' => $usuario->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 

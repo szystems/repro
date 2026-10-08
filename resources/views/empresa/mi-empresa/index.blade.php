@@ -95,8 +95,9 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            @if ($empresa->logo)
-                                <img src="{{ asset('assets/imgs/empresas/'.$empresa->logo) }}" alt="Logo" class="img-thumbnail me-3" style="height: 60px;">
+                            @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                            @if ($logoUrl)
+                                <img src="{{ $logoUrl }}" alt="Logo" class="img-thumbnail me-3" style="height: 60px;">
                             @else
                                 <div class="avatar avatar-lg me-3">
                                     <div class="avatar-title bg-success-subtle text-success rounded">

@@ -37,8 +37,9 @@
                     <div class="card-header">
                         <div class="row">
                             <div class="col-md-8 d-flex align-items-center">
-                                @if ($empresa->logo)
-                                    <img src="{{ asset('assets/imgs/empresas/'.$empresa->logo) }}" alt="Logo" class="img-thumbnail me-3" style="height: 60px;">
+                                @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                                @if ($logoUrl)
+                                    <img src="{{ $logoUrl }}" alt="Logo" class="img-thumbnail me-3" style="height: 60px;">
                                 @else
                                     <div class="avatar avatar-lg me-3">
                                         <div class="avatar-title bg-light text-secondary rounded">
@@ -282,13 +283,21 @@
                 </div>
 
                 <!-- Logo de la empresa -->
-                @if($empresa->logo)
+                @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                @if($logoUrl)
                 <div class="card mb-3">
                     <div class="card-header">
                         <h6 class="card-title mb-0"><i class="bi bi-image"></i> Logo de la Empresa</h6>
                     </div>
                     <div class="card-body text-center">
-                        <img src="{{ asset('assets/imgs/empresas/'.$empresa->logo) }}" alt="Logo" class="img-fluid rounded" style="max-height: 300px;">
+                        <img src="{{ $logoUrl }}" alt="Logo" class="img-fluid rounded" style="max-height: 300px;">
+                    </div>
+                </div>
+                @elseif($empresa->logo)
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="text-warning small mb-2">El archivo de este logo ya no está en el servidor.</p>
+                        <a href="{{ url('edit-empresa/'.$empresa->id) }}">Volver a subirlo</a>
                     </div>
                 </div>
                 @endif
