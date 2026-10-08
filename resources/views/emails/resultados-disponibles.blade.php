@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Resultados Disponibles - REPRO</title>
+    <title>{{ !empty($preliminar) ? 'Resultado preliminar disponible' : 'Informe final disponible' }} - REPRO</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -125,14 +125,23 @@
         </div>
 
         <div class="success-banner">
-            <h3>&#128203; Resultados Disponibles</h3>
-            <p style="margin: 5px 0 0 0;">Los resultados de su orden ya están disponibles para consulta</p>
+            @if(!empty($preliminar))
+                <h3>&#128203; Resultado preliminar disponible</h3>
+                <p style="margin: 5px 0 0 0;">Este aviso corresponde al resultado preliminar, no al informe final</p>
+            @else
+                <h3>&#128203; Informe final disponible</h3>
+                <p style="margin: 5px 0 0 0;">El informe final de su orden ya está disponible para consulta</p>
+            @endif
         </div>
 
         <div class="content">
             <p>Estimado cliente,</p>
 
-            <p>Le informamos que los resultados de la siguiente orden de evaluación ya están disponibles para su consulta:</p>
+            @if(!empty($preliminar))
+                <p>Le informamos que el <strong>resultado preliminar</strong> de la siguiente orden de evaluación ya está disponible para su consulta:</p>
+            @else
+                <p>Le informamos que el <strong>informe final</strong> de la siguiente orden de evaluación ya está disponible para su consulta:</p>
+            @endif
 
             <div class="orden-card">
                 <div class="orden-code">Orden: {{ $orden->codigo_orden }}</div>
@@ -168,11 +177,15 @@
             </div>
             @endif
 
-            <p>Puede acceder a los resultados detallados ingresando a su cuenta en el sistema REPRO:</p>
+            @if(!empty($preliminar))
+                <p>El <strong>informe final</strong> se estará completando a la brevedad posible. Cuando esté listo, recibirá un correo distinto con el asunto «Informe final disponible».</p>
+            @endif
+
+            <p>Puede consultarlo ingresando a su cuenta en el sistema REPRO:</p>
 
             <div style="text-align: center;">
                 <a href="{{ url('/login') }}" class="cta-button">
-                    Ver Resultados
+                    {{ !empty($preliminar) ? 'Ver resultado preliminar' : 'Ver informe final' }}
                 </a>
             </div>
 

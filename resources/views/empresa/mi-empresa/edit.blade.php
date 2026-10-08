@@ -185,10 +185,15 @@
                             <h6 class="card-title mb-0"><i class="bi bi-image text-success"></i> Logo de la Empresa</h6>
                         </div>
                         <div class="card-body text-center">
-                            @if ($empresa->logo)
-                                <img src="{{ asset('assets/imgs/empresas/'.$empresa->logo) }}" 
+                            @php
+                                $logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo);
+                            @endphp
+                            @if ($logoUrl)
+                                <img src="{{ $logoUrl }}" 
                                      alt="Logo actual" class="img-thumbnail mb-3" style="max-height: 150px;">
                                 <p class="text-muted small mb-3">Logo actual</p>
+                            @elseif ($empresa->logo)
+                                <p class="text-warning small mb-3">El archivo de este logo ya no está en el servidor. Selecciónelo de nuevo y pulse Guardar cambios.</p>
                             @else
                                 <div class="avatar avatar-xl mb-3 mx-auto">
                                     <div class="avatar-title bg-success-subtle text-success rounded" style="font-size: 3rem;">
@@ -200,11 +205,11 @@
                             <div class="mb-3">
                                 <label for="logo" class="form-label">Cambiar Logo</label>
                                 <input type="file" class="form-control @error('logo') is-invalid @enderror" 
-                                       id="logo" name="logo" accept="image/*">
+                                       id="logo" name="logo" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp">
                                 @error('logo')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text">Formatos: JPG, PNG, GIF. Máx: 2MB</div>
+                                <div class="form-text">Formatos: JPG, PNG, GIF o WEBP. Máximo 2 MB. Se guarda al pulsar Guardar cambios.</div>
                             </div>
                         </div>
                     </div>

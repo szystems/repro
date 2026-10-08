@@ -137,20 +137,23 @@ class EmpresaController extends Controller
             'contacto_cargo' => 'nullable|string|max:255',
             'contacto_telefono' => 'nullable|string|max:20',
             'contacto_email' => 'nullable|email|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'modo_visibilidad_reclutadores' => ['nullable', Rule::in(array_keys(EmpresaVisibilidadReclutadoresSupport::modosDisponibles()))],
         ]);
 
-        // Manejar logo
+        $logoAnterior = $empresa->logo;
         if ($request->hasFile('logo')) {
             $validated['logo'] = PerfilImagenSupport::guardar(
                 $request->file('logo'),
-                'empresas',
-                $empresa->logo
+                'empresas'
             );
         }
 
         $empresa->update($validated);
+
+        if ($request->hasFile('logo') && $logoAnterior && $logoAnterior !== $empresa->logo) {
+            PerfilImagenSupport::borrar('empresas', $logoAnterior);
+        }
 
         return redirect()->route('empresa.mi-empresa')->with('success', 'Información de empresa actualizada correctamente');
     }

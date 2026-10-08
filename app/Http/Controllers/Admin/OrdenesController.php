@@ -856,7 +856,7 @@ class OrdenesController extends Controller
         $correoOk = true;
         if (!$orden->resultados_visibles_empresa) {
             $orden->update(['resultados_visibles_empresa' => true]);
-            $correoOk = $this->notificarResultadosDisponibles($orden);
+            $correoOk = $this->notificarResultadosDisponibles($orden, true);
         }
 
         // Notificar que hay un resultado preliminar disponible
@@ -884,7 +884,7 @@ class OrdenesController extends Controller
 
         $correoOk = true;
         if ($nuevoEstado) {
-            $correoOk = $this->notificarResultadosDisponibles($orden);
+            $correoOk = $this->notificarResultadosDisponibles($orden, ! $this->ordenTieneInformeFinal($orden));
         }
 
         $mensaje = $nuevoEstado
@@ -902,51 +902,92 @@ class OrdenesController extends Controller
 
     /**
      * Enviar notificación por email cuando resultados están disponibles.
+     * $preliminar distingue el aviso del informe final para el cliente.
      */
-    private function notificarResultadosDisponibles(Orden $orden): bool
+    private function notificarResultadosDisponibles(Orden $orden, bool $preliminar = false): bool
     {
+        $orden->load(['empresa', 'evaluados']);
+        $empresa = $orden->empresa;
+
+        if (! $empresa) {
+            $this->avisarResultadosEnPortal($orden, $preliminar);
+
+            return true;
+        }
+
         try {
-            $orden->load(['empresa', 'evaluados']);
-            $empresa = $orden->empresa;
-
-            if (!$empresa) {
-                return true;
-            }
-
             $emailsEmpresa = DestinatariosCorreoEmpresaSupport::emailsResultados($orden);
-            $usuariosEmpresa = DestinatariosCorreoEmpresaSupport::usuariosResultados($orden);
 
             foreach ($emailsEmpresa as $email) {
-                Mail::to($email)->send(new \App\Mail\ResultadosDisponiblesMail($orden));
+                Mail::to($email)->send(new \App\Mail\ResultadosDisponiblesMail($orden, $preliminar));
             }
 
-            // Notificación in-app a admins y colaboradores REPRO (Fase 18 — Prioridad 3)
-            $usuariosRepro = \App\Models\User::where('role_as', '>=', 2)
+            Log::info('Notificación de resultados enviada', [
+                'orden_id' => $orden->id,
+                'empresa' => $empresa->nombre,
+                'emails' => $emailsEmpresa->all(),
+                'preliminar' => $preliminar,
+            ]);
+        } catch (\Throwable $e) {
+            CorreoEnvioSupport::registrarFallo($e, 'resultados_disponibles');
+            $this->avisarResultadosEnPortal($orden, $preliminar);
+
+            return false;
+        }
+
+        $this->avisarResultadosEnPortal($orden, $preliminar);
+
+        return true;
+    }
+
+    /**
+     * Campana del portal. Si falla, el correo ya enviado no se reporta como fallo.
+     */
+    private function avisarResultadosEnPortal(Orden $orden, bool $preliminar): void
+    {
+        try {
+            $orden->loadMissing('evaluados');
+            $usuariosEmpresa = DestinatariosCorreoEmpresaSupport::usuariosResultados($orden);
+            $usuariosRepro = User::where('role_as', '>=', 2)
                 ->where('estado', 1)
                 ->get();
 
             foreach ($orden->evaluados as $evaluado) {
                 foreach ($usuariosEmpresa as $usuario) {
-                    $usuario->notify(new ResultadosDisponiblesNotification($evaluado));
+                    $this->avisarUsuarioResultado($usuario, $evaluado, $preliminar);
                 }
                 foreach ($usuariosRepro as $usuario) {
-                    $usuario->notify(new ResultadosDisponiblesNotification($evaluado));
+                    $this->avisarUsuarioResultado($usuario, $evaluado, $preliminar);
                 }
             }
-
-            Log::info('Notificación de resultados enviada', [
-                'orden_id'      => $orden->id,
-                'empresa'       => $empresa->nombre,
-                'emails'        => $emailsEmpresa->all(),
-                'repro_notif'   => $usuariosRepro->count(),
+        } catch (\Throwable $e) {
+            Log::error('Campana de resultados no registrada', [
+                'orden_id' => $orden->id,
+                'error' => $e->getMessage(),
             ]);
-
-            return true;
-        } catch (\Exception $e) {
-            CorreoEnvioSupport::registrarFallo($e, 'resultados_disponibles');
-
-            return false;
         }
+    }
+
+    private function avisarUsuarioResultado(User $usuario, EvaluadoOrden $evaluado, bool $preliminar): void
+    {
+        try {
+            $usuario->notify(new ResultadosDisponiblesNotification($evaluado, $preliminar));
+        } catch (\Throwable $e) {
+            Log::error('Campana de resultados no registrada', [
+                'orden_id' => $evaluado->orden_id,
+                'user_id' => $usuario->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function ordenTieneInformeFinal(Orden $orden): bool
+    {
+        $orden->loadMissing('evaluados');
+
+        return $orden->evaluados->contains(
+            fn ($evaluado) => filled($evaluado->archivo_resultado_final)
+        );
     }
 
     /**
@@ -1727,7 +1768,7 @@ class OrdenesController extends Controller
             $orden->unsetRelation('evaluados');
             $orden->recalcularEstado();
             $orden->refresh();
-            $this->notificarResultadosDisponibles($orden);
+            $this->notificarResultadosDisponibles($orden, false);
 
             return RedirectFichaOrden::evaluado($evaluado, 'Archivo de resultado final subido. Los resultados han sido liberados automáticamente al cliente.');
         }
@@ -1738,7 +1779,7 @@ class OrdenesController extends Controller
             // hasta que recalcularEstado() la marque como 'entregado' cuando corresponda.
             if (!$orden->resultados_visibles_empresa) {
                 $orden->update(['resultados_visibles_empresa' => true]);
-                $this->notificarResultadosDisponibles($orden);
+                $this->notificarResultadosDisponibles($orden, true);
             }
             // Fase 18 (respuesta cliente #2): 'en_proceso' es 100% MANUAL, no automático al subir preliminar.
             // Notificar a admin y empresa que hay un resultado preliminar

@@ -11,7 +11,7 @@ class ResultadosDisponiblesNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(public EvaluadoOrden $evaluado)
+    public function __construct(public EvaluadoOrden $evaluado, public bool $preliminar = false)
     {
     }
 
@@ -34,7 +34,7 @@ class ResultadosDisponiblesNotification extends Notification
             'tipo' => 'resultados_disponibles',
             'icono' => 'bi-file-earmark-check',
             'color' => 'info',
-            'mensaje' => 'Resultados disponibles: ' . $this->evaluado->nombre_completo . ' — Orden #' . ($this->evaluado->orden->codigo_orden ?? $this->evaluado->orden_id),
+            'mensaje' => ($this->preliminar ? 'Resultado preliminar disponible: ' : 'Informe final disponible: ') . $this->evaluado->nombre_completo . ' — Orden #' . ($this->evaluado->orden->codigo_orden ?? $this->evaluado->orden_id),
             'url' => $url,
             'evaluado_id' => $this->evaluado->id,
         ];
