@@ -185,7 +185,9 @@
                             <h6 class="card-title mb-0"><i class="bi bi-image text-success"></i> Logo de la Empresa</h6>
                         </div>
                         <div class="card-body text-center">
-                            @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                            @php
+                                $logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo);
+                            @endphp
                             @if ($logoUrl)
                                 <img src="{{ $logoUrl }}" 
                                      alt="Logo actual" class="img-thumbnail mb-3" style="max-height: 150px;">

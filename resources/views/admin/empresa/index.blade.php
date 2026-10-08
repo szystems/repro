@@ -128,7 +128,9 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex flex-column align-items-center justify-content-center">
-                                                    @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                                                    @php
+                                                        $logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo);
+                                                    @endphp
                                                     @if ($logoUrl)
                                                         <img src="{{ $logoUrl }}" alt="Logo" class="img-thumbnail rounded" style="height: 50px;" />
                                                     @else

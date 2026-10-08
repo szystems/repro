@@ -198,7 +198,9 @@
                                         </div>
                                         <div class="card-body text-center">
                                             <div class="mb-3">
-                                                @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                                                @php
+                                                    $logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo);
+                                                @endphp
                                                 <img id="preview" src="{{ $logoUrl ?: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' }}" alt="{{ $logoUrl ? 'Logo actual' : 'Sin logo' }}" class="img-fluid rounded border" style="max-height: 200px;">
                                                 @if ($empresa->logo && ! $logoUrl)
                                                     <p class="text-warning small mt-2 mb-0">El archivo de este logo ya no está en el servidor. Selecciónelo de nuevo y pulse Guardar cambios.</p>

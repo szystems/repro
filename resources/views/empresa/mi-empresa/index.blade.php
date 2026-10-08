@@ -95,7 +95,9 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                            @php
+                                $logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo);
+                            @endphp
                             @if ($logoUrl)
                                 <img src="{{ $logoUrl }}" alt="Logo" class="img-thumbnail me-3" style="height: 60px;">
                             @else

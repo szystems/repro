@@ -37,7 +37,9 @@
                     <div class="card-header">
                         <div class="row">
                             <div class="col-md-8 d-flex align-items-center">
-                                @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                                @php
+                                    $logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo);
+                                @endphp
                                 @if ($logoUrl)
                                     <img src="{{ $logoUrl }}" alt="Logo" class="img-thumbnail me-3" style="height: 60px;">
                                 @else
@@ -283,7 +285,9 @@
                 </div>
 
                 <!-- Logo de la empresa -->
-                @php($logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo))
+                @php
+                    $logoUrl = \App\Support\PerfilImagenSupport::url('empresas', $empresa->logo);
+                @endphp
                 @if($logoUrl)
                 <div class="card mb-3">
                     <div class="card-header">

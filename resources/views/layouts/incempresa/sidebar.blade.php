@@ -3,7 +3,12 @@
     <!-- Sidebar header starts -->
     <div class="sidebar-header">
         <div class="sidebar-logo text-center pt-3 pb-3">
-            @php($logoUrl = Auth::user()->empresa ? \App\Support\PerfilImagenSupport::url('empresas', Auth::user()->empresa->logo) : null)
+            @php
+                $logoUrl = null;
+                if (Auth::user()->empresa) {
+                    $logoUrl = \App\Support\PerfilImagenSupport::url('empresas', Auth::user()->empresa->logo);
+                }
+            @endphp
             @if($logoUrl)
                 <img src="{{ $logoUrl }}" alt="{{ Auth::user()->empresa->nombre }}" class="img-fluid" style="max-height: 60px;">
             @else
