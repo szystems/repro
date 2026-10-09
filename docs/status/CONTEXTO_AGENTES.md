@@ -55,7 +55,7 @@ El guardado que falló estaba poniendo en Cristopher el DPI que ya tiene Carlos 
 
 **Cómo se corrige, sin borrar a nadie:** Editar la orden, cambiar el DPI solo en la ficha de esa persona y pulsar Guardar cambios. El enlace no cambia. El candidato entra escribiendo el DPI que quedó guardado. Si el número nuevo es el del otro, hay que dejarle a cada uno el suyo. Si quedaron cruzados, se cambian los dos en el mismo guardado.
 
-**Código:** el choque ya no muestra el SQL; dice quién tiene ese DPI. Un intercambio de los dos números en un solo guardado sí se guarda. No se modificaron los DPI de esta orden: no sabemos cuál es el correcto.
+**Prod:** `master` `deb93b4a` (PR #16). El choque ya no muestra el SQL; dice quién tiene ese DPI. Un intercambio de los dos números en un solo guardado sí se guarda. No se modificaron los DPI de esta orden: no sabemos cuál es el correcto. La ficha de edición en producción ya muestra la frase del DPI.
 
 **Siguiente:** nada, hasta que confirmen el DPI bueno de cada uno. No `migrate:fresh`. No resetear claves. No regenerar Word.
 
