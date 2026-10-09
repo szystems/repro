@@ -690,6 +690,146 @@ class OrdenesControllerTest extends TestCase
         $this->assertNotNull($existente->fecha_programada);
     }
 
+    public function test_cambiar_dpi_de_un_evaluado_conserva_el_enlace_y_al_otro(): void
+    {
+        [$admin, $empresa, $orden] = $this->ordenConDosEvaluadosMismoServicio();
+        $cristopher = $orden->evaluados()->where('dpi', '3403384231403')->first();
+        $carlos = $orden->evaluados()->where('dpi', '3403384231413')->first();
+        $tokenCristopher = $cristopher->token_unico;
+
+        $this->actingAs($admin)
+            ->get(route('ordenes.edit', $orden))
+            ->assertOk()
+            ->assertSee('El candidato entra con este número', false);
+
+        $this->actingAs($admin)
+            ->put(route('ordenes.update', $orden), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    $this->filaEvaluado($cristopher, ['dpi' => '2615487930101']),
+                    $this->filaEvaluado($carlos),
+                ],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $cristopher->refresh();
+        $carlos->refresh();
+        $this->assertSame('2615487930101', $cristopher->dpi);
+        $this->assertSame($tokenCristopher, $cristopher->token_unico);
+        $this->assertSame('3403384231413', $carlos->dpi);
+        $this->assertSame(2, $orden->evaluados()->count());
+    }
+
+    public function test_poner_el_dpi_de_otro_evaluado_del_mismo_servicio_explica_el_choque(): void
+    {
+        [$admin, $empresa, $orden] = $this->ordenConDosEvaluadosMismoServicio();
+        $cristopher = $orden->evaluados()->where('dpi', '3403384231403')->first();
+        $carlos = $orden->evaluados()->where('dpi', '3403384231413')->first();
+
+        $response = $this->actingAs($admin)
+            ->put(route('ordenes.update', $orden), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    $this->filaEvaluado($cristopher, ['dpi' => '3403384231413']),
+                    $this->filaEvaluado($carlos),
+                ],
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+        $mensaje = session('error');
+        $this->assertStringContainsString('Cristopher Rafael de León de León y Carlos Trujillo Lopez', $mensaje);
+        $this->assertStringContainsString('3403384231413', $mensaje);
+        $this->assertStringNotContainsString('SQLSTATE', $mensaje);
+        $this->assertStringNotContainsString('Integrity constraint', $mensaje);
+
+        $this->assertSame('3403384231403', $cristopher->fresh()->dpi);
+        $this->assertSame('3403384231413', $carlos->fresh()->dpi);
+    }
+
+    public function test_intercambiar_dpi_de_dos_evaluados_se_guarda_sin_perder_el_enlace(): void
+    {
+        [$admin, $empresa, $orden] = $this->ordenConDosEvaluadosMismoServicio();
+        $cristopher = $orden->evaluados()->where('dpi', '3403384231403')->first();
+        $carlos = $orden->evaluados()->where('dpi', '3403384231413')->first();
+        $tokenCristopher = $cristopher->token_unico;
+        $tokenCarlos = $carlos->token_unico;
+
+        $this->actingAs($admin)
+            ->put(route('ordenes.update', $orden), [
+                'empresa_id' => $empresa->id,
+                'evaluados' => [
+                    $this->filaEvaluado($cristopher, ['dpi' => '3403384231413']),
+                    $this->filaEvaluado($carlos, ['dpi' => '3403384231403']),
+                ],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $cristopher->refresh();
+        $carlos->refresh();
+        $this->assertSame('3403384231413', $cristopher->dpi);
+        $this->assertSame('3403384231403', $carlos->dpi);
+        $this->assertSame($tokenCristopher, $cristopher->token_unico);
+        $this->assertSame($tokenCarlos, $carlos->token_unico);
+        $this->assertSame(2, $orden->evaluados()->count());
+    }
+
+    /**
+     * @return array{0: User, 1: Empresa, 2: Orden}
+     */
+    private function ordenConDosEvaluadosMismoServicio(): array
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+        $empresa = Empresa::factory()->create();
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'creado_por' => $admin->id,
+        ]);
+
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Cristopher Rafael',
+            'apellidos' => 'de León de León',
+            'dpi' => '3403384231403',
+            'tipo_servicio' => 'vsa',
+            'tipo_formulario' => 'preempleo',
+            'email' => 'cristopher@test.com',
+            'token_unico' => str_repeat('a', 32),
+        ]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Carlos',
+            'apellidos' => 'Trujillo Lopez',
+            'dpi' => '3403384231413',
+            'tipo_servicio' => 'vsa',
+            'tipo_formulario' => 'preempleo',
+            'email' => 'carlos@test.com',
+            'token_unico' => str_repeat('b', 32),
+        ]);
+
+        return [$admin, $empresa, $orden];
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function filaEvaluado(EvaluadoOrden $evaluado, array $overrides = []): array
+    {
+        return array_merge([
+            'id' => $evaluado->id,
+            'nombre' => $evaluado->nombre,
+            'apellidos' => $evaluado->apellidos,
+            'dpi' => $evaluado->dpi,
+            'email' => $evaluado->email,
+            'tipo_servicio' => $evaluado->tipo_servicio,
+            'tipo_formulario' => $evaluado->tipo_formulario,
+        ], $overrides);
+    }
+
     // =========================================================
     // R1 — Auto-cambio de estados por acciones
     // =========================================================

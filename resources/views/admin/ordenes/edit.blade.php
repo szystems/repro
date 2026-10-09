@@ -248,7 +248,7 @@
                                             <input type="text" class="form-control" name="evaluados[{{ $index }}][dpi]" 
                                                    value="{{ old('evaluados.'.$index.'.dpi', $evaluado->dpi) }}" 
                                                    pattern="[0-9]{13}" maxlength="13" required>
-                                            <small class="text-muted">13 dígitos sin espacios ni guiones</small>
+                                            <small class="text-muted">13 dígitos sin espacios ni guiones. El candidato entra con este número. No puede repetirse en otro evaluado del mismo servicio.</small>
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <label class="form-label">Email *</label>
@@ -481,7 +481,7 @@
                 <label class="form-label">DPI *</label>
                 <input type="text" class="form-control evaluado-dpi" name="" 
                        pattern="[0-9]{13}" maxlength="13" required>
-                <small class="text-muted">13 dígitos sin espacios ni guiones</small>
+                <small class="text-muted">13 dígitos sin espacios ni guiones. El candidato entra con este número. No puede repetirse en otro evaluado del mismo servicio.</small>
             </div>
             <div class="col-md-6 mb-2">
                 <label class="form-label">Email *</label>

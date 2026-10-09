@@ -2,7 +2,7 @@
 
 **Documento de seguimiento activo**
 **Base de referencia:** docs/REQUERIMIENTOS_CLIENTE_2026-05.md
-**Ultima actualizacion:** 2026-10-08 — correo del preliminar, aviso amarillo y logos. Prod `https://portal.reprogt.com` · `master` `77742e05`. Contexto: `docs/status/CONTEXTO_AGENTES.md` (sección 8-oct).
+**Ultima actualizacion:** 2026-10-09 — DPI de un candidato en la orden. Prod `https://portal.reprogt.com`. Contexto: `docs/status/CONTEXTO_AGENTES.md` (sección 9-oct).
 
 > **Regla (Otto):** al cerrar cualquier punto de trabajo, actualizar **este archivo**, `docs/business/PLAN_IMPLEMENTACION_FORMULARIOS_2026-06-22.md` y `docs/status/CONTEXTO_AGENTES.md` en la misma sesión (estado E1, siguiente paso, fecha).
 **Deploy a producción:** ✅ Fase 20 2026-06-16 — commit `45c89dc5` · 5/5 archivos FTP · caché + OPcache limpiados · HTTP 200 login · vista enlace inválido verificada
@@ -11,6 +11,15 @@
 **Resumen pre-despliegue:** `docs/resumen_cambios_cliente.md`
 
 ---
+
+## 🟢 SESIÓN 9-oct-2026 — DPI en la orden
+
+| Qué | Detalle |
+|-----|---------|
+| **Pedido** | No podían guardar el cambio de DPI de un candidato (ORD-2026-1158) y a él no lo deja entrar al formulario. |
+| **Causa** | El DPI que querían guardar ya lo tiene el otro evaluado de la misma orden con VSA. Cristopher `3403384231403`, Carlos `3403384231413`. El formulario exige el DPI guardado. |
+| **Arreglo** | Mensaje en español (ya no el error SQL). Se puede corregir un DPI o intercambiar los dos en un solo guardado. El enlace del candidato se conserva. |
+| **Siguiente** | Ellos ponen el DPI correcto de cada persona. No cambiarlos desde aquí. |
 
 ## 🟢 SESIÓN CERRADA 8-oct-2026
 
