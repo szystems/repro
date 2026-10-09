@@ -18,7 +18,7 @@
 |-----|---------|
 | **Pedido** | No podían guardar el cambio de DPI de un candidato (ORD-2026-1158) y a él no lo deja entrar al formulario. |
 | **Causa** | El DPI que querían guardar ya lo tiene el otro evaluado de la misma orden con VSA. Cristopher `3403384231403`, Carlos `3403384231413`. El formulario exige el DPI guardado. |
-| **Arreglo** | Mensaje en español (ya no el error SQL). Se puede corregir un DPI o intercambiar los dos en un solo guardado. El enlace del candidato se conserva. |
+| **Arreglo** | En prod `deb93b4a` (PR #16). Mensaje en español (ya no el error SQL). Se puede corregir un DPI o intercambiar los dos en un solo guardado. El enlace del candidato se conserva. |
 | **Siguiente** | Ellos ponen el DPI correcto de cada persona. No cambiarlos desde aquí. |
 
 ## 🟢 SESIÓN CERRADA 8-oct-2026
