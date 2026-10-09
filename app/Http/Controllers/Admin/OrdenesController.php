@@ -607,7 +607,7 @@ class OrdenesController extends Controller
 
             return redirect()->route('ordenes.show', $orden)
                 ->with('success', 'Orden actualizada exitosamente.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             $this->evaluadosPendientesCorreoCandidato = [];
 
@@ -632,8 +632,11 @@ class OrdenesController extends Controller
                 'evaluados_payload' => $evaluadosPayload,
             ]);
 
-            return back()->with('error', 'Error al actualizar la orden: ' . $e->getMessage())
-                        ->withInput();
+            $mensaje = $e instanceof \RuntimeException
+                ? $e->getMessage()
+                : 'No se pudo guardar la orden. Si cambió un DPI, revise que ese número no esté ya en otro evaluado del mismo servicio.';
+
+            return back()->with('error', $mensaje)->withInput();
         }
     }
 
@@ -1001,6 +1004,8 @@ class OrdenesController extends Controller
         if ($esActualizacion) {
             $this->quitarEvaluadosMarcados($orden, $idsAEliminar, $evaluados);
             $orden->unsetRelation('evaluados');
+            $this->reservarDpisAlReasignar($orden, $evaluados);
+            $orden->unsetRelation('evaluados');
             $evaluadosExistentes = $orden->evaluados->pluck('id')->toArray();
             $evaluadosPorIndice = $orden->evaluados()->orderBy('id')->get()->values();
         }
@@ -1098,6 +1103,120 @@ class OrdenesController extends Controller
                 'user_id' => Auth::id(),
             ]);
         }
+    }
+
+    /**
+     * El mismo DPI con el mismo servicio no puede repetirse en la orden.
+     * Si dos fichas se intercambian el número en un solo guardado, se aparta
+     * el DPI actual un momento para que el índice único no rechace el cambio.
+     *
+     * @param  array<int, array<string, mixed>>  $evaluados
+     */
+    private function reservarDpisAlReasignar(Orden $orden, array $evaluados): void
+    {
+        $clavesFormulario = [];
+        foreach ($evaluados as $fila) {
+            $dpi = (string) ($fila['dpi'] ?? '');
+            $clave = $this->claveDpiServicio($dpi, (string) ($fila['tipo_servicio'] ?? ''));
+            if (isset($clavesFormulario[$clave])) {
+                $quien = trim(((string) ($fila['nombre'] ?? '')).' '.((string) ($fila['apellidos'] ?? '')));
+                $otro = trim(
+                    ((string) ($clavesFormulario[$clave]['nombre'] ?? '')).' '.
+                    ((string) ($clavesFormulario[$clave]['apellidos'] ?? ''))
+                );
+                $servicioTexto = $this->textoTipoServicio((string) ($fila['tipo_servicio'] ?? ''));
+                $personas = trim($otro.($otro !== '' && $quien !== '' ? ' y ' : '').$quien);
+
+                throw new \RuntimeException(
+                    "No se guardó: el DPI {$dpi} con {$servicioTexto} está en ".
+                    ($personas !== '' ? $personas : 'dos evaluados').
+                    '. En una orden cada persona lleva su propio DPI para el mismo servicio. '.
+                    'El candidato entra al formulario con el número que quede en su ficha; el enlace no cambia.'
+                );
+            }
+            $clavesFormulario[$clave] = $fila;
+        }
+
+        $enBd = $orden->evaluados()->get()->keyBy(fn (EvaluadoOrden $ev) => (int) $ev->id);
+        $claveFinalPorId = [];
+        foreach ($evaluados as $fila) {
+            $id = isset($fila['id']) && $fila['id'] !== '' ? (int) $fila['id'] : null;
+            if ($id && $enBd->has($id)) {
+                $claveFinalPorId[$id] = $this->claveDpiServicio(
+                    (string) ($fila['dpi'] ?? ''),
+                    (string) ($fila['tipo_servicio'] ?? '')
+                );
+            }
+        }
+
+        foreach ($evaluados as $fila) {
+            $dpi = (string) ($fila['dpi'] ?? '');
+            $servicio = (string) ($fila['tipo_servicio'] ?? '');
+            $clave = $this->claveDpiServicio($dpi, $servicio);
+            $idPropio = isset($fila['id']) && $fila['id'] !== '' ? (int) $fila['id'] : null;
+            $ocupante = $enBd->first(function (EvaluadoOrden $ev) use ($clave, $idPropio) {
+                return (int) $ev->id !== (int) $idPropio
+                    && $this->claveDpiServicio((string) $ev->dpi, (string) $ev->tipo_servicio) === $clave;
+            });
+            if (! $ocupante) {
+                continue;
+            }
+
+            // Sin id, la misma clave se trata como la ficha que ya existe (no es un alta).
+            if (! $idPropio) {
+                continue;
+            }
+
+            $ocupanteSeMueve = isset($claveFinalPorId[(int) $ocupante->id])
+                && $claveFinalPorId[(int) $ocupante->id] !== $clave;
+            if ($ocupanteSeMueve) {
+                continue;
+            }
+
+            $quien = trim(((string) ($fila['nombre'] ?? '')).' '.((string) ($fila['apellidos'] ?? '')));
+            $otro = trim($ocupante->nombre.' '.$ocupante->apellidos);
+            $servicioTexto = $ocupante->tipo_servicio_texto;
+
+            throw new \RuntimeException(
+                "No se guardó el DPI {$dpi}".($quien !== '' ? " de {$quien}" : '').
+                ": ese número ya lo tiene {$otro} en esta orden con el servicio {$servicioTexto}. ".
+                'Use el DPI correcto de cada persona. El candidato entra al formulario con el número guardado en su ficha; el enlace sigue siendo el mismo.'
+            );
+        }
+
+        foreach ($claveFinalPorId as $id => $claveFinal) {
+            $ev = $enBd->get($id);
+            if (! $ev) {
+                continue;
+            }
+            $claveActual = $this->claveDpiServicio((string) $ev->dpi, (string) $ev->tipo_servicio);
+            if ($claveActual === $claveFinal) {
+                continue;
+            }
+            EvaluadoOrden::where('id', $id)->update([
+                'dpi' => $this->dpiTemporalUnico((int) $id),
+            ]);
+        }
+    }
+
+    private function claveDpiServicio(string $dpi, string $servicio): string
+    {
+        return $dpi.'|'.$servicio;
+    }
+
+    private function textoTipoServicio(string $servicio): string
+    {
+        return match ($servicio) {
+            'poligrafo' => 'Polígrafo',
+            'vsa' => 'VSA (Voice Stress Analysis)',
+            'socioeconomico' => 'Socioeconómico',
+            default => 'No definido',
+        };
+    }
+
+    private function dpiTemporalUnico(int $id): string
+    {
+        return 'T'.substr(str_pad((string) $id, 12, '0', STR_PAD_LEFT), -12);
     }
 
     /**

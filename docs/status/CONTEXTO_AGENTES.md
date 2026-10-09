@@ -1,8 +1,8 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 8 de octubre de 2026  
-**Estado:** Correo preliminar y fecha/hora ✅ ella lo confirmó · aviso amarillo de correo corregido en prod (`77742e05`) · logos nuevos sí se guardan (Arium, Global OC, Iberia, 8-oct 11:43) · logos viejos hay que volver a subirlos · **Resend Pro ⏸ Otto** · portal `https://portal.reprogt.com` · iPage 503  
+**Fecha de Contexto:** 9 de octubre de 2026  
+**Estado:** DPI de ORD-2026-1158: sí se edita, pero no puede repetirse en otro evaluado del mismo servicio · correo preliminar y fecha/hora ✅ · aviso amarillo ✅ · logos nuevos ✅ · logos viejos hay que volver a subirlos · **Resend Pro ⏸ Otto** · portal `https://portal.reprogt.com` · iPage 503  
 
 **Plan activo:** `docs/repro/cambios septiembre/20'09'2026/PLAN_SPRINT_T_OBSERVACIONES_20-09-2026.md`  
 **Plan S (correos reclutador):** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md` · merge prod ~`3f6092a6`  
@@ -37,6 +37,27 @@
 **Feedback 12-ago:** `docs/repro/cambios agosto/ultimos cambios 12-08-2026/`  
 **Producción:** https://portal.reprogt.com  
 **Repo:** https://github.com/szystems/repro · branch `master`
+
+---
+
+## ✅ 9-oct-2026 — cambiar el DPI de un candidato (ORD-2026-1158)
+
+**Qué pasó:** Lucía / el cliente de Arium intentaron guardar un DPI en **ORD-2026-1158** (orden id 1316, VSA, preempleo, confidencial, creada 09/10/2026 15:15). El portal mostró el error SQL `1062` del índice `evaluados_orden_unique_dpi_servicio` (`orden_id` + `dpi` + `tipo_servicio`). El candidato no entra al formulario porque el DPI que escribe no es el que está guardado en su ficha.
+
+**En la orden hay dos VSA, y los DPI se parecen (cambia un solo dígito):**
+
+| Persona | Id | DPI guardado | Puesto |
+|---|---|---|---|
+| Cristopher Rafael de León de León | 1485 | `3403384231403` | Auxiliar de Reparto |
+| Carlos Trujillo Lopez | 1484 | `3403384231413` | Coordinador de Panel |
+
+El guardado que falló estaba poniendo en Cristopher el DPI que ya tiene Carlos (`3403384231413`) con el mismo servicio VSA. El índice lo rechaza a propósito (H-02): en una orden no van dos personas con el mismo DPI y el mismo servicio.
+
+**Cómo se corrige, sin borrar a nadie:** Editar la orden, cambiar el DPI solo en la ficha de esa persona y pulsar Guardar cambios. El enlace no cambia. El candidato entra escribiendo el DPI que quedó guardado. Si el número nuevo es el del otro, hay que dejarle a cada uno el suyo. Si quedaron cruzados, se cambian los dos en el mismo guardado.
+
+**Código:** el choque ya no muestra el SQL; dice quién tiene ese DPI. Un intercambio de los dos números en un solo guardado sí se guarda. No se modificaron los DPI de esta orden: no sabemos cuál es el correcto.
+
+**Siguiente:** nada, hasta que confirmen el DPI bueno de cada uno. No `migrate:fresh`. No resetear claves. No regenerar Word.
 
 ---
 
