@@ -35,7 +35,9 @@ class EmpresaPermisosSupport
         'editar_ordenes' => ['ordenes.editar', 'ordenes.eliminar'],
         'ver_resultados' => ['resultados.ver', 'cuestionarios.ver'],
         'descargar_pdf' => ['resultados.descargar', 'ordenes.ver'],
-        'subir_documentos' => ['documentos.subir'],
+        // documentos.eliminar solo abre la ruta. El controlador exige que lo haya
+        // subido esa misma persona y que siga pendiente.
+        'subir_documentos' => ['documentos.subir', 'documentos.eliminar'],
         'descargar_documentos' => ['documentos.ver'],
         'ver_reportes' => ['reportes.ver'],
     ];

@@ -27,9 +27,11 @@ Lo que la cliente pidió explícitamente en el PDF:
 | Editar/cancelar orden propia | Editar / cancelar… | `editar_ordenes` | `ordenes.editar`, `ordenes.eliminar` | ✅ | ✅ |
 | Ver resultados liberados | Ver resultados | `ver_resultados` | `resultados.ver`, `cuestionarios.ver` | ✅ | ✅ |
 | PDF orden de servicio | Descargar PDFs… | `descargar_pdf` | `ordenes.ver`, `resultados.descargar` | ✅ | ✅ |
-| Subir papelería candidato | Subir papelería | `subir_documentos` | `documentos.subir` | ✅ | ✅ |
+| Subir papelería candidato | Subir papelería | `subir_documentos` | `documentos.subir`, `documentos.eliminar` | ✅ | ✅ |
 | Ver/descargar papelería | Ver y descargar… | `descargar_documentos` | `documentos.ver` | ✅ | ✅ |
 | Reportes evaluaciones | Ver reportes | `ver_reportes` | `reportes.ver` | ✅ | ✅ (desde 21-sep-2026, solo altas nuevas) |
+
+`documentos.eliminar` va junto con subir papelería: abre el basurero. La empresa solo borra un archivo si lo subió esa misma persona y sigue en Pendiente. Si ya está aprobado o rechazado, o lo subió otro usuario, lo borra REPRO. El núcleo REPRO incluye `documentos.eliminar`.
 
 **Perfil default trabajador:** `EmpresaPermisosSupport::PERMISOS_DEFAULT_TRABAJADOR` (8 claves; incluye `crear_ordenes` y `ver_reportes` desde prod `9466f5bf`).
 
@@ -55,6 +57,7 @@ Alta desde **REPRO → Usuarios** (`UsersController::insertuser`): si el tipo es
 | Botón «Nueva Solicitud» en listado | `hasPermission('ordenes.crear')` |
 | PDF orden de servicio | `hasPermission('ordenes.ver')` |
 | Subir papelería | `hasPermission('documentos.subir')` |
+| Basurero de papelería propia y pendiente | `hasPermission('documentos.eliminar')` y la subió ese usuario |
 | Ver/descargar papelería | `hasPermission('documentos.ver')` |
 | Menú «Mis Reportes» | `hasPermission('reportes.ver')` |
 

@@ -53,6 +53,7 @@ class EmpresaPermisosTrabajadorTest extends TestCase
 
         $this->assertTrue($principal->hasPermission('ordenes.crear'));
         $this->assertTrue($principal->hasPermission('documentos.subir'));
+        $this->assertTrue($principal->hasPermission('documentos.eliminar'));
         $this->assertFalse($principal->hasPermission('sedes.ver'));
     }
 

@@ -107,7 +107,7 @@
                                class="btn btn-outline-primary btn-sm py-0" title="Descargar">
                                 <i class="bi bi-download"></i>
                             </a>
-                            @if($puedeSubir && $documento->subido_por_user_id === Auth::id() && $documento->estado_verificacion === 'pendiente')
+                            @if($puedeSubir && Auth::user()->hasPermission('documentos.eliminar') && $documento->subido_por_user_id === Auth::id() && $documento->estado_verificacion === 'pendiente')
                                 <form action="{{ route('documentos-evaluado.destroy', $documento) }}"
                                       method="POST" class="d-inline"
                                       onsubmit="return confirm('¿Eliminar este documento?');">

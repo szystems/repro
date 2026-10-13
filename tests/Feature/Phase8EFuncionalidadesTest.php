@@ -264,6 +264,86 @@ class Phase8EFuncionalidadesTest extends TestCase
         $this->assertDatabaseMissing('documento_evaluados', ['id' => $doc->id]);
     }
 
+    public function test_empresa_no_puede_eliminar_su_documento_aprobado(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $userEmpresa = $this->crearUsuarioEmpresa($empresa);
+        [$orden, $evaluado] = $this->crearOrdenConEvaluado($empresa);
+
+        $doc = DocumentoEvaluado::factory()->create([
+            'evaluado_orden_id' => $evaluado->id,
+            'subido_por_tipo' => 'empresa',
+            'subido_por_user_id' => $userEmpresa->id,
+            'estado_verificacion' => 'aprobado',
+        ]);
+
+        $this->actingAs($userEmpresa)
+            ->delete(route('documentos-evaluado.destroy', $doc))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('documento_evaluados', ['id' => $doc->id]);
+    }
+
+    public function test_trabajador_con_subir_elimina_su_documento_pendiente(): void
+    {
+        Storage::fake('local');
+
+        $empresa = Empresa::factory()->create();
+        $trabajador = User::factory()->create([
+            'role_as' => 1,
+            'estado' => 1,
+            'empresa_id' => $empresa->id,
+            'principal' => 0,
+            'permisos' => ['subir_documentos', 'descargar_documentos'],
+        ]);
+        $trabajador->roles()->attach(Role::where('name', 'empresa')->first());
+        [$orden, $evaluado] = $this->crearOrdenConEvaluado($empresa);
+
+        $archivo = UploadedFile::fake()->create('norberto.pdf', 100, 'application/pdf');
+        $ruta = $archivo->store('documentos_evaluados/'.$evaluado->id, 'local');
+
+        $doc = DocumentoEvaluado::factory()->create([
+            'evaluado_orden_id' => $evaluado->id,
+            'ruta_archivo' => $ruta,
+            'subido_por_tipo' => 'empresa',
+            'subido_por_user_id' => $trabajador->id,
+            'estado_verificacion' => 'pendiente',
+        ]);
+
+        $this->actingAs($trabajador)
+            ->delete(route('documentos-evaluado.destroy', $doc))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('documento_evaluados', ['id' => $doc->id]);
+    }
+
+    public function test_trabajador_sin_subir_recibe_403_al_eliminar(): void
+    {
+        $empresa = Empresa::factory()->create();
+        $trabajador = User::factory()->create([
+            'role_as' => 1,
+            'estado' => 1,
+            'empresa_id' => $empresa->id,
+            'principal' => 0,
+            'permisos' => ['ver_ordenes'],
+        ]);
+        $trabajador->roles()->attach(Role::where('name', 'empresa')->first());
+        [$orden, $evaluado] = $this->crearOrdenConEvaluado($empresa);
+
+        $doc = DocumentoEvaluado::factory()->create([
+            'evaluado_orden_id' => $evaluado->id,
+            'subido_por_tipo' => 'empresa',
+            'subido_por_user_id' => $trabajador->id,
+            'estado_verificacion' => 'pendiente',
+        ]);
+
+        $this->actingAs($trabajador)
+            ->delete(route('documentos-evaluado.destroy', $doc))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('documento_evaluados', ['id' => $doc->id]);
+    }
+
     public function test_empresa_no_puede_eliminar_documento_de_repro(): void
     {
         $empresa = Empresa::factory()->create();
