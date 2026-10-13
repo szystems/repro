@@ -34,6 +34,7 @@
                         <a href="{{ route('admin.cuestionarios.show', $cuestionario) }}" class="btn btn-outline-secondary">
                             <i class="bi bi-eye"></i> Ver Detalle
                         </a>
+                        @include('admin.cuestionarios.partials.volver-a-la-orden')
                         <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left"></i> Volver al Listado
                         </a>
@@ -273,6 +274,7 @@
                                    rel="noopener noreferrer">
                                     <i class="bi bi-download"></i> Descargar borrador Word
                                 </a>
+                                @include('admin.cuestionarios.partials.volver-a-la-orden', ['class' => 'ms-1'])
                                 @endif
                             </div>
                             
@@ -380,12 +382,7 @@
                     <i class="bi bi-download"></i> Descargar informe final (PDF)
                 </a>
                 @endif
-                @if($evaluadoOrden)
-                <a href="{{ route('ordenes.show', $evaluadoOrden->orden_id) }}#heading-evaluado-{{ $evaluadoOrden->id }}"
-                   class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-box-arrow-up-right"></i> Ir a la orden (subir final)
-                </a>
-                @endif
+                @include('admin.cuestionarios.partials.volver-a-la-orden', ['class' => 'btn-sm'])
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>

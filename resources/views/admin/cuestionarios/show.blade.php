@@ -19,6 +19,7 @@
                         </small>
                     </div>
                     <div class="btn-group">
+                        @include('admin.cuestionarios.partials.volver-a-la-orden')
                         <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left"></i> Volver al Listado
                         </a>
