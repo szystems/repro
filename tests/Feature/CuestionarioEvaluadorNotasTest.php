@@ -96,6 +96,30 @@ class CuestionarioEvaluadorNotasTest extends TestCase
             ->assertSee('name="evaluador_notas[word_recomendaciones]"', false);
     }
 
+    public function test_edit_y_show_regresan_a_la_orden_del_candidato(): void
+    {
+        $repro = $this->crearRepro();
+        $evaluado = $this->cuestionario->evaluadoOrden;
+        $destino = route('ordenes.show', $evaluado->orden_id).'#resultado-final-'.$evaluado->id;
+
+        $this->actingAs($repro)
+            ->get(route('admin.cuestionarios.edit', $this->cuestionario->id))
+            ->assertOk()
+            ->assertSee('Volver a la orden', false)
+            ->assertSee($destino, false);
+
+        $this->actingAs($repro)
+            ->get(route('admin.cuestionarios.show', $this->cuestionario->id))
+            ->assertOk()
+            ->assertSee($destino, false);
+
+        $this->actingAs($repro)
+            ->get(route('ordenes.show', $evaluado->orden_id))
+            ->assertOk()
+            ->assertSee('id="resultado-final-'.$evaluado->id.'"', false)
+            ->assertSee('resultado-final)-(\\d+)', false);
+    }
+
     public function test_edit_separa_cuestionario_rojo_de_redaccion_word(): void
     {
         $repro = $this->crearRepro();

@@ -1023,7 +1023,7 @@
                                                 </div>
 
                                                 {{-- Resultado Final --}}
-                                                <div class="col-md-6">
+                                                <div class="col-md-6" id="resultado-final-{{ $evaluado->id }}">
                                                     <div class="card border-success mb-2">
                                                         <div class="card-body py-2 px-3">
                                                             <h6 class="card-subtitle mb-2 text-success"><i class="bi bi-file-earmark-check"></i> Resultado Final</h6>
@@ -1537,18 +1537,24 @@ function confirmarToggleResultados(checkbox) {
 
 // Función para expandir/colapsar todos los accordions de evaluados
 (function abrirEvaluadoDesdeHash() {
-    const match = (window.location.hash || '').match(/^#evaluado-(\d+)$/);
+    const hash = window.location.hash || '';
+    const match = hash.match(/^#(?:evaluado|resultado-final)-(\d+)$/);
     if (!match) {
         return;
     }
     const collapse = document.getElementById('collapse-evaluado-' + match[1]);
-    const ficha = document.getElementById('evaluado-' + match[1]);
-    if (collapse && window.bootstrap) {
+    const destino = document.getElementById(hash.slice(1)) || document.getElementById('evaluado-' + match[1]);
+    const ir = function () {
+        if (destino) {
+            destino.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    };
+    if (collapse && window.bootstrap && !collapse.classList.contains('show')) {
+        collapse.addEventListener('shown.bs.collapse', ir, { once: true });
         bootstrap.Collapse.getOrCreateInstance(collapse, { toggle: false }).show();
+        return;
     }
-    if (ficha) {
-        ficha.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    ir();
 })();
 
 function toggleAllAccordions(expand) {
