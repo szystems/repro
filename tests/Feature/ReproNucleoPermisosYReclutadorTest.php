@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\DocumentoEvaluado;
 use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
@@ -49,6 +50,29 @@ class ReproNucleoPermisosYReclutadorTest extends TestCase
         $this->actingAs($empleado)
             ->get(route('ordenes.edit', $orden))
             ->assertOk();
+    }
+
+    public function test_empleado_sin_rol_repro_puede_eliminar_papeleria(): void
+    {
+        Storage::fake('local');
+        $empleado = $this->empleadoSoloRolPersonal();
+        $this->assertTrue($empleado->hasPermission('documentos.eliminar'));
+
+        $orden = Orden::factory()->create(['estado' => 'en_proceso']);
+        $evaluado = EvaluadoOrden::factory()->create(['orden_id' => $orden->id]);
+        Storage::disk('local')->put('documentos_evaluados/'.$evaluado->id.'/mal.pdf', 'pdf');
+        $doc = DocumentoEvaluado::factory()->create([
+            'evaluado_orden_id' => $evaluado->id,
+            'ruta_archivo' => 'documentos_evaluados/'.$evaluado->id.'/mal.pdf',
+            'subido_por_tipo' => 'empresa',
+            'estado_verificacion' => 'aprobado',
+        ]);
+
+        $this->actingAs($empleado)
+            ->delete(route('documentos-evaluado.destroy', $doc))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('documento_evaluados', ['id' => $doc->id]);
     }
 
     public function test_empresa_no_tiene_permiso_eliminar_informes(): void

@@ -177,7 +177,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'finanzas.ver',
             'calendario.ver', 'calendario.editar',
             'notificaciones.ver',
-            'documentos.ver', 'documentos.subir', 'documentos.verificar',
+            'documentos.ver', 'documentos.subir', 'documentos.verificar', 'documentos.eliminar',
             'informe_preliminar.ver', 'informe_preliminar.editar',
             'observacion.ver', 'observacion.editar',
             'historial_dpi.ver',
@@ -195,7 +195,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'sedes.ver', 'sedes.crear', 'sedes.editar',
             'calendario.ver',
             'notificaciones.ver',
-            'documentos.ver', 'documentos.subir',
+            'documentos.ver', 'documentos.subir', 'documentos.eliminar',
             'informe_preliminar.ver',
         ];
         

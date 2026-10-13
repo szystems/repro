@@ -31,6 +31,7 @@ class ReproPermisosSupport
         'documentos.ver',
         'documentos.subir',
         'documentos.verificar',
+        'documentos.eliminar',
         'informe_preliminar.ver',
         'informe_preliminar.editar',
         'observacion.ver',

@@ -43,6 +43,19 @@ class RevisionAgosto2026SupportTest extends TestCase
                 'documentos.subir'
             )
         );
+        $this->assertTrue(
+            EmpresaPermisosSupport::empresaTienePermisoSistema(
+                json_encode(['subir_documentos']),
+                'documentos.eliminar'
+            )
+        );
+        $this->assertFalse(
+            EmpresaPermisosSupport::empresaTienePermisoSistema(
+                json_encode(['ver_ordenes']),
+                'documentos.eliminar'
+            )
+        );
+        $this->assertTrue(EmpresaPermisosSupport::permisoSistemaPermitido('documentos.eliminar'));
     }
 
     public function test_permiso_descargar_documentos_habilita_documentos_ver(): void
@@ -98,6 +111,7 @@ class RevisionAgosto2026SupportTest extends TestCase
     {
         $this->assertTrue(ReproPermisosSupport::esNucleo('ordenes.editar'));
         $this->assertTrue(ReproPermisosSupport::esNucleo('resultados.eliminar'));
+        $this->assertTrue(ReproPermisosSupport::esNucleo('documentos.eliminar'));
         $this->assertFalse(ReproPermisosSupport::esNucleo('finanzas.editar'));
         $this->assertContains('ordenes.editar', ReproPermisosSupport::conNucleo(['reportes.ver']));
     }
