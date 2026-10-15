@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Empresa;
+use App\Models\EstadoHistorial;
 use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Models\Role;
@@ -188,5 +189,69 @@ class Fase18AutoTransicionesTest extends TestCase
         Cache::flush();
         FormularioAutoTransiciones::aplicarAlAcceder();
         $this->assertEquals('pendiente_de_llenar', $segundo->fresh()->estado_formulario);
+    }
+
+    public function test_autotransicion_no_atribuye_al_usuario_conectado(): void
+    {
+        $ajeno = User::factory()->create([
+            'role_as' => 1,
+            'empresa_id' => Empresa::factory()->create()->id,
+            'estado' => 1,
+        ]);
+
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->orden->id,
+            'estado_formulario' => 'link_enviado',
+            'token_expira_at' => now()->addDays(25),
+        ]);
+
+        $this->actingAs($ajeno);
+        FormularioAutoTransiciones::aplicar();
+
+        $historial = EstadoHistorial::query()
+            ->where('evaluado_orden_id', $evaluado->id)
+            ->where('campo', 'estado_formulario')
+            ->where('estado_nuevo', 'pendiente_de_llenar')
+            ->first();
+
+        $this->assertNotNull($historial);
+        $this->assertNull($historial->user_id);
+        $this->assertSame('Cambio automático del sistema', $historial->observacion);
+
+        $this->assertTrue($evaluado->fresh()->cambiarEstadoFormulario(
+            'formulario_completado_y_recibido',
+            'Lo marcó a mano'
+        ));
+
+        $manual = EstadoHistorial::query()
+            ->where('evaluado_orden_id', $evaluado->id)
+            ->where('estado_nuevo', 'formulario_completado_y_recibido')
+            ->first();
+
+        $this->assertSame($ajeno->id, (int) $manual->user_id);
+        $this->assertSame('Lo marcó a mano', $manual->observacion);
+    }
+
+    public function test_vencimiento_automatico_no_atribuye_al_usuario_conectado(): void
+    {
+        $ajeno = User::factory()->create(['role_as' => 2, 'estado' => 1]);
+
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->orden->id,
+            'estado_formulario' => 'link_enviado',
+            'token_expira_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($ajeno);
+        FormularioAutoTransiciones::aplicar();
+
+        $historial = EstadoHistorial::query()
+            ->where('evaluado_orden_id', $evaluado->id)
+            ->where('estado_nuevo', 'vencido')
+            ->first();
+
+        $this->assertNotNull($historial);
+        $this->assertNull($historial->user_id);
+        $this->assertSame('Cambio automático del sistema', $historial->observacion);
     }
 }

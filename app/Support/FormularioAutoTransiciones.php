@@ -39,7 +39,7 @@ class FormularioAutoTransiciones
                 $pendientes++;
                 continue;
             }
-            if ($evaluado->cambiarEstadoFormulario('pendiente_de_llenar')) {
+            if ($evaluado->cambiarEstadoFormulario('pendiente_de_llenar', 'Cambio automático del sistema', true)) {
                 $pendientes++;
                 Log::info('AutoTransicion: link_enviado → pendiente_de_llenar', [
                     'evaluado_id' => $evaluado->id,
@@ -58,7 +58,7 @@ class FormularioAutoTransiciones
                 $vencidos++;
                 continue;
             }
-            if ($evaluado->cambiarEstadoFormulario('vencido')) {
+            if ($evaluado->cambiarEstadoFormulario('vencido', 'Cambio automático del sistema', true)) {
                 $vencidos++;
                 Log::info('AutoTransicion: estado_formulario → vencido', [
                     'evaluado_id' => $evaluado->id,

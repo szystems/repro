@@ -18,14 +18,17 @@ trait RegistraCambiosEstado
         string $campo,
         ?string $estadoAnterior,
         string $estadoNuevo,
-        ?string $observaciones = null
+        ?string $observaciones = null,
+        bool $comoSistema = false
     ): void {
         $data = [
             'campo'           => $campo,
             'estado_anterior' => $estadoAnterior,
             'estado_nuevo'    => $estadoNuevo,
             'observacion'     => $observaciones,
-            'user_id'         => Auth::id(),
+            // Null = «Sistema» en el historial. Las pasadas automáticas corren
+            // dentro del request de quien esté conectado; no hay que atribuírselas.
+            'user_id'         => $comoSistema ? null : Auth::id(),
         ];
 
         if ($this instanceof Orden) {

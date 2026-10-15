@@ -1372,7 +1372,7 @@ class EvaluadoOrden extends Model
     /**
      * Cambiar estado de formulario con validación.
      */
-    public function cambiarEstadoFormulario(string $nuevoEstado, ?string $observacion = null): bool
+    public function cambiarEstadoFormulario(string $nuevoEstado, ?string $observacion = null, bool $comoSistema = false): bool
     {
         if (!$this->puedeTransicionarEstadoFormulario($nuevoEstado)) {
             return false;
@@ -1405,7 +1405,7 @@ class EvaluadoOrden extends Model
             if ($esSaltoSocio && ($obs === null || $obs === '')) {
                 $obs = 'Marcado manual Formulario Completado (socioeconómico / Jotform — E6.3).';
             }
-            $this->registrarCambioEstado('estado_formulario', $estadoAnterior, $nuevoEstado, $obs);
+            $this->registrarCambioEstado('estado_formulario', $estadoAnterior, $nuevoEstado, $obs, $comoSistema);
         }
 
         return $resultado;
