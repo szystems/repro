@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\Config;
 use App\Models\Empresa;
 use App\Models\EstadoHistorial;
 use App\Models\EvaluadoOrden;
@@ -49,7 +50,7 @@ class Fase18AutoTransicionesTest extends TestCase
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id'          => $this->orden->id,
             'estado_formulario' => 'link_enviado',
-            'token_expira_at'   => now()->addDays(25), // generado hace > 24h (< 29d): suficiente margen para timezone
+            'token_expira_at'   => $this->tokenConMasDe24Horas(),
         ]);
 
         $this->artisan('formulario:auto-transiciones')->assertSuccessful();
@@ -62,7 +63,7 @@ class Fase18AutoTransicionesTest extends TestCase
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id'          => $this->orden->id,
             'estado_formulario' => 'link_enviado',
-            'token_expira_at'   => now()->addDays(30), // generado recién (token_expira_at = now+30d = < 24h): no debe transicionar
+            'token_expira_at'   => $this->tokenRecienEmitido(),
         ]);
 
         $this->artisan('formulario:auto-transiciones')->assertSuccessful();
@@ -157,7 +158,7 @@ class Fase18AutoTransicionesTest extends TestCase
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $this->orden->id,
             'estado_formulario' => 'link_enviado',
-            'token_expira_at' => now()->addDays(25),
+            'token_expira_at' => $this->tokenConMasDe24Horas(),
         ]);
 
         $admin = User::factory()->create(['role_as' => 3, 'estado' => 1]);
@@ -173,7 +174,7 @@ class Fase18AutoTransicionesTest extends TestCase
         $primero = EvaluadoOrden::factory()->create([
             'orden_id' => $this->orden->id,
             'estado_formulario' => 'link_enviado',
-            'token_expira_at' => now()->addDays(25),
+            'token_expira_at' => $this->tokenConMasDe24Horas(),
         ]);
         FormularioAutoTransiciones::aplicarAlAcceder();
         $this->assertEquals('pendiente_de_llenar', $primero->fresh()->estado_formulario);
@@ -181,7 +182,7 @@ class Fase18AutoTransicionesTest extends TestCase
         $segundo = EvaluadoOrden::factory()->create([
             'orden_id' => $this->orden->id,
             'estado_formulario' => 'link_enviado',
-            'token_expira_at' => now()->addDays(25),
+            'token_expira_at' => $this->tokenConMasDe24Horas(),
         ]);
         FormularioAutoTransiciones::aplicarAlAcceder();
         $this->assertEquals('link_enviado', $segundo->fresh()->estado_formulario);
@@ -202,7 +203,7 @@ class Fase18AutoTransicionesTest extends TestCase
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $this->orden->id,
             'estado_formulario' => 'link_enviado',
-            'token_expira_at' => now()->addDays(25),
+            'token_expira_at' => $this->tokenConMasDe24Horas(),
         ]);
 
         $this->actingAs($ajeno);
@@ -253,5 +254,30 @@ class Fase18AutoTransicionesTest extends TestCase
         $this->assertNotNull($historial);
         $this->assertNull($historial->user_id);
         $this->assertSame('Cambio automático del sistema', $historial->observacion);
+    }
+
+    public function test_enlace_de_15_dias_recien_creado_no_pasa_a_pendiente_de_llenar(): void
+    {
+        Config::create(['currency' => 'GTQ Q', 'dias_vigencia_token' => 15]);
+
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $this->orden->id,
+            'estado_formulario' => 'link_enviado',
+            'token_expira_at' => EvaluadoOrden::calcularExpiracionToken(),
+        ]);
+
+        $this->artisan('formulario:auto-transiciones')->assertSuccessful();
+
+        $this->assertEquals('link_enviado', $evaluado->fresh()->estado_formulario);
+    }
+
+    private function tokenRecienEmitido(): \Illuminate\Support\Carbon
+    {
+        return now()->addDays(Config::diasVigenciaTokenEnlace());
+    }
+
+    private function tokenConMasDe24Horas(): \Illuminate\Support\Carbon
+    {
+        return now()->addDays(Config::diasVigenciaTokenEnlace())->subHours(25);
     }
 }

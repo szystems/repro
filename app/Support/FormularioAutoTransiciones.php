@@ -2,7 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\Config;
 use App\Models\EvaluadoOrden;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -11,8 +13,8 @@ use Illuminate\Support\Facades\Log;
  * El cron en iPage suele estar apagado: también se llama al listar/ver órdenes.
  *
  * Reglas:
- *  - link_enviado +24h sin abrir → pendiente_de_llenar
- *  - estado incompleto +30 días (token_expira_at < now) → vencido
+ *  - link_enviado +24h → pendiente_de_llenar
+ *  - enlace ya vencido (token_expira_at < now) → vencido
  */
 class FormularioAutoTransiciones
 {
@@ -25,7 +27,7 @@ class FormularioAutoTransiciones
     {
         $pendientes = 0;
         $vencidos = 0;
-        $limite24h = now()->copy()->addDays(29);
+        $limite24h = self::limiteEnlaceConMasDe24Horas();
         $ahora = now();
 
         $candidatosPendiente = EvaluadoOrden::query()
@@ -69,6 +71,16 @@ class FormularioAutoTransiciones
         }
 
         return compact('pendientes', 'vencidos');
+    }
+
+    /**
+     * Un enlace nuevo vence en N días (hoy 15). Lleva más de 24 h cuando a
+     * token_expira_at le queda menos de N−1 días. Con el umbral fijo de 29 días
+     * (pensado para enlaces de 30) un enlace de 15 días ya cumplía al crearse.
+     */
+    public static function limiteEnlaceConMasDe24Horas(): Carbon
+    {
+        return now()->copy()->addDays(Config::diasVigenciaTokenEnlace() - 1);
     }
 
     /** Una pasada cada 5 minutos al entrar a listados/fichas (fallback si no hay cron). */
