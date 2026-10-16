@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -29,7 +30,7 @@ class CorreoEnvioSupport
         $avisoDesde = self::avisoDesde();
 
         if ($limite > 0 && $enviados >= $limite) {
-            self::guardarAlerta(self::NIVEL_CORTE, self::mensajeCorte($enviados, $limite));
+            self::guardarAlerta(self::NIVEL_CORTE, self::mensajeCorte($limite));
 
             return;
         }
@@ -49,10 +50,9 @@ class CorreoEnvioSupport
         }
 
         $limite = self::limiteDiario();
-        $enviados = self::enviadosHoy();
 
         if (self::esErrorTope($e)) {
-            self::guardarAlerta(self::NIVEL_CORTE, self::mensajeCorte($enviados, $limite));
+            self::guardarAlerta(self::NIVEL_CORTE, self::mensajeCorte($limite));
         }
 
         // Fallos puntuales (timeout, etc.): solo log. El flash de la acción avisa en esa pantalla;
@@ -139,11 +139,11 @@ class CorreoEnvioSupport
         return "Hoy ya salieron {$enviados} correos automáticos (tope del servicio: {$limite}/día). Si dejan de llegar, es el límite, no un fallo del portal. Se reinicia mañana.";
     }
 
-    private static function mensajeCorte(int $enviados, int $limite): string
+    private static function mensajeCorte(int $limite): string
     {
-        $conteo = $enviados > 0 ? " Van {$enviados} de {$limite}." : '';
+        $reanuda = self::reanudaEnGuatemala()->format('H:i');
 
-        return "Los correos automáticos se detuvieron: se alcanzó el límite diario del servicio ({$limite}/día).{$conteo} Los avisos en el portal sí quedan. Se reanudan mañana o al subir el plan.";
+        return "Los correos automáticos se detuvieron: el servicio de correo llegó a su límite ({$limite}/día). Se reanudan a las {$reanuda} (hora de Guatemala). Los avisos en el portal sí quedan.";
     }
 
     private static function limiteDiario(): int
@@ -161,18 +161,33 @@ class CorreoEnvioSupport
         return in_array(config('mail.default'), ['array', 'log'], true);
     }
 
+    /**
+     * Resend reinicia la cuota a las 00:00 UTC (18:00 en Guatemala).
+     * El día del portal (medianoche en Guatemala) parte ese ciclo a la mitad
+     * y el aviso decía «van 14 de 100» cuando el proveedor ya no aceptaba más.
+     */
+    private static function ahoraProveedor(): Carbon
+    {
+        return now()->timezone('UTC');
+    }
+
+    private static function reanudaEnGuatemala(): Carbon
+    {
+        return self::ahoraProveedor()->copy()->addDay()->startOfDay()->timezone('America/Guatemala');
+    }
+
     private static function claveContador(): string
     {
-        return 'correo.enviados.'.now()->timezone(config('app.timezone'))->toDateString();
+        return 'correo.enviados.'.self::ahoraProveedor()->toDateString();
     }
 
     private static function claveAlerta(): string
     {
-        return 'correo.alerta.'.now()->timezone(config('app.timezone'))->toDateString();
+        return 'correo.alerta.'.self::ahoraProveedor()->toDateString();
     }
 
     private static function expiraMedianoche(): \DateTimeInterface
     {
-        return now()->timezone(config('app.timezone'))->endOfDay();
+        return self::ahoraProveedor()->copy()->endOfDay();
     }
 }

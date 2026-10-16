@@ -327,5 +327,44 @@ class ReportesTest extends TestCase
         $this->assertStringContainsString('Castillo', $html);
         $this->assertStringContainsString('Reclutador', $html);
         $this->assertStringContainsString('Sede/Región empresa (cliente)', $html);
+        $this->assertStringContainsString('Resultado', $html);
+    }
+
+    public function test_evaluaciones_excel_incluye_resultado_en_columna(): void
+    {
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'resultado' => 'aprobado',
+            'tipo_servicio' => 'poligrafo',
+        ]);
+        $evaluado->setRelation('orden', $orden);
+
+        $html = (new EvaluacionesExport(collect([$evaluado])))->toHtmlTable();
+
+        $this->assertStringContainsString('>Resultado<', $html);
+        $this->assertStringContainsString('Aprobado', $html);
+        $this->assertStringNotContainsString('No liberado', $html);
+    }
+
+    public function test_evaluaciones_excel_oculta_resultado_no_liberado_a_la_empresa(): void
+    {
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'resultados_visibles_empresa' => false,
+            'estado' => 'en_proceso',
+        ]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'resultado' => 'no_aprobado',
+            'tipo_servicio' => 'poligrafo',
+        ]);
+
+        $html = (new EvaluacionesExport(collect([$evaluado->fresh('orden')]), true))->toHtmlTable();
+
+        $this->assertStringContainsString('No liberado', $html);
+        $this->assertStringNotContainsString('No Aprobado', $html);
     }
 }

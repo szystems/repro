@@ -14,7 +14,7 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
 {
     protected $evaluados;
 
-    public function __construct(Collection $evaluados)
+    public function __construct(Collection $evaluados, protected bool $ocultarResultadoNoLiberado = false)
     {
         $this->evaluados = $evaluados;
     }
@@ -40,6 +40,7 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
             'Estado de Formulario',
             'Estado de Programación',
             'Estado de Evaluación',
+            'Resultado',
             'Puesto',
             'Fecha Creación',
             'Fecha Completado',
@@ -75,10 +76,20 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
             $evaluado->estado_formulario_texto,
             $evaluado->estado_programacion_texto,
             $evaluado->estado_evaluacion_texto,
+            $this->textoResultado($evaluado),
             $evaluado->puesto_evaluar ?? 'N/A',
             $evaluado->created_at?->format('d/m/Y'),
             $fechaCompletado,
         ];
+    }
+
+    private function textoResultado($evaluado): string
+    {
+        if ($this->ocultarResultadoNoLiberado && ! $evaluado->resultadosDisponiblesParaEmpresa()) {
+            return 'No liberado';
+        }
+
+        return $evaluado->resultado_texto;
     }
 
     public function styles(Worksheet $sheet)
