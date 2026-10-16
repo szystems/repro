@@ -543,7 +543,7 @@ return [
         ],
         [
             'pregunta' => '¿Por qué dejaron de llegar los correos?',
-            'respuesta' => 'Si el portal muestra un aviso amarillo o rojo de límite diario, el servicio de correo (Resend) llegó a su tope (100/día por defecto). Los avisos en SIGOR sí quedan. Se reanudan al día siguiente o al subir el plan. MAIL_ALERTA_ACTIVA / MAIL_LIMITE_DIARIO se configuran en el servidor.',
+            'respuesta' => 'Si el portal muestra un aviso amarillo o rojo de límite diario, el servicio de correo (Resend) llegó a su tope (100/día por defecto). Los avisos en SIGOR sí quedan. Se reanudan a las 18:00 (hora de Guatemala) o al subir el plan. MAIL_ALERTA_ACTIVA / MAIL_LIMITE_DIARIO se configuran en el servidor.',
             'audiencias' => ['repro'],
             'icono' => 'bi-envelope-exclamation',
             'articulo' => 'correos-automaticos',

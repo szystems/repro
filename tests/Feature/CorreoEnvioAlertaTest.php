@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\CorreoEnvioSupport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use RuntimeException;
 use Tests\Feature\Concerns\CreatesRolesAndPermissions;
@@ -49,13 +50,34 @@ class CorreoEnvioAlertaTest extends TestCase
         $alerta = CorreoEnvioSupport::alertaActiva();
         $this->assertNotNull($alerta);
         $this->assertSame(CorreoEnvioSupport::NIVEL_CORTE, $alerta['nivel']);
-        $this->assertStringContainsString('límite diario', $alerta['mensaje']);
+        $this->assertStringContainsString('límite', $alerta['mensaje']);
+        $this->assertStringContainsString('18:00', $alerta['mensaje']);
+        $this->assertStringNotContainsString('Van ', $alerta['mensaje']);
+    }
+
+    public function test_el_aviso_de_corte_se_borra_al_reinicio_utc(): void
+    {
+        try {
+            Carbon::setTestNow(Carbon::parse('2026-10-16 11:21:00', 'America/Guatemala'));
+
+            CorreoEnvioSupport::registrarFallo(
+                new RuntimeException('550 daily email sending quota'),
+                'test'
+            );
+            $this->assertNotNull(CorreoEnvioSupport::alertaActiva());
+
+            Carbon::setTestNow(Carbon::parse('2026-10-16 18:01:00', 'America/Guatemala'));
+
+            $this->assertNull(CorreoEnvioSupport::alertaActiva());
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_contador_no_muestra_banner_solo_por_acercarse_al_tope(): void
     {
         Cache::put(
-            'correo.enviados.'.now()->timezone(config('app.timezone'))->toDateString(),
+            'correo.enviados.'.now()->timezone('UTC')->toDateString(),
             89,
             now()->endOfDay()
         );
@@ -79,7 +101,7 @@ class CorreoEnvioAlertaTest extends TestCase
     public function test_contador_corta_al_llegar_al_limite(): void
     {
         Cache::put(
-            'correo.enviados.'.now()->timezone(config('app.timezone'))->toDateString(),
+            'correo.enviados.'.now()->timezone('UTC')->toDateString(),
             99,
             now()->endOfDay()
         );

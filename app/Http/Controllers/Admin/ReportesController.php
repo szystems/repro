@@ -272,7 +272,10 @@ class ReportesController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $export = new \App\Exports\EvaluacionesExport($evaluados);
+        $export = new \App\Exports\EvaluacionesExport(
+            $evaluados,
+            (int) Auth::user()->role_as === 1
+        );
         $base = 'reporte-evaluaciones-' . now()->format('Y-m-d');
 
         return ExportacionesSupport::descargarExcel($export, $base);
