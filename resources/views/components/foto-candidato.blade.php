@@ -48,6 +48,29 @@
     #fotoWebcamError {
         display: none;
     }
+    .foto-recorte-stage {
+        width: min(240px, 70vw);
+        aspect-ratio: 3 / 4;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+        background: #111;
+        border-radius: 8px;
+        touch-action: none;
+        cursor: grab;
+    }
+    .foto-recorte-stage.is-dragging {
+        cursor: grabbing;
+    }
+    .foto-recorte-stage img {
+        position: absolute;
+        max-width: none;
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+    #fotoRecorteError {
+        display: none;
+    }
 </style>
 @endonce
 
@@ -55,7 +78,7 @@
     <label class="form-label">
         Fotografía del candidato @if($requerido)<span class="required">*</span>@endif
     </label>
-    <p class="form-text mb-3">Tome una fotografía de medio cuerpo con la cámara web o del celular, suba una imagen reciente (JPG, PNG o WEBP, máx. 5 MB) o péguela con Ctrl+V, igual que en papelería.</p>
+    <p class="form-text mb-3">Tome una fotografía de medio cuerpo con la cámara web o del celular, suba una imagen reciente (JPG, PNG o WEBP, máx. 5 MB) o péguela con Ctrl+V. Si sobra fondo, use Recortar: el recuadro es vertical.</p>
 
     <div class="foto-candidato-box zona-pegar-foto" data-foto-box tabindex="0">
         <div class="foto-candidato-preview-wrap mb-3 {{ ($fotoUrl ?? null) ? '' : 'd-none' }}" data-foto-preview-wrap>
@@ -76,6 +99,9 @@
             </button>
             <button type="button" class="btn btn-outline-secondary btn-sm" data-foto-trigger="upload">
                 <i class="bi bi-upload"></i> Subir archivo
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-foto-trigger="crop" data-foto-crop disabled>
+                <i class="bi bi-crop"></i> Recortar
             </button>
             <span class="small text-muted align-self-center">También puede pegar (Ctrl+V)</span>
         </div>
@@ -125,6 +151,31 @@
                 <button type="button" class="btn btn-primary" id="fotoWebcamCapture" disabled>
                     <i class="bi bi-record-circle"></i> Capturar
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="fotoRecorteModal" tabindex="-1" aria-labelledby="fotoRecorteModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fotoRecorteModalLabel">
+                    <i class="bi bi-crop"></i> Recortar fotografía
+                </h5>
+                <button type="button" class="btn-close" data-foto-recorte-close aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="fotoRecorteError" class="alert alert-warning mb-3"></div>
+                <p class="small text-muted">Arrastre la foto y ajuste el zoom. Lo que queda dentro del recuadro es lo que se guarda. El recuadro es vertical, de medio cuerpo.</p>
+                <div id="fotoRecorteStage" class="foto-recorte-stage mb-3">
+                    <img id="fotoRecorteImg" alt="Foto para recortar">
+                </div>
+                <label for="fotoRecorteZoom" class="form-label small mb-1">Zoom</label>
+                <input id="fotoRecorteZoom" type="range" class="form-range" min="1" max="3" step="0.01" value="1">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-foto-recorte-close>Cancelar</button>
+                <button type="button" class="btn btn-primary" id="fotoRecorteAplicar">Usar este recorte</button>
             </div>
         </div>
     </div>

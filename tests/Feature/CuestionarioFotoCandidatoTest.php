@@ -54,10 +54,19 @@ class CuestionarioFotoCandidatoTest extends TestCase
 
     public function test_formulario_ofrece_pegar_foto_como_papeleria(): void
     {
-        $html = view('components.foto-candidato', ['fotoUrl' => null])->render();
+        $this->withViewErrors([]);
 
-        $this->assertStringContainsString('Ctrl+V', $html);
-        $this->assertStringContainsString('zona-pegar-foto', $html);
+        $this->blade('<x-foto-candidato />@stack("scripts")')
+            ->assertSee('Ctrl+V', false)
+            ->assertSee('zona-pegar-foto', false)
+            ->assertSee('Recortar', false)
+            ->assertSee('data-foto-crop', false)
+            ->assertSee('id="fotoRecorteModal"', false)
+            ->assertSee('Usar este recorte', false);
+
+        $js = file_get_contents(public_path('js/foto-candidato.js'));
+        $this->assertStringContainsString('function openCrop', $js);
+        $this->assertStringContainsString('outputH * 3 / 4', $js);
     }
 
     public function test_rechaza_seccion_1_sin_foto(): void
