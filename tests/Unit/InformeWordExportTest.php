@@ -442,7 +442,9 @@ class InformeWordExportTest extends TestCase
         $this->assertStringContainsString('Q.' . "\xc2\xa0" . '45,000.00', $xml);
         $this->assertStringContainsString('Q.' . "\xc2\xa0" . '28,000.00', $xml);
         $this->assertStringContainsString('Q.' . "\xc2\xa0" . '1,150.00', $xml);
-        $this->assertStringContainsString('w:w="1560"', $xml);
+        $this->assertStringContainsString('w:w="1400"', $xml);
+        $this->assertStringContainsString('w:w="1900"', $xml);
+        $this->assertStringContainsString('w:w="1500"', $xml);
         $this->assertStringNotContainsString('>Q45000<', $xml);
     }
 

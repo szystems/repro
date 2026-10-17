@@ -2890,13 +2890,13 @@ class InformeWordRelleno
 
         $porNombre = [
             'entidad' => 1450,
-            'monto' => 1560,
-            'saldo' => 1560,
-            'cuota' => 1520,
-            'motivo' => 1100,
-            'antig' => 1480,
-            'estatus' => 1100,
-            'atraso' => 998,
+            'monto' => 1400,
+            'saldo' => 1400,
+            'cuota' => 1360,
+            'motivo' => 780,
+            'antig' => 1900,
+            'estatus' => 1500,
+            'atraso' => 978,
         ];
 
         if ($encabezado === null) {
