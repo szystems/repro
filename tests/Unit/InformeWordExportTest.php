@@ -298,6 +298,7 @@ class InformeWordExportTest extends TestCase
 
         $tablaDatos = substr($documentXml, $limites[0], $limites[1] - $limites[0]);
         $this->assertStringContainsString('w:tblpX="4527"', $tablaDatos, 'La tabla queda a la derecha para la foto al costado');
+        $this->assertStringContainsString('w:bottomFromText="680"', $tablaDatos, 'Debe quedar un hueco antes de la tabla de resultado');
 
         $antesDeLaTabla = substr($documentXml, 0, $limites[0]);
         $this->assertStringContainsString('wp:anchor', $antesDeLaTabla);

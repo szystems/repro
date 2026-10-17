@@ -330,6 +330,8 @@ class InformeWordFoto
             1
         ) ?? $parrafo;
         $parrafo = preg_replace('/(<wp:docPr id="\d+" name=)"[^"]*"/', '$1"Foto evaluado"', $parrafo, 1) ?? $parrafo;
+        // ~1,2 cm bajo la foto, para que no toque RESULTADO DE EVALUACIÓN si queda más alta que los datos.
+        $parrafo = preg_replace('/\bdistB="\d+"/', 'distB="430000"', $parrafo, 1) ?? $parrafo;
 
         return substr($documentXml, 0, $marco['start'])
             . $parrafo

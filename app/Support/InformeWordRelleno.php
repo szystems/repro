@@ -214,8 +214,10 @@ class InformeWordRelleno
             return InformeWordXml::reconstruirTabla($tabla, $filas);
         });
 
-        // La foto queda más corta que el cuadro de datos; este párrafo deja el hueco
-        // que el cliente marcó entre ese cuadro y RESULTADO DE EVALUACIÓN.
+        // La foto y DATOS GENERALES flotan: un párrafo vacío queda detrás de ellos y
+        // RESULTADO DE EVALUACIÓN se pega al borde inferior. bottomFromText abre el hueco.
+        $xml = InformeWordXml::separarTablaFlotanteDebajo($xml, 'DATOS GENERALES', 680);
+
         return InformeWordXml::insertarFragmentoTrasTabla(
             $xml,
             'DATOS GENERALES',

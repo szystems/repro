@@ -1804,6 +1804,22 @@ class InformeWordXml
         ) ?? $celdaXml;
     }
 
+    /** Deja aire bajo una tabla flotante para que la siguiente no quede pegada. */
+    public static function separarTablaFlotanteDebajo(string $xml, string $marcador, int $twips): string
+    {
+        return self::reemplazarTablaPorMarcador($xml, $marcador, static function (string $tabla) use ($twips): string {
+            if (! str_contains($tabla, '<w:tblpPr')) {
+                return $tabla;
+            }
+
+            if (preg_match('/w:bottomFromText="\d+"/', $tabla) === 1) {
+                return preg_replace('/w:bottomFromText="\d+"/', 'w:bottomFromText="'.$twips.'"', $tabla, 1) ?? $tabla;
+            }
+
+            return preg_replace('/<w:tblpPr\b/', '<w:tblpPr w:bottomFromText="'.$twips.'"', $tabla, 1) ?? $tabla;
+        });
+    }
+
     public static function quitarAnclajeFlotanteTabla(string $tablaXml): string
     {
         return preg_replace('/<w:tblpPr\b[^>]*\/>/', '', $tablaXml) ?? $tablaXml;
