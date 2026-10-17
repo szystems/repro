@@ -520,7 +520,7 @@ class InformeDatos
         }
 
         try {
-            return Carbon::parse($fechaRaw)->format('d/m/Y');
+            return Carbon::parse($fechaRaw)->locale('es')->translatedFormat('j \d\e F \d\e Y');
         } catch (\Throwable) {
             return $fechaRaw;
         }

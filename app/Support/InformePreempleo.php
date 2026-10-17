@@ -491,7 +491,8 @@ class InformePreempleo
         }
 
         if (isset($datos['expareja']) && is_array($datos['expareja'])) {
-            $datos['expareja']['aplica'] = self::siNoABooleano($datos['expareja']['aplica'] ?? false);
+            $datos['expareja']['aplica'] = self::siNoABooleano($datos['expareja']['aplica'] ?? false)
+                || self::exparejaTieneDatos($datos['expareja']);
         }
 
         return $datos;
@@ -563,6 +564,18 @@ class InformePreempleo
         $compacto = preg_replace('/[\s.:·\-–—]/u', '', $texto) ?? $texto;
 
         return $compacto === '' || preg_match('/^x+$/i', $compacto) === 1;
+    }
+
+    /** @param  array<string, mixed>  $expareja */
+    private static function exparejaTieneDatos(array $expareja): bool
+    {
+        foreach (['nombre', 'tipo', 'tiempo_relacion', 'hijos_comun', 'cantidad_hijos', 'problemas_legales'] as $campo) {
+            if (trim((string) ($expareja[$campo] ?? '')) !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function siNoABooleano(mixed $valor): bool

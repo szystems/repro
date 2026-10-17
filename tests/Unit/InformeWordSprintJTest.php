@@ -207,6 +207,37 @@ class InformeWordSprintJTest extends TestCase
         $this->assertSame('Hijo Uno', $tablas['familiar']['hijos'][0]['nombre'] ?? null);
     }
 
+    public function test_expareja_anotada_por_el_evaluador_aplica_aunque_el_candidato_la_dejo_en_no(): void
+    {
+        $orden = Orden::factory()->create();
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'tipo_formulario' => 'preempleo',
+        ]);
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'seccion_actual' => 5,
+            'total_secciones' => 5,
+            'completado' => true,
+        ]);
+
+        InformePreempleo::guardarDesdeRequest($evaluado->id, [
+            'familiar' => [
+                'expareja' => [
+                    'aplica' => 'no',
+                    'nombre' => 'María Expareja Anotada',
+                    'tipo' => 'Noviazgo',
+                    'tiempo_relacion' => '3 años',
+                ],
+            ],
+        ], [], null);
+
+        $tablas = InformePreempleo::tablasParaAdmin($cuestionario);
+        $this->assertTrue($tablas['familiar']['expareja']['aplica'] ?? false);
+        $this->assertSame('María Expareja Anotada', $tablas['familiar']['expareja']['nombre'] ?? null);
+    }
+
     public function test_j14_salud_socio_queda_en_blanco_sin_redaccion_evaluador(): void
     {
         $orden = Orden::factory()->create();

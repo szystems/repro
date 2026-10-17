@@ -252,6 +252,11 @@ class InformeWordObservaciones16AgoTest extends TestCase
         $this->assertNotEmpty($target, 'La relación de la imagen debe existir');
         $this->assertStringContainsString('foto_evaluado', $target[1], 'El marco debe apuntar a la foto del evaluado');
         $this->assertStringNotContainsString('a:srcRect', $marco['xml'], 'El recorte de la silueta desencuadraría la foto');
+
+        preg_match('/<wp:extent cx="(\d+)" cy="(\d+)"\s*\/>/', $marco['xml'], $extent);
+        $this->assertNotEmpty($extent);
+        $this->assertLessThanOrEqual(2160000, (int) $extent[1], 'La foto no debe pasar de 6 cm de ancho');
+        $this->assertLessThanOrEqual(2880000, (int) $extent[2], 'La foto no debe pasar de 8 cm de alto');
     }
 
     public function test_foto_conserva_su_proporcion_dentro_del_marco(): void

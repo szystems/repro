@@ -211,7 +211,13 @@ class InformeWordRelleno
             return InformeWordXml::reconstruirTabla($tabla, $filas);
         });
 
-        return $xml;
+        // La foto queda más corta que el cuadro de datos; este párrafo deja el hueco
+        // que el cliente marcó entre ese cuadro y RESULTADO DE EVALUACIÓN.
+        return InformeWordXml::insertarFragmentoTrasTabla(
+            $xml,
+            'DATOS GENERALES',
+            InformeWordXml::parrafoEspacio(280, 200)
+        );
     }
 
     /**
@@ -849,18 +855,19 @@ class InformeWordRelleno
         $expareja = is_array($familiar['expareja'] ?? null) ? $familiar['expareja'] : [];
         $lineas = ['No aplica'];
 
-        if (($expareja['aplica'] ?? false) === true) {
-            $lineas = collect([
-                self::texto($expareja['nombre'] ?? '') !== '' ? 'Nombre: ' . self::texto($expareja['nombre'] ?? '') : '',
-                self::texto($expareja['tipo'] ?? '') !== '' ? 'Tipo de relación: ' . self::texto($expareja['tipo'] ?? '') : '',
-                self::texto($expareja['tiempo_relacion'] ?? '') !== '' ? 'Tiempo de relación: ' . self::texto($expareja['tiempo_relacion'] ?? '') : '',
-                isset($expareja['hijos_comun']) ? 'Hijos en común: ' . $expareja['hijos_comun'] : '',
-                isset($expareja['cantidad_hijos']) && $expareja['cantidad_hijos'] !== '' ? 'Cantidad de hijos: ' . $expareja['cantidad_hijos'] : '',
-                isset($expareja['problemas_legales']) ? 'Problemas legales: ' . $expareja['problemas_legales'] : '',
-            ])->filter()->values()->all();
-            if ($lineas === []) {
-                $lineas = ['No aplica'];
-            }
+        // Si el candidato dejó el apartado vacío, el evaluador lo anota en el informe.
+        // Esos datos deben salir aunque el interruptor «aplica» haya quedado en no.
+        $anotadas = collect([
+            self::texto($expareja['nombre'] ?? '') !== '' ? 'Nombre: ' . self::texto($expareja['nombre'] ?? '') : '',
+            self::texto($expareja['tipo'] ?? '') !== '' ? 'Tipo de relación: ' . self::texto($expareja['tipo'] ?? '') : '',
+            self::texto($expareja['tiempo_relacion'] ?? '') !== '' ? 'Tiempo de relación: ' . self::texto($expareja['tiempo_relacion'] ?? '') : '',
+            self::texto($expareja['hijos_comun'] ?? '') !== '' ? 'Hijos en común: ' . self::texto($expareja['hijos_comun'] ?? '') : '',
+            self::texto($expareja['cantidad_hijos'] ?? '') !== '' ? 'Cantidad de hijos: ' . self::texto($expareja['cantidad_hijos'] ?? '') : '',
+            self::texto($expareja['problemas_legales'] ?? '') !== '' ? 'Problemas legales: ' . self::texto($expareja['problemas_legales'] ?? '') : '',
+        ])->filter()->values()->all();
+
+        if (($expareja['aplica'] ?? false) === true || $anotadas !== []) {
+            $lineas = $anotadas !== [] ? $anotadas : ['No aplica'];
         }
 
         $marcador = InformeWordXml::limitesTablaPorMarcador($xml, 'DATOS DE EXPAREJAS') !== null

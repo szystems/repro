@@ -19,6 +19,14 @@ class InformeWordFoto
 
     private const MAX_ALTO_PX_FOTO = 300;
 
+    /**
+     * Medida que pidió el cliente (17-oct-2026): 8 × 6 cm en vertical, para que la foto
+     * no invada la tabla de resultado. 1 cm = 360 000 EMU.
+     */
+    private const ANCHO_ESTANDAR_EMU = 2160000;
+
+    private const ALTO_ESTANDAR_EMU = 2880000;
+
     /** Límite genérico para otras imágenes (anexos). */
     private const MAX_ANCHO_PX = 480;
 
@@ -302,8 +310,8 @@ class InformeWordFoto
         ['cx' => $cx, 'cy' => $cy] = self::dimensionesEmuEnMarco(
             $media['widthPx'],
             $media['heightPx'],
-            (int) $extent[1],
-            (int) $extent[2]
+            min((int) $extent[1], self::ANCHO_ESTANDAR_EMU),
+            min((int) $extent[2], self::ALTO_ESTANDAR_EMU)
         );
 
         $parrafo = preg_replace('/r:embed="rId\d+"/', 'r:embed="' . $relId . '"', $marco['xml'], 1) ?? $marco['xml'];
