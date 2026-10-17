@@ -1555,7 +1555,7 @@ class InformeWordRelleno
                 self::texto($empleo['empresa'] ?? ''),
                 self::texto($empleo['puesto'] ?? ''),
                 self::texto($empleo['fechas'] ?? $empleo['fechas_laboradas'] ?? ''),
-                self::texto($empleo['salario'] ?? $empleo['salario_actual'] ?? $empleo['ultimo_salario'] ?? ''),
+                self::quetzalesCelda($empleo['salario'] ?? $empleo['salario_actual'] ?? $empleo['ultimo_salario'] ?? ''),
                 self::texto($empleo['motivo'] ?? $empleo['motivo_prueba'] ?? $empleo['motivo_retiro'] ?? ''),
             ];
         }
@@ -1577,7 +1577,7 @@ class InformeWordRelleno
             self::texto($empleo['empresa'] ?? ''),
             self::texto($empleo['puesto'] ?? ''),
             FechasLaboradasCampo::formatearParaInforme($fechas),
-            self::moneda($empleo['ultimo_salario'] ?? $empleo['salario'] ?? $empleo['salario_mensual'] ?? ''),
+            self::quetzalesCelda($empleo['ultimo_salario'] ?? $empleo['salario'] ?? $empleo['salario_mensual'] ?? ''),
             self::texto($empleo['motivo_retiro'] ?? $empleo['motivo'] ?? ''),
         ];
     }
