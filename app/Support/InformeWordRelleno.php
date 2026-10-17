@@ -48,8 +48,11 @@ class InformeWordRelleno
             $tabla = InformeWordXml::forzarTamanoFuenteFilasPorAncho($tabla, 24, 22, 5);
             $filas = InformeWordXml::filasTabla($tabla);
             foreach ($filas as $indice => $fila) {
-                if (str_contains(InformeWordXml::textoFila($fila), 'TOTALES:')) {
+                $textoFila = InformeWordXml::textoFila($fila);
+                if (str_contains($textoFila, 'TOTALES:')) {
                     $filas[$indice] = self::filaTotalesDeudasEnOncePuntos($fila);
+                } elseif (str_contains($textoFila, 'Antigüedad') || str_contains($textoFila, 'Antiguedad')) {
+                    $filas[$indice] = self::filaSinSaltoDeLinea($fila);
                 }
             }
 
@@ -1640,13 +1643,7 @@ class InformeWordRelleno
             }
 
             $tabla = InformeWordXml::reconstruirTabla($tabla, $nuevas);
-            $tabla = InformeWordXml::ajustarAnchosColumnas($tabla, [
-                1 => 1900,
-                2 => 1900,
-                3 => 1750,
-                4 => 1100,
-                5 => 1000,
-            ]);
+            $tabla = InformeWordXml::ajustarAnchosColumnas($tabla, self::anchosColumnasDeudas($tabla));
 
             return InformeWordXml::reemplazarMarcadores($tabla, ['xxxxxx' => '']);
         });
@@ -1670,9 +1667,9 @@ class InformeWordRelleno
         return $ordenSocio
             ? [
                 self::texto($deuda['entidad'] ?? ''),
-                self::moneda($deuda['monto'] ?? ''),
-                self::moneda($deuda['saldo'] ?? ''),
-                self::moneda($deuda['cuota'] ?? ''),
+                self::quetzalesCelda($deuda['monto'] ?? ''),
+                self::quetzalesCelda($deuda['saldo'] ?? ''),
+                self::quetzalesCelda($deuda['cuota'] ?? ''),
                 self::texto($estatus),
                 self::texto($deuda['meses_atraso'] ?? ''),
                 self::texto($deuda['motivo'] ?? ''),
@@ -1680,9 +1677,9 @@ class InformeWordRelleno
             ]
             : [
                 self::texto($deuda['entidad'] ?? ''),
-                self::moneda($deuda['monto'] ?? ''),
-                self::moneda($deuda['saldo'] ?? ''),
-                self::moneda($deuda['cuota'] ?? ''),
+                self::quetzalesCelda($deuda['monto'] ?? ''),
+                self::quetzalesCelda($deuda['saldo'] ?? ''),
+                self::quetzalesCelda($deuda['cuota'] ?? ''),
                 self::texto($deuda['motivo'] ?? ''),
                 self::texto($deuda['antiguedad'] ?? ''),
                 self::texto($estatus),
@@ -2833,9 +2830,15 @@ class InformeWordRelleno
             $fila
         ) ?? $fila;
 
+        return self::filaSinSaltoDeLinea($fila);
+    }
+
+    /** Evita que Antigüedad, Estatus, Atraso y TOTALES partan la palabra en dos líneas. */
+    private static function filaSinSaltoDeLinea(string $fila): string
+    {
         $celdas = InformeWordXml::celdasFila($fila);
         foreach ($celdas as $indice => $celda) {
-            if ($indice === 0 || str_contains($celda, 'w:noWrap')) {
+            if (str_contains($celda, 'w:noWrap')) {
                 continue;
             }
             if (preg_match('/<w:tcPr\b/', $celda) === 1) {
@@ -2849,6 +2852,71 @@ class InformeWordRelleno
         preg_match('/<w:tr\b[^>]*>/', $fila, $apertura);
 
         return ($apertura[0] ?? '<w:tr>').implode('', $celdas).'</w:tr>';
+    }
+
+    /**
+     * Monto, saldo y cuota de cada deuda, con el mismo formato que la fila TOTALES.
+     * «Q35000» y «35000» quedan «Q. 35,000.00».
+     */
+    private static function quetzalesCelda(mixed $valor): string
+    {
+        $texto = trim((string) $valor);
+        if ($texto === '' || preg_match('/\d/', $texto) !== 1) {
+            return $texto;
+        }
+
+        return self::formatoQuetzales(self::numeroMoneda($valor));
+    }
+
+    /**
+     * Reparte el ancho de la tabla para que los encabezados quepan en una línea
+     * y el monto formateado (Q. 35,000.00) también. La suma respeta el ancho de página.
+     *
+     * @return array<int, int>
+     */
+    private static function anchosColumnasDeudas(string $tabla): array
+    {
+        $filas = InformeWordXml::filasTabla($tabla);
+        $encabezado = null;
+        foreach ($filas as $fila) {
+            $texto = InformeWordXml::textoFila($fila);
+            if (str_contains($texto, 'Entidad') && str_contains($texto, 'Cuota')) {
+                $encabezado = $fila;
+                break;
+            }
+        }
+
+        $porNombre = [
+            'entidad' => 1450,
+            'monto' => 1560,
+            'saldo' => 1560,
+            'cuota' => 1520,
+            'motivo' => 1100,
+            'antig' => 1480,
+            'estatus' => 1100,
+            'atraso' => 998,
+        ];
+
+        if ($encabezado === null) {
+            return [
+                1 => $porNombre['monto'],
+                2 => $porNombre['saldo'],
+                3 => $porNombre['cuota'],
+            ];
+        }
+
+        $anchos = [];
+        foreach (InformeWordXml::celdasFila($encabezado) as $indice => $celda) {
+            $texto = mb_strtolower(InformeWordXml::textoCelda($celda));
+            foreach ($porNombre as $clave => $ancho) {
+                if (str_contains($texto, $clave)) {
+                    $anchos[$indice] = $ancho;
+                    break;
+                }
+            }
+        }
+
+        return $anchos;
     }
 
     private static function formatoQuetzales(float $monto): string
