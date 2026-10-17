@@ -35,7 +35,8 @@ class CorreoEnvioSupport
             return;
         }
 
-        // Solo aviso persistente al llegar al tope; acercarse (p. ej. 90/100) no llena pantalla todo el día.
+        // Si un correo ya salió, el aviso rojo era de un corte anterior. No se queda en pantalla.
+        self::olvidarAlertaPersistente();
     }
 
     public static function registrarFallo(Throwable $e, ?string $contexto = null): void
@@ -50,6 +51,12 @@ class CorreoEnvioSupport
         }
 
         $limite = self::limiteDiario();
+
+        if (self::esErrorMensual($e)) {
+            self::guardarAlerta(self::NIVEL_CORTE, self::mensajeMensual());
+
+            return;
+        }
 
         if (self::esErrorTope($e)) {
             self::guardarAlerta(self::NIVEL_CORTE, self::mensajeCorte($limite));
@@ -75,8 +82,17 @@ class CorreoEnvioSupport
             : null;
     }
 
+    public static function esErrorMensual(Throwable $e): bool
+    {
+        return str_contains(strtolower($e->getMessage()), 'monthly');
+    }
+
     public static function esErrorTope(Throwable $e): bool
     {
+        if (self::esErrorMensual($e)) {
+            return false;
+        }
+
         $texto = strtolower($e->getMessage());
 
         foreach ([
@@ -144,6 +160,11 @@ class CorreoEnvioSupport
         $reanuda = self::reanudaEnGuatemala()->format('H:i');
 
         return "Los correos automáticos se detuvieron: el servicio de correo llegó a su límite ({$limite}/día). Se reanudan a las {$reanuda} (hora de Guatemala). Los avisos en el portal sí quedan.";
+    }
+
+    private static function mensajeMensual(): string
+    {
+        return 'Los correos automáticos se detuvieron: se alcanzó el cupo mensual del servicio de correo. No se reanudan a las 18:00. Hay que ampliar el plan. Los avisos en el portal sí quedan.';
     }
 
     private static function limiteDiario(): int

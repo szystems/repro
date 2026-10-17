@@ -53,6 +53,7 @@ class CorreoEnvioAlertaTest extends TestCase
         $this->assertStringContainsString('límite', $alerta['mensaje']);
         $this->assertStringContainsString('18:00', $alerta['mensaje']);
         $this->assertStringNotContainsString('Van ', $alerta['mensaje']);
+        $this->assertStringNotContainsString('mensual', $alerta['mensaje']);
     }
 
     public function test_el_aviso_de_corte_se_borra_al_reinicio_utc(): void
@@ -72,6 +73,32 @@ class CorreoEnvioAlertaTest extends TestCase
         } finally {
             Carbon::setTestNow();
         }
+    }
+
+    public function test_cupo_mensual_no_promete_reanudar_a_las_18(): void
+    {
+        CorreoEnvioSupport::registrarFallo(
+            new RuntimeException('550 You have reached your monthly email sending quota.'),
+            'test'
+        );
+
+        $alerta = CorreoEnvioSupport::alertaActiva();
+        $this->assertNotNull($alerta);
+        $this->assertStringContainsString('cupo mensual', $alerta['mensaje']);
+        $this->assertStringNotContainsString('18:00', $alerta['mensaje']);
+    }
+
+    public function test_un_envio_exitoso_quita_el_aviso_pegado(): void
+    {
+        CorreoEnvioSupport::registrarFallo(
+            new RuntimeException('550 You have reached your monthly email sending quota.'),
+            'test'
+        );
+        $this->assertNotNull(CorreoEnvioSupport::alertaActiva());
+
+        CorreoEnvioSupport::registrarEnvio();
+
+        $this->assertNull(CorreoEnvioSupport::alertaActiva());
     }
 
     public function test_contador_no_muestra_banner_solo_por_acercarse_al_tope(): void
