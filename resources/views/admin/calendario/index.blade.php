@@ -263,6 +263,9 @@
                             </a>
                         @endif
                     </h5>
+                    <p class="text-muted small mb-0 mt-2">
+                        El Excel trae la fecha de la prueba y los datos de Informes de empresas (resultado, puesto, DPI, reclutador y sede del cliente) para facturar los procesos realizados.
+                    </p>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
