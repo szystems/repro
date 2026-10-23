@@ -26,7 +26,7 @@ class ReportesController extends Controller
      */
     private function buildEvaluacionesQuery(array $filters): \Illuminate\Database\Eloquent\Builder
     {
-        $query = EvaluadoOrden::with(['orden.empresa', 'orden.reclutador', 'cuestionario'])->deOrdenesActivas();
+        $query = EvaluadoOrden::with(['orden.empresa', 'orden.reclutador', 'cuestionario', 'responsable'])->deOrdenesActivas();
 
         // Cliente (empresa): ver todos los evaluados de sus órdenes, independiente del estado.
         // La vista/columnas de resultados se condicionan por separado usando
@@ -35,11 +35,12 @@ class ReportesController extends Controller
             EmpresaVisibilidadReclutadoresSupport::filtrarQueryEvaluadosEmpresa($query, Auth::user());
         }
 
+        // La facturación usa el día de la prueba (calendario), no el alta del registro.
         if (!empty($filters['fecha_inicio'])) {
-            $query->whereDate('created_at', '>=', $filters['fecha_inicio']);
+            $query->whereDate('fecha_programada', '>=', $filters['fecha_inicio']);
         }
         if (!empty($filters['fecha_fin'])) {
-            $query->whereDate('created_at', '<=', $filters['fecha_fin']);
+            $query->whereDate('fecha_programada', '<=', $filters['fecha_fin']);
         }
         if (!empty($filters['empresa_id']) && Auth::user()->role_as >= 2) {
             $query->whereHas('orden', function ($q) use ($filters) {
@@ -88,8 +89,7 @@ class ReportesController extends Controller
                 ->toArray(),
         ];
 
-        // Datos para la tabla
-        $evaluados = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $evaluados = $this->ordenarPorFechaDeLaPrueba($query)->paginate(20)->withQueryString();
 
         // Empresas para filtro
         $empresas = Auth::user()->role_as >= 2
@@ -175,7 +175,7 @@ class ReportesController extends Controller
     {
         $query = $this->buildEvaluacionesQuery($request->all());
 
-        $evaluados = $query->orderBy('created_at', 'desc')->get();
+        $evaluados = $this->ordenarPorFechaDeLaPrueba($query)->get();
 
         $stats = [
             'total' => $evaluados->count(),
@@ -268,9 +268,9 @@ class ReportesController extends Controller
     {
         ExportacionesSupport::asegurarPuedeExportarInformes(Auth::user());
 
-        $evaluados = $this->buildEvaluacionesQuery($request->all())
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $evaluados = $this->ordenarPorFechaDeLaPrueba(
+            $this->buildEvaluacionesQuery($request->all())
+        )->get();
 
         $export = new \App\Exports\EvaluacionesExport(
             $evaluados,
@@ -293,5 +293,18 @@ class ReportesController extends Controller
         $base = 'reporte-empresas-' . now()->format('Y-m-d');
 
         return ExportacionesSupport::descargarExcel($export, $base);
+    }
+
+    /**
+     * Primero los procesos con día de prueba (el dato de facturación), los sin programar al final.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function ordenarPorFechaDeLaPrueba($query)
+    {
+        return $query
+            ->orderByRaw('CASE WHEN fecha_programada IS NULL THEN 1 ELSE 0 END')
+            ->orderByDesc('fecha_programada');
     }
 }

@@ -170,32 +170,49 @@ class ReportesTest extends TestCase
     }
 
     /**
-     * Test que el filtro por fecha funciona en evaluaciones.
+     * El mes y las fechas de Informes de empresas filtran el día de la prueba, no el alta del registro.
      */
     public function test_evaluaciones_report_filters_by_date(): void
     {
         $admin = $this->createAdminUser();
 
         $empresa = Empresa::factory()->create(['estado' => 1]);
-        $orden = Orden::factory()->create([
-            'empresa_id' => $empresa->id,
-            'created_at' => now()->subDays(5),
-        ]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
 
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
-            'created_at' => now()->subDays(5),
+            'nombre' => 'Dentro',
+            'apellidos' => 'Rango',
+            'created_at' => now()->subDays(20),
+            'fecha_programada' => now()->subDay()->setTime(9, 30),
+        ]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Fuera',
+            'apellidos' => 'Rango',
+            'created_at' => now(),
+            'fecha_programada' => now()->subDays(10)->setTime(8, 0),
+        ]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'SinFecha',
+            'apellidos' => 'Prueba',
+            'created_at' => now(),
+            'fecha_programada' => null,
         ]);
 
-        // Buscar evaluados de los últimos 3 días (no debería encontrar el creado hace 5 días)
         $response = $this->actingAs($admin)->get(route('reportes.evaluaciones', [
             'fecha_inicio' => now()->subDays(3)->format('Y-m-d'),
             'fecha_fin' => now()->format('Y-m-d'),
         ]));
 
         $response->assertStatus(200);
-        $evaluados = $response->viewData('evaluados');
-        $this->assertEquals(0, $evaluados->count());
+        $response->assertSee('Fecha de la prueba');
+        $response->assertSee('Dentro');
+        $response->assertSee(now()->subDay()->format('d/m/Y'));
+        $response->assertDontSee('Fuera');
+        $response->assertDontSee('SinFecha');
+        $this->assertEquals(1, $response->viewData('evaluados')->total());
     }
 
     /**
@@ -328,6 +345,34 @@ class ReportesTest extends TestCase
         $this->assertStringContainsString('Reclutador', $html);
         $this->assertStringContainsString('Sede/Región empresa (cliente)', $html);
         $this->assertStringContainsString('Resultado', $html);
+    }
+
+    public function test_evaluaciones_excel_usa_el_dia_de_la_prueba(): void
+    {
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $encargado = User::factory()->create(['name' => 'Luis Encargado', 'role_as' => 2, 'estado' => 1]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Marta',
+            'puesto_evaluar' => 'Cajera',
+            'resultado' => 'aprobado',
+            'tipo_servicio' => 'poligrafo',
+            'responsable_id' => $encargado->id,
+            'fecha_programada' => '2026-04-15 14:30:00',
+            'created_at' => '2026-01-02 08:00:00',
+        ]);
+
+        $html = (new EvaluacionesExport(collect([$evaluado->fresh(['orden.empresa', 'orden.reclutador', 'responsable'])])))->toHtmlTable();
+
+        $this->assertStringContainsString('Fecha de la prueba', $html);
+        $this->assertStringContainsString('Hora de la prueba', $html);
+        $this->assertStringContainsString('Encargado', $html);
+        $this->assertStringContainsString('15/04/2026', $html);
+        $this->assertStringContainsString('14:30', $html);
+        $this->assertStringContainsString('Luis Encargado', $html);
+        $this->assertStringContainsString('Cajera', $html);
+        $this->assertStringContainsString('02/01/2026', $html);
     }
 
     public function test_evaluaciones_excel_incluye_resultado_en_columna(): void

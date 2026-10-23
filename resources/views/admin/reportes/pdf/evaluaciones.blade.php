@@ -261,10 +261,10 @@
     <div class="filters">
         <h3>Filtros Aplicados</h3>
         <div class="filter-item">
-            <strong>Fecha Inicio:</strong> {{ $filtros['fecha_inicio'] ?? 'Sin filtro' }}
+            <strong>Fecha de la prueba (desde):</strong> {{ $filtros['fecha_inicio'] ?? 'Sin filtro' }}
         </div>
         <div class="filter-item">
-            <strong>Fecha Fin:</strong> {{ $filtros['fecha_fin'] ?? 'Sin filtro' }}
+            <strong>Fecha de la prueba (hasta):</strong> {{ $filtros['fecha_fin'] ?? 'Sin filtro' }}
         </div>
         <div class="filter-item">
             <strong>Empresa:</strong> {{ $filtros['empresa'] ?? 'Todas' }}
@@ -313,7 +313,7 @@
                 <th style="width: 10%;">Estado de Formulario</th>
                 <th style="width: 10%;">Estado de Programación</th>
                 <th style="width: 10%;">Estado de Evaluación</th>
-                <th style="width: 8%;">Fecha</th>
+                <th style="width: 8%;">Fecha prueba</th>
             </tr>
         </thead>
         <tbody>
@@ -333,7 +333,7 @@
                     <td>{{ $evaluado->estado_formulario_texto }}</td>
                     <td>{{ $evaluado->estado_programacion_texto }}</td>
                     <td>{{ $evaluado->estado_evaluacion_texto }}</td>
-                    <td>{{ $evaluado->created_at->format('d/m/Y') }}</td>
+                    <td>{{ $evaluado->fecha_programada ? $evaluado->fecha_programada->format('d/m/Y') : 'Sin programar' }}</td>
                 </tr>
             @empty
                 <tr>

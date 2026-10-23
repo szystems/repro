@@ -401,6 +401,7 @@ class CalendarioController extends Controller
                 'resultadoSubidoPor',
                 'sede',
                 'orden.empresa',
+                'orden.reclutador',
             ]);
 
         $this->aplicarFiltrosCitas($query, $this->filtrosDesdeRequest($request));

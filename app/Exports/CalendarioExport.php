@@ -21,7 +21,7 @@ class CalendarioExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'Fecha',
+            'Fecha de la prueba',
             'Hora',
             'Candidato',
             'Empresa',
@@ -34,6 +34,16 @@ class CalendarioExport implements FromCollection, WithHeadings, WithMapping
             'Tipo',
             'Estado evaluación',
             'Estado programación',
+            'Código orden',
+            'Reclutador',
+            'Sede/región empresa (cliente)',
+            'DPI',
+            'Teléfono',
+            'Resultado',
+            'Puesto',
+            'Estado de formulario',
+            'Fecha de registro',
+            'Fecha cuestionario completado',
         ];
     }
 
@@ -60,7 +70,34 @@ class CalendarioExport implements FromCollection, WithHeadings, WithMapping
             },
             str_replace('_', ' ', (string) ($cita->estado_evaluacion ?? '—')),
             str_replace('_', ' ', (string) ($cita->estado_programacion ?? '—')),
+            $cita->orden?->codigo_orden ?? '—',
+            $cita->orden?->reclutador?->name ?? 'Sin asignar',
+            filled($cita->sede_region_empresa) ? $cita->sede_region_empresa : '—',
+            $cita->dpi ?: '—',
+            $cita->telefono ?? $cita->celular ?? '—',
+            $cita->resultado_texto ?? 'Sin resultado',
+            $cita->puesto_evaluar ?: '—',
+            $cita->estado_formulario_texto ?? '—',
+            $cita->created_at?->format('d/m/Y') ?? '—',
+            $this->fechaCompletado($cita),
         ];
+    }
+
+    private function fechaCompletado($cita): string
+    {
+        if (! $cita->cuestionario_completado_at) {
+            return '—';
+        }
+
+        try {
+            $fecha = $cita->cuestionario_completado_at instanceof \Carbon\Carbon
+                ? $cita->cuestionario_completado_at
+                : \Carbon\Carbon::parse($cita->cuestionario_completado_at);
+
+            return $fecha->format('d/m/Y H:i');
+        } catch (\Exception $e) {
+            return '—';
+        }
     }
 
     /** @return list<array{0: string, 1: int}> */
