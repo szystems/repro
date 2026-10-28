@@ -42,6 +42,9 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
             'Estado de Evaluación',
             'Resultado',
             'Puesto',
+            'Fecha de la prueba',
+            'Hora de la prueba',
+            'Encargado',
             'Fecha Creación',
             'Fecha Completado',
         ];
@@ -78,9 +81,41 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
             $evaluado->estado_evaluacion_texto,
             $this->textoResultado($evaluado),
             $evaluado->puesto_evaluar ?? 'N/A',
-            $evaluado->created_at?->format('d/m/Y'),
+            $this->fechaPrueba($evaluado),
+            $this->horaPrueba($evaluado),
+            $evaluado->responsable->name ?? 'Sin asignar',
+            $evaluado->created_at?->format('d/m/Y') ?? '—',
             $fechaCompletado,
         ];
+    }
+
+    private function fechaPrueba($evaluado): string
+    {
+        $fecha = $this->carbonPrueba($evaluado);
+
+        return $fecha ? $fecha->format('d/m/Y') : 'Sin programar';
+    }
+
+    private function horaPrueba($evaluado): string
+    {
+        $fecha = $this->carbonPrueba($evaluado);
+
+        return $fecha ? $fecha->format('H:i') : '—';
+    }
+
+    private function carbonPrueba($evaluado): ?Carbon
+    {
+        if (! $evaluado->fecha_programada) {
+            return null;
+        }
+
+        try {
+            return $evaluado->fecha_programada instanceof Carbon
+                ? $evaluado->fecha_programada
+                : Carbon::parse($evaluado->fecha_programada);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     private function textoResultado($evaluado): string

@@ -1102,20 +1102,47 @@ class CalendarioTest extends TestCase
     public function test_calendario_export_html_incluye_columnas_informe_final(): void
     {
         $repro = $this->usuarioRepro();
+        $empresa = \App\Models\Empresa::factory()->create(['nombre' => 'Cliente Calendario', 'estado' => 1]);
+        $reclutador = User::factory()->create(['name' => 'Recluta Excel', 'role_as' => 1, 'estado' => 1]);
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'reclutador_id' => $reclutador->id,
+            'codigo_orden' => 'ORD-CAL-EXCEL',
+        ]);
         $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
             'informe_final_responsable_id' => $repro->id,
             'archivo_resultado_final' => 'resultados/x.pdf',
             'informe_final_subido_por' => $repro->id,
-            'fecha_programada' => now(),
+            'fecha_programada' => '2026-03-18 09:15:00',
+            'puesto_evaluar' => 'Bodega',
+            'resultado' => 'aprobado',
+            'tipo_servicio' => 'poligrafo',
+            'sede_region_empresa' => 'Agencia Xela',
+            'dpi' => '1234567890101',
         ]);
 
         $html = (new CalendarioExport(collect([$evaluado->fresh([
             'informeFinalResponsable',
             'informeFinalSubidoPor',
+            'orden.empresa',
+            'orden.reclutador',
+            'responsable',
         ])])))->toHtmlTable();
 
         $this->assertStringContainsString('Informe final (responsable)', $html);
         $this->assertStringContainsString('Subió informe final', $html);
+        $this->assertStringContainsString('Fecha de la prueba', $html);
+        $this->assertStringContainsString('18/03/2026', $html);
+        $this->assertStringContainsString('09:15', $html);
+        $this->assertStringContainsString('Código orden', $html);
+        $this->assertStringContainsString('ORD-CAL-EXCEL', $html);
+        $this->assertStringContainsString('Resultado', $html);
+        $this->assertStringContainsString('Aprobado', $html);
+        $this->assertStringContainsString('Puesto', $html);
+        $this->assertStringContainsString('Bodega', $html);
+        $this->assertStringContainsString('Agencia Xela', $html);
+        $this->assertStringContainsString('Recluta Excel', $html);
         $this->assertStringContainsString($repro->name, $html);
     }
 
