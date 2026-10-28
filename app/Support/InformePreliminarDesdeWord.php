@@ -7,6 +7,7 @@ use App\Models\EvaluadoOrden;
 /**
  * Sincroniza la 1ª hoja Word (resultado + observaciones) al informe preliminar del cliente.
  * No pisa ediciones hechas a mano en la ficha de la orden.
+ * No registra fecha ni avisa al cliente: eso ocurre solo al pulsar Enviar preliminar.
  */
 class InformePreliminarDesdeWord
 {
@@ -31,7 +32,6 @@ class InformePreliminarDesdeWord
         $evaluado->update([
             'texto_informe_preliminar' => $html,
             'informe_preliminar_editado_manual' => false,
-            'informe_preliminar_at' => $evaluado->fechaAlGuardarInformePreliminar($html),
         ]);
     }
 

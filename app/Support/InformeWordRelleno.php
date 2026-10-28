@@ -1812,6 +1812,9 @@ class InformeWordRelleno
         $xml = self::rellenarConclusiones($xml, $narrativas['nombre_candidato']);
         $xml = self::rellenarResultadoUltimaHoja($xml, $evaluado);
         $xml = self::rellenarApa($xml, $narrativas['poligrafista']);
+        if (($evaluado->tipo_servicio ?? '') === 'poligrafo') {
+            $xml = InformeWordFirmas::dejarSolo($xml, InformeWordFirmas::claveEfectiva($evaluado));
+        }
 
         return self::finalizarTablaAspectoEconomico($xml);
     }
@@ -2337,8 +2340,9 @@ class InformeWordRelleno
     }
 
     /**
-     * N-A1 / N-A2: las firmas de plantilla (Stefanie/Rodrigo/Narda o Aldin) se quedan.
-     * En polígrafo se ocultan los bordes de esa tabla; VSA no se reescribe.
+     * N-A1 / N-A2: no se reescribe el nombre del polígrafista dentro del cuadro.
+     * En polígrafo se ocultan los bordes de esa tabla. La firma que queda (una o las tres)
+     * la decide InformeWordFirmas. VSA no se reescribe: Aldin se queda.
      */
     private static function rellenarApa(string $xml, string $poligrafista): string
     {

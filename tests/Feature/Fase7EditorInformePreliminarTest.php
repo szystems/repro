@@ -144,6 +144,8 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $response->assertSee('— ' . trim($this->evaluado->nombre.' '.$this->evaluado->apellidos), false);
         $response->assertSee('editor-preliminar-' . $this->evaluado->id);
         $response->assertSee("color': []", false);
+        $response->assertSee('Guardar observaciones');
+        $response->assertSee('Enviar preliminar');
         $response->assertSee('Insertar tabla');
         $response->assertSee('Agregar fila');
         $response->assertSee('Eliminar fila');
@@ -193,12 +195,24 @@ class Fase7EditorInformePreliminarTest extends TestCase
     }
 
     /** @test */
-    public function co6_guarda_la_hora_de_la_tabla_y_la_muestra_en_la_ficha(): void
+    public function co6_guardar_observaciones_no_fecha_ni_libera_y_enviar_si(): void
     {
         $this->travelTo(Carbon::parse('2026-10-02 10:31:00'));
 
         $this->actingAs($this->admin)
             ->patch(route('evaluados.guardar-informe-preliminar', $this->evaluado->id), [
+                'accion' => 'guardar',
+                'texto_informe_preliminar' => '<p>Tabla de resultado</p>',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertNull($this->evaluado->fresh()->informe_preliminar_at);
+        $this->assertFalse((bool) $this->orden->fresh()->resultados_visibles_empresa);
+
+        $this->actingAs($this->admin)
+            ->patch(route('evaluados.guardar-informe-preliminar', $this->evaluado->id), [
+                'accion' => 'enviar',
                 'texto_informe_preliminar' => '<p>Tabla de resultado</p>',
             ])
             ->assertRedirect();
@@ -207,11 +221,13 @@ class Fase7EditorInformePreliminarTest extends TestCase
             '2026-10-02 10:31:00',
             $this->evaluado->fresh()->informe_preliminar_at?->format('Y-m-d H:i:s')
         );
+        $this->assertTrue((bool) $this->orden->fresh()->resultados_visibles_empresa);
 
         $this->travelTo(Carbon::parse('2026-10-02 15:00:00'));
 
         $this->actingAs($this->admin)
             ->patch(route('evaluados.guardar-informe-preliminar', $this->evaluado->id), [
+                'accion' => 'guardar',
                 'texto_informe_preliminar' => '<p>Tabla corregida</p>',
             ])
             ->assertRedirect();
@@ -223,15 +239,17 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('ordenes.show', $this->orden->id))
             ->assertOk()
-            ->assertSee('Generado el 02/10/2026 10:31', false);
+            ->assertSee('Enviado el 02/10/2026 10:31', false);
 
         $this->actingAs($this->admin)
             ->patch(route('evaluados.guardar-informe-preliminar', $this->evaluado->id), [
+                'accion' => 'guardar',
                 'texto_informe_preliminar' => null,
             ])
             ->assertRedirect();
 
-        $this->assertNull($this->evaluado->fresh()->informe_preliminar_at);
+        $this->assertNull($this->evaluado->fresh()->texto_informe_preliminar);
+        $this->assertSame('2026-10-02 10:31:00', $this->evaluado->fresh()->informe_preliminar_at?->format('Y-m-d H:i:s'));
     }
 
     /** @test */

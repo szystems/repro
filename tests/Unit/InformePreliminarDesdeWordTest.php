@@ -83,7 +83,7 @@ class InformePreliminarDesdeWordTest extends TestCase
         $this->assertStringNotContainsString('texto inicial', (string) $html);
     }
 
-    public function test_la_primera_copia_guarda_fecha_y_hora_y_una_correccion_no_la_cambia(): void
+    public function test_copiar_observaciones_no_registra_fecha_ni_la_borra_si_ya_se_envio(): void
     {
         $this->travelTo(Carbon::parse('2026-10-02 10:31:00'));
         $evaluado = $this->evaluadoPoli(['resultado' => 'aprobado_excepcion']);
@@ -94,11 +94,9 @@ class InformePreliminarDesdeWordTest extends TestCase
 
         InformePreliminarDesdeWord::sincronizarDesdeWord($evaluado);
 
-        $this->assertSame(
-            '2026-10-02 10:31:00',
-            $evaluado->fresh()->informe_preliminar_at?->format('Y-m-d H:i:s')
-        );
+        $this->assertNull($evaluado->fresh()->informe_preliminar_at);
 
+        $evaluado->update(['informe_preliminar_at' => '2026-10-02 11:00:00']);
         $this->travelTo(Carbon::parse('2026-10-02 16:05:00'));
         EvaluadorNotasSupport::guardarDesdeRequest($evaluado->id, [
             InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => 'corrección de la tarde',
@@ -107,7 +105,7 @@ class InformePreliminarDesdeWordTest extends TestCase
 
         $fresco = $evaluado->fresh();
         $this->assertStringContainsString('corrección de la tarde', (string) $fresco->texto_informe_preliminar);
-        $this->assertSame('2026-10-02 10:31:00', $fresco->informe_preliminar_at?->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-10-02 11:00:00', $fresco->informe_preliminar_at?->format('Y-m-d H:i:s'));
     }
 
     public function test_no_inventa_fecha_si_el_texto_ya_existia(): void

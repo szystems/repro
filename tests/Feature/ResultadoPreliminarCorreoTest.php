@@ -110,6 +110,7 @@ class ResultadoPreliminarCorreoTest extends TestCase
 
         $this->actingAs($this->admin)
             ->patch(route('evaluados.guardar-informe-preliminar', $evaluado), [
+                'accion' => 'enviar',
                 'texto_informe_preliminar' => '<p>Informe</p>',
             ])
             ->assertRedirect()
@@ -129,6 +130,7 @@ class ResultadoPreliminarCorreoTest extends TestCase
 
         $this->actingAs($this->admin)
             ->patch(route('evaluados.guardar-informe-preliminar', $evaluado), [
+                'accion' => 'enviar',
                 'texto_informe_preliminar' => '<p>Informe</p>',
             ])
             ->assertRedirect()

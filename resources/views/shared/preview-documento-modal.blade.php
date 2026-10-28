@@ -29,6 +29,7 @@
 </div>
 
 @push('scripts')
+<script src="{{ \App\Support\PublicAsset::url('js/mammoth.browser.min.js') }}"></script>
 <script>
 (function () {
     let escala = 1;
@@ -112,7 +113,7 @@
         lienzo = null;
 
         document.getElementById('modalPreviewDocTitulo').textContent = nombre;
-        document.getElementById('btnDescargarPreview').href = url.replace('/preview', '/download');
+        document.getElementById('btnDescargarPreview').href = btn.dataset.descarga || url.replace('/preview', '/download');
         mostrarBarra(tipo === 'imagen');
 
         const contenedor = document.getElementById('previewContenedor');
@@ -140,6 +141,29 @@
                 contenedor.innerHTML = '<p class="text-danger p-4">No se pudo cargar la imagen.</p>';
             };
             img.src = url;
+        } else if (tipo === 'docx') {
+            if (typeof mammoth === 'undefined') {
+                contenedor.innerHTML = '<p class="text-muted p-4 mb-0">No se pudo abrir el Word aquí. Use Descargar.</p>';
+                return;
+            }
+            fetch(url, { credentials: 'same-origin' })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+                    return response.arrayBuffer();
+                })
+                .then(function (buffer) {
+                    return mammoth.convertToHtml({ arrayBuffer: buffer });
+                })
+                .then(function (result) {
+                    contenedor.innerHTML = '<div class="bg-white p-4" style="max-height:80vh;overflow:auto;width:100%">' + result.value + '</div>';
+                })
+                .catch(function () {
+                    contenedor.innerHTML = '<p class="text-danger p-4 mb-0">No se pudo mostrar el Word. Use Descargar.</p>';
+                });
+        } else if (tipo === 'doc') {
+            contenedor.innerHTML = '<p class="text-muted p-4 mb-0">Este archivo .doc no se puede ver aquí. Use Descargar.</p>';
         } else {
             const iframe = document.createElement('iframe');
             iframe.src = url;

@@ -863,9 +863,9 @@ class EvaluadoOrden extends Model
     }
 
     /**
-     * Hora en que el texto del preliminar (tabla de polígrafo y VSA) quedó
-     * registrado por primera vez. No se rellena en textos que ya existían
-     * sin esa hora. Borrar el texto la limpia.
+     * Conservado por compatibilidad. Enviar preliminar pone la hora con now().
+     * Guardar observaciones y la sincronización desde Word no deben usarlo:
+     * borrar el texto aquí devolvería null y borraría la hora de un envío.
      */
     public function fechaAlGuardarInformePreliminar(?string $textoNuevo): ?\Illuminate\Support\Carbon
     {

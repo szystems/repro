@@ -183,6 +183,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         Route::get('ordenes/{orden}/pdf', [OrdenesController::class, 'pdf'])->name('ordenes.pdf');
         Route::get('ordenes/{orden}/pdf-informe', [OrdenesController::class, 'pdfInforme'])->name('ordenes.pdf-informe');
         Route::get('ordenes/{orden}/evaluados/{evaluado}/informe-word', [OrdenesController::class, 'informeWord'])->name('ordenes.informe-word');
+        Route::post('evaluados/{evaluado}/firma-informe', [OrdenesController::class, 'guardarFirmaInforme'])->name('evaluados.firma-informe');
     });
     // Editar
     Route::middleware(['permission:ordenes.editar'])->group(function () {
@@ -231,6 +232,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // RESULTADOS (permission granular)
     // ========================================
     Route::middleware(['permission:resultados.ver'])->group(function () {
+        Route::get('evaluados/{evaluado}/resultado-archivo/{tipo}/preview', [OrdenesController::class, 'previewResultadoArchivo'])->name('evaluados.preview-resultado-archivo');
         Route::get('evaluados/{evaluado}/resultado-archivo/{tipo}', [OrdenesController::class, 'descargarResultadoArchivo'])->name('evaluados.descargar-resultado-archivo');
     });
     Route::middleware(['permission:resultados.editar'])->group(function () {

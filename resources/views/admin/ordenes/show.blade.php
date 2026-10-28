@@ -958,10 +958,11 @@
                                         <hr>
 
                                         @if(Auth::user()->role_as >= 2)
-                                        <div class="mb-3">
+                                        <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
                                             <a href="{{ route('ordenes.informe-word', [$orden, $evaluado]) }}?v={{ now()->timestamp }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-file-earmark-word"></i> Descargar informe Word (.docx)
                                             </a>
+                                            @include('admin.ordenes._firma_poligrafista', ['evaluado' => $evaluado])
                                         </div>
                                         @endif
 
@@ -1036,6 +1037,25 @@
                                                                         @endif
                                                                     </div>
                                                                     <div>
+                                                                        @php
+                                                                            $extFinal = strtolower(pathinfo((string) $evaluado->archivo_resultado_final, PATHINFO_EXTENSION));
+                                                                            $tipoVistaFinal = match ($extFinal) {
+                                                                                'pdf' => 'pdf',
+                                                                                'docx' => 'docx',
+                                                                                default => 'doc',
+                                                                            };
+                                                                        @endphp
+                                                                        <button type="button"
+                                                                                class="btn btn-sm btn-outline-secondary btn-preview-doc"
+                                                                                data-bs-toggle="modal"
+                                                                                data-bs-target="#modalPreviewDoc"
+                                                                                data-url="{{ route('evaluados.preview-resultado-archivo', [$evaluado->id, 'final']) }}"
+                                                                                data-descarga="{{ route('evaluados.descargar-resultado-archivo', [$evaluado->id, 'final']) }}"
+                                                                                data-tipo="{{ $tipoVistaFinal }}"
+                                                                                data-nombre="Informe final de {{ $evaluado->nombre }}"
+                                                                                title="Vista previa">
+                                                                            <i class="bi bi-eye"></i>
+                                                                        </button>
                                                                         <a href="{{ route('evaluados.descargar-resultado-archivo', [$evaluado->id, 'final']) }}"
                                                                            class="btn btn-sm btn-outline-success" title="Descargar">
                                                                             <i class="bi bi-download"></i>
@@ -1102,7 +1122,7 @@
                                                         <span class="badge bg-secondary ms-2">Sin redactar</span>
                                                     @endif
                                                     @if($evaluado->informe_preliminar_at)
-                                                        <small class="text-muted fw-normal ms-2">Generado el {{ $evaluado->informe_preliminar_at->format('d/m/Y H:i') }}</small>
+                                                        <small class="text-muted fw-normal ms-2">Enviado el {{ $evaluado->informe_preliminar_at->format('d/m/Y H:i') }}</small>
                                                     @endif
                                                 </h6>
                                             </div>
@@ -1141,11 +1161,17 @@
                                                             </button>
                                                             <div class="form-text mt-1 mb-0">
                                                                 Seleccione el texto y pulse un cuadro de <strong>Color de letra</strong> o <strong>Fondo</strong>. En la tabla se puede copiar y pegar. La <strong>A</strong> de la barra abre más colores. La <strong>×</strong> elimina la fila.
+                                                                <strong>Guardar observaciones</strong> no avisa al cliente ni pone fecha. <strong>Enviar preliminar</strong> registra la fecha y hora y envía el correo.
                                                             </div>
                                                         </div>
-                                                        <button type="submit" class="btn btn-sm btn-info text-white">
-                                                            <i class="bi bi-save"></i> Guardar informe
-                                                        </button>
+                                                        <div class="d-flex gap-2">
+                                                            <button type="submit" name="accion" value="guardar" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="bi bi-save"></i> Guardar observaciones
+                                                            </button>
+                                                            <button type="submit" name="accion" value="enviar" class="btn btn-sm btn-info text-white" onclick="return confirm('Se registrará la fecha y hora y se enviará el preliminar al cliente. ¿Continuar?');">
+                                                                <i class="bi bi-send"></i> Enviar preliminar
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </form>
                                             </div>

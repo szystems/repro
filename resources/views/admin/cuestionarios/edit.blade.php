@@ -298,6 +298,12 @@
                 </div>
             </form>
 
+            @if(Auth::user()->role_as >= 2 && $cuestionario->evaluadoOrden)
+                <div class="mt-3">
+                    @include('admin.ordenes._firma_poligrafista', ['evaluado' => $cuestionario->evaluadoOrden])
+                </div>
+            @endif
+
             @include('admin.ordenes._documentos_evaluado', ['evaluado' => $cuestionario->evaluadoOrden])
         </div>
     </div>

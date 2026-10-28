@@ -8,6 +8,7 @@ use App\Mail\EvaluadoAsignadoMail;
 use App\Models\Orden;
 use App\Models\EvaluadoObservacionEntrada;
 use App\Models\EvaluadoOrden;
+use App\Models\EvaluadorNota;
 use App\Models\Empresa;
 use App\Models\Sede;
 use App\Models\User;
@@ -24,6 +25,7 @@ use App\Support\ExportacionesSupport;
 use App\Support\FormularioAutoTransiciones;
 use App\Models\EmpresaPreguntasPreempleo;
 use App\Support\InformeWordBloquesEvaluador;
+use App\Support\InformeWordFirmas;
 use App\Support\InformeWordPreguntasPoligraficas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -846,15 +848,33 @@ class OrdenesController extends Controller
             'texto_informe_preliminar' => 'nullable|string',
         ]);
 
-        $textoLimpio = $this->sanitizarHtmlInforme($request->texto_informe_preliminar);
+        $accion = $request->input('accion', 'guardar');
+        if (! in_array($accion, ['guardar', 'enviar'], true)) {
+            $accion = 'guardar';
+        }
 
-        $evaluado->update([
+        $textoLimpio = $this->sanitizarHtmlInforme($request->texto_informe_preliminar);
+        $nombre = trim($evaluado->nombre.' '.$evaluado->apellidos);
+
+        if ($accion === 'enviar' && trim(strip_tags((string) $textoLimpio)) === '') {
+            return back()->with('error', 'Escriba el informe preliminar antes de enviarlo.');
+        }
+
+        $datos = [
             'texto_informe_preliminar' => $textoLimpio,
             'informe_preliminar_editado_manual' => true,
-            'informe_preliminar_at' => $evaluado->fechaAlGuardarInformePreliminar($textoLimpio),
-        ]);
+        ];
+        if ($accion === 'enviar') {
+            $datos['informe_preliminar_at'] = now();
+        }
 
-        // Auto-liberar resultados para el cliente al guardar el informe preliminar
+        $evaluado->update($datos);
+
+        if ($accion !== 'enviar') {
+            return back()->with('success', "Observaciones de {$nombre} guardadas. Aún no se envían al cliente.");
+        }
+
+        // Enviar es lo único que libera el preliminar y avisa al cliente.
         $orden = $evaluado->orden;
         $correoOk = true;
         if (!$orden->resultados_visibles_empresa) {
@@ -862,10 +882,9 @@ class OrdenesController extends Controller
             $correoOk = $this->notificarResultadosDisponibles($orden, true);
         }
 
-        // Notificar que hay un resultado preliminar disponible
         $this->notificarPreliminarSubido($evaluado);
 
-        $respuesta = back()->with('success', "Informe preliminar de {$evaluado->nombre} {$evaluado->apellidos} guardado y liberado al cliente.");
+        $respuesta = back()->with('success', "Informe preliminar de {$nombre} enviado al cliente.");
 
         return $correoOk
             ? $respuesta
@@ -1661,6 +1680,41 @@ class OrdenesController extends Controller
     }
 
     /**
+     * Quién firma el Word de polígrafo. No toca el VSA.
+     */
+    public function guardarFirmaInforme(Request $request, EvaluadoOrden $evaluado)
+    {
+        if ((int) Auth::user()->role_as < 2) {
+            abort(403, 'Solo personal REPRO puede elegir la firma del informe.');
+        }
+        if (! $this->usuarioPuedeVerOrden($evaluado->orden)) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+        if (($evaluado->tipo_servicio ?? '') !== 'poligrafo') {
+            return back()->with('error', 'La firma solo se elige en informes de polígrafo.');
+        }
+
+        $request->validate([
+            'firmante' => 'required|in:todas,stefanie,rodrigo,narda',
+        ]);
+
+        $firmante = (string) $request->input('firmante');
+        EvaluadorNota::guardarNota(
+            $evaluado->id,
+            InformeWordFirmas::SECCION,
+            '',
+            $firmante,
+            Auth::id()
+        );
+
+        $etiqueta = $firmante === 'todas'
+            ? 'las tres firmas'
+            : InformeWordFirmas::FIRMANTES[$firmante]['nombre'];
+
+        return back()->with('success', 'Al generar el Word de polígrafo se usará '.$etiqueta.'.');
+    }
+
+    /**
      * Fase A.3 — Motivo/hecho de evaluación (Periódica / Específica).
      */
     public function actualizarMotivoHecho(Request $request, EvaluadoOrden $evaluado)
@@ -1936,6 +1990,44 @@ class OrdenesController extends Controller
         $nombreDescarga = "resultado_{$tipo}_{$evaluado->nombre}_{$evaluado->apellidos}.{$extension}";
 
         return Storage::disk('local')->download($evaluado->$campo, $nombreDescarga);
+    }
+
+    /**
+     * Vista previa en la ficha: PDF en el navegador, Word .docx para el visor, .doc solo descarga.
+     */
+    public function previewResultadoArchivo(EvaluadoOrden $evaluado, string $tipo)
+    {
+        if (! in_array($tipo, ['preliminar', 'final'], true)) {
+            abort(404);
+        }
+
+        if (! $this->usuarioPuedeVerOrden($evaluado->orden)) {
+            abort(403, 'No tiene permisos para esta acción.');
+        }
+
+        if (Auth::user()->role_as == 1 && ! $evaluado->resultadosDisponiblesParaEmpresa()) {
+            abort(403, 'Los resultados aún no están disponibles.');
+        }
+
+        $campo = $tipo === 'preliminar' ? 'archivo_resultado_preliminar' : 'archivo_resultado_final';
+
+        if (! $evaluado->$campo || ! Storage::disk('local')->exists($evaluado->$campo)) {
+            abort(404, "No hay archivo de resultado {$tipo}.");
+        }
+
+        $extension = strtolower((string) pathinfo($evaluado->$campo, PATHINFO_EXTENSION));
+        $mime = match ($extension) {
+            'pdf' => 'application/pdf',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'doc' => 'application/msword',
+            default => 'application/octet-stream',
+        };
+
+        return response()->file(Storage::disk('local')->path($evaluado->$campo), [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="resultado-'.$tipo.'.'.$extension.'"',
+            'Cache-Control' => 'private, no-store',
+        ]);
     }
 
     /**
