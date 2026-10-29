@@ -5,17 +5,13 @@ namespace App\Support;
 use App\Models\EvaluadoOrden;
 
 /**
- * Paquete de la sección Salud para el asistente.
+ * Paquete de la sección Salud.
  * Solo lo que el formulario consultó y la nota del evaluador.
- * Un campo vacío sigue vacío: no se convierte en «no» ni en «ninguna».
- * No incluye nombre, DPI, empresa ni fotos.
+ * No incluye nombre, DPI, empresa, hábitos ni tatuajes.
  */
 class AsistenteRedaccionSalud
 {
     /**
-     * Campos que el formulario de salud pregunta hoy.
-     * El detalle cuelga de la respuesta sí/no: si esa fue «no», el detalle vacío no es un faltante.
-     *
      * @var list<array{clave: string, pregunta: string, tipo: string, depende_de?: string}>
      */
     private const CONSULTADOS = [
@@ -40,8 +36,6 @@ class AsistenteRedaccionSalud
     ];
 
     /**
-     * Respuestas de formularios viejos. Solo entran si el candidato escribió algo.
-     *
      * @var list<array{clave: string, pregunta: string}>
      */
     private const LEGADO = [
@@ -53,132 +47,19 @@ class AsistenteRedaccionSalud
     ];
 
     /**
-     * @return array{
-     *     seccion: string,
-     *     servicio: string,
-     *     formulario: string,
-     *     campos: list<array{clave: string, pregunta: string, valor: string, texto: string, vacio: bool, incompleto: bool}>,
-     *     observacion_evaluador: string,
-     *     texto_para_modelo: string
-     * }
+     * @return array<string, mixed>
      */
-    public static function paquete(EvaluadoOrden $evaluado): array
+    public static function paquete(EvaluadoOrden $evaluado, ?string $observacion = null): array
     {
         $evaluado->loadMissing('cuestionario');
         $respuestas = $evaluado->cuestionario?->obtenerRespuestasSeccion(5) ?? [];
-        $notas = EvaluadorNotasSupport::mapaPorSeccion($evaluado->id);
-        $observacion = trim((string) ($notas[InformeWordBloquesEvaluador::NOTA_SALUD] ?? ''));
 
-        $campos = [];
-        foreach (self::CONSULTADOS as $definicion) {
-            $campos[] = self::campo($definicion, $respuestas, $campos);
-        }
-
-        foreach (self::LEGADO as $definicion) {
-            $armado = self::campo($definicion + ['tipo' => 'texto'], $respuestas, $campos);
-            if ($armado['vacio']) {
-                continue;
-            }
-            $campos[] = $armado;
-        }
-
-        $paquete = [
-            'seccion' => AsistenteRedaccion::SECCION_PILOTO,
-            'servicio' => (string) ($evaluado->tipo_servicio ?? ''),
-            'formulario' => (string) ($evaluado->tipo_formulario ?: $evaluado->cuestionario?->tipo_formulario ?: ''),
-            'campos' => $campos,
-            'observacion_evaluador' => $observacion,
-            'texto_para_modelo' => '',
-        ];
-        $paquete['texto_para_modelo'] = self::textoParaModelo($paquete);
-
-        return $paquete;
-    }
-
-    /**
-     * @param  array{clave: string, pregunta: string, tipo?: string, depende_de?: string}  $definicion
-     * @param  array<string, mixed>  $respuestas
-     * @param  list<array{clave: string, pregunta: string, valor: string, texto: string, vacio: bool, incompleto: bool}>  $yaArmados
-     * @return array{clave: string, pregunta: string, valor: string, texto: string, vacio: bool, incompleto: bool}
-     */
-    private static function campo(array $definicion, array $respuestas, array $yaArmados): array
-    {
-        $crudo = $respuestas[$definicion['clave']] ?? null;
-        $valor = is_scalar($crudo) ? trim((string) $crudo) : '';
-        $tipo = $definicion['tipo'] ?? 'texto';
-        $texto = self::texto($tipo, $valor);
-        $vacio = $texto === '';
-        $incompleto = $vacio && ! self::detalleCubiertoPorNo($definicion, $yaArmados);
-
-        return [
-            'clave' => $definicion['clave'],
-            'pregunta' => $definicion['pregunta'],
-            'valor' => $valor,
-            'texto' => $texto,
-            'vacio' => $vacio,
-            'incompleto' => $incompleto,
-        ];
-    }
-
-    /**
-     * @param  array{depende_de?: string}  $definicion
-     * @param  list<array{clave: string, valor: string}>  $yaArmados
-     */
-    private static function detalleCubiertoPorNo(array $definicion, array $yaArmados): bool
-    {
-        $padre = $definicion['depende_de'] ?? '';
-        if ($padre === '') {
-            return false;
-        }
-
-        foreach ($yaArmados as $campo) {
-            if ($campo['clave'] === $padre) {
-                return $campo['valor'] === 'no';
-            }
-        }
-
-        return false;
-    }
-
-    private static function texto(string $tipo, string $valor): string
-    {
-        if ($valor === '') {
-            return '';
-        }
-
-        return match ($tipo) {
-            'si_no' => match ($valor) {
-                'si' => 'Sí',
-                'no' => 'No',
-                default => $valor,
-            },
-            'estado' => SaludHabitosCampos::ESTADOS_GENERAL[SaludHabitosCampos::normalizarEstadoGeneral($valor)] ?? $valor,
-            default => $valor,
-        };
-    }
-
-    /**
-     * @param  array{servicio: string, formulario: string, campos: list<array{pregunta: string, texto: string, vacio: bool}>, observacion_evaluador: string}  $paquete
-     */
-    public static function textoParaModelo(array $paquete): string
-    {
-        $lineas = [
-            'Sección: Salud',
-            'Tipo de informe: '.trim($paquete['servicio'].' '.$paquete['formulario']),
-            '',
-            'Respuestas del formulario:',
-        ];
-
-        foreach ($paquete['campos'] as $campo) {
-            $lineas[] = '- '.$campo['pregunta'].': '.($campo['vacio'] ? '(vacío)' : $campo['texto']);
-        }
-
-        $lineas[] = '';
-        $lineas[] = 'Observación del evaluador:';
-        $lineas[] = $paquete['observacion_evaluador'] !== ''
-            ? $paquete['observacion_evaluador']
-            : '(ninguna)';
-
-        return implode("\n", $lineas);
+        return AsistenteRedaccionCampos::cerrar(
+            $evaluado,
+            AsistenteRedaccion::SECCION_PILOTO,
+            'Salud',
+            AsistenteRedaccionCampos::lista(self::CONSULTADOS, $respuestas, self::LEGADO),
+            $observacion
+        );
     }
 }

@@ -299,6 +299,8 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
             Route::get('/{cuestionario}/foto-candidato', [App\Http\Controllers\Admin\CuestionariosController::class, 'fotoCandidato'])->name('foto-candidato');
         });
         Route::middleware(['permission:evaluaciones.editar'])->group(function () {
+            Route::post('/{cuestionario}/asistente-redaccion', [App\Http\Controllers\Admin\AsistenteRedaccionController::class, 'generar'])->name('asistente-redaccion');
+            Route::post('/{cuestionario}/asistente-redaccion/aceptar', [App\Http\Controllers\Admin\AsistenteRedaccionController::class, 'aceptar'])->name('asistente-redaccion.aceptar');
             Route::get('/{cuestionario}/editar', [App\Http\Controllers\Admin\CuestionariosController::class, 'edit'])->name('edit');
             Route::put('/{cuestionario}', [App\Http\Controllers\Admin\CuestionariosController::class, 'update'])->name('update');
             Route::post('/{cuestionario}/completar', [App\Http\Controllers\Admin\CuestionariosController::class, 'marcarCompleto'])->name('completar');

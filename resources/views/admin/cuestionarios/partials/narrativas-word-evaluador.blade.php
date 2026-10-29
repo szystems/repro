@@ -49,6 +49,10 @@
                               name="evaluador_notas[{{ $slug }}]"
                               rows="5"
                               placeholder="Redacción del evaluador para {{ $bloque['titulo'] }}…">{{ $valor }}</textarea>
+                    @include('admin.cuestionarios.partials.asistente-redaccion-boton', [
+                        'slug' => $slug,
+                        'titulo' => $bloque['titulo'],
+                    ])
                 @endif
             </div>
         @endforeach
@@ -81,8 +85,13 @@
                           name="evaluador_notas[{{ \App\Support\InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES }}]"
                           rows="4"
                           placeholder="Redacción de recomendaciones para el informe Word…">{{ $recomendacionesWord }}</textarea>
+                @include('admin.cuestionarios.partials.asistente-redaccion-boton', [
+                    'slug' => \App\Support\InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES,
+                    'titulo' => 'Recomendaciones',
+                ])
             @endif
         </div>
     </div>
 </div>
+@include('admin.cuestionarios.partials.asistente-redaccion-modal')
 @endif

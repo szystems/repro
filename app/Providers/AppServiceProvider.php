@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Support\AsistenteRedaccionClaude;
+use App\Support\AsistenteRedaccionMotor;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -19,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(AsistenteRedaccionMotor::class, AsistenteRedaccionClaude::class);
     }
 
     /**

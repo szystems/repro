@@ -20,6 +20,11 @@ class AsistenteRedaccion
         return $config ? (bool) $config->asistente_redaccion_activo : false;
     }
 
+    public static function disponibleEn(string $seccion): bool
+    {
+        return self::activo() && AsistenteRedaccionSecciones::permite($seccion);
+    }
+
     /**
      * @return array<string, mixed>
      */

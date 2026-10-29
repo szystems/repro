@@ -62,16 +62,16 @@ Generar el apartado desde el formulario, reglas de seis secciones, «Informació
 ### Orden de construcción
 
 1. **Cimiento.** Rama, interruptor apagado. Hecho en código, sin publicar. La llave de Claude no hace falta hasta la fase 3. Para pruebas se usa una llave de Szystems. La de producción la crea REPRO en su cuenta; Otto solo recibe la llave de API, no la contraseña.
-2. **Salud.** Hecho en código: `AsistenteRedaccionSalud::paquete()`. Junta las respuestas de la sección 5 y la nota `word_salud`. Un vacío queda `(vacío)`, no «No». El detalle vacío de un «no» no se marca incompleto. No lleva nombre, DPI, hábitos ni tatuajes. Todavía no hay botón ni llamada a Claude.
-3. **Ciclo.** Generar redacción, confirmada sin cambios, observaciones más «el resto sin cambios». Vista previa, aceptar, editar, descartar. Nada entra al informe hasta aceptar.
-4. **Después del texto.** Reescribir, Otra versión y Cambiar estilo, separados. También sobre texto escrito a mano. Conservan hechos, fechas y montos.
-5. **Resto de secciones.** Actividades delictivas y drogas, aspectos judiciales, recomendaciones, información económica, información laboral al final.
-6. **Avisos** de vacíos y diferencias. Un vacío no es un «no». No se tocan las respuestas del candidato.
-7. **Dictado.** El micrófono solo llena la nota. La redacción sigue siendo Generar.
-8. **Instrucciones por tipo** de informe, cuando las seis secciones ya salgan bien.
-9. **Prueba** con un cuestionario de ejemplo y revisión de Stephany. Recién ahí se enciende el interruptor.
+2. **Salud.** Hecho: `AsistenteRedaccionSalud::paquete()`. Junta las respuestas de la sección 5. Un vacío queda `(vacío)`, no «No». El detalle vacío de un «no» no se marca incompleto. No lleva nombre, DPI, hábitos ni tatuajes.
+3. **Ciclo.** Hecho en código. Botón «Generar redacción» solo si el interruptor está encendido. Opciones: confirmada sin cambios, y observaciones más «el resto sin cambios». Vista previa editable, aceptar, descartar. Aceptar guarda solo la nota de esa sección. Generar no guarda nada. Hábitos y la primera hoja no tienen botón.
+4. **Después del texto.** Hecho. Reescribir, Otra versión y Cambiar estilo (formal, técnica, breve, detallada). Sirven sobre el texto generado y sobre el que ya esté escrito. No guardan hasta aceptar.
+5. **Resto de secciones.** Hecho. El mismo ciclo en actividades delictivas y drogas, aspectos judiciales, recomendaciones, información económica e información laboral. El paquete no manda nombre, DPI, resultado, ni el nombre y teléfono del jefe.
+6. **Avisos.** Hecho. Un vacío se muestra como vacío y no se vuelve «no». Si la nota contradice el formulario, avisa y no toca las respuestas.
+7. **Dictado.** Hecho. «Dictar en la nota» escribe solo en las observaciones de la entrevista. No redacta el informe. Si el navegador no tiene micrófono, el botón lo dice.
+8. **Instrucciones por tipo.** Hecho en `AsistenteRedaccionInstrucciones`: polígrafo, VSA y socioeconómico, y un criterio por sección. Se cambian en ese archivo, no en Configuración.
+9. **Prueba con Stephany.** Pendiente. Hace falta un cuestionario de ejemplo y su revisión. El interruptor sigue apagado. Para una redacción real, la llave va en `ANTHROPIC_API_KEY` del servidor, nunca en el repo. Hasta entonces las pruebas usan un redactor simulado.
 
-**Siguiente paso de código:** fase 3, el ciclo Generar / vista previa / aceptar en Salud, todavía con el interruptor apagado.
+**Siguiente:** fase 9, cuando Otto tenga la llave de prueba o la de REPRO, y Stephany revise un cuestionario de ejemplo. No unir a `master` antes de eso.
 
 ---
 
