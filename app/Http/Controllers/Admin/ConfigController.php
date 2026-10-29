@@ -47,6 +47,7 @@ class ConfigController extends Controller
         $config->nombre_empresa = $request->input('nombre_empresa') ?: null;
         $config->dias_vigencia_token = $request->input('dias_vigencia_token', 15);
         $config->historial_visible_empresa = $request->boolean('historial_visible_empresa');
+        $config->asistente_redaccion_activo = $request->boolean('asistente_redaccion_activo');
         $config->update();
 
         // $request->session()->flash('alert-success', 'Configuración actualizado correctamente!');

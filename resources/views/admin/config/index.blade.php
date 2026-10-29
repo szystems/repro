@@ -252,6 +252,25 @@
 
                                                 <div class="card mb-4 border">
                                                     <div class="card-header bg-light">
+                                                        <h6 class="mb-0"><i class="bi bi-stars me-1"></i> Asistente de redacción</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                                   id="asistente_redaccion_activo" name="asistente_redaccion_activo" value="1"
+                                                                   {{ ($config->asistente_redaccion_activo ?? false) ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="asistente_redaccion_activo">
+                                                                Asistente de redacción activo
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-text">
+                                                            Apagado, el personal no ve el asistente en el informe. Solo un administrador puede encenderlo.
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="card mb-4 border">
+                                                    <div class="card-header bg-light">
                                                         <h6 class="mb-0"><i class="bi bi-eye me-1"></i> Visibilidad para Clientes</h6>
                                                     </div>
                                                     <div class="card-body">

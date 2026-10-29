@@ -1,8 +1,8 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 9 de octubre de 2026  
-**Estado:** DPI de ORD-2026-1158: sí se edita, pero no puede repetirse en otro evaluado del mismo servicio · correo preliminar y fecha/hora ✅ · aviso amarillo ✅ · logos nuevos ✅ · logos viejos hay que volver a subirlos · **Resend Pro ⏸ Otto** · portal `https://portal.reprogt.com` · iPage 503  
+**Fecha de Contexto:** 29 de octubre de 2026  
+**Estado:** Asistente de redacción **en desarrollo** en la rama `asistente-redaccion` (no está en producción). Interruptor apagado. Prod sigue en `master` `0086e3ce`. SIGOR pagado Q 23,600. Portal `https://portal.reprogt.com`.  
 
 **Plan activo:** `docs/repro/cambios septiembre/20'09'2026/PLAN_SPRINT_T_OBSERVACIONES_20-09-2026.md`  
 **Plan S (correos reclutador):** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md` · merge prod ~`3f6092a6`  
@@ -36,7 +36,42 @@
 **Permisos empresa (OBLIGATORIO leer antes de tocar portal cliente):** `docs/repro/cambios agosto/PERMISOS_EMPRESA_CLIENTE.md`  
 **Feedback 12-ago:** `docs/repro/cambios agosto/ultimos cambios 12-08-2026/`  
 **Producción:** https://portal.reprogt.com  
-**Repo:** https://github.com/szystems/repro · branch `master`
+**Repo:** https://github.com/szystems/repro · producción `master` · asistente en `asistente-redaccion`
+
+---
+
+## Asistente de redacción — EN CURSO (29-oct-2026)
+
+**Pedido de Stephany:** `docs/asistente de redaccion/REQUERIMIENTOS DEL ASISTENTE DE REDACCIÓN INTELIGENTE.pdf`  
+**Cotización:** extra E, `docs/business/COTIZACION_SITIO_Y_EXTRAS_SEPTIEMBRE_2026_CLIENTE.md` y aclaraciones del mismo folder.  
+**Precio a Szystems:** Q 2,500 con IVA. Anticipo para empezar Q 1,250. Saldo Q 1,250 al quedar en producción.  
+**Consumo de Claude:** lo paga REPRO, cuenta a su nombre. Estimado Q 65 a Q 250 al mes si son unos 300 informes. Tope en dólares que ellos definan. No pedir la contraseña de Claude. La llave va solo en el servidor, nunca en el repo ni en el chat.
+
+**Rama:** `asistente-redaccion`, sacada de `master` `0086e3ce`. No unir a `master` ni subir a producción mientras el interruptor no exista y el trabajo no esté listo. Coolify publica solo `master`.  
+**Arreglos que pida Stephany sobre lo ya publicado:** rama corta desde `master`, se publica esa, y después se trae `master` a `asistente-redaccion`.  
+**Interruptor:** Configuración, solo administrador (`role_as` 3). Columna `configs.asistente_redaccion_activo`, default **apagado**. Clase `App\Support\AsistenteRedaccion::activo()`. Apagado, no hay botón y no se llama a Claude.
+
+### Qué cubren los Q 2,500
+
+Botón dentro de SIGOR sobre el texto que el evaluador ya escribió. Opciones: corregir, mejorar, más formal, más breve, apuntes a párrafo. Vista previa, aceptar, editar o descartar. El original se queda. No inventa, no cambia el resultado, no entra en tablas. Solo se envía el texto de ese campo.
+
+### Qué pide el PDF encima de ese precio
+
+Generar el apartado desde el formulario, reglas de seis secciones, «Información confirmada, sin cambios», dictado por voz, Reescribir / Otra versión / Cambiar estilo, avisos de vacíos y contradicciones, e instrucciones distintas para polígrafo, VSA y socioeconómico. El punto 13 del PDF pide decirle qué entra en el precio y qué es de más. Hábitos personales y las observaciones de la primera hoja no los pidió: siguen a mano.
+
+### Orden de construcción
+
+1. **Cimiento.** Rama, interruptor apagado, cuenta y tope de Claude. **En curso: interruptor hecho en código, sin publicar. Falta la llave de Claude en el servidor (la pone Otto).**
+2. **Salud**, una sola sección. Paquete con respuestas del formulario y la nota del evaluador. Un vacío sigue vacío.
+3. **Ciclo.** Generar redacción, confirmada sin cambios, observaciones más «el resto sin cambios». Vista previa, aceptar, editar, descartar. Nada entra al informe hasta aceptar.
+4. **Después del texto.** Reescribir, Otra versión y Cambiar estilo, separados. También sobre texto escrito a mano. Conservan hechos, fechas y montos.
+5. **Resto de secciones.** Actividades delictivas y drogas, aspectos judiciales, recomendaciones, información económica, información laboral al final.
+6. **Avisos** de vacíos y diferencias. Un vacío no es un «no». No se tocan las respuestas del candidato.
+7. **Dictado.** El micrófono solo llena la nota. La redacción sigue siendo Generar.
+8. **Instrucciones por tipo** de informe, cuando las seis secciones ya salgan bien.
+9. **Prueba** con un cuestionario de ejemplo y revisión de Stephany. Recién ahí se enciende el interruptor.
+
+**Siguiente paso de código:** fase 2, el paquete de datos de Salud. No mostrar botón todavía.
 
 ---
 

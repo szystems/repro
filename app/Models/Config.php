@@ -11,6 +11,7 @@ class Config extends Model
     protected $table = 'configs';
     protected $attributes = [
         'historial_visible_empresa' => true,
+        'asistente_redaccion_activo' => false,
     ];
     protected $fillable = [
         'logo',
@@ -28,12 +29,14 @@ class Config extends Model
         'impuesto',
         'dias_vigencia_token',
         'historial_visible_empresa',
+        'asistente_redaccion_activo',
     ];
 
     protected function casts(): array
     {
         return [
             'historial_visible_empresa' => 'boolean',
+            'asistente_redaccion_activo' => 'boolean',
         ];
     }
 
@@ -42,6 +45,11 @@ class Config extends Model
         $config = static::first();
 
         return $config ? (bool) $config->historial_visible_empresa : true;
+    }
+
+    public static function asistenteRedaccionActivo(): bool
+    {
+        return \App\Support\AsistenteRedaccion::activo();
     }
 
     /** Mínimo operativo de vigencia del enlace del formulario (pedido Stephany 8-sep). */
