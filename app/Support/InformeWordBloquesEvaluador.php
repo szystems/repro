@@ -21,6 +21,8 @@ class InformeWordBloquesEvaluador
      */
     public const NOTA_RECOMENDACIONES = 'word_recomendaciones';
 
+    public const NOTA_SALUD = 'word_salud';
+
     /** @var list<array{slug: string, titulo: string}> */
     /** Orden confirmado cliente ago-2026 (audio + CAMBIOS PARA LOS REPORTES.pdf). */
     public const BLOQUES = [

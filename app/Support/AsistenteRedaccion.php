@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Config;
+use App\Models\EvaluadoOrden;
 
 /**
  * Extra E. El interruptor nace apagado: el personal no ve el asistente
@@ -17,5 +18,13 @@ class AsistenteRedaccion
         $config = Config::query()->first();
 
         return $config ? (bool) $config->asistente_redaccion_activo : false;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function paqueteSalud(EvaluadoOrden $evaluado): array
+    {
+        return AsistenteRedaccionSalud::paquete($evaluado);
     }
 }

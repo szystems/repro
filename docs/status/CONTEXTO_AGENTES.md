@@ -61,8 +61,8 @@ Generar el apartado desde el formulario, reglas de seis secciones, «Informació
 
 ### Orden de construcción
 
-1. **Cimiento.** Rama, interruptor apagado, cuenta y tope de Claude. **En curso: interruptor hecho en código, sin publicar. Falta la llave de Claude en el servidor (la pone Otto).**
-2. **Salud**, una sola sección. Paquete con respuestas del formulario y la nota del evaluador. Un vacío sigue vacío.
+1. **Cimiento.** Rama, interruptor apagado. Hecho en código, sin publicar. La llave de Claude no hace falta hasta la fase 3. Para pruebas se usa una llave de Szystems. La de producción la crea REPRO en su cuenta; Otto solo recibe la llave de API, no la contraseña.
+2. **Salud.** Hecho en código: `AsistenteRedaccionSalud::paquete()`. Junta las respuestas de la sección 5 y la nota `word_salud`. Un vacío queda `(vacío)`, no «No». El detalle vacío de un «no» no se marca incompleto. No lleva nombre, DPI, hábitos ni tatuajes. Todavía no hay botón ni llamada a Claude.
 3. **Ciclo.** Generar redacción, confirmada sin cambios, observaciones más «el resto sin cambios». Vista previa, aceptar, editar, descartar. Nada entra al informe hasta aceptar.
 4. **Después del texto.** Reescribir, Otra versión y Cambiar estilo, separados. También sobre texto escrito a mano. Conservan hechos, fechas y montos.
 5. **Resto de secciones.** Actividades delictivas y drogas, aspectos judiciales, recomendaciones, información económica, información laboral al final.
@@ -71,7 +71,7 @@ Generar el apartado desde el formulario, reglas de seis secciones, «Informació
 8. **Instrucciones por tipo** de informe, cuando las seis secciones ya salgan bien.
 9. **Prueba** con un cuestionario de ejemplo y revisión de Stephany. Recién ahí se enciende el interruptor.
 
-**Siguiente paso de código:** fase 2, el paquete de datos de Salud. No mostrar botón todavía.
+**Siguiente paso de código:** fase 3, el ciclo Generar / vista previa / aceptar en Salud, todavía con el interruptor apagado.
 
 ---
 
