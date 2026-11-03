@@ -174,6 +174,8 @@ class AsistenteRedaccionCicloTest extends TestCase
 
         $this->assertStringContainsString('breve', $this->motor->usuario);
         $this->assertStringContainsString('penicilina', $this->motor->usuario);
+        $this->assertStringNotContainsString('(vacío)', $this->motor->usuario);
+        $this->assertStringNotContainsString('Cristopher Unico', $this->motor->usuario);
         $this->assertDatabaseHas('evaluador_notas', [
             'seccion' => 'word_salud',
             'contenido' => 'Texto ya guardado',

@@ -82,8 +82,17 @@
         boton.addEventListener('click', function () {
             seccionActual = boton.getAttribute('data-seccion');
             document.getElementById('asistente-titulo').textContent = boton.getAttribute('data-titulo');
-            document.getElementById('asistente-error').classList.add('d-none');
-            document.getElementById('asistente-avisos').classList.add('d-none');
+            document.getElementById('asistente-modo').value = 'confirmada';
+            mostrar('asistente-observacion-grupo', false);
+            document.getElementById('asistente-observacion').value = '';
+            document.getElementById('asistente-resto').checked = false;
+            document.getElementById('asistente-estilo').value = 'formal';
+            var error = document.getElementById('asistente-error');
+            var avisos = document.getElementById('asistente-avisos');
+            error.textContent = '';
+            error.classList.add('d-none');
+            avisos.textContent = '';
+            avisos.classList.add('d-none');
             document.getElementById('asistente-propuesta-grupo').classList.add('d-none');
             document.getElementById('asistente-propuesta').value = '';
             modal.show();

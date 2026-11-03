@@ -28,11 +28,10 @@ class AsistenteRedaccionGenerador
         );
         $sistema = AsistenteRedaccionInstrucciones::sistema($seccion, (string) ($paquete['servicio'] ?? ''));
         $pedido = AsistenteRedaccionInstrucciones::pedido($modo, $estilo, $conObservacion && $restoSinCambios);
-        $usuario = $pedido."\n\n".$paquete['texto_para_modelo'];
-
-        if (in_array($modo, ['reescribir', 'otra_version', 'cambiar_estilo'], true)) {
-            $usuario .= "\n\nTexto a trabajar:\n".$textoActual;
-        }
+        $reescribe = in_array($modo, ['reescribir', 'otra_version', 'cambiar_estilo'], true);
+        $usuario = $reescribe
+            ? $pedido."\n\nTexto a trabajar:\n".$textoActual
+            : $pedido."\n\n".$paquete['texto_para_modelo'];
 
         return [
             'texto' => $this->motor->redactar($sistema, $usuario),
