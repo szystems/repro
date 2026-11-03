@@ -20,6 +20,10 @@
                             Coloca tus credenciales para poder iniciar sesión.
                         </h5>
 
+                        @if (session('error'))
+                            <div class="alert alert-warning" role="alert">{{ session('error') }}</div>
+                        @endif
+
                         <div class="mb-3">
                             <label for="email" class="form-label">Tu Email</label>
                             <div class="input-group">

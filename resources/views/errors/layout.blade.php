@@ -87,12 +87,16 @@
         <p class="error-message">@yield('mensaje')</p>
 
         <div class="d-flex gap-2 justify-content-center flex-wrap">
+            @hasSection('acciones')
+                @yield('acciones')
+            @else
             <a href="{{ url('/dashboard') }}" class="btn-home">
                 <i class="bi bi-house me-1"></i> Ir al inicio
             </a>
             <button onclick="history.back()" class="btn-back">
                 <i class="bi bi-arrow-left me-1"></i> Regresar
             </button>
+            @endif
         </div>
     </div>
 </body>
