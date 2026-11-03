@@ -128,7 +128,7 @@ class AsistenteRedaccionCampos
         ];
 
         foreach ($paquete['campos'] as $campo) {
-            $lineas[] = '- '.$campo['pregunta'].': '.($campo['vacio'] ? '(vacío)' : $campo['texto']);
+            $lineas[] = '- '.$campo['pregunta'].': '.self::textoDeCampo($campo);
         }
 
         $lineas[] = '';
@@ -193,6 +193,37 @@ class AsistenteRedaccionCampos
         }
 
         return false;
+    }
+
+    /**
+     * @param  array{texto: string, vacio: bool}  $campo
+     */
+    private static function textoDeCampo(array $campo): string
+    {
+        if ($campo['vacio']) {
+            return '(vacío)';
+        }
+
+        $texto = $campo['texto'];
+        if (! self::esDenegacion($texto)) {
+            return $texto;
+        }
+
+        return rtrim($texto, ". \t").'. No lo ha realizado.';
+    }
+
+    /**
+     * Un No o un N/A escrito por el candidato es una respuesta: no lo hizo.
+     * Una frase más larga se deja igual para no recortarla.
+     */
+    private static function esDenegacion(string $texto): bool
+    {
+        $normal = mb_strtolower(trim($texto));
+        $normal = rtrim($normal, ". \t");
+        $compacto = str_replace([' ', '.'], '', $normal);
+
+        return in_array($normal, ['no', 'ninguna', 'ninguno', 'ninguno/a', 'no aplica'], true)
+            || in_array($compacto, ['no', 'na', 'n/a'], true);
     }
 
     private static function texto(string $tipo, string $valor): string
