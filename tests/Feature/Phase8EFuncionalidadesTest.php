@@ -67,6 +67,7 @@ class Phase8EFuncionalidadesTest extends TestCase
 
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'telefono' => '55551234',
             'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
         ]);
@@ -89,6 +90,7 @@ class Phase8EFuncionalidadesTest extends TestCase
                     'apellidos' => 'Pérez',
                     'dpi' => '1234567890123',
                     'email' => 'juan@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'poligrafo',
                     'tipo_formulario' => 'preempleo',
                 ],
@@ -97,6 +99,7 @@ class Phase8EFuncionalidadesTest extends TestCase
                     'apellidos' => 'Pérez',
                     'dpi' => '1234567890123',
                     'email' => 'juan@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'vsa',
                     'tipo_formulario' => 'preempleo',
                 ],
@@ -123,6 +126,7 @@ class Phase8EFuncionalidadesTest extends TestCase
                     'apellidos' => 'Pérez',
                     'dpi' => '1234567890123',
                     'email' => 'juan@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'poligrafo',
                     'tipo_formulario' => 'preempleo',
                 ],
@@ -131,6 +135,7 @@ class Phase8EFuncionalidadesTest extends TestCase
                     'apellidos' => 'Pérez',
                     'dpi' => '1234567890123',
                     'email' => 'juan@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'poligrafo',
                     'tipo_formulario' => 'preempleo',
                 ],
@@ -154,11 +159,13 @@ class Phase8EFuncionalidadesTest extends TestCase
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
             'dpi' => '1234567890123',
+            'telefono' => '55551234',
             'tipo_servicio' => 'poligrafo',
         ]);
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
             'dpi' => '1234567890123',
+            'telefono' => '55551234',
             'tipo_servicio' => 'vsa',
         ]);
 

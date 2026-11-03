@@ -276,9 +276,10 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4 mb-2">
-                                            <label class="form-label"><i class="bi bi-whatsapp text-success"></i> WhatsApp</label>
+                                            <label class="form-label"><i class="bi bi-whatsapp text-success"></i> Teléfono principal *</label>
                                             <input type="tel" class="form-control" name="evaluados[{{ $index }}][telefono]" 
-                                                   value="{{ old('evaluados.'.$index.'.telefono', $evaluado->telefono) }}">
+                                                   value="{{ old('evaluados.'.$index.'.telefono', $evaluado->telefono) }}" required maxlength="20" inputmode="tel">
+                                            <small class="text-muted">Obligatorio. Con este número se contacta al candidato.</small>
                                         </div>
                                         <div class="col-md-4 mb-2">
                                             <label class="form-label">Teléfono alternativo</label>
@@ -504,8 +505,8 @@
             </select>
             </div>
             <div class="col-md-6 mb-2">
-                <label class="form-label"><i class="bi bi-whatsapp text-success"></i> WhatsApp</label>
-                <input type="tel" class="form-control evaluado-telefono" name="">
+                <label class="form-label"><i class="bi bi-whatsapp text-success"></i> Teléfono principal *</label>
+                <input type="tel" class="form-control evaluado-telefono" name="" required maxlength="20" inputmode="tel">
             </div>
             <div class="col-md-6 mb-2">
                 <label class="form-label">Teléfono alternativo</label>
@@ -767,6 +768,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!email) {
                 alert(`El email del evaluado ${index + 1} es requerido.`);
+                valid = false;
+                return;
+            }
+
+            const telefono = (item.querySelector('[name$="[telefono]"]')?.value || '').replace(/\D/g, '');
+            if (telefono.length < 8) {
+                alert(`El teléfono principal del evaluado ${index + 1} es obligatorio y debe tener al menos 8 dígitos.`);
                 valid = false;
                 return;
             }

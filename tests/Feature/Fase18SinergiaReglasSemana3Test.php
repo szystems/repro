@@ -83,6 +83,7 @@ class Fase18SinergiaReglasSemana3Test extends TestCase
                     'apellidos'       => 'Perez',
                     'dpi'             => '1234567890123',
                     'email'           => 'juan@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio'   => 'poligrafo',
                     'tipo_formulario' => 'preempleo',
                     'modalidad'       => 'virtual',

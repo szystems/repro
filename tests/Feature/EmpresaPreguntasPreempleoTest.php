@@ -83,7 +83,8 @@ class EmpresaPreguntasPreempleoTest extends TestCase
                 'apellidos' => 'Prueba',
                 'dpi' => '1234567890123',
                 'email' => 'ana.preguntas@test.com',
-                'tipo_servicio' => 'poligrafo',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'poligrafo',
                 'tipo_formulario' => 'preempleo',
             ]],
         ])->assertRedirect();
@@ -120,7 +121,8 @@ class EmpresaPreguntasPreempleoTest extends TestCase
                 'apellidos' => 'General',
                 'dpi' => '2234567890123',
                 'email' => 'luis.general@test.com',
-                'tipo_servicio' => 'poligrafo',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'poligrafo',
                 'tipo_formulario' => 'preempleo',
             ]],
         ])->assertRedirect();
@@ -143,6 +145,7 @@ class EmpresaPreguntasPreempleoTest extends TestCase
         $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'telefono' => '55551234',
             'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
         ]);
@@ -173,9 +176,9 @@ class EmpresaPreguntasPreempleoTest extends TestCase
         );
 
         foreach ([
-            ['dpi' => '3234567890123', 'tipo_servicio' => 'poligrafo', 'tipo_formulario' => 'periodica'],
-            ['dpi' => '4234567890123', 'tipo_servicio' => 'vsa', 'tipo_formulario' => 'especifica'],
-            ['dpi' => '5234567890123', 'tipo_servicio' => 'socioeconomico', 'tipo_formulario' => 'preempleo'],
+            ['dpi' => '3234567890123', 'telefono' => '55551234', 'tipo_servicio' => 'poligrafo', 'tipo_formulario' => 'periodica'],
+            ['dpi' => '4234567890123', 'telefono' => '55551234', 'tipo_servicio' => 'vsa', 'tipo_formulario' => 'especifica'],
+            ['dpi' => '5234567890123', 'telefono' => '55551234', 'tipo_servicio' => 'socioeconomico', 'tipo_formulario' => 'preempleo'],
         ] as $caso) {
             $this->actingAs($admin)->post(route('ordenes.store'), [
                 'empresa_id' => $empresa->id,
@@ -185,6 +188,7 @@ class EmpresaPreguntasPreempleoTest extends TestCase
                     'apellidos' => 'Blanco',
                     'dpi' => $caso['dpi'],
                     'email' => $caso['dpi'].'@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => $caso['tipo_servicio'],
                     'tipo_formulario' => $caso['tipo_formulario'],
                 ]],
@@ -219,6 +223,7 @@ class EmpresaPreguntasPreempleoTest extends TestCase
                     'apellidos' => 'Empresa',
                     'dpi' => '6234567890123',
                     'email' => 'vsa.empresa@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'vsa',
                     'tipo_formulario' => 'preempleo',
                     'preguntas_juego' => 'principal',
@@ -228,6 +233,7 @@ class EmpresaPreguntasPreempleoTest extends TestCase
                     'apellidos' => 'Puesto',
                     'dpi' => '7234567890123',
                     'email' => 'poli.puesto@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'poligrafo',
                     'tipo_formulario' => 'preempleo',
                     'preguntas_juego' => 'puesto',
@@ -331,6 +337,7 @@ class EmpresaPreguntasPreempleoTest extends TestCase
                     'apellidos' => 'Poli',
                     'dpi' => '8234567890123',
                     'email' => 'peri.poli@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'poligrafo',
                     'tipo_formulario' => 'periodica',
                 ],
@@ -339,6 +346,7 @@ class EmpresaPreguntasPreempleoTest extends TestCase
                     'apellidos' => 'Vsa',
                     'dpi' => '9234567890123',
                     'email' => 'peri.vsa@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'vsa',
                     'tipo_formulario' => 'periodica',
                 ],
@@ -347,6 +355,7 @@ class EmpresaPreguntasPreempleoTest extends TestCase
                     'apellidos' => 'Blanco',
                     'dpi' => '1334567890123',
                     'email' => 'espe.blanco@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'poligrafo',
                     'tipo_formulario' => 'especifica',
                 ],
@@ -400,7 +409,8 @@ class EmpresaPreguntasPreempleoTest extends TestCase
                 'apellidos' => 'Vacio',
                 'dpi' => '1434567890123',
                 'email' => 'peri.vacio@test.com',
-                'tipo_servicio' => 'poligrafo',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'poligrafo',
                 'tipo_formulario' => 'periodica',
             ]],
         ])->assertRedirect();

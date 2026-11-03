@@ -254,6 +254,7 @@ class AuditoriaSeguridadTest extends TestCase
         EvaluadoOrden::factory()->create([
             'orden_id'      => $orden->id,
             'dpi'           => '1111111111111',
+            'telefono' => '55551234',
             'tipo_servicio' => 'poligrafo',
         ]);
 
@@ -262,6 +263,7 @@ class AuditoriaSeguridadTest extends TestCase
         EvaluadoOrden::factory()->create([
             'orden_id'      => $orden->id,
             'dpi'           => '1111111111111',
+            'telefono' => '55551234',
             'tipo_servicio' => 'poligrafo',
         ]);
     }
@@ -272,12 +274,14 @@ class AuditoriaSeguridadTest extends TestCase
         EvaluadoOrden::factory()->create([
             'orden_id'      => $orden->id,
             'dpi'           => '2222222222222',
+            'telefono' => '55551234',
             'tipo_servicio' => 'poligrafo',
         ]);
 
         $segundo = EvaluadoOrden::factory()->create([
             'orden_id'      => $orden->id,
             'dpi'           => '2222222222222',
+            'telefono' => '55551234',
             'tipo_servicio' => 'vsa',
         ]);
 
@@ -324,6 +328,7 @@ class AuditoriaSeguridadTest extends TestCase
                     'apellidos'        => 'Persona',
                     'dpi'              => '3333333333333',
                     'email'            => 'mismo@correo.com',
+                    'telefono' => '55551234',
                     'tipo_servicio'    => 'poligrafo',
                     'tipo_formulario'  => 'preempleo',
                 ],
@@ -332,6 +337,7 @@ class AuditoriaSeguridadTest extends TestCase
                     'apellidos'        => 'Persona',
                     'dpi'              => '4444444444444',
                     'email'            => 'mismo@correo.com',
+                    'telefono' => '55551234',
                     'tipo_servicio'    => 'poligrafo',
                     'tipo_formulario'  => 'preempleo',
                 ],

@@ -168,6 +168,7 @@ class NotificacionesInAppTest extends TestCase
                     'apellidos'       => 'Test',
                     'dpi'             => '1234567890101',
                     'email'           => 'candidato@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio'   => 'poligrafo',
                     'tipo_formulario' => 'preempleo',
                     'puesto_evaluar'  => 'Analista',
