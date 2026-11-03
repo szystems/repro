@@ -323,8 +323,9 @@ function agregarEvaluado(datos = {}) {
                 </div>
                 @endif
                 <div class="col-md-3 mb-2">
-                    <label class="form-label"><i class="bi bi-whatsapp text-success"></i> WhatsApp</label>
-                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono]" placeholder="45464545" value="${telefono}">
+                    <label class="form-label"><i class="bi bi-whatsapp text-success"></i> Teléfono principal *</label>
+                    <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][telefono]" placeholder="45464545" value="${telefono}" required maxlength="20" inputmode="tel">
+                    <small class="text-muted">Obligatorio. Con este número se contacta al candidato.</small>
                 </div>
                 <div class="col-md-3 mb-2">
                     <label class="form-label">Teléfono alternativo</label>
@@ -415,6 +416,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 alert('Debe agregar al menos un evaluado.');
                 return false;
+            }
+
+            for (let i = 0; i < evaluados.length; i++) {
+                const campo = evaluados[i].querySelector('[name$="[telefono]"]');
+                const digitos = (campo && campo.value ? campo.value : '').replace(/\D/g, '');
+                if (digitos.length < 8) {
+                    e.preventDefault();
+                    alert('El teléfono principal del evaluado ' + (i + 1) + ' es obligatorio y debe tener al menos 8 dígitos.');
+                    if (campo) {
+                        campo.focus();
+                    }
+                    return false;
+                }
             }
 
             // Marcar como enviando y bloquear botón

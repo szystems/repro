@@ -182,6 +182,7 @@ class Fase1AjustesTest extends TestCase
 
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'telefono' => '55551234',
             'tipo_servicio' => 'poligrafo',
             'resultado' => 'aprobado',
         ]);
@@ -206,6 +207,7 @@ class Fase1AjustesTest extends TestCase
 
         $evaluado = EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'telefono' => '55551234',
             'tipo_servicio' => 'socioeconomico',
             'resultado' => 'tipo_a',
         ]);
@@ -259,6 +261,7 @@ class Fase1AjustesTest extends TestCase
                     'apellidos' => 'Pérez',
                     'dpi' => '1234567890123',
                     'email' => 'juan@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'socioeconomico',
                     'tipo_formulario' => 'periodica',
                 ],
@@ -286,6 +289,7 @@ class Fase1AjustesTest extends TestCase
                     'apellidos' => 'López',
                     'dpi' => '9876543210123',
                     'email' => 'carlos@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'poligrafo',
                     'tipo_formulario' => 'preempleo',
                 ],

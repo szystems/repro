@@ -277,7 +277,7 @@ class OrdenesController extends Controller
             'evaluados.*.apellidos' => 'required|string|max:100',
             'evaluados.*.dpi' => 'required|string|size:13',
             'evaluados.*.email' => 'required|email|max:100',
-            'evaluados.*.telefono' => 'nullable|string|max:20',
+            'evaluados.*.telefono' => \App\Support\TelefonoPrincipal::reglas(),
             'evaluados.*.telefono_alternativo' => 'nullable|string|max:20',
             'evaluados.*.tipo_servicio' => 'required|in:poligrafo,vsa,socioeconomico',
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
@@ -292,6 +292,7 @@ class OrdenesController extends Controller
             'confidencial' => 'nullable|boolean',
         ], [
             'sede_id.required' => 'Seleccione la sede responsable de REPRO.',
+            'evaluados.*.telefono.required' => \App\Support\TelefonoPrincipal::mensajeRequerido(),
         ]);
 
         // Validar que no haya DPI+servicio duplicados en la misma orden
@@ -526,7 +527,7 @@ class OrdenesController extends Controller
             'evaluados.*.apellidos' => 'required|string|max:100',
             'evaluados.*.dpi' => 'required|string|size:13',
             'evaluados.*.email' => 'required|email|max:100',
-            'evaluados.*.telefono' => 'nullable|string|max:20',
+            'evaluados.*.telefono' => \App\Support\TelefonoPrincipal::reglas(),
             'evaluados.*.telefono_alternativo' => 'nullable|string|max:20',
             'evaluados.*.tipo_servicio' => 'required|in:poligrafo,vsa,socioeconomico',
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
@@ -541,6 +542,8 @@ class OrdenesController extends Controller
             'evaluados_eliminar.*' => 'integer|exists:evaluados_orden,id',
             'reclutador_id' => 'nullable|exists:users,id',
             'confidencial' => 'nullable|boolean',
+        ], [
+            'evaluados.*.telefono.required' => \App\Support\TelefonoPrincipal::mensajeRequerido(),
         ]);
 
         DB::beginTransaction();

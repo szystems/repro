@@ -41,7 +41,7 @@ class OrdenFormRequest extends FormRequest
             'evaluados.*.apellidos' => 'required|string|max:100', 
             'evaluados.*.dpi' => 'required|string|size:13|regex:/^[0-9]{13}$/',
             'evaluados.*.email' => 'required|email|max:100',
-            'evaluados.*.telefono' => 'nullable|string|max:20',
+            'evaluados.*.telefono' => \App\Support\TelefonoPrincipal::reglas(),
             
             // Campos granulares por evaluado
             'evaluados.*.tipo_servicio' => 'required|in:poligrafo,vsa,socioeconomico',
@@ -81,6 +81,7 @@ class OrdenFormRequest extends FormRequest
             'evaluados.*.dpi.regex' => 'El DPI debe contener solo números.',
             'evaluados.*.email.required' => 'El email del evaluado es obligatorio.',
             'evaluados.*.email.email' => 'Formato de email inválido.',
+            'evaluados.*.telefono.required' => \App\Support\TelefonoPrincipal::mensajeRequerido(),
             
             'evaluados.*.tipo_servicio.required' => 'El tipo de servicio es obligatorio para cada evaluado.',
             'evaluados.*.tipo_servicio.in' => 'Tipo de servicio inválido.',

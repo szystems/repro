@@ -200,6 +200,7 @@ class EmpresaConfidencialidadReclutadoresTest extends TestCase
                     'apellidos' => 'Méndez',
                     'dpi' => '1234567890123',
                     'email' => 'carla.conf@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'poligrafo',
                     'tipo_formulario' => 'preempleo',
                 ]],

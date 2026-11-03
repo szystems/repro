@@ -125,6 +125,30 @@ class OrdenesControllerTest extends TestCase
         $this->assertEquals('preempleo', $evaluado->tipo_formulario);
     }
 
+    public function test_no_crea_la_orden_sin_telefono_principal(): void
+    {
+        $admin = User::factory()->create(['role_as' => 3]);
+        $admin->roles()->attach(Role::where('name', 'admin')->first());
+        $empresa = Empresa::factory()->create();
+
+        $response = $this->actingAs($admin)->post(route('ordenes.store'), [
+            'empresa_id' => $empresa->id,
+            'prioridad' => 'normal',
+            'evaluados' => [[
+                'nombre' => 'Pablo',
+                'apellidos' => 'Valiente',
+                'dpi' => '1234567890123',
+                'email' => 'pablo@test.com',
+                'telefono' => '',
+                'tipo_servicio' => 'vsa',
+                'tipo_formulario' => 'preempleo',
+            ]],
+        ]);
+
+        $response->assertSessionHasErrors('evaluados.0.telefono');
+        $this->assertDatabaseMissing('evaluados_orden', ['dpi' => '1234567890123']);
+    }
+
     public function test_puede_ver_detalle_de_orden()
     {
         // Crear usuario admin
@@ -327,7 +351,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => 'López',
                         'dpi' => '9876543210123',
                         'email' => 'maria@test.com',
-                        'tipo_servicio' => 'poligrafo',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'poligrafo',
                         'tipo_formulario' => 'preempleo',
                         'puesto_evaluar' => 'Analista',
                         'sede_region_empresa' => 'Regional Norte',
@@ -358,7 +383,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => 'Gómez',
                         'dpi' => '1111111111111',
                         'email' => 'carlos@test.com',
-                        'tipo_servicio' => 'vsa',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'vsa',
                         'tipo_formulario' => 'periodica',
                     ]
                 ]
@@ -396,7 +422,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => $evaluado->apellidos,
                         'dpi' => $evaluado->dpi,
                         'email' => $evaluado->email,
-                        'tipo_servicio' => $evaluado->tipo_servicio,
+                    'telefono' => '55551234',
+                    'tipo_servicio' => $evaluado->tipo_servicio,
                         'tipo_formulario' => $evaluado->tipo_formulario,
                         'sede_region_empresa' => 'Sucursal Centro',
                     ]
@@ -442,7 +469,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => $evaluadoExistente->apellidos,
                         'dpi' => $evaluadoExistente->dpi,
                         'email' => $evaluadoExistente->email,
-                        'tipo_servicio' => $evaluadoExistente->tipo_servicio,
+                    'telefono' => '55551234',
+                    'tipo_servicio' => $evaluadoExistente->tipo_servicio,
                         'tipo_formulario' => $evaluadoExistente->tipo_formulario,
                     ],
                     [
@@ -450,7 +478,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => 'Nuevo',
                         'dpi' => '2222222222222',
                         'email' => 'nuevo@test.com',
-                        'tipo_servicio' => 'poligrafo',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'poligrafo',
                         'tipo_formulario' => 'preempleo',
                     ],
                 ],
@@ -490,6 +519,7 @@ class OrdenesControllerTest extends TestCase
             'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
             'email' => 'existente@test.com',
+                    'telefono' => '55551234',
             'estado_evaluacion' => 'pendiente_de_evaluacion', 'estado_programacion' => 'reprogramado',
             'fecha_programada' => now()->addDay(),
         ]);
@@ -504,7 +534,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => 'Prueba',
                         'dpi' => '1234567896541',
                         'email' => 'existente@test.com',
-                        'tipo_servicio' => 'poligrafo',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'poligrafo',
                         'tipo_formulario' => 'preempleo',
                     ],
                     [
@@ -512,7 +543,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => 'Rivera',
                         'dpi' => '9999999999999',
                         'email' => 'maria.rivera@test.com',
-                        'tipo_servicio' => 'vsa',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'vsa',
                         'tipo_formulario' => 'periodica',
                     ],
                 ],
@@ -533,6 +565,7 @@ class OrdenesControllerTest extends TestCase
         $this->assertDatabaseHas('evaluados_orden', [
             'orden_id' => $orden->id,
             'dpi' => '9999999999999',
+            'telefono' => '55551234',
             'tipo_servicio' => 'vsa',
         ]);
     }
@@ -556,6 +589,7 @@ class OrdenesControllerTest extends TestCase
             'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
             'email' => 'existente@test.com',
+                    'telefono' => '55551234',
         ]);
 
         $response = $this->actingAs($admin)
@@ -567,7 +601,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => 'Distinta',
                         'dpi' => '1234567896541',
                         'email' => 'otro@test.com',
-                        'tipo_servicio' => 'poligrafo',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'poligrafo',
                         'tipo_formulario' => 'preempleo',
                     ],
                 ],
@@ -603,6 +638,7 @@ class OrdenesControllerTest extends TestCase
             'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
             'email' => 'existente@test.com',
+                    'telefono' => '55551234',
         ]);
 
         $response = $this->actingAs($admin)
@@ -615,7 +651,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => 'Prueba',
                         'dpi' => '1234567896541',
                         'email' => 'existente@test.com',
-                        'tipo_servicio' => 'poligrafo',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'poligrafo',
                         'tipo_formulario' => 'preempleo',
                     ],
                     [
@@ -623,7 +660,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => 'Rivera',
                         'dpi' => '9999999999999',
                         'email' => 'maria.rivera@test.com',
-                        'tipo_servicio' => 'vsa',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'vsa',
                         'tipo_formulario' => 'periodica',
                     ],
                 ],
@@ -656,6 +694,7 @@ class OrdenesControllerTest extends TestCase
             'tipo_servicio' => 'poligrafo',
             'tipo_formulario' => 'preempleo',
             'email' => 'prueba@test.com',
+                    'telefono' => '55551234',
             'estado_formulario' => 'formulario_completado_y_recibido',
             'estado_programacion' => 'programado',
             'estado_evaluacion' => 'pendiente_de_evaluacion',
@@ -673,7 +712,8 @@ class OrdenesControllerTest extends TestCase
                         'apellidos' => 'NUMERO PRUEBA DUPLICACIÓN',
                         'dpi' => '2222222222222',
                         'email' => 'prueba@test.com',
-                        'tipo_servicio' => 'poligrafo',
+                    'telefono' => '55551234',
+                    'tipo_servicio' => 'poligrafo',
                         'tipo_formulario' => 'preempleo',
                     ],
                 ],
@@ -797,6 +837,7 @@ class OrdenesControllerTest extends TestCase
             'tipo_servicio' => 'vsa',
             'tipo_formulario' => 'preempleo',
             'email' => 'cristopher@test.com',
+                    'telefono' => '55551234',
             'token_unico' => str_repeat('a', 32),
         ]);
         EvaluadoOrden::factory()->create([
@@ -807,6 +848,7 @@ class OrdenesControllerTest extends TestCase
             'tipo_servicio' => 'vsa',
             'tipo_formulario' => 'preempleo',
             'email' => 'carlos@test.com',
+                    'telefono' => '55551234',
             'token_unico' => str_repeat('b', 32),
         ]);
 
@@ -825,7 +867,8 @@ class OrdenesControllerTest extends TestCase
             'apellidos' => $evaluado->apellidos,
             'dpi' => $evaluado->dpi,
             'email' => $evaluado->email,
-            'tipo_servicio' => $evaluado->tipo_servicio,
+                    'telefono' => '55551234',
+                    'tipo_servicio' => $evaluado->tipo_servicio,
             'tipo_formulario' => $evaluado->tipo_formulario,
         ], $overrides);
     }
@@ -851,7 +894,8 @@ class OrdenesControllerTest extends TestCase
                 'apellidos'      => 'Pérez',
                 'dpi'            => '1234567890101',
                 'email'          => 'juan@example.com',
-                'tipo_servicio'  => 'vsa',
+                    'telefono' => '55551234',
+                    'tipo_servicio'  => 'vsa',
                 'tipo_formulario'=> 'preempleo',
             ]],
         ]);
@@ -883,7 +927,8 @@ class OrdenesControllerTest extends TestCase
                 'apellidos'      => 'López',
                 'dpi'            => '9876543210101',
                 'email'          => 'ana@example.com',
-                'tipo_servicio'  => 'vsa',
+                    'telefono' => '55551234',
+                    'tipo_servicio'  => 'vsa',
                 'tipo_formulario'=> 'preempleo',
             ]],
         ])->assertRedirect();

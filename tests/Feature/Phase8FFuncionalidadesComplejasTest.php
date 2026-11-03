@@ -67,6 +67,7 @@ class Phase8FFuncionalidadesComplejasTest extends TestCase
                     'apellidos' => 'Pérez',
                     'dpi' => '1234567890123',
                     'email' => 'juan@test.com',
+                    'telefono' => '55551234',
                     'tipo_servicio' => 'poligrafo',
                     'tipo_formulario' => 'preempleo',
                 ],

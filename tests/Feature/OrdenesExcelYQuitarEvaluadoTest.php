@@ -54,6 +54,7 @@ class OrdenesExcelYQuitarEvaluadoTest extends TestCase
         ]);
         EvaluadoOrden::factory()->create([
             'orden_id' => $orden->id,
+            'telefono' => '55551234',
             'tipo_servicio' => 'poligrafo',
         ]);
 
@@ -286,6 +287,7 @@ class OrdenesExcelYQuitarEvaluadoTest extends TestCase
             'orden_id' => $orden->id,
             'nombre' => 'Ana',
             'apellidos' => 'Prueba',
+            'telefono' => '55551234',
             'tipo_servicio' => 'poligrafo',
             'sede_region_empresa' => 'Regional Norte',
         ]);
@@ -342,6 +344,7 @@ class OrdenesExcelYQuitarEvaluadoTest extends TestCase
             'tipo_servicio' => $servicio,
             'tipo_formulario' => 'preempleo',
             'email' => $dpi.'@test.com',
+                    'telefono' => '55551234',
             'cuestionario_completado' => false,
             'estado_evaluacion' => 'pendiente_de_evaluacion',
             'estado_formulario' => 'link_pendiente',
@@ -359,7 +362,8 @@ class OrdenesExcelYQuitarEvaluadoTest extends TestCase
             'apellidos' => $evaluado->apellidos,
             'dpi' => $evaluado->dpi,
             'email' => $evaluado->email,
-            'tipo_servicio' => $evaluado->tipo_servicio,
+                    'telefono' => '55551234',
+                    'tipo_servicio' => $evaluado->tipo_servicio,
             'tipo_formulario' => $evaluado->tipo_formulario ?? 'preempleo',
         ];
     }
