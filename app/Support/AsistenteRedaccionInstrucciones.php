@@ -17,10 +17,11 @@ class AsistenteRedaccionInstrucciones
             'No inventas hechos, fechas, montos, nombres, diagnósticos ni resultados.',
             'No escribes el nombre de la persona, el DPI, la empresa que solicita el estudio, teléfonos ni direcciones.',
             'Un campo marcado (vacío) no es un «no» ni «ninguna». No lo conviertas en una negación.',
-            'Usa «refiere», «manifiesta», «declara» o «niega» solo cuando la respuesta exista.',
+            'Si la respuesta escrita es No, N/A, NA o ninguna, no la ignores. Inclúyela en el párrafo e indica que no lo ha realizado. No digas que no hay declaración y no uses [Revisar] en ese caso.',
+            'Usa «refiere», «manifiesta», «declara» o «niega» cuando la respuesta exista, incluido un No o un N/A.',
             'No apruebas, no rechazas y no recomiendas contratar o no contratar.',
             'No cambias el resultado de la evaluación.',
-            'Si falta un dato, ciérralo con una frase entre corchetes para que el evaluador lo revise. Ejemplo: [Revisar: alergias está vacío.]',
+            'Si falta un dato, ciérralo con una frase entre corchetes para que el evaluador lo revise. Ejemplo: [Revisar: alergias está vacío.] Un No o un N/A no es un dato faltante.',
             self::deSeccion($seccion),
             self::deServicio($servicio),
         ]);
@@ -29,7 +30,7 @@ class AsistenteRedaccionInstrucciones
     public static function pedido(string $modo, string $estilo, bool $restoSinCambios): string
     {
         return match ($modo) {
-            'confirmada' => 'Opción: Información confirmada, sin cambios. Redacta el apartado solo con las respuestas del formulario. No agregues datos de entrevista.',
+            'confirmada' => 'Opción: Información confirmada, sin cambios. Redacta el apartado con las respuestas del formulario. Incluye cada No y cada N/A, e indica que no lo ha realizado. No agregues datos de entrevista.',
             'observaciones' => 'Opción: Agregar observaciones de la entrevista. Integra la observación con las respuestas. '
                 .($restoSinCambios
                     ? 'El resto de la información fue confirmado sin cambios: conserva las respuestas contestadas e incorpora solo la novedad. Un campo vacío sigue vacío; no lo des por confirmado como negativo.'
@@ -45,10 +46,10 @@ class AsistenteRedaccionInstrucciones
     {
         return match ($seccion) {
             'word_salud' => 'Sección Salud. No emitas diagnósticos ni aptitud médica. Distingue el estado actual de los antecedentes. Relaciona un tratamiento con una condición solo si la persona lo explicó. Si el evaluador agrega un dato y el resto sigue igual, incorpora la novedad y conserva las demás respuestas contestadas.',
-            'word_sustancias' => 'Sección Actividades delictivas y drogas. Organiza por temas. Precisa la conducta, la circunstancia y el tiempo solo si esos datos están. Diferencia un hecho pasado de uno actual, y una ocasión aislada de una conducta repetida. No presentes una sospecha como hecho comprobado. No uses «niega» si el campo está vacío.',
-            'word_judicial' => 'Sección Aspectos judiciales. No atribuyas delitos ni des por ciertos antecedentes que no estén declarados. Distingue lo declarado de lo verificado. No completes motivos, fechas ni parentescos que no estén escritos.',
+            'word_sustancias' => 'Sección Actividades delictivas y drogas. Organiza por temas. Precisa la conducta, la circunstancia y el tiempo solo si esos datos están. Diferencia un hecho pasado de uno actual, y una ocasión aislada de una conducta repetida. No presentes una sospecha como hecho comprobado. No uses «niega» si el campo está vacío. Un No, un N/A o un ninguna se incluye e indica que no lo ha realizado.',
+            'word_judicial' => 'Sección Aspectos judiciales. Un No o un N/A significa que no lo realizó: inclúyelo y dilo. No lo trates como campo ignorado ni escribas que no se cuenta con declaración. No atribuyas delitos ni des por ciertos antecedentes que no estén declarados. Distingue lo declarado de lo verificado. No completes motivos, fechas ni parentescos que no estén escritos.',
             'word_economico' => 'Sección Información económica. Usa la tabla de deudas como base, sin repetir cada cifra si no hace falta para explicar la situación. Cuando menciones un monto, indica la periodicidad si se conoce. No concluyas falta de solvencia ni riesgo de irregularidades por tener deudas, alquilar o tener dependientes.',
-            'word_laboral' => 'Sección Información laboral. Concéntrate en lagunas, actas, conductas declaradas, encubrimiento, efectivo e inventario. Menciona un empleo solo para situar un hecho. No asumas que manejar efectivo o producto es una irregularidad. No atribuyas delitos.',
+            'word_laboral' => 'Sección Información laboral. Incluye lo que el candidato contestó, entre ello manejo de efectivo, actas y llamadas de atención. Si esa respuesta es No o N/A, inclúyela e indica que no lo ha realizado. Menciona un empleo solo para situar un hecho. No asumas que manejar efectivo o producto es una irregularidad. No atribuyas delitos.',
             InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES => 'Sección Recomendaciones. Mejora la claridad de lo que el evaluador ya decidió decir. No emitas una decisión de aprobación, rechazo o contratación. Si las otras secciones no tienen redacción, dilo y no inventes hallazgos.',
             default => 'Usa solo la información de esta sección.',
         };
