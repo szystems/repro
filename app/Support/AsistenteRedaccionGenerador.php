@@ -28,14 +28,32 @@ class AsistenteRedaccionGenerador
         );
         $sistema = AsistenteRedaccionInstrucciones::sistema($seccion, (string) ($paquete['servicio'] ?? ''));
         $pedido = AsistenteRedaccionInstrucciones::pedido($modo, $estilo, $conObservacion && $restoSinCambios);
-        $reescribe = in_array($modo, ['reescribir', 'otra_version', 'cambiar_estilo'], true);
-        $usuario = $reescribe
-            ? $pedido."\n\nTexto a trabajar:\n".$textoActual
-            : $pedido."\n\n".$paquete['texto_para_modelo'];
+        $usuario = $this->mensaje($modo, $pedido, $observacion, $textoActual, (string) $paquete['texto_para_modelo']);
 
         return [
             'texto' => $this->motor->redactar($sistema, $usuario),
             'avisos' => AsistenteRedaccionAvisos::de($paquete, $conObservacion && $restoSinCambios),
         ];
+    }
+
+    private function mensaje(string $modo, string $pedido, string $observacion, string $textoActual, string $formulario): string
+    {
+        $soloTexto = in_array($modo, ['reescribir', 'otra_version', 'cambiar_estilo', 'instruccion'], true)
+            || ($modo === 'observaciones' && $textoActual !== '');
+
+        if ($soloTexto) {
+            $mensaje = $pedido."\n\nTexto actual:\n".$textoActual;
+            if ($observacion !== '') {
+                $mensaje .= "\n\nInstrucción:\n".$observacion;
+            }
+
+            return $mensaje;
+        }
+
+        if ($modo === 'confirmada' && $textoActual !== '') {
+            return $pedido."\n\nTexto ya escrito en la sección. Consérvalo como base:\n".$textoActual."\n\n".$formulario;
+        }
+
+        return $pedido."\n\n".$formulario;
     }
 }

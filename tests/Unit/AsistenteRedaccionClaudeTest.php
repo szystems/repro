@@ -39,9 +39,13 @@ class AsistenteRedaccionClaudeTest extends TestCase
         Http::assertSent(function ($request): bool {
             $cuerpo = json_encode($request->data());
 
+            $sistema = $request['system'][0]['text'] ?? null;
+
             return $request->url() === 'https://api.anthropic.com/v1/messages'
                 && $request->hasHeader('x-api-key', 'llave-de-prueba')
-                && $request['system'] === 'criterio'
+                && $sistema === 'criterio'
+                && $request['temperature'] === 0.2
+                && $request['max_tokens'] === 700
                 && is_string($cuerpo)
                 && ! str_contains($cuerpo, 'llave-de-prueba');
         });

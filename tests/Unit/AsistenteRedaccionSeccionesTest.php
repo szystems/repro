@@ -49,6 +49,8 @@ class AsistenteRedaccionSeccionesTest extends TestCase
         CuestionarioRespuesta::guardarRespuestas($cuestionario->id, 'antecedentes', [
             'sustancias_usadas' => 'marihuana',
             'salud_alergias' => 'si',
+            'judicial_08' => 'No ha portado armas.',
+            'judicial_02' => 'Sin antecedente penal.',
             'dpi' => '3403384231403',
         ]);
 
@@ -56,9 +58,10 @@ class AsistenteRedaccionSeccionesTest extends TestCase
         $laboral = json_encode(AsistenteRedaccionSecciones::paquete($evaluado, 'word_laboral', ''), JSON_UNESCAPED_UNICODE);
         $economico = json_encode(AsistenteRedaccionSecciones::paquete($evaluado, 'word_economico', ''), JSON_UNESCAPED_UNICODE);
         $drogas = json_encode(AsistenteRedaccionSecciones::paquete($evaluado, 'word_sustancias', ''), JSON_UNESCAPED_UNICODE);
+        $judicial = json_encode(AsistenteRedaccionSecciones::paquete($evaluado, 'word_judicial', ''), JSON_UNESCAPED_UNICODE);
 
         $this->assertIsString($laboral);
-        $this->assertStringContainsString('Panadería Luz', $laboral);
+        $this->assertStringNotContainsString('Panadería Luz', $laboral);
         $this->assertStringContainsString('Manejó caja.', $laboral);
         $this->assertStringNotContainsString('Pedro Jefe', $laboral);
         $this->assertStringNotContainsString('55551234', $laboral);
@@ -66,12 +69,16 @@ class AsistenteRedaccionSeccionesTest extends TestCase
         $this->assertStringNotContainsString('3403384231403', $laboral);
         $this->assertStringNotContainsString('no_aprobado', $laboral);
 
-        $this->assertStringContainsString('Banco Industrial', $economico);
-        $this->assertStringContainsString('Al día', $economico);
+        $this->assertStringNotContainsString('Banco Industrial', $economico);
+        $this->assertStringNotContainsString('45000', $economico);
         $this->assertStringContainsString('5000', $economico);
         $this->assertStringNotContainsString('Cristopher Unico', $economico);
 
         $this->assertStringContainsString('Marihuana', $drogas);
+        $this->assertStringContainsString('No ha portado armas.', $drogas);
+        $this->assertStringNotContainsString('Sin antecedente penal.', $drogas);
+        $this->assertStringContainsString('Sin antecedente penal.', $judicial);
+        $this->assertStringNotContainsString('No ha portado armas.', $judicial);
         $this->assertStringNotContainsString('salud_alergias', $drogas);
         $this->assertStringNotContainsString('3403384231403', $drogas);
     }
@@ -104,6 +111,7 @@ class AsistenteRedaccionSeccionesTest extends TestCase
         $evaluado = $this->evaluado('socioeconomico', 'preempleo');
         $evaluado->update(['resultado' => 'no_aprobado', 'texto_informe_preliminar' => 'Se recomienda no contratar.']);
         EvaluadorNota::guardarNota($evaluado->id, 'word_salud', '', 'Refiere buena salud.', null);
+        EvaluadorNota::guardarNota($evaluado->id, 'word_observaciones', '', 'No presentó antecedentes penales y policiales.', null);
 
         $json = json_encode(
             AsistenteRedaccionSecciones::paquete($evaluado->fresh(), 'word_recomendaciones', 'Redactar con cautela.'),
@@ -111,7 +119,8 @@ class AsistenteRedaccionSeccionesTest extends TestCase
         );
 
         $this->assertIsString($json);
-        $this->assertStringContainsString('Refiere buena salud.', $json);
+        $this->assertStringContainsString('No presentó antecedentes penales y policiales.', $json);
+        $this->assertStringNotContainsString('Refiere buena salud.', $json);
         $this->assertStringNotContainsString('no_aprobado', $json);
         $this->assertStringNotContainsString('no contratar', $json);
     }

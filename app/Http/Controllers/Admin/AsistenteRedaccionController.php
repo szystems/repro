@@ -21,7 +21,7 @@ class AsistenteRedaccionController extends Controller
         $registro = $this->autorizar($cuestionario);
         $datos = $request->validate([
             'seccion' => 'required|string|max:40',
-            'modo' => 'required|string|in:confirmada,observaciones,reescribir,otra_version,cambiar_estilo',
+            'modo' => 'required|string|in:confirmada,observaciones,instruccion,reescribir,otra_version,cambiar_estilo',
             'observacion' => 'nullable|string|max:5000',
             'resto_sin_cambios' => 'nullable|boolean',
             'texto_actual' => 'nullable|string|max:10000',
@@ -33,11 +33,14 @@ class AsistenteRedaccionController extends Controller
         }
 
         $textoActual = trim((string) ($datos['texto_actual'] ?? ''));
-        if (in_array($datos['modo'], ['reescribir', 'otra_version', 'cambiar_estilo'], true) && $textoActual === '') {
+        if (in_array($datos['modo'], ['reescribir', 'otra_version', 'cambiar_estilo', 'instruccion'], true) && $textoActual === '') {
             return response()->json(['message' => 'No hay un texto para modificar.'], 422);
         }
         if ($datos['modo'] === 'observaciones' && trim((string) ($datos['observacion'] ?? '')) === '') {
             return response()->json(['message' => 'Escriba la observación de la entrevista.'], 422);
+        }
+        if ($datos['modo'] === 'instruccion' && trim((string) ($datos['observacion'] ?? '')) === '') {
+            return response()->json(['message' => 'Escriba la instrucción.'], 422);
         }
 
         try {

@@ -176,7 +176,7 @@
 <h5 class="mb-2">{{ SaludHabitosCampos::TITULO_SUSTANCIAS }}</h5>
 <p class="text-muted small">{{ SaludHabitosCampos::INTRO_SUSTANCIAS }}</p>
 <div class="form-group">
-    <label class="form-label d-block">Marque las sustancias que conoce, ha experimentado o usado</label>
+    <label class="form-label d-block">Marque las drogas ilegales que conoce, ha experimentado o usado</label>
     @foreach(SaludHabitosCampos::SUSTANCIAS as $k => $et)
         <div class="form-check form-check-inline">
             <input class="form-check-input" type="checkbox" name="sustancias_usadas[]" id="sust_{{ $k }}" value="{{ $k }}"

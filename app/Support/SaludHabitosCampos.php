@@ -62,7 +62,7 @@ class SaludHabitosCampos
         'sustancia_experiencia' => '¿Cómo ha sido su experiencia?',
         'sustancia_ultima_vez' => '¿Cuándo fue la última vez que experimento?',
         'sustancia_ultimos_6_meses' => '¿En los últimos 6 meses cuantas veces consumió?',
-        'sustancia_familiar_consume' => '¿Tiene algún amigo o familiar que las consuma?',
+        'sustancia_familiar_consume' => '¿Tiene amigos o familiares que consumen drogas ilegales?',
         'sustancia_consumo_frente' => '¿Cuándo fue la última vez que consumieron frente a usted?',
         'sustancia_guardo_transporto' => '¿Cuándo fue la última vez que guardó, transportó o vendió alguna droga ilegal?',
         'sustancia_mejora_animo' => 'Alguna de ellas le ayuda a mejorar su salud o estado de ánimo? Cuál?',

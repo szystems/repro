@@ -16,12 +16,13 @@
                     <select id="asistente-modo" class="form-select">
                         <option value="confirmada">Información confirmada, sin cambios</option>
                         <option value="observaciones">Agregar observaciones de la entrevista</option>
+                        <option value="instruccion">Dar instrucción</option>
                     </select>
                 </div>
                 <div class="mb-3 d-none" id="asistente-observacion-grupo">
-                    <label class="form-label" for="asistente-observacion">Observaciones de la entrevista</label>
+                    <label class="form-label" id="asistente-observacion-label" for="asistente-observacion">Observaciones de la entrevista</label>
                     <textarea id="asistente-observacion" class="form-control" rows="4" placeholder="Escriba o dicte solo la novedad…"></textarea>
-                    <div class="form-check mt-2">
+                    <div class="form-check mt-2" id="asistente-resto-grupo">
                         <input class="form-check-input" type="checkbox" id="asistente-resto">
                         <label class="form-check-label" for="asistente-resto">El resto de la información fue confirmado sin cambios</label>
                     </div>
@@ -75,7 +76,18 @@
     }
 
     document.getElementById('asistente-modo').addEventListener('change', function () {
-        mostrar('asistente-observacion-grupo', this.value === 'observaciones');
+        var conNota = this.value === 'observaciones' || this.value === 'instruccion';
+        mostrar('asistente-observacion-grupo', conNota);
+        document.getElementById('asistente-resto-grupo').classList.toggle('d-none', this.value !== 'observaciones');
+        var etiqueta = document.getElementById('asistente-observacion-label');
+        var caja = document.getElementById('asistente-observacion');
+        if (this.value === 'instruccion') {
+            etiqueta.textContent = 'Instrucción';
+            caja.placeholder = 'Por ejemplo: quita el N/A, agrega que trabajó en agricultura, cambia esta frase…';
+        } else {
+            etiqueta.textContent = 'Observaciones de la entrevista';
+            caja.placeholder = 'Escriba o dicte solo la novedad…';
+        }
     });
 
     document.querySelectorAll('.btn-asistente-redaccion').forEach(function (boton) {
@@ -93,8 +105,10 @@
             error.classList.add('d-none');
             avisos.textContent = '';
             avisos.classList.add('d-none');
-            document.getElementById('asistente-propuesta-grupo').classList.add('d-none');
-            document.getElementById('asistente-propuesta').value = '';
+            var notaAbierta = campoNota();
+            var yaEscrito = notaAbierta ? notaAbierta.value.trim() : '';
+            document.getElementById('asistente-propuesta').value = yaEscrito;
+            document.getElementById('asistente-propuesta-grupo').classList.toggle('d-none', yaEscrito === '');
             modal.show();
         });
     });
@@ -107,15 +121,11 @@
             modo: modo,
             observacion: document.getElementById('asistente-observacion').value,
             resto_sin_cambios: document.getElementById('asistente-resto').checked ? 1 : 0,
-            texto_actual: document.getElementById('asistente-propuesta').value,
             estilo: document.getElementById('asistente-estilo').value
         };
-        if (modo === 'reescribir' || modo === 'otra_version' || modo === 'cambiar_estilo') {
-            var nota = campoNota();
-            if (!cuerpo.texto_actual && nota) {
-                cuerpo.texto_actual = nota.value;
-            }
-        }
+        var nota = campoNota();
+        var propuesta = document.getElementById('asistente-propuesta').value.trim();
+        cuerpo.texto_actual = propuesta || (nota ? nota.value : '');
         return fetch(raiz.getAttribute('data-generar'), {
             method: 'POST',
             headers: {

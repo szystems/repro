@@ -97,9 +97,10 @@ class AsistenteRedaccionCicloTest extends TestCase
             ->assertOk()
             ->assertSee('btn-asistente-redaccion', false)
             ->assertSee('data-seccion="word_salud"', false)
+            ->assertSee('data-seccion="word_habitos"', false)
             ->assertSee('data-seccion="word_recomendaciones"', false)
-            ->assertSee('Dictar en la nota', false)
-            ->assertDontSee('data-seccion="word_habitos"', false);
+            ->assertSee('Dar instrucción', false)
+            ->assertSee('Dictar en la nota', false);
 
         $this->actingAs($repro)
             ->get(route('admin.cuestionarios.show', $this->cuestionario))
@@ -182,18 +183,66 @@ class AsistenteRedaccionCicloTest extends TestCase
         ]);
     }
 
-    public function test_habitos_no_usa_el_asistente(): void
+    public function test_habitos_redacta_con_lo_que_contesto_y_no_guarda(): void
     {
         $this->encender();
+        CuestionarioRespuesta::guardarRespuestas($this->cuestionario->id, 'antecedentes', [
+            'habito_tabaco' => 'No fuma.',
+            'habito_tiempo_libre' => 'Juega fútbol.',
+        ]);
 
         $this->actingAs($this->repro())
             ->postJson(route('admin.cuestionarios.asistente-redaccion', $this->cuestionario), [
                 'seccion' => 'word_habitos',
                 'modo' => 'confirmada',
             ])
-            ->assertStatus(422);
+            ->assertOk();
 
-        $this->assertSame(0, $this->motor->llamadas);
+        $this->assertStringContainsString('No fuma.', $this->motor->usuario);
+        $this->assertStringContainsString('Juega fútbol.', $this->motor->usuario);
+        $this->assertStringNotContainsString('Cristopher Unico', $this->motor->usuario);
+        $this->assertSame(0, EvaluadorNota::query()->where('seccion', 'word_habitos')->count());
+    }
+
+    public function test_la_instruccion_trabaja_el_texto_actual_y_no_el_formulario(): void
+    {
+        $this->encender();
+
+        $this->actingAs($this->repro())
+            ->postJson(route('admin.cuestionarios.asistente-redaccion', $this->cuestionario), [
+                'seccion' => 'word_salud',
+                'modo' => 'instruccion',
+                'observacion' => 'Quita lo de la alergia y deja el resto.',
+                'texto_actual' => 'Manifestó buen estado de salud y alergia a la penicilina.',
+            ])
+            ->assertOk();
+
+        $this->assertStringContainsString('Quita lo de la alergia', $this->motor->usuario);
+        $this->assertStringContainsString('Manifestó buen estado de salud', $this->motor->usuario);
+        $this->assertStringNotContainsString('(vacío)', $this->motor->usuario);
+        $this->assertDatabaseHas('evaluador_notas', [
+            'seccion' => 'word_salud',
+            'contenido' => 'Texto ya guardado',
+        ]);
+    }
+
+    public function test_generar_conserva_el_texto_escrito_en_la_seccion(): void
+    {
+        $this->encender();
+
+        $this->actingAs($this->repro())
+            ->postJson(route('admin.cuestionarios.asistente-redaccion', $this->cuestionario), [
+                'seccion' => 'word_salud',
+                'modo' => 'confirmada',
+                'texto_actual' => 'Texto corregido a mano en el cuadro.',
+            ])
+            ->assertOk();
+
+        $this->assertStringContainsString('Texto corregido a mano en el cuadro.', $this->motor->usuario);
+        $this->assertDatabaseHas('evaluador_notas', [
+            'seccion' => 'word_salud',
+            'contenido' => 'Texto ya guardado',
+        ]);
     }
 
     public function test_la_empresa_no_puede_generar(): void

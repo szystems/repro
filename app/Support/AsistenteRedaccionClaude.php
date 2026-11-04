@@ -21,10 +21,15 @@ class AsistenteRedaccionClaude implements AsistenteRedaccionMotor
         $respuesta = Http::withHeaders([
             'x-api-key' => $llave,
             'anthropic-version' => '2023-06-01',
-        ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
+        ])->timeout(45)->post('https://api.anthropic.com/v1/messages', [
             'model' => (string) config('services.anthropic.model'),
-            'max_tokens' => 1200,
-            'system' => $sistema,
+            'max_tokens' => 700,
+            'temperature' => 0.2,
+            'system' => [[
+                'type' => 'text',
+                'text' => $sistema,
+                'cache_control' => ['type' => 'ephemeral'],
+            ]],
             'messages' => [
                 ['role' => 'user', 'content' => $usuario],
             ],
