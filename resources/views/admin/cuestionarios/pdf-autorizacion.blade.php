@@ -105,6 +105,36 @@
             font-size: 9px;
         }
 
+        .firma-responsable {
+            margin-top: 24px;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .firma-responsable-linea {
+            display: inline-block;
+            width: 250px;
+            border-top: 2px solid #000555;
+            padding-top: 8px;
+        }
+
+        .firma-responsable-nombre {
+            font-size: 10px;
+            font-weight: bold;
+            color: #000555;
+        }
+
+        .firma-responsable-cargo {
+            font-size: 9px;
+            color: #666;
+        }
+
+        .firma-responsable-rol {
+            font-size: 8px;
+            color: #999;
+            margin-top: 2px;
+        }
+
         .infornet-fecha {
             font-size: 8px;
             color: #666;

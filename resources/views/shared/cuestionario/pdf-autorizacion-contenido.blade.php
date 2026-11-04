@@ -1,6 +1,7 @@
 {{-- Contenido de autorización legal + firmas (PDF cuestionario separado, ago 2026) --}}
 @php
     $evaluado = $cuestionario->evaluadoOrden;
+    $mostrarFirmaEncargado = auth()->check() && (int) auth()->user()->role_as >= 2;
 @endphp
 
 @if($cuestionario->acepta_terminos)
@@ -24,6 +25,18 @@
                     <strong>{{ $evaluado->nombre }} {{ $evaluado->apellidos }}</strong><br>
                     DPI: {{ $evaluado->dpi }}<br>
                     Firmado digitalmente el {{ $cuestionario->completado_at ? $cuestionario->completado_at->format('d/m/Y \a \l\a\s H:i:s') : ($cuestionario->acepta_terminos_at ? $cuestionario->acepta_terminos_at->format('d/m/Y \a \l\a\s H:i:s') : 'N/A') }}
+                </div>
+            </div>
+        @endif
+
+        @if($mostrarFirmaEncargado && $evaluado->responsable)
+            <div class="firma-responsable">
+                <div class="firma-responsable-linea">
+                    <div class="firma-responsable-nombre">{{ $evaluado->responsable->name }}</div>
+                    @if($evaluado->responsable->cargo)
+                        <div class="firma-responsable-cargo">{{ $evaluado->responsable->cargo }}</div>
+                    @endif
+                    <div class="firma-responsable-rol">Responsable del Proceso — REPRO Guatemala</div>
                 </div>
             </div>
         @endif

@@ -430,6 +430,44 @@ class Phase8DPdfDocumentosTest extends TestCase
         $this->assertStringNotContainsString('Responsable del Proceso', $view);
     }
 
+    public function test_pdf_autorizacion_muestra_firma_del_encargado_solo_a_repro(): void
+    {
+        $responsable = $this->crearRepro();
+        $responsable->update(['name' => 'Felipe Encargado Interno', 'cargo' => 'Poligrafista Senior']);
+        $empresa = Empresa::factory()->create();
+        [$orden, $evaluado] = $this->crearOrdenConEvaluado($empresa, $responsable);
+        $cliente = $this->crearEmpresa($empresa);
+
+        $cuestionario = Cuestionario::create([
+            'evaluado_orden_id' => $evaluado->id,
+            'tipo_formulario' => 'preempleo',
+            'total_secciones' => 5,
+            'completado' => true,
+            'acepta_terminos' => true,
+            'firma_digital' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==',
+            'completado_at' => now()->subDay(),
+        ]);
+
+        $datos = [
+            'cuestionario' => $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.responsable']),
+        ];
+
+        $this->actingAs($responsable);
+        $interno = view('admin.cuestionarios.pdf-autorizacion', $datos)->render();
+
+        $this->assertStringContainsString('Felipe Encargado Interno', $interno);
+        $this->assertStringContainsString('Poligrafista Senior', $interno);
+        $this->assertStringContainsString('Responsable del Proceso', $interno);
+        $this->assertStringContainsString($evaluado->nombre, $interno);
+
+        $this->actingAs($cliente);
+        $paraCliente = view('admin.cuestionarios.pdf-autorizacion', $datos)->render();
+
+        $this->assertStringContainsString($evaluado->nombre, $paraCliente);
+        $this->assertStringNotContainsString('Felipe Encargado Interno', $paraCliente);
+        $this->assertStringNotContainsString('Responsable del Proceso', $paraCliente);
+    }
+
     public function test_pdf_autorizacion_sin_responsable_no_muestra_firma(): void
     {
         $empresa = Empresa::factory()->create();
