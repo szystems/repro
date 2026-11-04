@@ -103,7 +103,11 @@
                     </form>
                     <p class="text-muted small mb-0 mt-3">
                         El mes y las fechas filtran el día en que se realizó el proceso (calendario), no el día en que se creó el registro.
-                        El Excel incluye resultado, puesto, encargado y esa fecha para cruzar lo facturado con lo que sí se hizo.
+                        @if((int) Auth::user()->role_as >= 2)
+                            El Excel incluye resultado, puesto, encargado y esa fecha para cruzar lo facturado con lo que sí se hizo.
+                        @else
+                            El Excel incluye resultado, puesto y esa fecha.
+                        @endif
                     </p>
                 </div>
             </div>
@@ -220,7 +224,9 @@
                                     <th>Estado de Evaluación</th>
                                     <th>Resultado</th>
                                     <th>Puesto</th>
+                                    @if((int) Auth::user()->role_as >= 2)
                                     <th>Encargado</th>
+                                    @endif
                                     <th>Fecha de la prueba</th>
                                     <th class="text-center">Informe</th>
                                     <th class="text-center">Papelería</th>
@@ -278,7 +284,9 @@
                                             @endif
                                         </td>
                                         <td>{{ $evaluado->puesto_evaluar ?: '—' }}</td>
+                                        @if((int) Auth::user()->role_as >= 2)
                                         <td>{{ $evaluado->responsable->name ?? 'Sin asignar' }}</td>
+                                        @endif
                                         <td>
                                             @if($evaluado->fecha_programada)
                                                 {{ $evaluado->fecha_programada->format('d/m/Y') }}
@@ -364,7 +372,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="16" class="text-center py-4 text-muted">
+                                        <td colspan="{{ (int) Auth::user()->role_as >= 2 ? 16 : 15 }}" class="text-center py-4 text-muted">
                                             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                             No se encontraron evaluados con los filtros seleccionados
                                         </td>

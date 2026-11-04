@@ -14,8 +14,11 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
 {
     protected $evaluados;
 
-    public function __construct(Collection $evaluados, protected bool $ocultarResultadoNoLiberado = false)
-    {
+    public function __construct(
+        Collection $evaluados,
+        protected bool $ocultarResultadoNoLiberado = false,
+        protected bool $ocultarEncargado = false,
+    ) {
         $this->evaluados = $evaluados;
     }
 
@@ -26,7 +29,7 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
 
     public function headings(): array
     {
-        return [
+        $headings = [
             'Código Orden',
             'Empresa',
             'Reclutador',
@@ -48,6 +51,15 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
             'Fecha Creación',
             'Fecha Completado',
         ];
+
+        if ($this->ocultarEncargado) {
+            $headings = array_values(array_filter(
+                $headings,
+                static fn (string $heading): bool => $heading !== 'Encargado'
+            ));
+        }
+
+        return $headings;
     }
 
     public function map($evaluado): array
@@ -65,7 +77,7 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
             }
         }
 
-        return [
+        $fila = [
             $evaluado->orden->codigo_orden ?? 'N/A',
             $evaluado->orden->empresa->nombre ?? 'N/A',
             $evaluado->orden->reclutador->name ?? 'Sin asignar',
@@ -83,10 +95,16 @@ class EvaluacionesExport implements FromCollection, WithHeadings, WithMapping, W
             $evaluado->puesto_evaluar ?? 'N/A',
             $this->fechaPrueba($evaluado),
             $this->horaPrueba($evaluado),
-            $evaluado->responsable->name ?? 'Sin asignar',
-            $evaluado->created_at?->format('d/m/Y') ?? '—',
-            $fechaCompletado,
         ];
+
+        if (! $this->ocultarEncargado) {
+            $fila[] = $evaluado->responsable->name ?? 'Sin asignar';
+        }
+
+        $fila[] = $evaluado->created_at?->format('d/m/Y') ?? '—';
+        $fila[] = $fechaCompletado;
+
+        return $fila;
     }
 
     private function fechaPrueba($evaluado): string

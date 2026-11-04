@@ -272,9 +272,11 @@ class ReportesController extends Controller
             $this->buildEvaluacionesQuery($request->all())
         )->get();
 
+        $esCliente = (int) Auth::user()->role_as === 1;
         $export = new \App\Exports\EvaluacionesExport(
             $evaluados,
-            (int) Auth::user()->role_as === 1
+            $esCliente,
+            $esCliente
         );
         $base = 'reporte-evaluaciones-' . now()->format('Y-m-d');
 

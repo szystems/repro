@@ -403,10 +403,10 @@ class Phase8DPdfDocumentosTest extends TestCase
         $this->assertStringNotContainsString('Responsable del Proceso', $view);
     }
 
-    public function test_pdf_autorizacion_incluye_responsable(): void
+    public function test_pdf_autorizacion_no_incluye_encargado(): void
     {
         $responsable = $this->crearRepro();
-        $responsable->update(['cargo' => 'Poligrafista Senior']);
+        $responsable->update(['name' => 'Zulema Encargada Interna', 'cargo' => 'Poligrafista Senior']);
         $empresa = Empresa::factory()->create();
         [$orden, $evaluado, $admin] = $this->crearOrdenConEvaluado($empresa, $responsable);
 
@@ -424,9 +424,10 @@ class Phase8DPdfDocumentosTest extends TestCase
             'cuestionario' => $cuestionario->load(['evaluadoOrden.orden.empresa', 'evaluadoOrden.responsable']),
         ])->render();
 
-        $this->assertStringContainsString($responsable->name, $view);
-        $this->assertStringContainsString('Poligrafista Senior', $view);
-        $this->assertStringContainsString('Responsable del Proceso', $view);
+        $this->assertStringContainsString($evaluado->nombre, $view);
+        $this->assertStringNotContainsString('Zulema Encargada Interna', $view);
+        $this->assertStringNotContainsString('Poligrafista Senior', $view);
+        $this->assertStringNotContainsString('Responsable del Proceso', $view);
     }
 
     public function test_pdf_autorizacion_sin_responsable_no_muestra_firma(): void

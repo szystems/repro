@@ -27,18 +27,6 @@
                 </div>
             </div>
         @endif
-
-        @if($evaluado->responsable)
-            <div class="firma-responsable">
-                <div class="firma-responsable-linea">
-                    <div class="firma-responsable-nombre">{{ $evaluado->responsable->name }}</div>
-                    @if($evaluado->responsable->cargo)
-                        <div class="firma-responsable-cargo">{{ $evaluado->responsable->cargo }}</div>
-                    @endif
-                    <div class="firma-responsable-rol">Responsable del Proceso — REPRO Guatemala</div>
-                </div>
-            </div>
-        @endif
     </div>
 
     @if($cuestionario->acepta_infornet && $cuestionario->texto_infornet_html)

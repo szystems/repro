@@ -135,6 +135,39 @@ class ReportesTest extends TestCase
         $response->assertViewIs('admin.reportes.evaluaciones');
     }
 
+    public function test_cliente_no_ve_encargado_en_informes_y_repro_si(): void
+    {
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $cliente = $this->createEmpresaUser($empresa);
+        $repro = $this->createReproUser();
+        $repro->update(['name' => 'Zulema Encargada Interna']);
+
+        $orden = Orden::factory()->create([
+            'empresa_id' => $empresa->id,
+            'estado' => 'entregado',
+        ]);
+        EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Carmen',
+            'apellidos' => 'Castillo',
+            'responsable_id' => $repro->id,
+            'estado_evaluacion' => 'informe_final_enviado',
+        ]);
+
+        $this->actingAs($cliente)
+            ->get(route('reportes.evaluaciones'))
+            ->assertOk()
+            ->assertSee('Carmen')
+            ->assertDontSee('Encargado')
+            ->assertDontSee('Zulema Encargada Interna');
+
+        $this->actingAs($repro)
+            ->get(route('reportes.evaluaciones'))
+            ->assertOk()
+            ->assertSee('Encargado')
+            ->assertSee('Zulema Encargada Interna');
+    }
+
     /**
      * Test que un usuario de empresa NO puede ver el reporte de empresas.
      */
@@ -373,6 +406,30 @@ class ReportesTest extends TestCase
         $this->assertStringContainsString('Luis Encargado', $html);
         $this->assertStringContainsString('Cajera', $html);
         $this->assertStringContainsString('02/01/2026', $html);
+    }
+
+    public function test_evaluaciones_excel_oculta_encargado_a_la_empresa(): void
+    {
+        $empresa = Empresa::factory()->create(['estado' => 1]);
+        $orden = Orden::factory()->create(['empresa_id' => $empresa->id]);
+        $encargado = User::factory()->create(['name' => 'Zulema Encargada Interna', 'role_as' => 2, 'estado' => 1]);
+        $evaluado = EvaluadoOrden::factory()->create([
+            'orden_id' => $orden->id,
+            'nombre' => 'Marta',
+            'responsable_id' => $encargado->id,
+            'fecha_programada' => '2026-04-15 14:30:00',
+        ]);
+
+        $html = (new EvaluacionesExport(
+            collect([$evaluado->fresh(['orden.empresa', 'orden.reclutador', 'responsable'])]),
+            true,
+            true
+        ))->toHtmlTable();
+
+        $this->assertStringNotContainsString('Encargado', $html);
+        $this->assertStringNotContainsString('Zulema Encargada Interna', $html);
+        $this->assertStringContainsString('Marta', $html);
+        $this->assertStringContainsString('15/04/2026', $html);
     }
 
     public function test_evaluaciones_excel_incluye_resultado_en_columna(): void
