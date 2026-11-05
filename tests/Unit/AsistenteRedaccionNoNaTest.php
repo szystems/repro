@@ -39,13 +39,20 @@ class AsistenteRedaccionNoNaTest extends TestCase
 
         $this->assertStringContainsString('no lo ha realizado', $sistema);
         $this->assertStringContainsString('Un No o un N/A no es un dato faltante.', $sistema);
-        $this->assertStringContainsString('agrúpalas por tema', $sistema);
         $this->assertStringContainsString('como máximo dos verbos', $sistema);
         $this->assertStringContainsString('no está registrado', $sistema);
         $this->assertStringContainsString('no se cuenta con declaración', $sistema);
         $this->assertStringContainsString('Nunca inventes verificaciones.', $sistema);
+        $this->assertStringContainsString('no escribas una oración por cada una', $sistema);
+        $this->assertStringContainsString('Agrúpalas por tema en una o dos oraciones.', $sistema);
+        $this->assertStringContainsString('«así como» y «tampoco»', $sistema);
+        $this->assertStringContainsString('No omitas ninguna respuesta al agrupar', $sistema);
+        $this->assertStringContainsString('Negó haber cometido robos, haber tomado dinero sin autorización', $sistema);
+        $this->assertStringNotContainsString('con una frase completa según la pregunta', $sistema);
         $this->assertStringContainsString('Incluye cada No y cada N/A', $pedido);
+        $this->assertStringContainsString('no repitas «no» ni «no haber» en cada hecho', $pedido);
         $this->assertStringContainsString('manejo de efectivo, actas y llamadas de atención', $laboral);
+        $this->assertStringContainsString('no escribas «no haber» por cada pregunta', $laboral);
 
         $recomendaciones = AsistenteRedaccionInstrucciones::sistema('word_recomendaciones', 'poligrafo');
         $this->assertStringContainsString('Se recomienda', $recomendaciones);
