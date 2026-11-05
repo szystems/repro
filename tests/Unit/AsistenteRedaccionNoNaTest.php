@@ -39,21 +39,23 @@ class AsistenteRedaccionNoNaTest extends TestCase
 
         $this->assertStringContainsString('no lo ha realizado', $sistema);
         $this->assertStringContainsString('Un No o un N/A no es un dato faltante.', $sistema);
-        $this->assertStringContainsString('como máximo dos verbos', $sistema);
+        $this->assertStringContainsString('como máximo tres verbos', $sistema);
         $this->assertStringContainsString('no está registrado', $sistema);
         $this->assertStringContainsString('no se cuenta con declaración', $sistema);
         $this->assertStringContainsString('Nunca inventes verificaciones.', $sistema);
         $this->assertStringContainsString('no escribas una oración por cada una', $sistema);
-        $this->assertStringContainsString('Agrúpalas por tema en una o dos oraciones.', $sistema);
-        $this->assertStringContainsString('«haber» se escribe una sola vez', $sistema);
+        $this->assertStringContainsString('«haber» se usa como máximo dos veces por párrafo', $sistema);
+        $this->assertStringContainsString('tres o cuatro respuestas por oración', $sistema);
+        $this->assertStringContainsString('Esto incluye «haber», «no», «ni», «que»', $sistema);
         $this->assertStringContainsString('No omitas ninguna respuesta al agrupar', $sistema);
-        $this->assertStringContainsString('haber alterado documentos, haber aceptado sobornos', $sistema);
-        $this->assertStringContainsString('alterado documentos o facturas, aceptado sobornos o tomado dinero sin autorización', $sistema);
+        $this->assertStringContainsString('haber alterado documentos o facturas, haber aceptado sobornos', $sistema);
+        $this->assertStringContainsString('antecedentes de alteración de documentos o facturas, aceptación de sobornos', $sistema);
+        $this->assertStringContainsString('recomendaciones. El ejemplo usa el aspecto laboral', $sistema);
         $this->assertStringNotContainsString('con una frase completa según la pregunta', $sistema);
         $this->assertStringContainsString('Incluye cada No y cada N/A', $pedido);
-        $this->assertStringContainsString('«haber» se escribe una sola vez', $pedido);
+        $this->assertStringContainsString('«haber» se usa como máximo dos veces por párrafo', $pedido);
         $this->assertStringContainsString('manejo de efectivo, actas y llamadas de atención', $laboral);
-        $this->assertStringContainsString('no escribas «haber» por cada pregunta', $laboral);
+        $this->assertStringContainsString('no escribas «haber» al inicio de cada pregunta', $laboral);
 
         $recomendaciones = AsistenteRedaccionInstrucciones::sistema('word_recomendaciones', 'poligrafo');
         $this->assertStringContainsString('Se recomienda', $recomendaciones);
