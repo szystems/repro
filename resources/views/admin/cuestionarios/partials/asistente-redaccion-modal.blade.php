@@ -30,6 +30,7 @@
                     <small class="text-muted d-block">El micrófono solo escribe en esta nota. No redacta el informe.</small>
                 </div>
                 <button type="button" class="btn btn-primary" id="asistente-generar">Generar</button>
+                <div id="asistente-estado" class="text-muted small mt-2 d-none">Generando…</div>
                 <div id="asistente-avisos" class="alert alert-warning mt-3 d-none"></div>
                 <div id="asistente-error" class="alert alert-danger mt-3 d-none"></div>
                 <div id="asistente-propuesta-grupo" class="mt-3 d-none">
@@ -63,6 +64,7 @@
     var modal = bootstrap.Modal.getOrCreateInstance(raiz);
     var seccionActual = '';
     var dictado = null;
+    var enCurso = false;
 
     function campoNota() {
         if (seccionActual === 'word_recomendaciones') {
@@ -114,8 +116,16 @@
     });
 
     function pedir(modo) {
+        if (enCurso) {
+            return;
+        }
+        enCurso = true;
         var error = document.getElementById('asistente-error');
         error.classList.add('d-none');
+        document.getElementById('asistente-estado').classList.remove('d-none');
+        raiz.querySelectorAll('button').forEach(function (boton) {
+            boton.disabled = true;
+        });
         var cuerpo = {
             seccion: seccionActual,
             modo: modo,
@@ -136,9 +146,15 @@
             },
             body: JSON.stringify(cuerpo)
         }).then(function (respuesta) {
-            return respuesta.json().then(function (datos) {
+            return respuesta.text().then(function (texto) {
+                var datos = {};
+                try {
+                    datos = texto ? JSON.parse(texto) : {};
+                } catch (e) {
+                    datos = {};
+                }
                 if (!respuesta.ok) {
-                    throw new Error(datos.message || 'No se pudo redactar.');
+                    throw new Error(datos.message || 'No se pudo redactar. Intente de nuevo.');
                 }
                 return datos;
             });
@@ -153,8 +169,14 @@
                 avisos.classList.add('d-none');
             }
         }).catch(function (fallo) {
-            error.textContent = fallo.message || 'No se pudo redactar.';
+            error.textContent = (fallo && fallo.message) ? fallo.message : 'No se pudo redactar. Intente de nuevo.';
             error.classList.remove('d-none');
+        }).finally(function () {
+            enCurso = false;
+            document.getElementById('asistente-estado').classList.add('d-none');
+            raiz.querySelectorAll('button').forEach(function (boton) {
+                boton.disabled = false;
+            });
         });
     }
 

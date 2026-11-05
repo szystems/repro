@@ -21,9 +21,9 @@ class AsistenteRedaccionClaude implements AsistenteRedaccionMotor
         $respuesta = Http::withHeaders([
             'x-api-key' => $llave,
             'anthropic-version' => '2023-06-01',
-        ])->timeout(45)->post('https://api.anthropic.com/v1/messages', [
+        ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
             'model' => (string) config('services.anthropic.model'),
-            'max_tokens' => 700,
+            'max_tokens' => 1600,
             'temperature' => 0.2,
             'system' => [[
                 'type' => 'text',
@@ -36,7 +36,19 @@ class AsistenteRedaccionClaude implements AsistenteRedaccionMotor
         ]);
 
         if (! $respuesta->successful()) {
-            throw new RuntimeException('Claude no respondió.');
+            $codigo = $respuesta->status();
+            if ($codigo === 429) {
+                throw new RuntimeException('Claude está ocupado. Espere un momento e intente de nuevo.');
+            }
+            if (in_array($codigo, [408, 504, 529], true)) {
+                throw new RuntimeException('Claude tardó demasiado. Intente de nuevo.');
+            }
+
+            throw new RuntimeException('No se pudo redactar. Intente de nuevo.');
+        }
+
+        if ($respuesta->json('stop_reason') === 'max_tokens') {
+            throw new RuntimeException('La redacción quedó incompleta. Intente de nuevo.');
         }
 
         $texto = '';

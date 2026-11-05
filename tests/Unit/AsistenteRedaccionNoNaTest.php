@@ -39,8 +39,16 @@ class AsistenteRedaccionNoNaTest extends TestCase
 
         $this->assertStringContainsString('no lo ha realizado', $sistema);
         $this->assertStringContainsString('Un No o un N/A no es un dato faltante.', $sistema);
+        $this->assertStringContainsString('agrúpalas por tema', $sistema);
+        $this->assertStringContainsString('como máximo dos verbos', $sistema);
+        $this->assertStringContainsString('no está registrado', $sistema);
         $this->assertStringContainsString('no se cuenta con declaración', $sistema);
+        $this->assertStringContainsString('Nunca inventes verificaciones.', $sistema);
         $this->assertStringContainsString('Incluye cada No y cada N/A', $pedido);
         $this->assertStringContainsString('manejo de efectivo, actas y llamadas de atención', $laboral);
+
+        $recomendaciones = AsistenteRedaccionInstrucciones::sistema('word_recomendaciones', 'poligrafo');
+        $this->assertStringContainsString('Se recomienda', $recomendaciones);
+        $this->assertStringContainsString('factores de riesgo', $recomendaciones);
     }
 }

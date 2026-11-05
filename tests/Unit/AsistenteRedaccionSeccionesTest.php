@@ -65,6 +65,7 @@ class AsistenteRedaccionSeccionesTest extends TestCase
         $this->assertStringContainsString('Manejó caja.', $laboral);
         $this->assertStringNotContainsString('Pedro Jefe', $laboral);
         $this->assertStringNotContainsString('55551234', $laboral);
+        $this->assertStringContainsString('no registrado', $laboral);
         $this->assertStringNotContainsString('Cristopher Unico', $laboral);
         $this->assertStringNotContainsString('3403384231403', $laboral);
         $this->assertStringNotContainsString('no_aprobado', $laboral);

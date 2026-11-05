@@ -9,6 +9,7 @@ use App\Support\AsistenteRedaccion;
 use App\Support\AsistenteRedaccionGenerador;
 use App\Support\AsistenteRedaccionSecciones;
 use App\Support\EvaluadorNotasSupport;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -53,9 +54,17 @@ class AsistenteRedaccionController extends Controller
                 $textoActual,
                 (string) ($datos['estilo'] ?? 'formal')
             );
-        } catch (RuntimeException) {
+        } catch (ConnectionException) {
             return response()->json([
-                'message' => 'No se pudo redactar. Revise la llave de Claude o intente de nuevo.',
+                'message' => 'Claude tardó demasiado. Intente de nuevo.',
+            ], 503);
+        } catch (RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 503);
+        } catch (\Throwable) {
+            return response()->json([
+                'message' => 'No se pudo redactar. Intente de nuevo.',
             ], 503);
         }
 

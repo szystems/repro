@@ -108,6 +108,7 @@ class AsistenteRedaccionCampos
             'formulario' => (string) ($evaluado->tipo_formulario ?: $evaluado->cuestionario?->tipo_formulario ?: ''),
             'campos' => $campos,
             'observacion_evaluador' => trim($observacion),
+            'sexo' => self::sexo($evaluado),
             'texto_para_modelo' => '',
         ];
         $paquete['texto_para_modelo'] = self::textoParaModelo($paquete);
@@ -123,6 +124,7 @@ class AsistenteRedaccionCampos
         $lineas = [
             'Sección: '.($paquete['titulo'] ?? 'Salud'),
             'Tipo de informe: '.trim($paquete['servicio'].' '.$paquete['formulario']),
+            'Sexo: '.(($paquete['sexo'] ?? '') !== '' ? $paquete['sexo'] : 'no registrado'),
             '',
             'Respuestas del formulario:',
         ];
@@ -138,6 +140,13 @@ class AsistenteRedaccionCampos
             : '(ninguna)';
 
         return implode("\n", $lineas);
+    }
+
+    private static function sexo(EvaluadoOrden $evaluado): string
+    {
+        $valor = trim((string) ($evaluado->sexo ?? $evaluado->genero ?? ''));
+
+        return $valor !== '' ? $valor : 'no registrado';
     }
 
     /**

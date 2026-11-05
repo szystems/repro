@@ -45,9 +45,25 @@ class AsistenteRedaccionClaudeTest extends TestCase
                 && $request->hasHeader('x-api-key', 'llave-de-prueba')
                 && $sistema === 'criterio'
                 && $request['temperature'] === 0.2
-                && $request['max_tokens'] === 700
+                && $request['max_tokens'] === 1600
                 && is_string($cuerpo)
                 && ! str_contains($cuerpo, 'llave-de-prueba');
         });
+    }
+
+    public function test_si_claude_esta_ocupado_lo_dice(): void
+    {
+        config([
+            'services.anthropic.key' => 'llave-de-prueba',
+            'services.anthropic.model' => 'claude-sonnet-4-6',
+        ]);
+        Http::fake([
+            'api.anthropic.com/*' => Http::response(['error' => ['type' => 'rate_limit_error']], 429),
+        ]);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Claude está ocupado.');
+
+        (new AsistenteRedaccionClaude)->redactar('criterio', 'texto');
     }
 }

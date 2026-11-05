@@ -100,6 +100,7 @@ class AsistenteRedaccionCicloTest extends TestCase
             ->assertSee('data-seccion="word_habitos"', false)
             ->assertSee('data-seccion="word_recomendaciones"', false)
             ->assertSee('Dar instrucción', false)
+            ->assertSee('Generando…', false)
             ->assertSee('Dictar en la nota', false);
 
         $this->actingAs($repro)
