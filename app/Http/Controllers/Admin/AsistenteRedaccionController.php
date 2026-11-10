@@ -27,6 +27,7 @@ class AsistenteRedaccionController extends Controller
             'resto_sin_cambios' => 'nullable|boolean',
             'texto_actual' => 'nullable|string|max:10000',
             'estilo' => 'nullable|string|in:formal,tecnica,breve,detallada',
+            'proveedor' => 'nullable|string|in:claude,gpt',
         ]);
 
         if (! AsistenteRedaccionSecciones::permite($datos['seccion'])) {
@@ -52,11 +53,14 @@ class AsistenteRedaccionController extends Controller
                 trim((string) ($datos['observacion'] ?? '')),
                 $request->boolean('resto_sin_cambios'),
                 $textoActual,
-                (string) ($datos['estilo'] ?? 'formal')
+                (string) ($datos['estilo'] ?? 'formal'),
+                (string) ($datos['proveedor'] ?? 'claude')
             );
         } catch (ConnectionException) {
+            $nombre = ($datos['proveedor'] ?? 'claude') === 'gpt' ? 'GPT' : 'Claude';
+
             return response()->json([
-                'message' => 'Claude tardó demasiado. Intente de nuevo.',
+                'message' => $nombre.' tardó demasiado. Intente de nuevo.',
             ], 503);
         } catch (RuntimeException $e) {
             return response()->json([

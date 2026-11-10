@@ -18,7 +18,8 @@ class AsistenteRedaccionGenerador
         string $observacion,
         bool $restoSinCambios,
         string $textoActual,
-        string $estilo
+        string $estilo,
+        string $proveedor = 'claude'
     ): array {
         $conObservacion = $modo === 'observaciones';
         $paquete = AsistenteRedaccionSecciones::paquete(
@@ -31,9 +32,18 @@ class AsistenteRedaccionGenerador
         $usuario = $this->mensaje($modo, $pedido, $observacion, $textoActual, (string) $paquete['texto_para_modelo']);
 
         return [
-            'texto' => $this->motor->redactar($sistema, $usuario),
+            'texto' => $this->motorDe($proveedor)->redactar($sistema, $usuario),
             'avisos' => AsistenteRedaccionAvisos::de($paquete, $conObservacion && $restoSinCambios),
         ];
+    }
+
+    private function motorDe(string $proveedor): AsistenteRedaccionMotor
+    {
+        if ($proveedor === 'gpt') {
+            return app(AsistenteRedaccionOpenAi::class);
+        }
+
+        return $this->motor;
     }
 
     private function mensaje(string $modo, string $pedido, string $observacion, string $textoActual, string $formulario): string

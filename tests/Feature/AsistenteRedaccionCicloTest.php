@@ -101,6 +101,7 @@ class AsistenteRedaccionCicloTest extends TestCase
             ->assertSee('data-seccion="word_recomendaciones"', false)
             ->assertSee('Dar instrucción', false)
             ->assertSee('Generando…', false)
+            ->assertSee('value="gpt"', false)
             ->assertSee('Dictar en la nota', false);
 
         $this->actingAs($repro)
@@ -240,6 +241,41 @@ class AsistenteRedaccionCicloTest extends TestCase
             ->assertOk();
 
         $this->assertStringContainsString('Texto corregido a mano en el cuadro.', $this->motor->usuario);
+        $this->assertDatabaseHas('evaluador_notas', [
+            'seccion' => 'word_salud',
+            'contenido' => 'Texto ya guardado',
+        ]);
+    }
+
+    public function test_gpt_redacta_sin_llamar_a_claude_ni_guardar(): void
+    {
+        $this->encender();
+        config([
+            'services.openai.key' => 'llave-de-prueba',
+            'services.openai.model' => 'gpt-6-luna',
+        ]);
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'finish_reason' => 'stop',
+                    'message' => ['content' => 'Redacción de GPT.'],
+                ]],
+            ]),
+        ]);
+
+        $this->actingAs($this->repro())
+            ->postJson(route('admin.cuestionarios.asistente-redaccion', $this->cuestionario), [
+                'seccion' => 'word_salud',
+                'modo' => 'confirmada',
+                'proveedor' => 'gpt',
+                'texto_actual' => 'Texto corregido a mano en el cuadro.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('texto', 'Redacción de GPT.');
+
+        $this->assertSame(0, $this->motor->llamadas);
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/chat/completions'
+            && ! str_contains(json_encode($request->data()), 'llave-de-prueba'));
         $this->assertDatabaseHas('evaluador_notas', [
             'seccion' => 'word_salud',
             'contenido' => 'Texto ya guardado',

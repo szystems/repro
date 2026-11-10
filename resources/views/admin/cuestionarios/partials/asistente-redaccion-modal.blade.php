@@ -12,6 +12,14 @@
             <div class="modal-body">
                 <p class="text-muted small">Nada entra al informe hasta que acepte la redacción. Descartar deja el texto anterior como está.</p>
                 <div class="mb-3">
+                    <label class="form-label" for="asistente-proveedor">Redactor</label>
+                    <select id="asistente-proveedor" class="form-select">
+                        <option value="claude">Claude</option>
+                        <option value="gpt">GPT</option>
+                    </select>
+                    <div class="form-text">Puede cambiarlo en cada redacción. El texto no entra al informe hasta Aceptar.</div>
+                </div>
+                <div class="mb-3">
                     <label class="form-label" for="asistente-modo">Qué desea hacer</label>
                     <select id="asistente-modo" class="form-select">
                         <option value="confirmada">Información confirmada, sin cambios</option>
@@ -65,6 +73,15 @@
     var seccionActual = '';
     var dictado = null;
     var enCurso = false;
+    try {
+        var redactorGuardado = localStorage.getItem('sigor-redactor');
+        if (redactorGuardado === 'gpt' || redactorGuardado === 'claude') {
+            document.getElementById('asistente-proveedor').value = redactorGuardado;
+        }
+    } catch (e) {}
+    document.getElementById('asistente-proveedor').addEventListener('change', function () {
+        try { localStorage.setItem('sigor-redactor', this.value); } catch (e) {}
+    });
 
     function campoNota() {
         if (seccionActual === 'word_recomendaciones') {
@@ -123,15 +140,16 @@
         var error = document.getElementById('asistente-error');
         error.classList.add('d-none');
         document.getElementById('asistente-estado').classList.remove('d-none');
-        raiz.querySelectorAll('button').forEach(function (boton) {
-            boton.disabled = true;
+        raiz.querySelectorAll('button, select').forEach(function (control) {
+            control.disabled = true;
         });
         var cuerpo = {
             seccion: seccionActual,
             modo: modo,
             observacion: document.getElementById('asistente-observacion').value,
             resto_sin_cambios: document.getElementById('asistente-resto').checked ? 1 : 0,
-            estilo: document.getElementById('asistente-estilo').value
+            estilo: document.getElementById('asistente-estilo').value,
+            proveedor: document.getElementById('asistente-proveedor').value
         };
         var nota = campoNota();
         var propuesta = document.getElementById('asistente-propuesta').value.trim();
@@ -174,8 +192,8 @@
         }).finally(function () {
             enCurso = false;
             document.getElementById('asistente-estado').classList.add('d-none');
-            raiz.querySelectorAll('button').forEach(function (boton) {
-                boton.disabled = false;
+            raiz.querySelectorAll('button, select').forEach(function (control) {
+                control.disabled = false;
             });
         });
     }
