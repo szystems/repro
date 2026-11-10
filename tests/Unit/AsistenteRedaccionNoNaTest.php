@@ -41,6 +41,9 @@ class AsistenteRedaccionNoNaTest extends TestCase
         $this->assertStringContainsString('Un No o un N/A no es un dato faltante.', $sistema);
         $this->assertStringContainsString('como máximo tres verbos', $sistema);
         $this->assertStringContainsString('no está registrado', $sistema);
+        $this->assertStringContainsString('Los montos de dinero son quetzales.', $sistema);
+        $this->assertStringContainsString('3000 queda Q3,000.00', $sistema);
+        $this->assertStringContainsString('No le pongas Q a edades', $sistema);
         $this->assertStringContainsString('no se cuenta con declaración', $sistema);
         $this->assertStringContainsString('Nunca inventes verificaciones.', $sistema);
         $this->assertStringContainsString('no escribas una oración por cada una', $sistema);
