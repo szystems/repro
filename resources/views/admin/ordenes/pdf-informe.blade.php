@@ -295,7 +295,11 @@
                         @if($evaluado->informe_preliminar_at)
                             <small style="color:#666;">{{ $evaluado->informe_preliminar_at->format('d/m/Y H:i') }}</small>
                         @endif
-                        <div style="margin-top: 4px; font-size: 10px; line-height: 1.4;">
+                        <div class="informe-preliminar-html" style="margin-top: 4px; font-size: 10px; line-height: 1.4;">
+                            <style>
+                                .informe-preliminar-html ul { list-style-type: disc; margin: 4px 0 4px 16px; padding-left: 12px; }
+                                .informe-preliminar-html ol { list-style-type: decimal; margin: 4px 0 4px 16px; padding-left: 12px; }
+                            </style>
                             {!! \App\Support\InformePreliminarHtml::normalizar($evaluado->texto_informe_preliminar) !!}
                         </div>
                     </div>

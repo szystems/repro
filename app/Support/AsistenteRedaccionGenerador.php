@@ -32,7 +32,10 @@ class AsistenteRedaccionGenerador
         $usuario = $this->mensaje($modo, $pedido, $observacion, $textoActual, (string) $paquete['texto_para_modelo']);
 
         return [
-            'texto' => $this->motorDe($proveedor)->redactar($sistema, $usuario),
+            'texto' => AsistenteRedaccionFormato::limpiar(
+                $this->motorDe($proveedor)->redactar($sistema, $usuario),
+                $seccion
+            ),
             'avisos' => AsistenteRedaccionAvisos::de($paquete, $conObservacion && $restoSinCambios),
         ];
     }

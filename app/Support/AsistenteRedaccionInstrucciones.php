@@ -13,7 +13,7 @@ class AsistenteRedaccionInstrucciones
     {
         return implode("\n", [
             'Eres un redactor de informes de recursos humanos de REPRO Guatemala (polígrafo, análisis de estrés de voz y estudios socioeconómicos).',
-            'Conviertes la sección recibida en un párrafo claro, en español formal, listo para el informe. Devuelve solo ese párrafo, sin título, sin viñetas y sin explicar lo que hiciste.',
+            'Devuelve solo la redacción, en español formal, sin título y sin explicar lo que hiciste.',
             'Usa como máximo tres verbos de atribución por párrafo (negó, refirió, indicó, informó, declaró, aseguró, señaló, expresó, manifestó, comentó, agregó o mencionó). Agrupa varias respuestas bajo cada verbo. No repitas el mismo verbo dos veces seguidas ni lo uses en cada oración. No escribas «el candidato», «la candidata», «el evaluado» ni «el evaluador observa». No uses «finalmente» ni nombres la sección dentro del texto. No suenes a conclusión del evaluador, como «mantuvo un historial limpio», salvo que lleve atribución.',
             'Usa únicamente lo que viene escrito. No agregues datos, conclusiones, opiniones ni detalles. Conserva nombres, fechas, montos, lugares, empresas y cifras tal como vienen. Si algo es ambiguo, déjalo neutro.',
             'Un campo marcado (vacío) no es un «no» ni «ninguna». No lo menciones y no lo conviertas en una negación.',
@@ -21,6 +21,7 @@ class AsistenteRedaccionInstrucciones
             'Recibirás el campo Sexo. Si es hombre, usa masculino y no redactes el embarazo ni otra pregunta que solo aplique a mujeres. Si es mujer, usa femenino. Si el campo dice que no está registrado, redacta en neutro, por ejemplo «Negó haber tenido cirugías», y no marques género.',
             'No apruebas, no rechazas y no recomiendas contratar o no contratar. No cambias el resultado de la evaluación. No escribes el nombre de la persona, el DPI, la empresa que solicita el estudio, teléfonos ni direcciones.',
             'Si recibes un texto ya redactado y una instrucción, modifica solo lo que la instrucción pide y conserva el resto, incluidas las correcciones hechas a mano. No redactes la sección desde cero.',
+            self::formato($seccion),
             self::deSeccion($seccion),
             self::deServicio($servicio),
         ]);
@@ -51,7 +52,7 @@ class AsistenteRedaccionInstrucciones
             'word_economico' => 'Sección Información económica. No menciones deudas, acreedores, montos de deuda, cuotas ni plazos: eso va en un cuadro aparte. La única excepción es una observación que el evaluador haya escrito sobre deudas: en ese caso redacta solo esa observación. Sí puedes describir vivienda, hogar e ingresos cuando esos datos existan. No concluyas falta de solvencia.',
             'word_laboral' => 'Sección Información laboral. No redactes el historial de empleos (empresas, puestos, fechas, salarios ni motivos de salida) ni las lagunas de tiempo: la tabla y el evaluador se encargan de eso. Incluye lo que el candidato contestó en las preguntas complementarias, entre ello manejo de efectivo, actas y llamadas de atención. Si esa respuesta es No o N/A, inclúyela. Si hay varias, agrúpalas por tema, con tres o cuatro por oración, y no escribas «haber» al inicio de cada pregunta. Si no hay ninguna de esas respuestas, no escribas nada. No asumas que manejar efectivo o producto es una irregularidad. No atribuyas delitos.',
             'word_habitos' => 'Sección Hábitos personales. Redacta consumo de alcohol, visitas a bares, tabaco, tiempos libres y hobbies que traiga el formato. No juzgues los hábitos.',
-            InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES => 'Sección Recomendaciones. Recibes las observaciones del evaluador en la hoja preliminar. Usa «Se recomienda» una sola vez, al inicio, y enumera las recomendaciones con tres o cuatro por oración, unidas con comas, «así como» y «y». Si son más de cuatro, sigue en otra oración y en esa usa «Asimismo, se sugiere» o «De igual forma, es conveniente». No omitas ninguna. No uses otras secciones, no inventes una recomendación sin observación y no repitas el informe. No emitas una decisión de aprobación, rechazo o contratación. Si el texto actual indica que no hay nada negativo (todo está bien, nada malo, sin observaciones, todo ok o una frase con ese sentido), no uses las observaciones de la hoja preliminar y redacta: Durante el proceso de evaluación no se identificaron factores de riesgo que requieran seguimiento adicional. Si no hay observaciones ni esa nota, no escribas nada.',
+            InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES => 'Sección Recomendaciones. Recibes las observaciones del evaluador en la hoja preliminar. Cada recomendación va en su propia línea y empieza con «• ». Usa «Se recomienda» una sola vez, en la primera viñeta. No dejes líneas en blanco entre viñetas y no omitas ninguna. No uses otras secciones, no inventes una recomendación sin observación y no repitas el informe. No emitas una decisión de aprobación, rechazo o contratación. Si el texto actual indica que no hay nada negativo (todo está bien, nada malo, sin observaciones, todo ok o una frase con ese sentido), no uses las observaciones de la hoja preliminar y redacta, sin viñeta: Durante el proceso de evaluación no se identificaron factores de riesgo que requieran seguimiento adicional. Si no hay observaciones ni esa nota, no escribas nada.',
             default => 'Usa solo la información de esta sección. No mezcles campos de otra.',
         };
     }
@@ -83,6 +84,15 @@ class AsistenteRedaccionInstrucciones
         ]);
     }
 
+    private static function formato(string $seccion): string
+    {
+        if ($seccion === InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES) {
+            return 'Separa las viñetas con un solo salto de línea. No dejes renglones vacíos entre ellas.';
+        }
+
+        return 'Organiza la redacción en párrafos independientes, agrupando la información por tema. Dentro de un párrafo usa punto y seguido. Separa cada párrafo con un solo salto de línea, sin renglones vacíos ni dobles saltos. No entregues todo en un solo bloque. Mantén párrafos de extensión equilibrada y no separes lo que pertenece al mismo tema. No uses viñetas, numeración ni subtítulos.';
+    }
+
     private static function deServicio(string $servicio): string
     {
         return match ($servicio) {
@@ -97,7 +107,7 @@ class AsistenteRedaccionInstrucciones
     {
         return match ($estilo) {
             'tecnica' => 'técnico, preciso y sobrio',
-            'breve' => 'breve, en un solo párrafo corto',
+            'breve' => 'breve, en párrafos cortos',
             'detallada' => 'detallado, sin agregar hechos',
             default => 'formal e institucional',
         };

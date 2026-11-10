@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cuestionario;
+use App\Models\EvaluadoOrden;
 use App\Models\EvaluadorNota;
 use App\Support\AsistenteRedaccion;
 use App\Support\AsistenteRedaccionGenerador;
+use App\Support\AsistenteRedaccionPreliminar;
 use App\Support\AsistenteRedaccionSecciones;
 use App\Support\EvaluadorNotasSupport;
 use Illuminate\Http\Client\ConnectionException;
@@ -53,6 +55,56 @@ class AsistenteRedaccionController extends Controller
                 trim((string) ($datos['observacion'] ?? '')),
                 $request->boolean('resto_sin_cambios'),
                 $textoActual,
+                (string) ($datos['estilo'] ?? 'formal'),
+                (string) ($datos['proveedor'] ?? 'claude')
+            );
+        } catch (ConnectionException) {
+            $nombre = ($datos['proveedor'] ?? 'claude') === 'gpt' ? 'GPT' : 'Claude';
+
+            return response()->json([
+                'message' => $nombre.' tardó demasiado. Intente de nuevo.',
+            ], 503);
+        } catch (RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 503);
+        } catch (\Throwable) {
+            return response()->json([
+                'message' => 'No se pudo redactar. Intente de nuevo.',
+            ], 503);
+        }
+
+        return response()->json($propuesta);
+    }
+
+    public function preliminar(Request $request, EvaluadoOrden $evaluado, AsistenteRedaccionPreliminar $preliminar): JsonResponse
+    {
+        if (! AsistenteRedaccion::activo()) {
+            abort(404);
+        }
+        if (Auth::user()->role_as < 2) {
+            abort(403);
+        }
+
+        $datos = $request->validate([
+            'modo' => 'required|string|in:instruccion,reescribir,otra_version,cambiar_estilo',
+            'observacion' => 'nullable|string|max:5000',
+            'texto_actual' => 'required|string|max:20000',
+            'estilo' => 'nullable|string|in:formal,tecnica,breve,detallada',
+            'proveedor' => 'nullable|string|in:claude,gpt',
+        ]);
+        if ($datos['modo'] === 'instruccion' && trim((string) ($datos['observacion'] ?? '')) === '') {
+            return response()->json(['message' => 'Escriba la instrucción.'], 422);
+        }
+        if (trim(strip_tags($datos['texto_actual'])) === '') {
+            return response()->json(['message' => 'No hay un texto para modificar.'], 422);
+        }
+
+        try {
+            $propuesta = $preliminar->proponer(
+                $datos['texto_actual'],
+                $datos['modo'],
+                trim((string) ($datos['observacion'] ?? '')),
                 (string) ($datos['estilo'] ?? 'formal'),
                 (string) ($datos['proveedor'] ?? 'claude')
             );

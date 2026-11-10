@@ -247,6 +247,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
     // ========================================
     Route::middleware(['permission:informe_preliminar.editar'])->group(function () {
         Route::patch('evaluados/{evaluado}/informe-preliminar', [OrdenesController::class, 'guardarInformePreliminar'])->name('evaluados.guardar-informe-preliminar');
+        Route::post('evaluados/{evaluado}/asistente-preliminar', [App\Http\Controllers\Admin\AsistenteRedaccionController::class, 'preliminar'])->name('evaluados.asistente-preliminar');
     });
     Route::middleware(['permission:observacion.editar'])->group(function () {
         Route::patch('evaluados/{evaluado}/observacion', [OrdenesController::class, 'actualizarObservacion'])->name('evaluados.actualizar-observacion');

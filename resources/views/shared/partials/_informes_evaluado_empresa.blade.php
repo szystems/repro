@@ -40,6 +40,8 @@
                 .informe-preliminar-empresa table { border-collapse: collapse; width: 100%; }
                 .informe-preliminar-empresa th, .informe-preliminar-empresa td { border: 1px solid #6c757d; padding: 6px 8px; }
                 .informe-preliminar-empresa th { background: #e9ecef; }
+                .informe-preliminar-empresa ul { list-style-type: disc; margin: 0.35rem 0 0.35rem 1.25rem; padding-left: 1.1rem; }
+                .informe-preliminar-empresa ol { list-style-type: decimal; margin: 0.35rem 0 0.35rem 1.25rem; padding-left: 1.1rem; }
             </style>
         </div>
     </div>

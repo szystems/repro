@@ -282,6 +282,30 @@ class AsistenteRedaccionCicloTest extends TestCase
         ]);
     }
 
+    public function test_el_preliminar_corrige_solo_el_texto_y_no_guarda(): void
+    {
+        $this->encender();
+        $evaluado = $this->cuestionario->evaluadoOrden;
+        $evaluado->update(['texto_informe_preliminar' => '<p>Texto que ya estaba.</p>']);
+
+        $this->actingAs($this->repro())
+            ->postJson(route('evaluados.asistente-preliminar', $evaluado), [
+                'modo' => 'reescribir',
+                'texto_actual' => '<p>Se observó buena presentación.</p><ul><li>Puntual</li></ul>',
+                'proveedor' => 'claude',
+            ])
+            ->assertOk()
+            ->assertJsonPath('texto', 'PROPUESTA DE PRUEBA');
+
+        $this->assertSame(1, $this->motor->llamadas);
+        $this->assertStringContainsString('Se observó buena presentación.', $this->motor->usuario);
+        $this->assertStringContainsString('• Puntual', $this->motor->usuario);
+        $this->assertStringContainsString('únicamente con el texto entregado', $this->motor->sistema);
+        $this->assertStringNotContainsString('Cristopher Unico', $this->motor->usuario);
+        $this->assertStringNotContainsString('3403384231403', $this->motor->usuario);
+        $this->assertSame('<p>Texto que ya estaba.</p>', $evaluado->fresh()->texto_informe_preliminar);
+    }
+
     public function test_la_empresa_no_puede_generar(): void
     {
         $this->encender();

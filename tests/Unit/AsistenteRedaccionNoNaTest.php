@@ -60,5 +60,8 @@ class AsistenteRedaccionNoNaTest extends TestCase
         $recomendaciones = AsistenteRedaccionInstrucciones::sistema('word_recomendaciones', 'poligrafo');
         $this->assertStringContainsString('Se recomienda', $recomendaciones);
         $this->assertStringContainsString('factores de riesgo', $recomendaciones);
+        $this->assertStringContainsString('«• »', $recomendaciones);
+        $this->assertStringContainsString('un solo salto de línea', $sistema);
+        $this->assertStringContainsString('No uses viñetas', $sistema);
     }
 }

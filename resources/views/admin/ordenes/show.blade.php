@@ -1153,6 +1153,11 @@
                                                     </div>
                                                     <div class="mt-2 d-flex justify-content-between align-items-center">
                                                         <div>
+                                                            @if(\App\Support\AsistenteRedaccion::activo())
+                                                            <button type="button" class="btn btn-sm btn-outline-primary asistente-preliminar" data-evaluado="{{ $evaluado->id }}" data-url="{{ route('evaluados.asistente-preliminar', $evaluado) }}" title="Corrige la redacción de esta hoja. No usa los datos del candidato.">
+                                                                <i class="bi bi-stars"></i> Corregir redacción
+                                                            </button>
+                                                            @endif
                                                             <button type="button" class="btn btn-sm btn-outline-secondary insertar-tabla-preliminar" data-evaluado="{{ $evaluado->id }}" title="Inserta una tabla con Resultado y Observaciones">
                                                                 <i class="bi bi-table"></i> Insertar tabla
                                                             </button>
@@ -1327,6 +1332,54 @@
         @endif
 
     </div>
+    @if(\App\Support\AsistenteRedaccion::activo())
+    <div class="modal fade" id="asistentePreliminarModal" tabindex="-1" aria-hidden="true" data-csrf="{{ csrf_token() }}">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Corregir redacción del preliminar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Corrige solo el texto de esta hoja. No consulta el formulario ni la ficha del candidato. Aceptar lo deja en el editor; hay que pulsar Guardar observaciones para que quede.</p>
+                    <div class="mb-3">
+                        <label class="form-label" for="preliminar-proveedor">Redactor</label>
+                        <select id="preliminar-proveedor" class="form-select">
+                            <option value="claude">Claude</option>
+                            <option value="gpt">GPT</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="preliminar-instruccion">Instrucción, si quiere pedir un cambio</label>
+                        <textarea id="preliminar-instruccion" class="form-control" rows="3" placeholder="Por ejemplo: pon cada observación en una viñeta"></textarea>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-primary" id="preliminar-reescribir">Reescribir</button>
+                        <button type="button" class="btn btn-outline-primary" id="preliminar-instruccion-btn">Dar instrucción</button>
+                        <button type="button" class="btn btn-outline-primary" id="preliminar-otra">Otra versión</button>
+                        <select id="preliminar-estilo" class="form-select" style="max-width: 11rem;">
+                            <option value="formal">Formal</option>
+                            <option value="tecnica">Técnica</option>
+                            <option value="breve">Breve</option>
+                            <option value="detallada">Detallada</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-primary" id="preliminar-estilo-btn">Cambiar estilo</button>
+                    </div>
+                    <div id="preliminar-estado" class="text-muted small mt-2 d-none">Generando…</div>
+                    <div id="preliminar-error" class="alert alert-danger mt-3 d-none"></div>
+                    <div id="preliminar-propuesta-grupo" class="mt-3 d-none">
+                        <label class="form-label" for="preliminar-propuesta">Vista previa. Puede editarla antes de aceptar.</label>
+                        <textarea id="preliminar-propuesta" class="form-control" rows="8"></textarea>
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="button" class="btn btn-success" id="preliminar-aceptar">Aceptar en el editor</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Descartar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
     <!-- Content wrapper end -->
 
 </div>
@@ -1391,6 +1444,22 @@
 }
 .ql-editor .repro-tabla-wrap {
     margin: 0.5rem 0;
+}
+.ql-editor ul,
+.informe-preliminar-html ul {
+    list-style-type: disc;
+    margin: 0.35rem 0 0.35rem 1.25rem;
+    padding-left: 1.1rem;
+}
+.ql-editor ol,
+.informe-preliminar-html ol {
+    list-style-type: decimal;
+    margin: 0.35rem 0 0.35rem 1.25rem;
+    padding-left: 1.1rem;
+}
+.ql-editor li,
+.informe-preliminar-html li {
+    display: list-item;
 }
 .ql-editor .repro-tabla-accion,
 .ql-editor .repro-tabla-accion th,
@@ -1906,6 +1975,16 @@ function copiarEnlaceEvaluado(url) {
                 quill.removeFormat(quill.getSelection(true));
             });
         });
+        const botonViñetas = toolbar.container.querySelector('button.ql-list[value="bullet"]');
+        if (botonViñetas) {
+            botonViñetas.setAttribute('title', 'Viñetas');
+            botonViñetas.setAttribute('aria-label', 'Viñetas');
+        }
+        const botonNumeros = toolbar.container.querySelector('button.ql-list[value="ordered"]');
+        if (botonNumeros) {
+            botonNumeros.setAttribute('title', 'Numeración');
+            botonNumeros.setAttribute('aria-label', 'Numeración');
+        }
         const colorLabel = toolbar.container.querySelector('.ql-color .ql-picker-label');
         if (colorLabel) {
             colorLabel.setAttribute('title', 'Color de letra — pulse para ver la paleta');
@@ -2019,5 +2098,116 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 @endif
 });
+
+@if(\App\Support\AsistenteRedaccion::activo())
+(function () {
+    var modalEl = document.getElementById('asistentePreliminarModal');
+    if (!modalEl || typeof bootstrap === 'undefined') {
+        return;
+    }
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    var evaluadoActual = '';
+    var urlActual = '';
+    var htmlActual = '';
+    var enCurso = false;
+    try {
+        var guardado = localStorage.getItem('sigor-redactor');
+        if (guardado === 'gpt' || guardado === 'claude') {
+            document.getElementById('preliminar-proveedor').value = guardado;
+        }
+    } catch (e) {}
+
+    document.querySelectorAll('.asistente-preliminar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            evaluadoActual = boton.getAttribute('data-evaluado');
+            urlActual = boton.getAttribute('data-url');
+            htmlActual = '';
+            document.getElementById('preliminar-instruccion').value = '';
+            document.getElementById('preliminar-error').classList.add('d-none');
+            document.getElementById('preliminar-propuesta-grupo').classList.add('d-none');
+            document.getElementById('preliminar-propuesta').value = '';
+            modal.show();
+        });
+    });
+
+    function pedir(modo) {
+        if (enCurso || !evaluadoActual) {
+            return;
+        }
+        var quill = window['quillPreliminar' + evaluadoActual];
+        if (!quill) {
+            return;
+        }
+        enCurso = true;
+        var error = document.getElementById('preliminar-error');
+        error.classList.add('d-none');
+        document.getElementById('preliminar-estado').classList.remove('d-none');
+        modalEl.querySelectorAll('button, select, textarea').forEach(function (control) {
+            control.disabled = true;
+        });
+        fetch(urlActual, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': modalEl.getAttribute('data-csrf'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                modo: modo,
+                observacion: document.getElementById('preliminar-instruccion').value,
+                texto_actual: quill.root.innerHTML,
+                estilo: document.getElementById('preliminar-estilo').value,
+                proveedor: document.getElementById('preliminar-proveedor').value
+            })
+        }).then(function (respuesta) {
+            return respuesta.text().then(function (texto) {
+                var datos = {};
+                try { datos = texto ? JSON.parse(texto) : {}; } catch (e) { datos = {}; }
+                if (!respuesta.ok) {
+                    throw new Error(datos.message || 'No se pudo redactar. Intente de nuevo.');
+                }
+                return datos;
+            });
+        }).then(function (datos) {
+            htmlActual = datos.html || '';
+            document.getElementById('preliminar-propuesta').value = datos.texto || '';
+            document.getElementById('preliminar-propuesta-grupo').classList.remove('d-none');
+            try { localStorage.setItem('sigor-redactor', document.getElementById('preliminar-proveedor').value); } catch (e) {}
+        }).catch(function (fallo) {
+            error.textContent = (fallo && fallo.message) ? fallo.message : 'No se pudo redactar. Intente de nuevo.';
+            error.classList.remove('d-none');
+        }).finally(function () {
+            enCurso = false;
+            document.getElementById('preliminar-estado').classList.add('d-none');
+            modalEl.querySelectorAll('button, select, textarea').forEach(function (control) {
+                control.disabled = false;
+            });
+        });
+    }
+
+    document.getElementById('preliminar-reescribir').addEventListener('click', function () { pedir('reescribir'); });
+    document.getElementById('preliminar-instruccion-btn').addEventListener('click', function () { pedir('instruccion'); });
+    document.getElementById('preliminar-otra').addEventListener('click', function () { pedir('otra_version'); });
+    document.getElementById('preliminar-estilo-btn').addEventListener('click', function () { pedir('cambiar_estilo'); });
+    document.getElementById('preliminar-aceptar').addEventListener('click', function () {
+        var quill = window['quillPreliminar' + evaluadoActual];
+        var texto = document.getElementById('preliminar-propuesta').value;
+        var html = htmlActual;
+        if (texto.trim() !== '' && html.trim() === '') {
+            html = texto.split('\n').map(function (linea) {
+                return '<p>' + linea.replace(/[&<>]/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c];
+                }) + '</p>';
+            }).join('');
+        }
+        if (quill && html.trim() !== '') {
+            quill.setContents([]);
+            quill.clipboard.dangerouslyPasteHTML(0, html);
+        }
+        modal.hide();
+    });
+})();
+@endif
 </script>
 @endpush
