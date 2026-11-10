@@ -1,0 +1,40 @@
+# Dispara un redeploy de repro-portal en Coolify al mergear a master.
+#
+# Setup único (Otto, ~5 min):
+# 1. Coolify → Settings → Advanced → activar "API Access"
+# 2. Coolify → Keys & Tokens → crear token con permiso "deploy"
+# 3. GitHub repo szystems/repro → Settings → Secrets → Actions:
+#    - COOLIFY_URL = http://5.78.235.235:8000
+#    - COOLIFY_TOKEN = (token del paso 2)
+#    - COOLIFY_APP_UUID = ot2bqftjjqp9d2l2ez7awoha
+#
+# Alternativa sin este workflow: en Coolify, app repro-portal → activar
+# "Auto Deploy" con GitHub App (push a master ya redespliega solo).
+
+name: Deploy repro-portal (Coolify)
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Coolify deployment
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_APP_UUID: ${{ secrets.COOLIFY_APP_UUID }}
+        run: |
+          if [ -z "$COOLIFY_URL" ] || [ -z "$COOLIFY_TOKEN" ] || [ -z "$COOLIFY_APP_UUID" ]; then
+            echo "Coolify secrets not configured in GitHub — skipping deploy."
+            echo "See comments at top of .github/workflows/coolify-deploy.yml"
+            exit 0
+          fi
+          curl --fail-with-body -sS -X GET \
+            "${COOLIFY_URL}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=false" \
+            -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
+            -H "Accept: application/json"
