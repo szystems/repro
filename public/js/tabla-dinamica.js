@@ -189,8 +189,8 @@
     }
 
     function buildMoveButtons() {
-        return '<button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="-1" title="Subir" aria-label="Subir"><i class="fas fa-arrow-up"></i></button>'
-            + '<button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="1" title="Bajar" aria-label="Bajar"><i class="fas fa-arrow-down"></i></button>';
+        return '<button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="-1" title="Subir" aria-label="Subir"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>'
+            + '<button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="1" title="Bajar" aria-label="Bajar"><i class="bi bi-arrow-down" aria-hidden="true"></i></button>';
     }
 
     function buildTableRow(name, index, columnas, textoEliminar, filaData, permitirEliminar, permitirReordenar) {
@@ -209,7 +209,7 @@
                 cells += buildMoveButtons();
             }
             if (permitirEliminar !== false) {
-                cells += '<button type="button" class="btn btn-outline-danger btn-sm tabla-dinamica-remove" title="' + escapeHtml(textoEliminar) + '"><i class="fas fa-trash-alt"></i></button>';
+                cells += '<button type="button" class="btn btn-outline-danger btn-sm tabla-dinamica-remove" title="' + escapeHtml(textoEliminar) + '" aria-label="' + escapeHtml(textoEliminar) + '"><i class="bi bi-trash" aria-hidden="true"></i></button>';
             }
             cells += '</div></td>';
         }

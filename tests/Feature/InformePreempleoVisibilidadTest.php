@@ -109,6 +109,9 @@ class InformePreempleoVisibilidadTest extends TestCase
             ->assertSee('name="informe_tablas[laboral]', false)
             ->assertSee('data-permitir-reordenar="1"', false)
             ->assertSee('tabla-dinamica-move', false)
+            ->assertSee('bi-arrow-up', false)
+            ->assertSee('bi-trash', false)
+            ->assertDontSee('fa-trash-alt', false)
             ->assertSee('orden cronológico', false);
     }
 
