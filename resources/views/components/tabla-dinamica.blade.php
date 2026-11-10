@@ -43,13 +43,13 @@
 
     @if($titulo)
         <div class="section-subtitle mb-2">
-            <i class="fas fa-table"></i> {{ $titulo }}
+            <i class="bi bi-table" aria-hidden="true"></i> {{ $titulo }}
         </div>
     @endif
 
     @if(count($columnas) >= 6)
         <p class="text-muted small tabla-dinamica-scroll-hint mb-2 d-none d-sm-block">
-            <i class="fas fa-arrows-alt-h"></i> Deslice horizontalmente para ver todas las columnas.
+            <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Deslice horizontalmente para ver todas las columnas.
         </p>
     @endif
 
@@ -93,7 +93,7 @@
 
     @if($permitirAgregar)
     <button type="button" class="btn btn-outline-primary btn-sm tabla-dinamica-add">
-        <i class="fas fa-plus"></i> {{ $textoAgregar }}
+        <i class="bi bi-plus-lg" aria-hidden="true"></i> {{ $textoAgregar }}
     </button>
     @endif
 </div>
