@@ -459,7 +459,7 @@ UAT prod PRUEBA 1 (resultado restaurado a null): #114 VSA peri 2 marcas + mentir
 
 | ID | Qué | Causa real / fix |
 |----|-----|------------------|
-| **M-F2** | ¿Padece alergias? + ¿Está embarazada? en **todos** los formularios | ✅ prod 26-ago. El sexo no va en el formulario del candidato. Va en la orden (creación y edición), opcional `hombre`/`mujer`, y solo lo lee la redacción. Embarazo Sí/No para todos; ayuda «Si no aplica, seleccione No.» Detalle de alergias solo si Sí. |
+| **M-F2** | ¿Padece alergias? + ¿Está embarazada? en **todos** los formularios | ✅ prod 26-ago. El sexo es obligatorio en la primera sección del evaluado y opcional al crear o editar la orden. Se guarda en `evaluados_orden.sexo` (`hombre`/`mujer`) y solo lo lee la redacción. No entra al Word ni al portal de la empresa. Embarazo Sí/No para todos; ayuda «Si no aplica, seleccione No.» Detalle de alergias solo si Sí. |
 | **M-F3** | Peri/espe §5 pedía «sección de salud» | ✅ prod 26-ago. Bloque corto **Aspectos de salud** (solo esas dos) antes de tatuajes. No se volcó el cuestionario de salud completo de preempleo. |
 
 Campos: `salud_alergias`, `salud_detalle_alergias`, `salud_embarazada`. Internos (no van al PDF empresa). Word: entran a la narrativa `word_salud` si REPRO no la reescribe.

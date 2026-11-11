@@ -271,7 +271,7 @@
                                                 <option value="hombre" {{ old('evaluados.'.$index.'.sexo', $evaluado->sexo) === 'hombre' ? 'selected' : '' }}>Hombre</option>
                                                 <option value="mujer" {{ old('evaluados.'.$index.'.sexo', $evaluado->sexo) === 'mujer' ? 'selected' : '' }}>Mujer</option>
                                             </select>
-                                            <small class="text-muted">Lo usa la redacción. No sale en el formulario del candidato.</small>
+                                            <small class="text-muted">Lo usa la redacción. El evaluado también lo confirma en sus datos.</small>
                                         </div>
                                         <div class="col-md-4 mb-2">
                                             <label class="form-label">Sede REPRO</label>

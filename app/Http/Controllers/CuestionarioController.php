@@ -621,7 +621,11 @@ class CuestionarioController extends Controller
         $seccionSlug = $this->getSlugSeccion($numero, $cuestionario->tipo_formulario);
 
         if ($numero === 1) {
-            unset($datosValidados['foto_candidato'], $datosValidados['foto_candidato_existente']);
+            $sexo = $datosValidados['sexo'] ?? null;
+            unset($datosValidados['sexo'], $datosValidados['foto_candidato'], $datosValidados['foto_candidato_existente']);
+            if (in_array($sexo, ['hombre', 'mujer'], true)) {
+                $evaluado->update(['sexo' => $sexo]);
+            }
 
             if ($request->hasFile('foto_candidato')) {
                 CuestionarioFotoCandidato::guardar(

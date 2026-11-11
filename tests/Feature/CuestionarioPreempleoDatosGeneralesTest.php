@@ -51,6 +51,9 @@ class CuestionarioPreempleoDatosGeneralesTest extends TestCase
         $response->assertSee('Departamento de nacimiento');
         $response->assertSee('Licencia de conducir');
         $response->assertSee('Teléfono de emergencia');
+        $response->assertSee('name="sexo"', false);
+        $response->assertSee('Hombre');
+        $response->assertSee('Mujer');
         $response->assertDontSee('name="genero"', false);
         $response->assertDontSee('name="profesion_oficio"', false);
         $response->assertDontSee('name="nivel_educativo"', false);
@@ -64,6 +67,7 @@ class CuestionarioPreempleoDatosGeneralesTest extends TestCase
             'token' => $this->evaluado->token_unico,
             'numero' => 1,
         ]), $this->datosSeccion1Preempleo([
+            'sexo' => 'mujer',
             'igss' => '123456789',
             'nit' => '9876543-2',
             'licencia_conducir' => 'si',
@@ -73,9 +77,13 @@ class CuestionarioPreempleoDatosGeneralesTest extends TestCase
 
         $response->assertSessionHasNoErrors();
 
+        $this->evaluado->refresh();
+        $this->assertSame('mujer', $this->evaluado->sexo);
+
         $cuestionario = $this->evaluado->cuestionario()->first();
         $respuestas = $cuestionario->obtenerRespuestasSeccion(1);
 
+        $this->assertArrayNotHasKey('sexo', $respuestas);
         $this->assertSame('123456789', $respuestas['igss'] ?? null);
         $this->assertSame('9876543-2', $respuestas['nit'] ?? null);
         $this->assertSame('si', $respuestas['licencia_conducir'] ?? null);

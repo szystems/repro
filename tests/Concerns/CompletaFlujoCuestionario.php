@@ -49,6 +49,7 @@ trait CompletaFlujoCuestionario
     protected function datosSeccion1Preempleo(array $extra = []): array
     {
         return array_merge([
+            'sexo' => 'hombre',
             'nombres_completos' => 'Juan Carlos',
             'apellidos_completos' => 'Pérez García',
             'tipo_identificacion' => 'dpi',
