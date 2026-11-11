@@ -45,6 +45,21 @@ class AsistenteRedaccionSaludTest extends TestCase
             $paquete['observacion_evaluador']
         );
         $this->assertStringContainsString('alergia a la penicilina', $paquete['texto_para_modelo']);
+        $this->assertSame('no registrado', $paquete['sexo']);
+        $this->assertStringContainsString('Sexo: no registrado', $paquete['texto_para_modelo']);
+    }
+
+    public function test_el_sexo_guardado_en_la_orden_llega_a_la_redaccion(): void
+    {
+        $evaluado = $this->evaluadoConSalud([
+            'salud_estado_general' => 'bueno',
+        ]);
+        $evaluado->update(['sexo' => 'hombre']);
+
+        $paquete = AsistenteRedaccionSalud::paquete($evaluado->fresh());
+
+        $this->assertSame('hombre', $paquete['sexo']);
+        $this->assertStringContainsString('Sexo: hombre', $paquete['texto_para_modelo']);
     }
 
     public function test_el_paquete_no_lleva_identidad_ni_otras_secciones(): void

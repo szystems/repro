@@ -175,10 +175,18 @@ class Cuestionario extends Model
     {
         $slugSeccion = $this->getSlugSeccion($numeroSeccion);
         
-        return $this->respuestas()
+        $respuestas = $this->respuestas()
             ->where('seccion', $slugSeccion)
             ->pluck('valor', 'campo')
             ->toArray();
+
+        foreach ($respuestas as $campo => $valor) {
+            if (is_string($valor)) {
+                $respuestas[$campo] = \App\Support\TextoOracion::aplicar($valor);
+            }
+        }
+
+        return $respuestas;
     }
     
     /**

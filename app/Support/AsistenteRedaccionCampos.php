@@ -144,9 +144,9 @@ class AsistenteRedaccionCampos
 
     private static function sexo(EvaluadoOrden $evaluado): string
     {
-        $valor = trim((string) ($evaluado->sexo ?? $evaluado->genero ?? ''));
+        $valor = mb_strtolower(trim((string) ($evaluado->sexo ?? '')));
 
-        return $valor !== '' ? $valor : 'no registrado';
+        return in_array($valor, ['hombre', 'mujer'], true) ? $valor : 'no registrado';
     }
 
     /**

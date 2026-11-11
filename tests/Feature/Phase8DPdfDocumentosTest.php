@@ -430,7 +430,7 @@ class Phase8DPdfDocumentosTest extends TestCase
         $this->assertStringNotContainsString('Responsable del Proceso', $view);
     }
 
-    public function test_pdf_autorizacion_muestra_firma_del_encargado_solo_a_repro(): void
+    public function test_pdf_autorizacion_no_muestra_al_encargado_ni_a_repro_ni_al_cliente(): void
     {
         $responsable = $this->crearRepro();
         $responsable->update(['name' => 'Felipe Encargado Interno', 'cargo' => 'Poligrafista Senior']);
@@ -455,9 +455,9 @@ class Phase8DPdfDocumentosTest extends TestCase
         $this->actingAs($responsable);
         $interno = view('admin.cuestionarios.pdf-autorizacion', $datos)->render();
 
-        $this->assertStringContainsString('Felipe Encargado Interno', $interno);
-        $this->assertStringContainsString('Poligrafista Senior', $interno);
-        $this->assertStringContainsString('Responsable del Proceso', $interno);
+        $this->assertStringNotContainsString('Felipe Encargado Interno', $interno);
+        $this->assertStringNotContainsString('Poligrafista Senior', $interno);
+        $this->assertStringNotContainsString('Responsable del Proceso', $interno);
         $this->assertStringContainsString($evaluado->nombre, $interno);
 
         $this->actingAs($cliente);
@@ -536,6 +536,13 @@ class Phase8DPdfDocumentosTest extends TestCase
         $this->assertStringContainsString('Responsable', $view);
         $this->assertStringContainsString($responsable->name, $view);
         $this->assertStringContainsString('Evaluador', $view);
+
+        $cliente = $this->crearEmpresa($empresa);
+        $this->actingAs($cliente);
+        $paraCliente = view('admin.ordenes.pdf', compact('orden', 'estados'))->render();
+
+        $this->assertStringNotContainsString($responsable->name, $paraCliente);
+        $this->assertStringNotContainsString('Evaluador', $paraCliente);
     }
 
     // ─── Validación de ProgramarCitaRequest ───

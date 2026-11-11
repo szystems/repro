@@ -189,8 +189,8 @@
     }
 
     function buildMoveButtons() {
-        return '<button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="-1" title="Subir" aria-label="Subir"><i class="fas fa-arrow-up"></i></button>'
-            + '<button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="1" title="Bajar" aria-label="Bajar"><i class="fas fa-arrow-down"></i></button>';
+        return '<button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="-1" title="Subir" aria-label="Subir"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>'
+            + '<button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="1" title="Bajar" aria-label="Bajar"><i class="bi bi-arrow-down" aria-hidden="true"></i></button>';
     }
 
     function buildTableRow(name, index, columnas, textoEliminar, filaData, permitirEliminar, permitirReordenar) {
@@ -209,7 +209,7 @@
                 cells += buildMoveButtons();
             }
             if (permitirEliminar !== false) {
-                cells += '<button type="button" class="btn btn-outline-danger btn-sm tabla-dinamica-remove" title="' + escapeHtml(textoEliminar) + '"><i class="fas fa-trash-alt"></i></button>';
+                cells += '<button type="button" class="btn btn-outline-danger btn-sm tabla-dinamica-remove" title="' + escapeHtml(textoEliminar) + '" aria-label="' + escapeHtml(textoEliminar) + '"><i class="bi bi-trash" aria-hidden="true"></i></button>';
             }
             cells += '</div></td>';
         }
@@ -502,6 +502,28 @@
         }
     }
 
+    function aOracion(valor) {
+        const texto = String(valor || '').trim();
+        if (!texto || !/\p{L}/u.test(texto)) {
+            return valor;
+        }
+        const upper = texto.toLocaleUpperCase('es');
+        const lower = texto.toLocaleLowerCase('es');
+        if (texto !== upper || texto === lower) {
+            return valor;
+        }
+        const clave = lower.replace(/ /g, '_');
+        const claves = ['si', 'no', 'soltero', 'casado', 'union_libre', 'divorciado', 'viudo', 'completo', 'incompleto', 'en_curso'];
+        if (claves.indexOf(clave) !== -1) {
+            return clave;
+        }
+        if (texto.indexOf(' ') === -1 && texto.length <= 5 && /^\p{L}+$/u.test(texto)) {
+            return valor;
+        }
+
+        return lower.charAt(0).toLocaleUpperCase('es') + lower.slice(1);
+    }
+
     function initWrapper(wrapper) {
         const addBtn = wrapper.querySelector('.tabla-dinamica-add');
         if (addBtn && wrapper.dataset.permitirAgregar !== '0') {
@@ -538,6 +560,25 @@
             confirmRemove(function () {
                 removeRow(wrapper, row.dataset.index);
             });
+        });
+
+        wrapper.addEventListener('focusout', function (event) {
+            const input = event.target;
+            if (!input || !wrapper.contains(input)) {
+                return;
+            }
+            const etiqueta = input.tagName;
+            if (etiqueta !== 'INPUT' && etiqueta !== 'TEXTAREA') {
+                return;
+            }
+            if (etiqueta === 'INPUT' && input.type && input.type !== 'text') {
+                return;
+            }
+            const corregido = aOracion(input.value);
+            if (corregido !== input.value) {
+                input.value = corregido;
+                syncWrapperFields(wrapper);
+            }
         });
 
         reindexWrapper(wrapper);

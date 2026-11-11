@@ -745,9 +745,9 @@ class Fase2DocumentacionTest extends TestCase
         );
 
         $this->orden->refresh();
-        // Fase 18: orden permanece 'en_proceso' (no hay estado 'preliminar')
+        $this->evaluado->refresh();
         $this->assertEquals('en_proceso', $this->orden->estado);
-        // Libera visibilidad automáticamente al subir preliminar
+        $this->assertEquals('resultado_preliminar', $this->evaluado->estado_evaluacion);
         $this->assertTrue((bool) $this->orden->resultados_visibles_empresa);
     }
 

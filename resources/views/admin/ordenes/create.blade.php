@@ -282,6 +282,14 @@ function agregarEvaluado(datos = {}) {
                     <input type="text" class="form-control" name="evaluados[${contadorEvaluados}][puesto_evaluar]" placeholder="Ej: Gerente de Ventas" value="${puestoEvaluar}" maxlength="100">
                 </div>
                 <div class="col-md-3 mb-2">
+                    <label class="form-label">Sexo</label>
+                    <select class="form-select" name="evaluados[${contadorEvaluados}][sexo]">
+                        <option value="" ${(!datos.sexo) ? 'selected' : ''}>Sin indicar</option>
+                        <option value="hombre" ${datos.sexo === 'hombre' ? 'selected' : ''}>Hombre</option>
+                        <option value="mujer" ${datos.sexo === 'mujer' ? 'selected' : ''}>Mujer</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
                     <label class="form-label">Sede REPRO</label>
                     <select class="form-select" name="evaluados[${contadorEvaluados}][sede_id]">
                         <option value="">Sin sede</option>

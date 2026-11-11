@@ -265,6 +265,15 @@
                                                    placeholder="Ej: Gerente de Ventas" maxlength="100">
                                         </div>
                                         <div class="col-md-4 mb-2">
+                                            <label class="form-label">Sexo</label>
+                                            <select class="form-select" name="evaluados[{{ $index }}][sexo]">
+                                                <option value="">Sin indicar</option>
+                                                <option value="hombre" {{ old('evaluados.'.$index.'.sexo', $evaluado->sexo) === 'hombre' ? 'selected' : '' }}>Hombre</option>
+                                                <option value="mujer" {{ old('evaluados.'.$index.'.sexo', $evaluado->sexo) === 'mujer' ? 'selected' : '' }}>Mujer</option>
+                                            </select>
+                                            <small class="text-muted">Lo usa la redacción. No sale en el formulario del candidato.</small>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
                                             <label class="form-label">Sede REPRO</label>
                                             <select class="form-select" name="evaluados[{{ $index }}][sede_id]">
                                                 <option value="">Sin sede</option>
@@ -494,6 +503,14 @@
             <div class="col-md-6 mb-2">
                 <label class="form-label">Puesto a Evaluar</label>
                 <input type="text" class="form-control evaluado-puesto-evaluar" name="" placeholder="Ej: Gerente de Ventas" maxlength="100">
+            </div>
+            <div class="col-md-6 mb-2">
+            <label class="form-label">Sexo</label>
+            <select class="form-select evaluado-sexo" name="">
+                <option value="">Sin indicar</option>
+                <option value="hombre">Hombre</option>
+                <option value="mujer">Mujer</option>
+            </select>
         </div>
         <div class="col-md-6 mb-2">
             <label class="form-label">Sede REPRO</label>
@@ -625,6 +642,8 @@ document.addEventListener('DOMContentLoaded', function() {
         newEvaluado.querySelector('.evaluado-dpi').name = `evaluados[${evaluadoIndex}][dpi]`;
         newEvaluado.querySelector('.evaluado-email').name = `evaluados[${evaluadoIndex}][email]`;
         newEvaluado.querySelector('.evaluado-puesto-evaluar').name = `evaluados[${evaluadoIndex}][puesto_evaluar]`;
+        const sexoEl = newEvaluado.querySelector('.evaluado-sexo');
+        if (sexoEl) sexoEl.name = `evaluados[${evaluadoIndex}][sexo]`;
         newEvaluado.querySelector('.evaluado-sede-id').name = `evaluados[${evaluadoIndex}][sede_id]`;
         newEvaluado.querySelector('.evaluado-sede-region-empresa').name = `evaluados[${evaluadoIndex}][sede_region_empresa]`;
         newEvaluado.querySelector('.evaluado-telefono').name = `evaluados[${evaluadoIndex}][telefono]`;
