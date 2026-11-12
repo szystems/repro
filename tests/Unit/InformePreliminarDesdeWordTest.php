@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\EvaluadorNotasSupport;
 use App\Support\InformePreliminarDesdeWord;
 use App\Support\InformeWordBloquesEvaluador;
+use App\Support\InformeWordPreguntasPoligraficas;
 use App\Support\InformeWordResultado;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -48,6 +49,68 @@ class InformePreliminarDesdeWordTest extends TestCase
         $this->assertStringContainsString('No aprobado', $html);
         $this->assertStringContainsString('preguntas 1 y 7', $html);
         $this->assertStringContainsString('vocabulario despectivo', $html);
+    }
+
+    public function test_las_preguntas_di_de_la_tabla_pasan_al_preliminar(): void
+    {
+        $evaluado = $this->evaluadoPoli(['resultado' => 'no_aprobado']);
+        $autor = User::factory()->create();
+        InformeWordPreguntasPoligraficas::guardarDesdeRequest($evaluado->id, [
+            [
+                'pregunta' => '¿Cometió usted delitos en empleos anteriores?',
+                'respuesta' => 'No',
+                'resultado' => 'NDI',
+                'puntuacion' => '',
+            ],
+            [
+                'pregunta' => '¿Tiene actas administrativas?',
+                'respuesta' => 'No',
+                'resultado' => 'DI',
+                'puntuacion' => '',
+            ],
+            [
+                'pregunta' => '¿En los últimos 6 meses ha consumido drogas ilegales?',
+                'respuesta' => 'No',
+                'resultado' => 'DI',
+                'puntuacion' => '',
+            ],
+        ], $autor->id);
+        EvaluadorNotasSupport::guardarDesdeRequest($evaluado->id, [
+            InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => 'pendiente papelería',
+        ], $autor->id);
+
+        InformePreliminarDesdeWord::sincronizarDesdeWord($evaluado);
+
+        $html = (string) $evaluado->fresh()->texto_informe_preliminar;
+        $this->assertStringContainsString('No aprobado', $html);
+        $this->assertStringContainsString('Indicación de mentira en las preguntas:', $html);
+        $this->assertStringContainsString('R2. ¿Tiene actas administrativas?', $html);
+        $this->assertStringContainsString('R3. ¿En los últimos 6 meses ha consumido drogas ilegales?', $html);
+        $this->assertStringContainsString('pendiente papelería', $html);
+        $this->assertStringNotContainsString('delitos en empleos anteriores', $html);
+    }
+
+    public function test_pregunta_di_mas_nota_manual_distinta_van_juntas_al_preliminar(): void
+    {
+        $evaluado = $this->evaluadoPoli(['resultado' => 'no_aprobado']);
+        $autor = User::factory()->create();
+        InformeWordPreguntasPoligraficas::guardarDesdeRequest($evaluado->id, [
+            [
+                'pregunta' => '¿Tiene actas administrativas?',
+                'respuesta' => 'No',
+                'resultado' => 'DI',
+                'puntuacion' => '',
+            ],
+        ], $autor->id);
+        EvaluadorNotasSupport::guardarDesdeRequest($evaluado->id, [
+            InformeWordResultado::NOTA_INDICACION_MENTIRA => 'Dato que no está en la tabla',
+        ], $autor->id);
+
+        InformePreliminarDesdeWord::sincronizarDesdeWord($evaluado);
+
+        $html = (string) $evaluado->fresh()->texto_informe_preliminar;
+        $this->assertStringContainsString('R1. ¿Tiene actas administrativas?', $html);
+        $this->assertStringContainsString('Dato que no está en la tabla', $html);
     }
 
     public function test_no_pisa_preliminar_editado_manualmente_en_ficha(): void

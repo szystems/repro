@@ -46,8 +46,15 @@ class InformePreliminarDesdeWord
         $observaciones = trim((string) ($notas[InformeWordBloquesEvaluador::NOTA_OBSERVACIONES] ?? ''));
 
         $obsPartes = [];
-        if ($resultado === 'no_aprobado' && $detalles['mentira'] !== '') {
-            $obsPartes[] = InformeWordResultado::ETIQUETA_MENTIRA.' '.$detalles['mentira'];
+        // Igual que en el Word: las DI de la tabla + nota manual (si aporta algo distinto).
+        if ($resultado === 'no_aprobado') {
+            $autoDi = InformeWordPreguntasPoligraficas::textoConclusionDi(
+                InformeWordPreguntasPoligraficas::filasGuardadas($evaluado->id)
+            );
+            $indicacion = InformeWordPreguntasPoligraficas::textoIndicacion($autoDi, $detalles['mentira']);
+            if ($indicacion !== '') {
+                $obsPartes[] = InformeWordResultado::ETIQUETA_MENTIRA."\n".$indicacion;
+            }
         }
         if ($resultado === 'aprobado_excepcion' && $detalles['excepcion'] !== '') {
             $obsPartes[] = InformeWordResultado::ETIQUETA_EXCEPCION.' '.$detalles['excepcion'];
@@ -63,7 +70,10 @@ class InformePreliminarDesdeWord
         $celdaResultado = e($etiqueta !== '' ? $etiqueta : '—');
         $celdaObs = $obsPartes === []
             ? '—'
-            : implode('<br>', array_map(static fn (string $parte): string => e($parte), $obsPartes));
+            : implode('<br>', array_map(
+                static fn (string $parte): string => nl2br(e($parte), false),
+                $obsPartes
+            ));
 
         $th = 'border: 1px solid #6c757d; padding: 6px 8px; min-width: 6rem; background-color: #e9ecef; font-weight: 600;';
         $td = 'border: 1px solid #6c757d; padding: 6px 8px; min-width: 6rem;';

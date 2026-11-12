@@ -29,7 +29,7 @@
     </ul>
 
     <h5>Informe preliminar (cliente) y 1ª hoja</h5>
-    <p>Al guardar el cuestionario, el sistema copia el <strong>resultado y observaciones de la primera hoja</strong> al informe preliminar HTML de la ficha de orden (lo que ve el cliente cuando REPRO lo libera). Si REPRO editó el preliminar a mano en la ficha, ese texto <strong>no se sobrescribe</strong> al guardar de nuevo el cuestionario.</p>
+    <p>Al guardar el cuestionario, el sistema copia el <strong>resultado, las preguntas marcadas DI y las observaciones de la primera hoja</strong> al informe preliminar HTML de la ficha de orden (lo que ve el cliente cuando REPRO lo libera). Si REPRO editó el preliminar a mano en la ficha, ese texto <strong>no se sobrescribe</strong> al guardar de nuevo el cuestionario.</p>
     <p>En <strong>polígrafo y VSA</strong> esa tabla es el preliminar. <strong>Guardar observaciones</strong> actualiza el texto y no avisa al cliente. <strong>Enviar preliminar</strong> registra la fecha y hora («Enviado el…») y envía el correo. En <strong>socioeconómico</strong> el preliminar es el archivo: al subirlo queda la fecha y hora junto a «Subido».</p>
 
     <div class="alert alert-warning">
