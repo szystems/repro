@@ -230,6 +230,45 @@ class InformeWordSprintPTest extends TestCase
         $this->assertFalse((bool) preg_match('/<\/w:tbl>\s*<w:tbl\b/', $out));
     }
 
+    public function test_las_preguntas_di_quedan_en_renglones_sin_borrar_una_nota_distinta(): void
+    {
+        $filas = [
+            ['pregunta' => '¿Robó en empleos anteriores?', 'resultado' => 'NDI'],
+            ['pregunta' => '¿Tiene actas administrativas?', 'resultado' => 'DI'],
+        ];
+
+        $this->assertSame(
+            'R2. ¿Tiene actas administrativas?',
+            InformeWordPreguntasPoligraficas::textoConclusionDi($filas)
+        );
+        $this->assertSame(
+            'preguntas 3 y 7',
+            InformeWordPreguntasPoligraficas::textoIndicacion('', 'preguntas 3 y 7')
+        );
+        $this->assertSame(
+            "R2. ¿Tiene actas administrativas?\nDato que no está en la tabla",
+            InformeWordPreguntasPoligraficas::textoIndicacion(
+                'R2. ¿Tiene actas administrativas?',
+                'Dato que no está en la tabla'
+            )
+        );
+
+        $celda = '<w:tc><w:p><w:r><w:t>Indicación de mentira en las preguntas: </w:t></w:r></w:p></w:tc>';
+        $con = InformeWordXml::anexarParrafos($celda, [
+            'R2. ¿Tiene actas administrativas?',
+        ]);
+        $this->assertStringContainsString('Indicación de mentira en las preguntas:', $con);
+        $this->assertStringContainsString('R2. ¿Tiene actas administrativas?', $con);
+        $this->assertSame(2, substr_count($con, '<w:p>'));
+
+        $plano = "R1. Robo\nR2. Actas";
+        $xml = '<w:t>'.htmlspecialchars($plano, ENT_XML1 | ENT_COMPAT, 'UTF-8').'</w:t>';
+        $out = InformeWordXml::saltosDeLinea($xml, $plano);
+        $this->assertStringContainsString('<w:br/>', $out);
+        $this->assertStringContainsString('R1. Robo', $out);
+        $this->assertStringContainsString('R2. Actas', $out);
+    }
+
     private function xmlDe(Orden $orden, EvaluadoOrden $evaluado): string
     {
         $path = InformeWordExport::generar($orden->fresh(), $evaluado->fresh(['cuestionario', 'orden.empresa', 'sede']));

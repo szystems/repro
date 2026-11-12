@@ -110,6 +110,21 @@ class InformeWordPreguntasPoligraficas
         return implode("\n", $lineas);
     }
 
+    /** Lo que va en la primera hoja y al final: las DI, y la nota manual si dice algo distinto. */
+    public static function textoIndicacion(string $automatico, string $nota): string
+    {
+        $automatico = trim($automatico);
+        $nota = trim($nota);
+        if ($automatico === '') {
+            return $nota;
+        }
+        if ($nota === '' || $nota === $automatico) {
+            return $automatico;
+        }
+
+        return $automatico."\n".$nota;
+    }
+
     /**
      * @return list<array{pregunta: string, respuesta: string, resultado: string, puntuacion: string}>
      */

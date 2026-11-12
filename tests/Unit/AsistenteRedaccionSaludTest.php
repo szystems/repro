@@ -116,6 +116,22 @@ class AsistenteRedaccionSaludTest extends TestCase
         $this->assertSame('periodica', $paquete['formulario']);
     }
 
+    public function test_los_tatuajes_llegan_solo_como_si_o_no(): void
+    {
+        $evaluado = $this->evaluadoConSalud([
+            'tiene_tatuajes' => 'si',
+            'salud_embarazada' => 'no',
+        ]);
+        $evaluado->update(['sexo' => 'mujer']);
+
+        $paquete = AsistenteRedaccionSalud::paquete($evaluado->fresh());
+
+        $this->assertSame('mujer', $paquete['sexo']);
+        $this->assertStringContainsString('¿Tiene tatuajes?: Sí', $paquete['texto_para_modelo']);
+        $this->assertStringContainsString('embarazada', mb_strtolower($paquete['texto_para_modelo']));
+        $this->assertStringNotContainsString('ubicación', mb_strtolower($paquete['texto_para_modelo']));
+    }
+
     /**
      * @param  array<string, mixed>  $respuestas
      */

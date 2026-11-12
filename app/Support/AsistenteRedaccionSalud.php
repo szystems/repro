@@ -7,7 +7,8 @@ use App\Models\EvaluadoOrden;
 /**
  * Paquete de la sección Salud.
  * Solo lo que el formulario consultó y la nota del evaluador.
- * No incluye nombre, DPI, empresa, hábitos ni tatuajes.
+ * No incluye nombre, DPI, empresa, hábitos ni el detalle de cada tatuaje.
+ * Sí incluye si tiene o no tatuajes, para que el párrafo lo mencione.
  */
 class AsistenteRedaccionSalud
 {
@@ -33,6 +34,7 @@ class AsistenteRedaccionSalud
         ['clave' => 'salud_alergias', 'pregunta' => SaludHabitosCampos::LABEL_ALERGIAS, 'tipo' => 'si_no'],
         ['clave' => 'salud_detalle_alergias', 'pregunta' => 'Detalle de alergias', 'tipo' => 'detalle', 'depende_de' => 'salud_alergias'],
         ['clave' => 'salud_embarazada', 'pregunta' => SaludHabitosCampos::LABEL_EMBARAZADA, 'tipo' => 'si_no'],
+        ['clave' => 'tiene_tatuajes', 'pregunta' => '¿Tiene tatuajes?', 'tipo' => 'si_no'],
     ];
 
     /**

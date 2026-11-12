@@ -286,13 +286,15 @@ class InformeWordRelleno
 
             if (isset($celdas[1])) {
                 $detalle = match ($opcion) {
-                    InformeWordResultado::OPCION_NO_APROBADO => ($autoDi !== '' ? $autoDi : $detalles['mentira']),
+                    InformeWordResultado::OPCION_NO_APROBADO => InformeWordPreguntasPoligraficas::textoIndicacion($autoDi, $detalles['mentira']),
                     InformeWordResultado::OPCION_EXCEPCION => $detalles['excepcion'],
                     default => '',
                 };
 
                 if ($detalle !== '') {
-                    $celdas[1] = InformeWordXml::prefijarTextoCeldaFinal($celdas[1], ' ' . $detalle);
+                    $celdas[1] = str_contains($detalle, "\n")
+                        ? InformeWordXml::anexarParrafos($celdas[1], self::lineasDesdeTexto($detalle))
+                        : InformeWordXml::prefijarTextoCeldaFinal($celdas[1], ' '.$detalle);
                 }
             }
 
@@ -2175,7 +2177,7 @@ class InformeWordRelleno
             $autoDi = InformeWordPreguntasPoligraficas::textoConclusionDi(
                 InformeWordPreguntasPoligraficas::filasGuardadas($evaluado->id)
             );
-            $preguntas = $autoDi !== '' ? $autoDi : trim($detalles['mentira']);
+            $preguntas = InformeWordPreguntasPoligraficas::textoIndicacion($autoDi, $detalles['mentira']);
             $xml = InformeWordXml::reemplazarTexto(
                 $xml,
                 InformeWordResultado::MARCADOR_PREGUNTAS_DI,
@@ -2185,6 +2187,7 @@ class InformeWordRelleno
             if ($autoDi !== '') {
                 $xml = InformeWordXml::forzarColorEnTexto($xml, $autoDi, 'FF0000');
             }
+            $xml = InformeWordXml::saltosDeLinea($xml, $preguntas);
             // P-R1: el cuadro vacío de 3 filas ya no se usa; las preguntas van en el párrafo.
             $primera = trim((string) (preg_split("/\r\n|\r|\n/", $preguntas)[0] ?? ''));
             $ancla = $primera !== '' ? $primera : InformeWordResultado::MARCADOR_PREGUNTAS_DI;

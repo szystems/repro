@@ -126,6 +126,27 @@ class AsistenteRedaccionSeccionesTest extends TestCase
         $this->assertStringNotContainsString('no contratar', $json);
     }
 
+    public function test_observaciones_de_la_primera_hoja_no_llevan_el_formulario(): void
+    {
+        $evaluado = $this->evaluado('poligrafo', 'preempleo');
+        $evaluado->update(['nombre' => 'Cristopher Unico', 'resultado' => 'no_aprobado']);
+        EvaluadorNota::guardarNota($evaluado->id, 'word_observaciones', '', "Pendiente envió de antecedentes.\nTiene actas administrativas.", null);
+        EvaluadorNota::guardarNota($evaluado->id, 'word_salud', '', 'Refiere buena salud.', null);
+
+        $json = json_encode(
+            AsistenteRedaccionSecciones::paquete($evaluado->fresh(), 'word_observaciones', ''),
+            JSON_UNESCAPED_UNICODE
+        );
+
+        $this->assertIsString($json);
+        $this->assertStringContainsString('Pendiente envió de antecedentes.', $json);
+        $this->assertStringContainsString('Tiene actas administrativas.', $json);
+        $this->assertStringNotContainsString('Refiere buena salud.', $json);
+        $this->assertStringNotContainsString('Cristopher Unico', $json);
+        $this->assertStringNotContainsString('no_aprobado', $json);
+        $this->assertTrue(AsistenteRedaccionSecciones::permite('word_observaciones'));
+    }
+
     private function evaluado(string $servicio, string $formulario): EvaluadoOrden
     {
         $orden = Orden::factory()->create();

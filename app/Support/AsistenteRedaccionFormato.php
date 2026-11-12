@@ -16,7 +16,7 @@ class AsistenteRedaccionFormato
             }
             if ($seccion === InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES) {
                 $linea = '• '.self::sinMarca($linea);
-            } elseif ($seccion !== 'preliminar') {
+            } elseif (! in_array($seccion, ['preliminar', InformeWordBloquesEvaluador::NOTA_OBSERVACIONES], true)) {
                 $linea = self::sinMarca($linea);
             }
             if ($linea !== '' && $linea !== '•') {
