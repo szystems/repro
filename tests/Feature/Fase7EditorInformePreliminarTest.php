@@ -159,6 +159,9 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $response->assertSee('attributors/style/background', false);
         $response->assertSee('foreColor');
         $response->assertSee('permitirPortapapelesEnTabla');
+        $response->assertSee("addHandler('list'", false);
+        $response->assertSee('insertUnorderedList');
+        $response->assertSee('insertOrderedList');
     }
 
     /** @test */
@@ -168,7 +171,9 @@ class Fase7EditorInformePreliminarTest extends TestCase
             .'<p><font color="#e60000"><b>Negrita roja</b></font></p>'
             .'<p><span class="ql-color-#0033cc ql-bg-#ffff00">Clase</span></p>'
             .'<table><tr><td onclick="alert(1)"><b style="font-weight: bold">Celda</b></td></tr></table>'
-            .'<img src=x onerror=alert(1)>';
+            .'<img src=x onerror=alert(1)>'
+            .'<ul><li data-list="bullet">Viñeta</li></ul>'
+            .'<ol><li data-list="ordered">Número</li></ol>';
 
         $response = $this->actingAs($this->admin)
             ->patch(route('evaluados.guardar-informe-preliminar', $this->evaluado->id), [
@@ -186,6 +191,10 @@ class Fase7EditorInformePreliminarTest extends TestCase
         $this->assertStringContainsString('color: #0033cc', $guardado);
         $this->assertStringContainsString('background-color: #ffff00', $guardado);
         $this->assertStringContainsString('font-weight: bold', $guardado);
+        $this->assertStringContainsString('data-list="bullet"', $guardado);
+        $this->assertStringContainsString('data-list="ordered"', $guardado);
+        $this->assertStringContainsString('Viñeta', $guardado);
+        $this->assertStringContainsString('Número', $guardado);
         $this->assertStringNotContainsString('<font', $guardado);
         $this->assertStringNotContainsString('ql-color', $guardado);
         $this->assertStringNotContainsString('onclick', $guardado);

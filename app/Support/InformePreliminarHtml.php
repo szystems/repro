@@ -142,4 +142,150 @@ class InformePreliminarHtml
 
         return null;
     }
+
+    /**
+     * Limpia el HTML del editor Quill: deja solo etiquetas y atributos seguros.
+     * Conserva ul/ol/li, data-list (viñetas/números de Quill), estilos de color y tablas.
+     */
+    public static function sanitizar(?string $html): ?string
+    {
+        if ($html === null || trim($html) === '') {
+            return $html;
+        }
+
+        $html = self::normalizar($html) ?? $html;
+
+        $permitidas = [
+            'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike',
+            'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            'blockquote', 'pre', 'code', 'span', 'div', 'a',
+            'table', 'thead', 'tbody', 'tr', 'th', 'td',
+        ];
+        $attrsPermitidos = [
+            'href', 'colspan', 'rowspan', 'data-list', 'style', 'class',
+        ];
+        $estilosPermitidos = [
+            'color', 'background-color', 'text-align',
+            'border', 'border-collapse', 'border-color', 'border-width',
+            'width', 'padding', 'font-weight', 'font-style', 'text-decoration',
+            'list-style-type', 'margin', 'margin-left', 'padding-left',
+        ];
+
+        $wrapped = '<div id="repro-root">'.$html.'</div>';
+        $prev = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $cargado = $dom->loadHTML('<?xml encoding="UTF-8">'.$wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+        libxml_use_internal_errors($prev);
+        if (! $cargado) {
+            return strip_tags($html, '<'.implode('><', $permitidas).'>');
+        }
+
+        $root = $dom->getElementById('repro-root');
+        if (! $root instanceof \DOMElement) {
+            return strip_tags($html, '<'.implode('><', $permitidas).'>');
+        }
+
+        $walker = static function (\DOMNode $nodo) use (&$walker, $permitidas, $attrsPermitidos, $estilosPermitidos): void {
+            if ($nodo instanceof \DOMElement) {
+                $tag = strtolower($nodo->tagName);
+                if (! in_array($tag, $permitidas, true)) {
+                    $parent = $nodo->parentNode;
+                    $movidos = [];
+                    if ($parent) {
+                        while ($nodo->firstChild) {
+                            $movidos[] = $nodo->firstChild;
+                            $parent->insertBefore($nodo->firstChild, $nodo);
+                        }
+                        $parent->removeChild($nodo);
+                    }
+                    foreach ($movidos as $hijo) {
+                        $walker($hijo);
+                    }
+
+                    return;
+                }
+
+                $quitar = [];
+                foreach ($nodo->attributes ?? [] as $attr) {
+                    $nombre = strtolower($attr->name);
+                    if (str_starts_with($nombre, 'on')) {
+                        $quitar[] = $attr->name;
+
+                        continue;
+                    }
+                    if (! in_array($nombre, $attrsPermitidos, true)) {
+                        $quitar[] = $attr->name;
+
+                        continue;
+                    }
+                    if (in_array($nombre, ['href', 'src'], true) && preg_match('/^\s*javascript:/i', $attr->value)) {
+                        $quitar[] = $attr->name;
+
+                        continue;
+                    }
+                    if ($nombre === 'style') {
+                        $keep = [];
+                        foreach (explode(';', $attr->value) as $decl) {
+                            if (! str_contains($decl, ':')) {
+                                continue;
+                            }
+                            [$prop, $val] = array_map('trim', explode(':', $decl, 2));
+                            $prop = strtolower($prop);
+                            if (! in_array($prop, $estilosPermitidos, true) || $val === '') {
+                                continue;
+                            }
+                            if (preg_match('/expression|javascript|behavior|@import|url\s*\(/i', $val)) {
+                                continue;
+                            }
+                            $keep[] = $prop.': '.$val;
+                        }
+                        if ($keep === []) {
+                            $quitar[] = $attr->name;
+                        } else {
+                            $nodo->setAttribute('style', implode('; ', $keep));
+                        }
+                    }
+                    if ($nombre === 'class') {
+                        $clases = [];
+                        foreach (preg_split('/\s+/', trim($attr->value)) ?: [] as $clase) {
+                            if ($clase === '' || preg_match('/^ql-/i', $clase)) {
+                                continue;
+                            }
+                            if (preg_match('/^[a-zA-Z0-9_-]+$/', $clase)) {
+                                $clases[] = $clase;
+                            }
+                        }
+                        if ($clases === []) {
+                            $quitar[] = $attr->name;
+                        } else {
+                            $nodo->setAttribute('class', implode(' ', $clases));
+                        }
+                    }
+                    if ($nombre === 'data-list' && ! in_array($attr->value, ['bullet', 'ordered'], true)) {
+                        $quitar[] = $attr->name;
+                    }
+                }
+                foreach ($quitar as $nombre) {
+                    $nodo->removeAttribute($nombre);
+                }
+            }
+
+            $hijos = [];
+            foreach ($nodo->childNodes as $hijo) {
+                $hijos[] = $hijo;
+            }
+            foreach ($hijos as $hijo) {
+                $walker($hijo);
+            }
+        };
+        $walker($root);
+
+        $salida = '';
+        foreach ($root->childNodes as $hijo) {
+            $salida .= $dom->saveHTML($hijo);
+        }
+
+        return $salida;
+    }
 }

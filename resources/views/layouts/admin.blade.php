@@ -100,20 +100,25 @@
             .bg-purple  { background-color: #7920d1 !important; color: #fff !important; }
 
             /* === Fase 8 (UI1, UI2, UI3): scroll natural del navegador y footer anclado === */
+            /* overflow-x:auto (no hidden): en celular hay que poder deslizar tablas/menús. */
             html, body {
-                overflow-x: hidden;
+                overflow-x: auto;
             }
             /* Eliminar scrollbar interno del content-wrapper para dejar solo la del navegador */
             .content-wrapper {
                 height: auto !important;
                 overflow: visible !important;
                 flex: 1 0 auto;
+                min-width: 0;
+                max-width: 100%;
             }
             /* El wrapper de las vistas tampoco debe scrollear: se delega al documento */
             .content-wrapper-scroll {
                 height: auto !important;
                 max-height: none !important;
                 overflow: visible !important;
+                min-width: 0;
+                max-width: 100%;
             }
             /* main-container como flex column para anclar el footer al final */
             .page-wrapper .main-container {
@@ -121,6 +126,14 @@
                 min-height: calc(100vh - 65px);
                 display: flex;
                 flex-direction: column;
+                min-width: 0;
+                max-width: 100%;
+            }
+            /* Tablas anchas: scroll horizontal táctil dentro del bloque, no recortar. */
+            .table-responsive {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                max-width: 100%;
             }
             /* Footer: que se empuje al final cuando el contenido es corto */
             .app-footer {

@@ -28,6 +28,7 @@ class AsistenteRedaccionPreliminar
             'Devuelve solo la redacción corregida, sin título y sin explicar lo que hiciste.',
             'Separa los párrafos con un solo salto de línea. No dejes renglones vacíos.',
             'Puedes usar viñetas, cada una en su línea y empezando con «• », o numeración «1. », cuando el texto o la instrucción lo pidan.',
+            AsistenteRedaccionInstrucciones::tonoHumano(),
         ]);
         $pedido = AsistenteRedaccionInstrucciones::pedido($modo, $estilo, false);
         $usuario = $pedido."\n\nTexto actual:\n".$plano;
