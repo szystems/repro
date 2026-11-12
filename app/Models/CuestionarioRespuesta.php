@@ -62,7 +62,9 @@ class CuestionarioRespuesta extends Model
     {
         foreach ($datos as $campo => $valor) {
             if (is_array($valor)) {
-                $valor = json_encode(array_values($valor), JSON_UNESCAPED_UNICODE);
+                $valor = json_encode(\App\Support\TextoOracion::aplicar(array_values($valor)), JSON_UNESCAPED_UNICODE);
+            } elseif (is_string($valor)) {
+                $valor = \App\Support\TextoOracion::aplicar($valor);
             }
 
             $atributos = [
@@ -108,7 +110,7 @@ class CuestionarioRespuesta extends Model
             ],
             [
                 'valor' => null,
-                'valor_json' => array_values($filas),
+                'valor_json' => \App\Support\TextoOracion::filas(array_values($filas)),
                 'tipo_campo' => 'text',
                 'metadata' => ['tipo_logico' => 'tabla'],
             ]
@@ -122,7 +124,9 @@ class CuestionarioRespuesta extends Model
      */
     public function getTabla(): array
     {
-        return is_array($this->valor_json) ? $this->valor_json : [];
+        $filas = is_array($this->valor_json) ? $this->valor_json : [];
+
+        return \App\Support\TextoOracion::filas($filas);
     }
     
     protected static function detectarTipoCampo($valor): string

@@ -419,7 +419,9 @@
                         @endif
                     </td>
                     <td>
-                        @if($evaluado->responsable)
+                        @if(auth()->check() && (int) auth()->user()->role_as < 2)
+                            <span class="text-muted">—</span>
+                        @elseif($evaluado->responsable)
                             {{ $evaluado->responsable->name }}
                             @if($evaluado->responsable->cargo)
                                 <br><small>{{ $evaluado->responsable->cargo }}</small>

@@ -283,6 +283,7 @@ class OrdenesController extends Controller
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
             'evaluados.*.preguntas_juego' => 'nullable|in:principal,puesto',
             'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
+            'evaluados.*.sexo' => 'nullable|in:hombre,mujer',
             'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:'.EvaluadoOrden::MOTIVO_HECHO_MAX,
             'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
             'evaluados.*.sede_region_empresa' => 'nullable|string|max:100',
@@ -533,6 +534,7 @@ class OrdenesController extends Controller
             'evaluados.*.tipo_formulario' => 'required|in:preempleo,periodica,especifica',
             'evaluados.*.preguntas_juego' => 'nullable|in:principal,puesto',
             'evaluados.*.puesto_evaluar' => 'nullable|string|max:100',
+            'evaluados.*.sexo' => 'nullable|in:hombre,mujer',
             'evaluados.*.motivo_hecho_evaluacion' => 'nullable|string|max:'.EvaluadoOrden::MOTIVO_HECHO_MAX,
             'evaluados.*.sede_id' => 'nullable|exists:sedes,id',
             'evaluados.*.sede_region_empresa' => 'nullable|string|max:100',
@@ -877,6 +879,8 @@ class OrdenesController extends Controller
             return back()->with('success', "Observaciones de {$nombre} guardadas. Aún no se envían al cliente.");
         }
 
+        $this->marcarResultadoPreliminar($evaluado->fresh(), 'Informe preliminar enviado');
+
         // Enviar es lo único que libera el preliminar y avisa al cliente.
         $orden = $evaluado->orden;
         $correoOk = true;
@@ -1052,6 +1056,7 @@ class OrdenesController extends Controller
                     $evaluadoData['tipo_formulario'] ?? null
                 ),
                 'puesto_evaluar' => $evaluadoData['puesto_evaluar'] ?? null,
+                'sexo' => in_array($evaluadoData['sexo'] ?? '', ['hombre', 'mujer'], true) ? $evaluadoData['sexo'] : null,
                 'motivo_hecho_evaluacion' => $evaluadoData['motivo_hecho_evaluacion'] ?? null,
                 'sede_id' => $evaluadoData['sede_id'] ?? null,
                 'sede_region_empresa' => $evaluadoData['sede_region_empresa'] ?? null,
@@ -1949,20 +1954,43 @@ class OrdenesController extends Controller
             return RedirectFichaOrden::evaluado($evaluado, 'Archivo de resultado final subido. Los resultados han sido liberados automáticamente al cliente.');
         }
 
-        // Subir preliminar → liberar resultados al cliente (Fase 18: sin auto-cambio de estado)
         if ($tipo === 'preliminar') {
-            // Fase 18: la orden no tiene estado 'preliminar'; se mantiene 'en_proceso'
-            // hasta que recalcularEstado() la marque como 'entregado' cuando corresponda.
+            $this->marcarResultadoPreliminar($evaluado->fresh(), 'Resultado preliminar subido');
+            $orden->refresh();
             if (!$orden->resultados_visibles_empresa) {
                 $orden->update(['resultados_visibles_empresa' => true]);
                 $this->notificarResultadosDisponibles($orden, true);
             }
-            // Fase 18 (respuesta cliente #2): 'en_proceso' es 100% MANUAL, no automático al subir preliminar.
-            // Notificar a admin y empresa que hay un resultado preliminar
             $this->notificarPreliminarSubido($evaluado);
         }
 
         return RedirectFichaOrden::evaluado($evaluado, "Archivo de resultado {$tipo} subido correctamente. Los resultados han sido liberados al cliente.");
+    }
+
+    /**
+     * Al publicar el preliminar, el estado de evaluación pasa a resultado preliminar.
+     * No retrocede un informe final ni reabre una orden ya entregada.
+     */
+    private function marcarResultadoPreliminar(EvaluadoOrden $evaluado, string $observacion): void
+    {
+        if (! in_array($evaluado->estado_evaluacion, ['informe_final_enviado', 'resultado_preliminar', 'cancelado', 'desistio'], true)) {
+            $anterior = $evaluado->estado_evaluacion;
+            $evaluado->update(['estado_evaluacion' => 'resultado_preliminar']);
+            \App\Models\EstadoHistorial::create([
+                'evaluado_orden_id' => $evaluado->id,
+                'campo' => 'estado_evaluacion',
+                'estado_anterior' => $anterior,
+                'estado_nuevo' => 'resultado_preliminar',
+                'observacion' => $observacion,
+                'user_id' => Auth::id(),
+            ]);
+        }
+
+        $orden = $evaluado->orden;
+        if ($orden && ! in_array($orden->estado, ['entregado', 'cancelado'], true)) {
+            $orden->unsetRelation('evaluados');
+            $orden->recalcularEstado();
+        }
     }
 
     /**

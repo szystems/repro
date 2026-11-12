@@ -64,6 +64,20 @@
 <div class="row">
     <div class="col-lg-4">
         <div class="form-group">
+            <label for="sexo" class="form-label">Sexo <span class="required">*</span></label>
+            <select class="form-control @error('sexo') is-invalid @enderror" id="sexo" name="sexo" required>
+                <option value="">Seleccione...</option>
+                <option value="hombre" {{ old('sexo', $evaluado->sexo ?? '') === 'hombre' ? 'selected' : '' }}>Hombre</option>
+                <option value="mujer" {{ old('sexo', $evaluado->sexo ?? '') === 'mujer' ? 'selected' : '' }}>Mujer</option>
+            </select>
+            @error('sexo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="form-group">
             <label for="tipo_identificacion" class="form-label">Tipo de identificación <span class="required">*</span></label>
             <select class="form-control @error('tipo_identificacion') is-invalid @enderror"
                     id="tipo_identificacion"

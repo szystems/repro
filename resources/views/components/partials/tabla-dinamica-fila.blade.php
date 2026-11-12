@@ -18,15 +18,15 @@
         <div class="tabla-dinamica-actions-inner">
             @if($permitirReordenar ?? false)
                 <button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="-1" title="Subir" aria-label="Subir">
-                    <i class="fas fa-arrow-up"></i>
+                    <i class="bi bi-arrow-up" aria-hidden="true"></i>
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm tabla-dinamica-move" data-direccion="1" title="Bajar" aria-label="Bajar">
-                    <i class="fas fa-arrow-down"></i>
+                    <i class="bi bi-arrow-down" aria-hidden="true"></i>
                 </button>
             @endif
             @if($permitirEliminar ?? true)
-                <button type="button" class="btn btn-outline-danger btn-sm tabla-dinamica-remove" title="{{ $textoEliminar }}">
-                    <i class="fas fa-trash-alt"></i>
+                <button type="button" class="btn btn-outline-danger btn-sm tabla-dinamica-remove" title="{{ $textoEliminar }}" aria-label="{{ $textoEliminar }}">
+                    <i class="bi bi-trash" aria-hidden="true"></i>
                 </button>
             @endif
         </div>

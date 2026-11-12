@@ -36,6 +36,7 @@ class DatosPersonalesRequest extends FormRequest
         $licencias = implode(',', array_keys(DatosPersonalesCampos::LICENCIA_CONDUCIR));
 
         $reglas = [
+            'sexo' => 'required|in:hombre,mujer',
             'nombres_completos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/',
             'apellidos_completos' => 'required|string|max:100|regex:/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/',
             'tipo_identificacion' => 'required|in:'.$tipos,
@@ -77,6 +78,8 @@ class DatosPersonalesRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'sexo.required' => 'Seleccione si es hombre o mujer.',
+            'sexo.in' => 'Seleccione si es hombre o mujer.',
             'nombres_completos.required' => 'Los nombres son obligatorios.',
             'nombres_completos.regex' => 'Los nombres solo pueden contener letras y espacios.',
             'apellidos_completos.required' => 'Los apellidos son obligatorios.',
@@ -107,6 +110,7 @@ class DatosPersonalesRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'sexo' => 'sexo',
             'nombres_completos' => 'nombres completos',
             'apellidos_completos' => 'apellidos completos',
             'tipo_identificacion' => 'tipo de identificación',
