@@ -81,14 +81,14 @@ class CuestionarioPrecarga
     public static function valorParaCampo(string $campo, array $precarga, array $respuestas, mixed $fallback = ''): mixed
     {
         if (array_key_exists($campo, $respuestas) && $respuestas[$campo] !== null && $respuestas[$campo] !== '') {
-            return $respuestas[$campo];
+            return TextoOracion::aplicar($respuestas[$campo]);
         }
 
         if (array_key_exists($campo, $precarga) && $precarga[$campo] !== null && $precarga[$campo] !== '') {
-            return $precarga[$campo];
+            return TextoOracion::aplicar($precarga[$campo]);
         }
 
-        return $fallback;
+        return TextoOracion::aplicar($fallback);
     }
 
     /**

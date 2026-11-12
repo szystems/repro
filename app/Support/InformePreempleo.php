@@ -343,7 +343,7 @@ class InformePreempleo
 
             $decoded = json_decode($nota->contenido, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $overrides[$nota->campo] = $decoded;
+                $overrides[$nota->campo] = TextoOracion::aplicar($decoded);
             }
         }
 

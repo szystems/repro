@@ -136,11 +136,13 @@ class Cuestionario extends Model
     
     public function getRespuestasPorSeccion(string $seccion): array
     {
-        return $this->respuestas()
+        $respuestas = $this->respuestas()
             ->where('seccion', $seccion)
             ->whereNotNull('valor')
             ->pluck('valor', 'campo')
             ->toArray();
+
+        return $this->respuestasEnOracion($respuestas);
     }
 
     /**
@@ -180,6 +182,15 @@ class Cuestionario extends Model
             ->pluck('valor', 'campo')
             ->toArray();
 
+        return $this->respuestasEnOracion($respuestas);
+    }
+
+    /**
+     * @param  array<string, mixed>  $respuestas
+     * @return array<string, mixed>
+     */
+    private function respuestasEnOracion(array $respuestas): array
+    {
         foreach ($respuestas as $campo => $valor) {
             if (is_string($valor)) {
                 $respuestas[$campo] = \App\Support\TextoOracion::aplicar($valor);

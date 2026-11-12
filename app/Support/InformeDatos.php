@@ -70,7 +70,9 @@ class InformeDatos
             $encabezado = self::aplicarPersonalAEncabezado($encabezado, $personal);
 
             // El override de REPRO trae solo la calle, así que el municipio y el departamento se
-            // vuelven a anexar después de aplicarlo.
+            // vuelven a anexar después de aplicarlo. La calle se baja a oración antes de unirla,
+            // porque si ya trae el municipio en mixto el texto completo ya no está en mayúsculas.
+            $encabezado['direccion'] = (string) TextoOracion::aplicar((string) ($encabezado['direccion'] ?? ''));
             $encabezado['direccion'] = self::direccionCompleta(
                 (string) ($encabezado['direccion'] ?? ''),
                 self::datosCuestionario($evaluado)
@@ -79,6 +81,12 @@ class InformeDatos
 
         $encabezado['estado_civil'] = self::etiquetaEstadoCivil((string) ($encabezado['estado_civil'] ?? ''));
         $encabezado['licencia'] = self::licenciaParaHojaUno($evaluado, $tablas, (string) ($encabezado['licencia'] ?? ''));
+
+        foreach (['nombres', 'apellidos', 'nombre', 'puesto', 'lugar_nacimiento', 'nacionalidad', 'agencia'] as $campo) {
+            if (isset($encabezado[$campo]) && is_string($encabezado[$campo])) {
+                $encabezado[$campo] = (string) TextoOracion::aplicar($encabezado[$campo]);
+            }
+        }
 
         return self::sinGuionesDeRelleno($encabezado);
     }
@@ -175,8 +183,9 @@ class InformeDatos
         $cuestionario = self::datosCuestionario($evaluado);
 
         $telefono = trim((string) ($evaluado->telefono ?: $evaluado->celular ?: $cuestionario['telefono_personal'] ?? ''));
+        $direccionBase = trim((string) ($evaluado->direccion ?: $cuestionario['direccion_residencia'] ?? ''));
         $direccion = self::direccionCompleta(
-            trim((string) ($evaluado->direccion ?: $cuestionario['direccion_residencia'] ?? '')),
+            (string) TextoOracion::aplicar($direccionBase),
             $cuestionario
         );
         $edad = trim((string) ($cuestionario['edad'] ?? ''));
@@ -216,10 +225,10 @@ class InformeDatos
         return [
             'proceso' => self::etiquetaProceso($evaluado),
             'fecha' => self::formatearFecha($evaluado->fecha_realizada ?? now()),
-            'nombre' => trim($evaluado->nombre . ' ' . $evaluado->apellidos),
-            'nombres' => trim((string) $evaluado->nombre),
-            'apellidos' => trim((string) $evaluado->apellidos),
-            'puesto' => trim((string) ($evaluado->puesto_evaluar ?: '—')),
+            'nombre' => trim((string) TextoOracion::aplicar(trim($evaluado->nombre.' '.$evaluado->apellidos))),
+            'nombres' => (string) TextoOracion::aplicar(trim((string) $evaluado->nombre)),
+            'apellidos' => (string) TextoOracion::aplicar(trim((string) $evaluado->apellidos)),
+            'puesto' => (string) TextoOracion::aplicar(trim((string) ($evaluado->puesto_evaluar ?: '—'))),
             'empresa' => trim((string) ($orden->empresa?->nombre ?: '—')),
             'agencia' => $agencia,
             'dpi' => self::formatearDpi((string) ($evaluado->dpi ?? '')),
