@@ -29,6 +29,7 @@ class AsistenteRedaccionSecciones
         'word_sustancias' => 'Actividades delictivas y drogas ilegales',
         'word_judicial' => 'Aspectos judiciales',
         InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES => 'Recomendaciones',
+        InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => 'Observaciones de la primera hoja',
     ];
 
     public static function permite(string $seccion): bool
@@ -51,6 +52,7 @@ class AsistenteRedaccionSecciones
             'word_economico' => self::economico($evaluado, $observacion),
             'word_laboral' => self::laboral($evaluado, $observacion),
             InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES => self::recomendaciones($evaluado, $observacion),
+            InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => self::observacionesPrimeraHoja($evaluado, $observacion),
             default => throw new \InvalidArgumentException('Sección no disponible para el asistente.'),
         };
     }
@@ -222,6 +224,36 @@ class AsistenteRedaccionSecciones
             self::TITULOS[InformeWordBloquesEvaluador::NOTA_RECOMENDACIONES],
             $campos,
             $observacion
+        );
+    }
+
+    /**
+     * Solo el texto que el evaluador ya escribió. No lleva respuestas del formulario.
+     *
+     * @return array<string, mixed>
+     */
+    private static function observacionesPrimeraHoja(EvaluadoOrden $evaluado, ?string $observacion): array
+    {
+        if ($observacion === null || trim($observacion) === '') {
+            $notas = EvaluadorNotasSupport::mapaPorSeccion($evaluado->id);
+            $observacion = (string) ($notas[InformeWordBloquesEvaluador::NOTA_OBSERVACIONES] ?? '');
+        }
+        $texto = trim($observacion);
+        $campos = [[
+            'clave' => InformeWordBloquesEvaluador::NOTA_OBSERVACIONES,
+            'pregunta' => 'Texto ya escrito por el evaluador',
+            'valor' => $texto,
+            'texto' => $texto,
+            'vacio' => $texto === '',
+            'incompleto' => false,
+        ]];
+
+        return AsistenteRedaccionCampos::cerrar(
+            $evaluado,
+            InformeWordBloquesEvaluador::NOTA_OBSERVACIONES,
+            self::TITULOS[InformeWordBloquesEvaluador::NOTA_OBSERVACIONES],
+            $campos,
+            $texto
         );
     }
 }

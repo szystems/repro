@@ -60,6 +60,16 @@ class AsistenteRedaccionNoNaTest extends TestCase
         $this->assertStringContainsString('manejo de efectivo, actas y llamadas de atención', $laboral);
         $this->assertStringContainsString('no escribas «haber» al inicio de cada pregunta', $laboral);
 
+        $observaciones = AsistenteRedaccionInstrucciones::sistema('word_observaciones', 'poligrafo');
+        $this->assertStringContainsString('Solo corriges el texto que ya está escrito', $observaciones);
+        $this->assertStringContainsString('«• »', $observaciones);
+        $this->assertStringNotContainsString('No uses viñetas', $observaciones);
+
+        $salud = AsistenteRedaccionInstrucciones::sistema('word_salud', 'poligrafo');
+        $this->assertStringContainsString('no enumeres cada uno', $salud);
+        $this->assertStringContainsString('Si Sexo es mujer', $salud);
+        $this->assertStringContainsString('Si Sexo es hombre, no redactes el embarazo', $salud);
+
         $recomendaciones = AsistenteRedaccionInstrucciones::sistema('word_recomendaciones', 'poligrafo');
         $this->assertStringContainsString('Se recomienda', $recomendaciones);
         $this->assertStringContainsString('factores de riesgo', $recomendaciones);

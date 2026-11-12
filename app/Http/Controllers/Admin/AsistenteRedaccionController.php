@@ -11,6 +11,7 @@ use App\Support\AsistenteRedaccionGenerador;
 use App\Support\AsistenteRedaccionPreliminar;
 use App\Support\AsistenteRedaccionSecciones;
 use App\Support\EvaluadorNotasSupport;
+use App\Support\InformeWordBloquesEvaluador;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,6 +35,10 @@ class AsistenteRedaccionController extends Controller
 
         if (! AsistenteRedaccionSecciones::permite($datos['seccion'])) {
             return response()->json(['message' => 'Esta sección no usa el asistente.'], 422);
+        }
+        if ($datos['seccion'] === InformeWordBloquesEvaluador::NOTA_OBSERVACIONES
+            && ! in_array($datos['modo'], ['reescribir', 'instruccion', 'otra_version', 'cambiar_estilo'], true)) {
+            return response()->json(['message' => 'Esta casilla solo corrige el texto ya escrito.'], 422);
         }
 
         $textoActual = trim((string) ($datos['texto_actual'] ?? ''));

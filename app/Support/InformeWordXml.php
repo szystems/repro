@@ -572,6 +572,49 @@ class InformeWordXml
         return substr($celdaXml, 0, $posicion) . self::escapar($texto) . substr($celdaXml, $posicion);
     }
 
+    /**
+     * @param  list<string>  $lineas
+     */
+    public static function anexarParrafos(string $celdaXml, array $lineas): string
+    {
+        $extra = '';
+        foreach ($lineas as $linea) {
+            $linea = trim((string) $linea);
+            if ($linea === '') {
+                continue;
+            }
+            $extra .= self::parrafoTextoSimple($linea);
+        }
+        if ($extra === '') {
+            return $celdaXml;
+        }
+
+        $pos = strrpos($celdaXml, '</w:tc>');
+        if ($pos === false) {
+            return $celdaXml;
+        }
+
+        return substr($celdaXml, 0, $pos).$extra.substr($celdaXml, $pos);
+    }
+
+    /** Convierte los saltos del texto ya insertado en saltos de Word, dentro del mismo run. */
+    public static function saltosDeLinea(string $xml, string $texto): string
+    {
+        $plano = self::escapar($texto);
+        if (! str_contains($plano, "\n")) {
+            return $xml;
+        }
+
+        $pos = strpos($xml, $plano);
+        if ($pos === false) {
+            return $xml;
+        }
+
+        $conSaltos = str_replace("\n", '</w:t><w:br/><w:t xml:space="preserve">', $plano);
+
+        return substr($xml, 0, $pos).$conSaltos.substr($xml, $pos + strlen($plano));
+    }
+
     public static function establecerCeldaParrafos(string $celdaXml, array $lineas): string
     {
         $parrafos = '';

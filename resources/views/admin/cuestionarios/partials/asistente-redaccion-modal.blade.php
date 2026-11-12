@@ -83,9 +83,16 @@
         try { localStorage.setItem('sigor-redactor', this.value); } catch (e) {}
     });
 
+    var modoSelect = document.getElementById('asistente-modo');
+    var modosCompletos = modoSelect.innerHTML;
+    var modosObservaciones = '<option value="reescribir">Corregir lo escrito</option><option value="instruccion">Corregir con una instrucción</option>';
+
     function campoNota() {
         if (seccionActual === 'word_recomendaciones') {
             return document.getElementById('word_recomendaciones');
+        }
+        if (seccionActual === 'word_observaciones') {
+            return document.getElementById('word_observaciones');
         }
         return document.getElementById('word_bloque_' + seccionActual);
     }
@@ -102,7 +109,9 @@
         var caja = document.getElementById('asistente-observacion');
         if (this.value === 'instruccion') {
             etiqueta.textContent = 'Instrucción';
-            caja.placeholder = 'Por ejemplo: quita el N/A, agrega que trabajó en agricultura, cambia esta frase…';
+            caja.placeholder = seccionActual === 'word_observaciones'
+                ? 'Por ejemplo: corrige la ortografía y déjalo en viñetas.'
+                : 'Por ejemplo: quita el N/A, agrega que trabajó en agricultura, cambia esta frase…';
         } else {
             etiqueta.textContent = 'Observaciones de la entrevista';
             caja.placeholder = 'Escriba o dicte solo la novedad…';
@@ -113,7 +122,14 @@
         boton.addEventListener('click', function () {
             seccionActual = boton.getAttribute('data-seccion');
             document.getElementById('asistente-titulo').textContent = boton.getAttribute('data-titulo');
-            document.getElementById('asistente-modo').value = 'confirmada';
+            if (seccionActual === 'word_observaciones') {
+                modoSelect.innerHTML = modosObservaciones;
+                modoSelect.value = 'reescribir';
+            } else {
+                modoSelect.innerHTML = modosCompletos;
+                modoSelect.value = 'confirmada';
+            }
+            modoSelect.dispatchEvent(new Event('change'));
             mostrar('asistente-observacion-grupo', false);
             document.getElementById('asistente-observacion').value = '';
             document.getElementById('asistente-resto').checked = false;

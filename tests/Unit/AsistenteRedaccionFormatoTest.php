@@ -30,6 +30,16 @@ class AsistenteRedaccionFormatoTest extends TestCase
         $this->assertStringContainsString('factores de riesgo', $sinRiesgo);
     }
 
+    public function test_las_observaciones_de_la_primera_hoja_conservan_las_vinetas(): void
+    {
+        $texto = AsistenteRedaccionFormato::limpiar(
+            "Pendiente envío de antecedentes.\n• Tiene actas administrativas.",
+            'word_observaciones'
+        );
+
+        $this->assertSame("Pendiente envío de antecedentes.\n• Tiene actas administrativas.", $texto);
+    }
+
     public function test_el_preliminar_conserva_vinetas_y_las_vuelve_html(): void
     {
         $html = AsistenteRedaccionFormato::html("Observación general.\n• Primera\n• Segunda");
