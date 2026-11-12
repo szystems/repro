@@ -74,6 +74,10 @@ class AsistenteRedaccionNoNaTest extends TestCase
         $this->assertStringContainsString('Se recomienda', $recomendaciones);
         $this->assertStringContainsString('factores de riesgo', $recomendaciones);
         $this->assertStringContainsString('«• »', $recomendaciones);
+        $this->assertStringContainsString('dirigida a la empresa que solicita el estudio, no al candidato', $recomendaciones);
+        $this->assertStringContainsString('Se recomienda solicitar al candidato la papelería correspondiente para validación y completar su expediente.', $recomendaciones);
+        $vsa = AsistenteRedaccionInstrucciones::sistema('word_recomendaciones', 'vsa');
+        $this->assertStringContainsString('dirigida a la empresa que solicita el estudio, no al candidato', $vsa);
         $this->assertStringContainsString('un solo salto de línea', $sistema);
         $this->assertStringContainsString('No uses viñetas', $sistema);
     }
