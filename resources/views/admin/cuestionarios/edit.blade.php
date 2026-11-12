@@ -29,11 +29,12 @@
                             </div>
                         @endif
                     </div>
-                    <div class="btn-group">
+                    <div class="btn-group flex-wrap">
                         @include('partials._ayuda_contextual', ['class' => 'me-2'])
                         <a href="{{ route('admin.cuestionarios.show', $cuestionario) }}" class="btn btn-outline-secondary">
                             <i class="bi bi-eye"></i> Ver Detalle
                         </a>
+                        @include('admin.cuestionarios.partials.documentos-candidato')
                         @include('admin.cuestionarios.partials.volver-a-la-orden')
                         <a href="{{ route('admin.cuestionarios.index') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left"></i> Volver al Listado
@@ -274,6 +275,7 @@
                                    rel="noopener noreferrer">
                                     <i class="bi bi-download"></i> Descargar borrador Word
                                 </a>
+                                @include('admin.cuestionarios.partials.documentos-candidato', ['class' => 'ms-1'])
                                 @include('admin.cuestionarios.partials.volver-a-la-orden', ['class' => 'ms-1'])
                                 @endif
                             </div>
@@ -388,6 +390,7 @@
                     <i class="bi bi-download"></i> Descargar informe final (PDF)
                 </a>
                 @endif
+                @include('admin.cuestionarios.partials.documentos-candidato', ['class' => 'btn-sm'])
                 @include('admin.cuestionarios.partials.volver-a-la-orden', ['class' => 'btn-sm'])
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
