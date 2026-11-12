@@ -106,7 +106,11 @@ class CuestionarioEvaluadorNotasTest extends TestCase
             ->get(route('admin.cuestionarios.edit', $this->cuestionario->id))
             ->assertOk()
             ->assertSee('Volver a la orden', false)
-            ->assertSee($destino, false);
+            ->assertSee($destino, false)
+            ->assertSee(route('admin.cuestionarios.pdf', $this->cuestionario->id), false)
+            ->assertSee(route('admin.cuestionarios.pdf-autorizacion', $this->cuestionario->id), false)
+            ->assertSee('PDF formulario', false)
+            ->assertSee('Autorización', false);
 
         $this->actingAs($repro)
             ->get(route('admin.cuestionarios.show', $this->cuestionario->id))
