@@ -25,6 +25,8 @@ class AsistenteRedaccionInstrucciones
             self::formato($seccion),
             self::deSeccion($seccion),
             self::deServicio($servicio),
+            // Stephany 12-nov-2026: tono humano. Si choca con estilo anterior, manda este bloque.
+            self::tonoHumano(),
         ]);
     }
 
@@ -47,7 +49,7 @@ class AsistenteRedaccionInstrucciones
     private static function deSeccion(string $seccion): string
     {
         return match ($seccion) {
-            'word_salud' => 'Sección Salud. No emitas diagnósticos ni aptitud médica. Distingue el estado actual de los antecedentes. Relaciona un tratamiento con una condición solo si la persona lo explicó. Si la respuesta de tatuajes es sí, escribe que presenta tatuajes y que el detalle queda en el cuadro de tatuajes; no enumeres cada uno. Si es no, escribe que no presenta tatuajes. Si está vacío, no lo menciones. Si Sexo es mujer y la respuesta de embarazo es sí o no, indica si está o no embarazada. Si Sexo es hombre, no redactes el embarazo. Si el embarazo está vacío, tampoco lo redactes.',
+            'word_salud' => 'Sección Salud. No emitas diagnósticos ni aptitud médica. Distingue el estado actual de los antecedentes. Relaciona un tratamiento con una condición solo si la persona lo explicó. Si la respuesta de tatuajes es sí, escribe que presenta tatuajes y agrega «los cuales se detallan en anexos»; no enumeres cada uno. Si es no, escribe que no presenta tatuajes. Si está vacío, no lo menciones. Si Sexo es mujer y la respuesta de embarazo es sí o no, indica si está o no embarazada. Si Sexo es hombre, no redactes el embarazo. Si el embarazo está vacío, tampoco lo redactes. Lo relacionado con salud mental va en una oración aparte, solo con lo que el candidato respondió.',
             InformeWordBloquesEvaluador::NOTA_OBSERVACIONES => 'Casilla Observaciones del evaluador, primera hoja. Solo corriges el texto que ya está escrito. No consultes el formulario ni otras secciones. No agregues hechos, nombres ni resultados. Puedes dejarlo en viñetas cuando el texto ya es una lista o cuando la instrucción lo pida. Cada viñeta conserva el hecho escrito, sin ampliarlo.',
             'word_sustancias' => 'Sección Actividades delictivas y drogas ilegales. Cuando hables de consumo, escribe «drogas ilegales», no «sustancias». Además del consumo, redacta la actividad ilegal o delictiva, el manejo de armas de fuego, los familiares o amigos privados de libertad, los familiares o amigos que consumen drogas ilegales y si el lugar de residencia es peligroso, siempre que el formato traiga esa respuesta. No mezcles antecedentes penales, detenciones ni demandas: eso va en Aspectos judiciales. Un No, un N/A o un ninguna se incluye. Si hay varios, agrúpalos por tema, con tres o cuatro por oración, y no escribas una frase por cada uno.',
             'word_judicial' => 'Sección Aspectos judiciales. Redacta solo antecedentes penales y policiales, si ha estado detenido, si ha demandado, si lo han demandado y la fecha en que actualizó sus documentos penales y policiales. No incluyas actividades delictivas, armas, familiares privados de libertad ni drogas ilegales. Un No o un N/A significa que no lo realizó: inclúyelo. Si hay varios, agrúpalos por tema, con tres o cuatro por oración, y no repitas la misma palabra al inicio de cada hecho. No lo trates como campo ignorado ni escribas que no se cuenta con declaración. No completes motivos, fechas ni parentescos que no estén escritos. Nunca inventes verificaciones. Si el evaluador no anotó ninguna, no escribas nada sobre búsquedas. Si escribió observaciones de sus verificaciones, aunque sean cortas (penales y policiales nada malo, registro de detenidos nada, web nada, todo bien, limpio, sin novedad, todo ok), redáctalas todas en forma impersonal, sin «negó», «refirió» ni «indicó» y sin nombrar al evaluador. Una frase general como «todo bien en judicial» cubre documentos penales y policiales, registro de detenidos y la web. Si una verificación no aparece en lo que escribió, no la menciones.',
@@ -117,5 +119,35 @@ class AsistenteRedaccionInstrucciones
             'detallada' => 'detallado, sin agregar hechos',
             default => 'formal e institucional',
         };
+    }
+
+    /**
+     * Prompt de Stephany (12-nov-2026): redacción más humana.
+     * Aplica a todas las secciones. Si contradice una regla de estilo anterior, manda este bloque;
+     * las reglas de contenido se mantienen.
+     */
+    public static function tonoHumano(): string
+    {
+        return implode("\n", [
+            'Prompt para una redacción más humana en SIGOR.',
+            'Estas instrucciones aplican a todas las secciones del informe. Si alguna contradice una regla de estilo anterior, sigue estas; las reglas de contenido anteriores se mantienen.',
+            'Redacta como un evaluador de recursos humanos con experiencia que le cuenta la entrevista a un gerente: en prosa natural y profesional, no como un cuestionario convertido en oraciones.',
+            'Las preguntas del formato son una guía para no olvidar nada, no un guion. No conviertas cada pregunta en una oración: agrupa lo relacionado y di cada dato una sola vez.',
+            'No saques conclusiones ni repitas ideas con otras palabras (por ejemplo, «por lo tanto, no tiene nada que pagar»).',
+            'Usa conectores y verbos como «refirió», «informó» o «negó» solo cuando suenen naturales, no por cumplir.',
+            'Empieza por lo más general o importante y después da los detalles. Varía el largo de las oraciones, como escribe una persona.',
+            'Une con coma solo ideas del mismo tema. Cuando cambia el tema, usa punto y seguido, y punto y aparte si el cambio es grande. No inventes nada y respeta lo que va en cada sección. Si el detalle de algo va en un cuadro aparte (por ejemplo, los tatuajes), menciona si tiene o no y agrega «los cuales se detallan en anexos», sin nombrar el cuadro.',
+            'Si una sección tiene poca información (por ejemplo, hábitos personales), redáctala en dos o tres oraciones completas que conecten los datos con naturalidad, sin agregar nada que no esté.',
+            'Este bloque solo cambia el tono para que suene más natural. Todo lo indicado en los prompts anteriores se mantiene: lo que va y no va en cada sección, las reglas de no inventar, el género del candidato, las verificaciones en aspecto judicial, las recomendaciones y demás. No elimines ni ignores ninguna de esas reglas.',
+            'Imita el tono de los ejemplos de abajo.',
+            'Ejemplos de referencia. A continuación hay textos escritos por nuestros mejores evaluadores. Imita su tono y su forma de organizar la información, no sus datos.',
+            'Aspecto laboral (ejemplo de estilo): «Informó que no tuvo problemas serios en sus empleos y que en el último año no se ausentó por ningún motivo. Manejó efectivo, con un máximo de Q75,000, y negó haber tenido faltantes o inconvenientes con sobrantes; también manejó producto. Refirió que nunca estuvo involucrado en actividades ilícitas en sus empleos, no alteró documentos ni recibió llamadas de atención. Negó haber participado en sobornos, encubierto o acusado a compañeros, hurtado o tomado algo sin autorización. No tuvo problemas con compañeros ni jefes, nunca abandonó un empleo y considera que en sus trabajos anteriores lo recomendarán bien.»',
+            'Otro ejemplo laboral: «Informó que no tuvo problemas serios en sus empleos anteriores y que en el último año no registró ausencias ni actas administrativas. No manejó efectivo ni producto. Negó haber laborado en corporaciones policiales o militares, así como cualquier conducta deshonesta, como sobornos, alteración de documentos o tomar dinero sin autorización. Nunca abandonó un empleo sin aviso, siempre reportó las faltas de sus compañeros y considera que sus referencias laborales lo recomendarán favorablemente.»',
+            'Aspecto económico: «Reside en una vivienda familiar con cuatro personas, de las cuales dos aportan a los gastos del hogar, y no tiene dependientes económicos. Su pretensión salarial es de Q4,500.00. Cuenta con una motocicleta propia y negó tener otros ingresos o propiedades a su nombre. No figura como omiso ante la SAT, no es fiador de ninguna persona y no ha tenido problemas con sus cuentas bancarias.»',
+            'Salud: «Considera que su estado de salud general es bueno. Pesa 140 libras, mide 1.65 metros y practica fútbol. No está en tratamiento médico, no padece alergias ni tiene antecedentes de operaciones u hospitalizaciones, y en el último año no se ausentó por enfermedad. Desconoce su tipo de sangre. Presenta tatuajes, los cuales se detallan en anexos.» Lo relacionado con salud mental va en una oración aparte, redactado con base en lo que el candidato realmente respondió.',
+            'Hábitos personales: «Consume bebidas alcohólicas de forma ocasional, principalmente en reuniones familiares, y no acostumbra frecuentar bares. No fuma. En su tiempo libre comparte con su familia y los fines de semana juega fútbol con amigos, actividad que considera su principal pasatiempo.»',
+            'Actividades delictivas y drogas ilegales: «Negó haber consumido drogas ilegales o haber participado en algún momento en actividades ilícitas, y no ha manejado armas de fuego. En su entorno cercano no hay familiares ni amigos privados de libertad o que consuman drogas. Describe la zona donde reside como tranquila.»',
+            'Aspecto judicial: «Refirió no contar con antecedentes penales ni policiales, documentos que actualizó en marzo de 2026. No ha estado detenido, no ha sido demandado ni ha interpuesto demandas contra otras personas. Se validaron sus documentos penales y policiales y se realizó búsqueda en el registro de detenidos y en la web, sin encontrar registros ni noticias negativas.»',
+        ]);
     }
 }

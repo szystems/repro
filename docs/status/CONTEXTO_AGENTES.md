@@ -1,8 +1,8 @@
 # CONTEXTO PARA AGENTES IA - PROYECTO REPRO
 
 **Sistema:** REPRO Guatemala - Plataforma de Evaluaciones Poligráficas  
-**Fecha de Contexto:** 29 de octubre de 2026  
-**Estado:** Asistente de redacción **en desarrollo** en la rama `asistente-redaccion` (no está en producción). Interruptor apagado. Prod sigue en `master` `0086e3ce`. SIGOR pagado Q 23,600. Portal `https://portal.reprogt.com`.  
+**Fecha de Contexto:** 12 de noviembre de 2026  
+**Estado:** Asistente de redacción en `master` (interruptor en Configuración). Pedidos Stephany 12-nov: tono humano (Word pegado en `AsistenteRedaccionInstrucciones::tonoHumano`), viñetas/números en preliminar, scroll horizontal móvil, letras #000555 en requerimientos empresa. CRM / WhatsApp / rediseño: pendientes de conversación. Portal `https://portal.reprogt.com`.  
 
 **Plan activo:** `docs/repro/cambios septiembre/20'09'2026/PLAN_SPRINT_T_OBSERVACIONES_20-09-2026.md`  
 **Plan S (correos reclutador):** `docs/repro/cambios agosto/PLAN_SPRINT_S_OBSERVACIONES_11-09-2026.md` · merge prod ~`3f6092a6`  

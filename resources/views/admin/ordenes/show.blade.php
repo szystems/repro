@@ -1445,21 +1445,37 @@
 .ql-editor .repro-tabla-wrap {
     margin: 0.5rem 0;
 }
+/* El template global pone ul { list-style: none; padding: 0 }. Forzar viñetas/números. */
 .ql-editor ul,
-.informe-preliminar-html ul {
-    list-style-type: disc;
-    margin: 0.35rem 0 0.35rem 1.25rem;
-    padding-left: 1.1rem;
+.informe-preliminar-html ul,
+.ql-editor .repro-tabla-wrap ul,
+.informe-preliminar-form ul {
+    list-style-type: disc !important;
+    margin: 0.35rem 0 0.35rem 1.25rem !important;
+    padding-left: 1.5rem !important;
 }
 .ql-editor ol,
-.informe-preliminar-html ol {
-    list-style-type: decimal;
-    margin: 0.35rem 0 0.35rem 1.25rem;
-    padding-left: 1.1rem;
+.informe-preliminar-html ol,
+.ql-editor .repro-tabla-wrap ol,
+.informe-preliminar-form ol {
+    list-style-type: decimal !important;
+    margin: 0.35rem 0 0.35rem 1.25rem !important;
+    padding-left: 1.5rem !important;
 }
 .ql-editor li,
-.informe-preliminar-html li {
-    display: list-item;
+.informe-preliminar-html li,
+.ql-editor .repro-tabla-wrap li,
+.informe-preliminar-form li {
+    display: list-item !important;
+    list-style: inherit !important;
+}
+.ql-editor li[data-list="bullet"] > .ql-ui::before,
+.ql-editor li[data-list=bullet] > .ql-ui:before {
+    content: '\2022' !important;
+}
+.ql-editor li[data-list="ordered"] > .ql-ui::before,
+.ql-editor li[data-list=ordered] > .ql-ui:before {
+    content: counter(list-0, decimal) '. ' !important;
 }
 .ql-editor .repro-tabla-accion,
 .ql-editor .repro-tabla-accion th,
@@ -1974,6 +1990,17 @@ function copiarEnlaceEvaluado(url) {
             formatoEnTablaOQuill('removeFormat', null, function () {
                 quill.removeFormat(quill.getSelection(true));
             });
+        });
+        // Viñetas/números también dentro de celdas de la tabla del preliminar.
+        toolbar.addHandler('list', function (value) {
+            if (restaurarRangoTabla() && celdaDeNodo(window.getSelection().anchorNode)) {
+                document.execCommand(value === 'ordered' ? 'insertOrderedList' : 'insertUnorderedList');
+                guardarRangoTabla();
+                return;
+            }
+            const rango = quill.getSelection(true);
+            const actual = quill.getFormat(rango).list;
+            quill.format('list', actual === value ? false : value);
         });
         const botonViñetas = toolbar.container.querySelector('button.ql-list[value="bullet"]');
         if (botonViñetas) {

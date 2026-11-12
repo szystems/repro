@@ -40,8 +40,9 @@
                 .informe-preliminar-empresa table { border-collapse: collapse; width: 100%; }
                 .informe-preliminar-empresa th, .informe-preliminar-empresa td { border: 1px solid #6c757d; padding: 6px 8px; }
                 .informe-preliminar-empresa th { background: #e9ecef; }
-                .informe-preliminar-empresa ul { list-style-type: disc; margin: 0.35rem 0 0.35rem 1.25rem; padding-left: 1.1rem; }
-                .informe-preliminar-empresa ol { list-style-type: decimal; margin: 0.35rem 0 0.35rem 1.25rem; padding-left: 1.1rem; }
+                .informe-preliminar-empresa ul { list-style-type: disc !important; margin: 0.35rem 0 0.35rem 1.25rem !important; padding-left: 1.5rem !important; }
+                .informe-preliminar-empresa ol { list-style-type: decimal !important; margin: 0.35rem 0 0.35rem 1.25rem !important; padding-left: 1.5rem !important; }
+                .informe-preliminar-empresa li { display: list-item !important; list-style: inherit !important; }
             </style>
         </div>
     </div>

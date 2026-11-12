@@ -63,10 +63,28 @@
         }
 
         /* Fase 8 (UI1/UI3): el scroll lo gestiona el documento, no este wrapper */
+        html, body {
+            overflow-x: auto;
+        }
         .content-wrapper-scroll {
             flex: 1;
             overflow: visible;
             padding-bottom: 10px;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .content-wrapper {
+            min-width: 0;
+            max-width: 100%;
+        }
+        .main-container {
+            min-width: 0;
+            max-width: 100%;
+        }
+        .table-responsive {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
         }
 
         /* Anidamientos legacy: nunca scroll propio */

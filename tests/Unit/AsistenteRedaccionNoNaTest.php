@@ -67,6 +67,7 @@ class AsistenteRedaccionNoNaTest extends TestCase
 
         $salud = AsistenteRedaccionInstrucciones::sistema('word_salud', 'poligrafo');
         $this->assertStringContainsString('no enumeres cada uno', $salud);
+        $this->assertStringContainsString('los cuales se detallan en anexos', $salud);
         $this->assertStringContainsString('Si Sexo es mujer', $salud);
         $this->assertStringContainsString('Si Sexo es hombre, no redactes el embarazo', $salud);
 
@@ -80,5 +81,11 @@ class AsistenteRedaccionNoNaTest extends TestCase
         $this->assertStringContainsString('dirigida a la empresa que solicita el estudio, no al candidato', $vsa);
         $this->assertStringContainsString('un solo salto de línea', $sistema);
         $this->assertStringContainsString('No uses viñetas', $sistema);
+
+        $this->assertStringContainsString('redacción más humana en SIGOR', $sistema);
+        $this->assertStringContainsString('prosa natural y profesional', $sistema);
+        $this->assertStringContainsString('Imita el tono de los ejemplos', $sistema);
+        $this->assertStringContainsString('los cuales se detallan en anexos', AsistenteRedaccionInstrucciones::tonoHumano());
+        $this->assertStringContainsString('Aspecto judicial', AsistenteRedaccionInstrucciones::tonoHumano());
     }
 }
