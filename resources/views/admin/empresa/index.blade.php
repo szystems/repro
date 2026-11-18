@@ -185,10 +185,26 @@
                                                             <label class="visually-hidden" for="correos-empresa-{{ $empresa->id }}">Correos automáticos de {{ $empresa->nombre }}</label>
                                                         </div>
                                                     </form>
+                                                    <form action="{{ route('empresas.correos-automaticos', $empresa->id) }}" method="POST" class="mt-1">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="correos_comentarios" value="0">
+                                                        <div class="form-check form-switch mb-0">
+                                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                                   name="correos_comentarios" value="1"
+                                                                   id="correos-comentarios-{{ $empresa->id }}"
+                                                                   @checked($empresa->recibeCorreosComentarios())
+                                                                   @disabled(! $empresa->recibeCorreosAutomaticos())
+                                                                   onchange="this.form.submit()"
+                                                                   title="Correo al guardar un comentario nuevo. Apagado por defecto. Requiere los correos automáticos encendidos.">
+                                                            <label class="form-check-label small" for="correos-comentarios-{{ $empresa->id }}">Comentarios</label>
+                                                        </div>
+                                                    </form>
                                                 @else
                                                     <span class="badge {{ $empresa->recibeCorreosAutomaticos() ? 'bg-success' : 'bg-secondary' }}">
                                                         {{ $empresa->recibeCorreosAutomaticos() ? 'Sí' : 'No' }}
                                                     </span>
+                                                    <div class="small text-muted mt-1">Comentarios: {{ $empresa->recibeCorreosComentarios() ? 'Sí' : 'No' }}</div>
                                                 @endif
                                             </td>
                                             <td>

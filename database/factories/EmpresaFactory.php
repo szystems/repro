@@ -20,6 +20,7 @@ class EmpresaFactory extends Factory
             'telefono' => $this->faker->phoneNumber(),
             'email' => $this->faker->companyEmail(),
             'correos_automaticos' => true,
+            'correos_comentarios' => false,
             'sitio_web' => $this->faker->url(),
             'descripcion' => $this->faker->paragraph(),
             'contacto_nombre' => $this->faker->name(),

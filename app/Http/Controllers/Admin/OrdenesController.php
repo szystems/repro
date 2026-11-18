@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OrdenFormRequest;
+use App\Mail\ComentarioAgregadoMail;
 use App\Mail\EvaluadoAsignadoMail;
 use App\Models\Orden;
 use App\Models\EvaluadoObservacionEntrada;
@@ -793,6 +794,7 @@ class OrdenesController extends Controller
         }
 
         $evaluado->agregarObservacion($texto, Auth::id());
+        $this->notificarComentarioEmpresa($evaluado, $texto);
 
         return back()->with('success', "Observación de {$evaluado->nombre} {$evaluado->apellidos} agregada.");
     }
@@ -934,6 +936,30 @@ class OrdenesController extends Controller
         }
 
         return back()->with('success', $mensaje);
+    }
+
+    /**
+     * Correo extra, solo si la empresa lo tiene encendido y los correos automáticos también.
+     * Corregir un comentario ya guardado no pasa por aquí.
+     */
+    private function notificarComentarioEmpresa(EvaluadoOrden $evaluado, string $texto): void
+    {
+        $evaluado->loadMissing('orden.empresa');
+        $orden = $evaluado->orden;
+        if (! $orden || ! CorreoClienteSupport::permiteComentarios($orden->empresa)) {
+            return;
+        }
+
+        $emails = DestinatariosCorreoEmpresaSupport::emailsResultados($orden);
+        if ($emails->isEmpty()) {
+            return;
+        }
+
+        try {
+            Mail::to($emails->all())->queue(new ComentarioAgregadoMail($evaluado, $texto));
+        } catch (\Throwable $e) {
+            CorreoEnvioSupport::registrarFallo($e, 'comentario_empresa');
+        }
     }
 
     /**
@@ -1405,6 +1431,7 @@ class OrdenesController extends Controller
 
         if ($textoObs !== '' && $textoObs !== trim((string) $evaluado->observaciones)) {
             $evaluado->agregarObservacion($textoObs, Auth::id());
+            $this->notificarComentarioEmpresa($evaluado, $textoObs);
         }
 
         $evaluado->fresh()->sincronizarCuestionarioConServicio();

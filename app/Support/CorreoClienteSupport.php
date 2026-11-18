@@ -18,4 +18,13 @@ class CorreoClienteSupport
 
         return $empresa->recibeCorreosAutomaticos();
     }
+
+    public static function permiteComentarios(?Empresa $empresa): bool
+    {
+        if ($empresa === null || ! self::permite($empresa)) {
+            return false;
+        }
+
+        return $empresa->recibeCorreosComentarios();
+    }
 }
