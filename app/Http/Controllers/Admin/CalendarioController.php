@@ -10,6 +10,7 @@ use App\Models\Empresa;
 use App\Models\EvaluadoOrden;
 use App\Models\Sede;
 use App\Models\User;
+use App\Support\CorreoClienteSupport;
 use App\Support\CorreoEnvioSupport;
 use App\Support\ExportacionesSupport;
 use Carbon\Carbon;
@@ -306,10 +307,12 @@ class CalendarioController extends Controller
             $request->responsable_id
         );
 
-        $this->notificarCitaAlCandidato($evaluado->fresh(), false);
+        $correoEnviado = $this->notificarCitaAlCandidato($evaluado->fresh(), false);
 
-        return redirect()->back()
+        $respuesta = redirect()->back()
             ->with('success', 'Cita programada correctamente para ' . $evaluado->nombre . ' ' . $evaluado->apellidos);
+
+        return $this->avisarSiCitaSinCorreo($respuesta, $correoEnviado);
     }
 
     /**
@@ -343,10 +346,12 @@ class CalendarioController extends Controller
             $request->motivo_reprogramacion
         );
 
-        $this->notificarCitaAlCandidato($evaluado->fresh(), true);
+        $correoEnviado = $this->notificarCitaAlCandidato($evaluado->fresh(), true);
 
-        return redirect()->back()
+        $respuesta = redirect()->back()
             ->with('success', 'Cita reprogramada correctamente.');
+
+        return $this->avisarSiCitaSinCorreo($respuesta, $correoEnviado);
     }
 
     /**
@@ -482,10 +487,18 @@ class CalendarioController extends Controller
         }
     }
 
-    private function notificarCitaAlCandidato(?EvaluadoOrden $evaluado, bool $reprogramada): void
+    /**
+     * @return bool false solo cuando la empresa tiene los correos apagados
+     */
+    private function notificarCitaAlCandidato(?EvaluadoOrden $evaluado, bool $reprogramada): bool
     {
         if (! $evaluado || empty($evaluado->email)) {
-            return;
+            return true;
+        }
+
+        $evaluado->loadMissing('orden.empresa');
+        if (! CorreoClienteSupport::permite($evaluado->orden?->empresa)) {
+            return false;
         }
 
         try {
@@ -493,5 +506,19 @@ class CalendarioController extends Controller
         } catch (\Exception $e) {
             CorreoEnvioSupport::registrarFallo($e, 'cita_programada');
         }
+
+        return true;
+    }
+
+    private function avisarSiCitaSinCorreo($respuesta, bool $correoEnviado)
+    {
+        if ($correoEnviado) {
+            return $respuesta;
+        }
+
+        return $respuesta->with(
+            'warning',
+            'La cita quedó en el calendario. Esta empresa tiene apagados los correos automáticos, así que el candidato no recibió el aviso.'
+        );
     }
 }

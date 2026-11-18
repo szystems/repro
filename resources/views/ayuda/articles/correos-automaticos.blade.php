@@ -33,6 +33,9 @@
         <li>Si el proceso es <strong>confidencial</strong>, nunca se avisa a alguien que no pueda ver esa orden en SIGOR. El gerente sigue viendo la orden en el portal; no recibe el correo si no es el responsable.</li>
     </ul>
 
+    <h5 id="interruptor"><i class="bi bi-toggle-on me-2"></i>Interruptor por empresa</h5>
+    <p>En <strong>Administración → Empresas</strong>, la columna <strong>Correos</strong> enciende o apaga los correos de esa empresa: enlace y recordatorio del candidato, cita y resultados. Nace encendido. La campana del portal, WhatsApp, la contraseña y el aviso a la sede de REPRO no se apagan. Apagar una empresa reserva cupo para las demás. No hace salir correos si el mes del servicio ya se agotó.</p>
+
     <h5 id="campana"><i class="bi bi-bell me-2"></i>Solo campana (sin correo)</h5>
     <ul>
         <li>Orden creada → REPRO y empresa (notificación en el portal).</li>
@@ -42,6 +45,6 @@
     @include('ayuda.partials.callout', [
         'tipo' => 'info',
         'titulo' => 'Si no llega el correo:',
-        'contenido' => 'Pida revisar spam y que el email del candidato o del responsable esté bien escrito. El correo de resultados llega al reclutador asignado (o a quien creó la orden / al titular), no a toda la empresa. Si REPRO ve un aviso de límite diario, el servicio de correo (Resend, 100/día) se saturó: el portal sigue; los mails se reanudan a las 18:00 (hora de Guatemala). El enlace del candidato también se puede copiar o mandar por WhatsApp.',
+        'contenido' => 'Pida revisar spam y que el email del candidato o del responsable esté bien escrito. El correo de resultados llega al reclutador asignado (o a quien creó la orden / al titular), no a toda la empresa. Si el aviso rojo dice límite diario, el servicio de correo (Resend, 100/día) se saturó: se reanuda a las 18:00 (hora de Guatemala). Si dice cupo mensual, no vuelve a esa hora: hay que ampliar el plan o esperar el siguiente periodo. El interruptor de Empresas no desbloquea ese cupo. El enlace del candidato también se puede copiar o mandar por WhatsApp.',
     ])
 </div>

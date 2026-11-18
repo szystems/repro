@@ -126,6 +126,7 @@ Route::middleware(['auth', 'redirect.role'])->group(function () {
         Route::get('edit-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'edit'])->name('empresas.edit');
         Route::put('update-empresa/{id}', [App\Http\Controllers\Admin\EmpresasController::class, 'update'])->name('empresas.update');
         Route::patch('cambiar-estado-empresa/{id}/{estado}', [App\Http\Controllers\Admin\EmpresasController::class, 'cambiarEstado'])->name('empresas.cambiar-estado');
+        Route::patch('empresas/{id}/correos-automaticos', [App\Http\Controllers\Admin\EmpresasController::class, 'cambiarCorreosAutomaticos'])->name('empresas.correos-automaticos');
     });
 
     // ========================================

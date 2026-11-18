@@ -98,6 +98,7 @@
                                                         <input type="email" name="email" id="email" class="form-control" value="{{ $empresa->email }}">
                                                     </div>
                                                 </div>
+                                                @include('admin.empresa.partials.correos-automaticos', ['empresa' => $empresa])
                                                 <div class="col-md-12 mb-3">
                                                     <label for="direccion" class="form-label">Dirección</label>
                                                     <div class="input-group">

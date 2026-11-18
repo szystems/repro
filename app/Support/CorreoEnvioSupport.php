@@ -26,8 +26,10 @@ class CorreoEnvioSupport
         $enviados = (int) Cache::increment(self::claveContador());
         Cache::put(self::claveContador(), $enviados, self::expiraMedianoche());
 
+        // Si este envío salió, el cupo del mes ya no está bloqueando.
+        self::olvidarAlertaMensual();
+
         $limite = self::limiteDiario();
-        $avisoDesde = self::avisoDesde();
 
         if ($limite > 0 && $enviados >= $limite) {
             self::guardarAlerta(self::NIVEL_CORTE, self::mensajeCorte($limite));
@@ -53,7 +55,7 @@ class CorreoEnvioSupport
         $limite = self::limiteDiario();
 
         if (self::esErrorMensual($e)) {
-            self::guardarAlerta(self::NIVEL_CORTE, self::mensajeMensual());
+            self::guardarAlertaMensual();
 
             return;
         }
@@ -75,11 +77,14 @@ class CorreoEnvioSupport
             return null;
         }
 
+        $mensual = Cache::get(self::claveAlertaMensual());
+        if (self::alertaValida($mensual)) {
+            return $mensual;
+        }
+
         $alerta = Cache::get(self::claveAlerta());
 
-        return is_array($alerta) && isset($alerta['mensaje'], $alerta['nivel'])
-            ? $alerta
-            : null;
+        return self::alertaValida($alerta) ? $alerta : null;
     }
 
     public static function esErrorMensual(Throwable $e): bool
@@ -134,12 +139,14 @@ class CorreoEnvioSupport
     {
         Cache::forget(self::claveContador());
         Cache::forget(self::claveAlerta());
+        self::olvidarAlertaMensual();
     }
 
     /** Quita el banner amarillo/rojo global (p. ej. aviso obsoleto tras deploy). */
     public static function olvidarAlertaPersistente(): void
     {
         Cache::forget(self::claveAlerta());
+        self::olvidarAlertaMensual();
     }
 
     private static function guardarAlerta(string $nivel, string $mensaje): void
@@ -148,6 +155,34 @@ class CorreoEnvioSupport
             'nivel' => $nivel,
             'mensaje' => $mensaje,
         ], self::expiraMedianoche());
+    }
+
+    /**
+     * El cupo del mes no se reinicia a las 00:00 UTC. Si el aviso usara la clave
+     * del día, a las 18:00 desaparecería aunque Resend siguiera rechazando.
+     */
+    private static function guardarAlertaMensual(): void
+    {
+        Cache::put(self::claveAlertaMensual(), [
+            'nivel' => self::NIVEL_CORTE,
+            'mensaje' => self::mensajeMensual(),
+        ], now()->addDays(40));
+    }
+
+    private static function olvidarAlertaMensual(): void
+    {
+        Cache::forget(self::claveAlertaMensual());
+    }
+
+    /**
+     * @param  mixed  $alerta
+     * @return array{nivel: string, mensaje: string}|null
+     */
+    private static function alertaValida(mixed $alerta): ?array
+    {
+        return is_array($alerta) && isset($alerta['mensaje'], $alerta['nivel'])
+            ? $alerta
+            : null;
     }
 
     private static function mensajeAviso(int $enviados, int $limite): string
@@ -205,6 +240,11 @@ class CorreoEnvioSupport
     private static function claveAlerta(): string
     {
         return 'correo.alerta.'.self::ahoraProveedor()->toDateString();
+    }
+
+    private static function claveAlertaMensual(): string
+    {
+        return 'correo.alerta.mensual';
     }
 
     private static function expiraMedianoche(): \DateTimeInterface

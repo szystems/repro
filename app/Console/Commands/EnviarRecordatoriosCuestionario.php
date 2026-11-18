@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Mail\RecordatorioCuestionarioMail;
+use App\Support\CorreoClienteSupport;
 use App\Support\CorreoEnvioSupport;
 use App\Models\EvaluadoOrden;
 use Illuminate\Console\Command;
@@ -155,6 +156,13 @@ class EnviarRecordatoriosCuestionario extends Command
 
             if (! $this->option('forzar') && $this->yaSeEnvioRecordatorioHoy($evaluado)) {
                 $this->line("   ⏭️ {$evaluado->nombre}: Ya recibió recordatorio hoy");
+
+                return [$enviados, $errores];
+            }
+
+            $evaluado->loadMissing('orden.empresa');
+            if (! CorreoClienteSupport::permite($evaluado->orden?->empresa)) {
+                $this->line("   ⏭️ {$evaluado->nombre}: correos automáticos apagados para la empresa");
 
                 return [$enviados, $errores];
             }

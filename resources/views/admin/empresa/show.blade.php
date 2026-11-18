@@ -96,6 +96,14 @@
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Correos automáticos:</label>
+                                <div>
+                                    <span class="badge {{ $empresa->recibeCorreosAutomaticos() ? 'bg-success' : 'bg-secondary' }} p-2">
+                                        {{ $empresa->recibeCorreosAutomaticos() ? 'Activados' : 'Apagados' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted">Teléfono:</label>
                                 <div class="fw-medium">{{ $empresa->telefono ?? 'No definido' }}</div>
                             </div>

@@ -543,7 +543,7 @@ return [
         ],
         [
             'pregunta' => '¿Por qué dejaron de llegar los correos?',
-            'respuesta' => 'Si el portal muestra un aviso amarillo o rojo de límite diario, el servicio de correo (Resend) llegó a su tope (100/día por defecto). Los avisos en SIGOR sí quedan. Se reanudan a las 18:00 (hora de Guatemala) o al subir el plan. MAIL_ALERTA_ACTIVA / MAIL_LIMITE_DIARIO se configuran en el servidor.',
+            'respuesta' => 'Si el aviso rojo dice cupo mensual, el servicio de correo agotó el mes. No vuelve a las 18:00: hay que ampliar el plan o esperar el siguiente periodo. El tope diario (100/día) sí se reanuda a las 18:00 (hora de Guatemala). Los avisos en el portal sí quedan. En Empresas, el interruptor Correos apaga enlace, recordatorio, cita y resultados de una empresa para reservar cupo; no desbloquea el mes ya agotado. Las claves y el aviso a la sede REPRO siguen.',
             'audiencias' => ['repro'],
             'icono' => 'bi-envelope-exclamation',
             'articulo' => 'correos-automaticos',
