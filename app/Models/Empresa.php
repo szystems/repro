@@ -18,6 +18,7 @@ class Empresa extends Model
         'direccion',
         'telefono',
         'email',
+        'correos_automaticos',
         'logo',
         'estado',
         'descripcion',
@@ -92,6 +93,20 @@ class Empresa extends Model
     public function getEstadoTexto()
     {
         return $this->estado == 1 ? 'Activa' : 'Inactiva';
+    }
+
+    /**
+     * El alta de todas las empresas queda encendido. REPRO lo apaga una por una.
+     */
+    public function recibeCorreosAutomaticos(): bool
+    {
+        $valor = $this->getAttributes()['correos_automaticos'] ?? null;
+
+        if ($valor === null) {
+            return true;
+        }
+
+        return filter_var($valor, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**

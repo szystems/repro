@@ -89,6 +89,7 @@ class EmpresasController extends Controller
         $empresa->direccion = $request->input('direccion');
         $empresa->telefono = $request->input('telefono');
         $empresa->email = $request->input('email');
+        $this->asignarCorreosAutomaticos($request, $empresa);
         $empresa->descripcion = $request->input('descripcion');
         $empresa->sitio_web = $request->input('sitio_web');
         $empresa->contacto_nombre = $request->input('contacto_nombre');
@@ -162,6 +163,7 @@ class EmpresasController extends Controller
         $empresa->direccion = $request->input('direccion');
         $empresa->telefono = $request->input('telefono');
         $empresa->email = $request->input('email');
+        $this->asignarCorreosAutomaticos($request, $empresa);
         $empresa->descripcion = $request->input('descripcion');
         $empresa->sitio_web = $request->input('sitio_web');
         $empresa->contacto_nombre = $request->input('contacto_nombre');
@@ -193,6 +195,15 @@ class EmpresasController extends Controller
         $this->guardarPreguntasPreempleo($request, $empresa);
 
         return redirect('show-empresa/'.$id)->with('status', 'Información de empresa actualizada correctamente');
+    }
+
+    private function asignarCorreosAutomaticos(EmpresaFormRequest $request, Empresa $empresa): void
+    {
+        if (! $request->exists('correos_automaticos')) {
+            return;
+        }
+
+        $empresa->correos_automaticos = $request->boolean('correos_automaticos');
     }
 
     private function asignarRequerimientosRepro(EmpresaFormRequest $request, Empresa $empresa): void
@@ -367,6 +378,19 @@ class EmpresasController extends Controller
         $empresa->update();
 
         $mensaje = $estado == 1 ? 'Empresa activada correctamente' : 'Empresa desactivada correctamente';
+
+        return redirect()->back()->with('status', $mensaje);
+    }
+
+    public function cambiarCorreosAutomaticos(Request $request, $id)
+    {
+        $empresa = Empresa::findOrFail($id);
+        $empresa->correos_automaticos = $request->boolean('correos_automaticos');
+        $empresa->save();
+
+        $mensaje = $empresa->recibeCorreosAutomaticos()
+            ? 'Correos automáticos activados para '.$empresa->nombre.'.'
+            : 'Correos automáticos apagados para '.$empresa->nombre.'. El portal y WhatsApp siguen.';
 
         return redirect()->back()->with('status', $mensaje);
     }

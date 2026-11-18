@@ -22,4 +22,4 @@ Artisan::command('inspire', function () {
 Artisan::command('correo:olvidar-alerta', function () {
     CorreoEnvioSupport::olvidarAlertaPersistente();
     $this->info('Banner persistente de correo eliminado de caché.');
-})->purpose('Quita el aviso global de correo/SMTP (sin resetear contador diario)');
+})->purpose('Quita el aviso global de correo/SMTP, incluido el cupo mensual');

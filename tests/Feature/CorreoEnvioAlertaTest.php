@@ -85,7 +85,28 @@ class CorreoEnvioAlertaTest extends TestCase
         $alerta = CorreoEnvioSupport::alertaActiva();
         $this->assertNotNull($alerta);
         $this->assertStringContainsString('cupo mensual', $alerta['mensaje']);
-        $this->assertStringNotContainsString('18:00', $alerta['mensaje']);
+        $this->assertStringContainsString('No se reanudan a las 18:00', $alerta['mensaje']);
+    }
+
+    public function test_cupo_mensual_sigue_despues_de_las_18(): void
+    {
+        try {
+            Carbon::setTestNow(Carbon::parse('2026-11-12 17:00:00', 'America/Guatemala'));
+
+            CorreoEnvioSupport::registrarFallo(
+                new RuntimeException('550 You have reached your monthly email sending quota.'),
+                'test'
+            );
+            $this->assertNotNull(CorreoEnvioSupport::alertaActiva());
+
+            Carbon::setTestNow(Carbon::parse('2026-11-12 18:05:00', 'America/Guatemala'));
+
+            $alerta = CorreoEnvioSupport::alertaActiva();
+            $this->assertNotNull($alerta);
+            $this->assertStringContainsString('cupo mensual', $alerta['mensaje']);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_un_envio_exitoso_quita_el_aviso_pegado(): void

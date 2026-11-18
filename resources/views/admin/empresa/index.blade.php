@@ -120,6 +120,7 @@
                                         <th>Usuarios</th>
                                         <th>Creada por</th>
                                         <th>Estado de Empresa</th>
+                                        <th>Correos</th>
                                         <th width="150">Acciones</th>
                                     </tr>
                                 </thead>
@@ -167,6 +168,28 @@
                                                 <span class="badge {{ $empresa->estado ? 'bg-success' : 'bg-danger' }}">
                                                     {{ $empresa->getEstadoTexto() }}
                                                 </span>
+                                            </td>
+                                            <td>
+                                                @if(Auth::user()->hasPermission('empresas.editar'))
+                                                    <form action="{{ route('empresas.correos-automaticos', $empresa->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="correos_automaticos" value="0">
+                                                        <div class="form-check form-switch mb-0">
+                                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                                   name="correos_automaticos" value="1"
+                                                                   id="correos-empresa-{{ $empresa->id }}"
+                                                                   @checked($empresa->recibeCorreosAutomaticos())
+                                                                   onchange="this.form.submit()"
+                                                                   title="Enlace, recordatorio, cita y resultados. No amplía el cupo del servicio de correo.">
+                                                            <label class="visually-hidden" for="correos-empresa-{{ $empresa->id }}">Correos automáticos de {{ $empresa->nombre }}</label>
+                                                        </div>
+                                                    </form>
+                                                @else
+                                                    <span class="badge {{ $empresa->recibeCorreosAutomaticos() ? 'bg-success' : 'bg-secondary' }}">
+                                                        {{ $empresa->recibeCorreosAutomaticos() ? 'Sí' : 'No' }}
+                                                    </span>
+                                                @endif
                                             </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm">

@@ -18,6 +18,7 @@ use App\Notifications\ResultadoPreliminarNotification;
 use App\Support\RedirectFichaOrden;
 use App\Notifications\ResultadosDisponiblesNotification;
 use App\Exports\OrdenesExport;
+use App\Support\CorreoClienteSupport;
 use App\Support\CorreoEnvioSupport;
 use App\Support\DestinatariosCorreoEmpresaSupport;
 use App\Support\EmpresaVisibilidadReclutadoresSupport;
@@ -893,6 +894,10 @@ class OrdenesController extends Controller
 
         $respuesta = back()->with('success', "Informe preliminar de {$nombre} enviado al cliente.");
 
+        if ($correoOk === null) {
+            return $respuesta->with('warning', 'El informe quedó en el portal. Esta empresa tiene apagados los correos automáticos.');
+        }
+
         return $correoOk
             ? $respuesta
             : $respuesta->with('warning', CorreoEnvioSupport::mensajeFlashFallo());
@@ -917,12 +922,14 @@ class OrdenesController extends Controller
         }
 
         $mensaje = $nuevoEstado
-            ? ($correoOk
-                ? 'Resultados ahora visibles para la empresa. Se envió notificación por correo.'
-                : 'Resultados ahora visibles para la empresa.')
+            ? ($correoOk === null
+                ? 'Resultados ahora visibles para la empresa. El aviso quedó en el portal: esta empresa tiene los correos apagados.'
+                : ($correoOk
+                    ? 'Resultados ahora visibles para la empresa. Se envió notificación por correo.'
+                    : 'Resultados ahora visibles para la empresa.'))
             : 'Resultados ocultos para la empresa.';
 
-        if ($nuevoEstado && ! $correoOk) {
+        if ($nuevoEstado && $correoOk === false) {
             return back()->with('success', $mensaje)->with('warning', CorreoEnvioSupport::mensajeFlashFallo());
         }
 
@@ -932,8 +939,10 @@ class OrdenesController extends Controller
     /**
      * Enviar notificación por email cuando resultados están disponibles.
      * $preliminar distingue el aviso del informe final para el cliente.
+     *
+     * @return bool|null true enviado, false falló el envío, null la empresa tiene los correos apagados
      */
-    private function notificarResultadosDisponibles(Orden $orden, bool $preliminar = false): bool
+    private function notificarResultadosDisponibles(Orden $orden, bool $preliminar = false): ?bool
     {
         $orden->load(['empresa', 'evaluados']);
         $empresa = $orden->empresa;
@@ -942,6 +951,12 @@ class OrdenesController extends Controller
             $this->avisarResultadosEnPortal($orden, $preliminar);
 
             return true;
+        }
+
+        if (! CorreoClienteSupport::permite($empresa)) {
+            $this->avisarResultadosEnPortal($orden, $preliminar);
+
+            return null;
         }
 
         try {
@@ -1497,6 +1512,16 @@ class OrdenesController extends Controller
                 continue;
             }
 
+            $evaluado->load('orden.empresa');
+            if (! CorreoClienteSupport::permite($evaluado->orden?->empresa)) {
+                Log::info('Correo al candidato omitido: empresa con correos apagados', [
+                    'evaluado_id' => $evaluado->id,
+                    'empresa_id' => $evaluado->orden?->empresa_id,
+                ]);
+
+                continue;
+            }
+
             $this->notificarEvaluadoAsignado($evaluado);
 
             if ($evaluado->estado_formulario === 'link_pendiente') {
@@ -1848,6 +1873,10 @@ class OrdenesController extends Controller
         try {
             // Cargar relaciones necesarias
             $evaluado->load('orden.empresa');
+
+            if (! CorreoClienteSupport::permite($evaluado->orden?->empresa)) {
+                return back()->with('warning', 'Esta empresa tiene apagados los correos automáticos. Puede activarlos en Empresas. El enlace también se copia o se manda por WhatsApp.');
+            }
 
             Mail::to($evaluado->email)
                 ->send(new EvaluadoAsignadoMail($evaluado));
