@@ -37,6 +37,7 @@ class EmpresaFormRequest extends FormRequest
             'telefono' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:191',
             'correos_automaticos' => 'sometimes|boolean',
+            'correos_comentarios' => 'sometimes|boolean',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'estado' => 'nullable|integer|in:0,1',
             'descripcion' => 'nullable|string|max:1000',

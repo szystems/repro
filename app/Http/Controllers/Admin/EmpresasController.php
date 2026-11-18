@@ -199,11 +199,13 @@ class EmpresasController extends Controller
 
     private function asignarCorreosAutomaticos(EmpresaFormRequest $request, Empresa $empresa): void
     {
-        if (! $request->exists('correos_automaticos')) {
-            return;
+        if ($request->exists('correos_automaticos')) {
+            $empresa->correos_automaticos = $request->boolean('correos_automaticos');
         }
 
-        $empresa->correos_automaticos = $request->boolean('correos_automaticos');
+        if ($request->exists('correos_comentarios')) {
+            $empresa->correos_comentarios = $request->boolean('correos_comentarios');
+        }
     }
 
     private function asignarRequerimientosRepro(EmpresaFormRequest $request, Empresa $empresa): void
@@ -385,12 +387,24 @@ class EmpresasController extends Controller
     public function cambiarCorreosAutomaticos(Request $request, $id)
     {
         $empresa = Empresa::findOrFail($id);
-        $empresa->correos_automaticos = $request->boolean('correos_automaticos');
+
+        if ($request->exists('correos_automaticos')) {
+            $empresa->correos_automaticos = $request->boolean('correos_automaticos');
+        }
+        if ($request->exists('correos_comentarios')) {
+            $empresa->correos_comentarios = $request->boolean('correos_comentarios');
+        }
         $empresa->save();
 
-        $mensaje = $empresa->recibeCorreosAutomaticos()
-            ? 'Correos automáticos activados para '.$empresa->nombre.'.'
-            : 'Correos automáticos apagados para '.$empresa->nombre.'. El portal y WhatsApp siguen.';
+        if ($request->exists('correos_comentarios') && ! $request->exists('correos_automaticos')) {
+            $mensaje = $empresa->recibeCorreosComentarios()
+                ? 'Aviso de comentarios activado para '.$empresa->nombre.'. Solo sale si los correos automáticos están encendidos.'
+                : 'Aviso de comentarios apagado para '.$empresa->nombre.'.';
+        } else {
+            $mensaje = $empresa->recibeCorreosAutomaticos()
+                ? 'Correos automáticos activados para '.$empresa->nombre.'.'
+                : 'Correos automáticos apagados para '.$empresa->nombre.'. El portal y WhatsApp siguen.';
+        }
 
         return redirect()->back()->with('status', $mensaje);
     }

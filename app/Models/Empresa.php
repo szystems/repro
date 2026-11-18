@@ -19,6 +19,7 @@ class Empresa extends Model
         'telefono',
         'email',
         'correos_automaticos',
+        'correos_comentarios',
         'logo',
         'estado',
         'descripcion',
@@ -104,6 +105,20 @@ class Empresa extends Model
 
         if ($valor === null) {
             return true;
+        }
+
+        return filter_var($valor, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Extra, apagado al crear la empresa. Solo corre si los correos automáticos están encendidos.
+     */
+    public function recibeCorreosComentarios(): bool
+    {
+        $valor = $this->getAttributes()['correos_comentarios'] ?? null;
+
+        if ($valor === null) {
+            return false;
         }
 
         return filter_var($valor, FILTER_VALIDATE_BOOLEAN);

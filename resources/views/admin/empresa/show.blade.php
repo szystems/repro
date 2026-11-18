@@ -101,6 +101,9 @@
                                     <span class="badge {{ $empresa->recibeCorreosAutomaticos() ? 'bg-success' : 'bg-secondary' }} p-2">
                                         {{ $empresa->recibeCorreosAutomaticos() ? 'Activados' : 'Apagados' }}
                                     </span>
+                                    <span class="badge {{ $empresa->recibeCorreosComentarios() ? 'bg-success' : 'bg-secondary' }} p-2 ms-1">
+                                        Comentarios: {{ $empresa->recibeCorreosComentarios() ? 'sí' : 'no' }}
+                                    </span>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
