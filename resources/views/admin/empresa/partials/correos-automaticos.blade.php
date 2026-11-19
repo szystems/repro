@@ -26,9 +26,10 @@
             <label class="form-check-label" for="correos_comentarios">Avisar por correo cada comentario nuevo</label>
         </div>
         <small class="text-muted d-block mt-1">
-            Apagado por defecto. Solo llega si los correos automáticos están encendidos.
-            Al guardar un comentario nuevo del candidato, se avisa al responsable (reclutador, quien creó la orden o el titular).
-            Corregir un comentario ya guardado no manda otro correo.
+            Apagado por defecto. Solo manda el correo, y solo si los correos automáticos están encendidos.
+            La campana del portal llega igual a quienes pueden ver la orden, sin gastar cupo.
+            El correo va al responsable (reclutador, quien creó la orden o el titular).
+            Corregir un comentario ya guardado no manda otra campana ni otro correo.
         </small>
     </div>
 </div>
