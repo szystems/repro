@@ -196,7 +196,7 @@
                                                                    @checked($empresa->recibeCorreosComentarios())
                                                                    @disabled(! $empresa->recibeCorreosAutomaticos())
                                                                    onchange="this.form.submit()"
-                                                                   title="Correo al guardar un comentario nuevo. Apagado por defecto. Requiere los correos automáticos encendidos.">
+                                                                   title="Correo extra al guardar un comentario nuevo. Apagado por defecto. La campana del portal llega igual y no gasta cupo.">
                                                             <label class="form-check-label small" for="correos-comentarios-{{ $empresa->id }}">Comentarios</label>
                                                         </div>
                                                     </form>

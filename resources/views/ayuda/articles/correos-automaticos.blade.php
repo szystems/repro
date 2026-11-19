@@ -35,12 +35,13 @@
 
     <h5 id="interruptor"><i class="bi bi-toggle-on me-2"></i>Interruptor por empresa</h5>
     <p>En <strong>Administración → Empresas</strong>, la columna <strong>Correos</strong> enciende o apaga los correos de esa empresa: enlace y recordatorio del candidato, cita y resultados. Nace encendido. La campana del portal, WhatsApp, la contraseña y el aviso a la sede de REPRO no se apagan. Apagar una empresa reserva cupo para las demás. No hace salir correos si el mes del servicio ya se agotó.</p>
-    <p>Debajo, <strong>Comentarios</strong> nace apagado. Si se enciende, y los correos automáticos también están encendidos, al guardar un comentario nuevo del candidato le llega un correo al responsable (reclutador asignado, quien creó la orden o el titular). Corregir un comentario ya escrito no manda otro correo. El comentario sigue viéndose en la ficha aunque este aviso esté apagado.</p>
+    <p>Debajo, <strong>Comentarios</strong> nace apagado y solo controla el correo. La campana del portal sale igual, sin gastar cupo: al guardar un comentario nuevo, les llega a los usuarios de la empresa que pueden ver esa orden. Si además se enciende este interruptor, y los correos automáticos también están encendidos, el responsable recibe el correo (reclutador asignado, quien creó la orden o el titular). Corregir un comentario ya escrito no manda otra campana ni otro correo.</p>
 
     <h5 id="campana"><i class="bi bi-bell me-2"></i>Solo campana (sin correo)</h5>
     <ul>
         <li>Orden creada → REPRO y empresa (notificación en el portal).</li>
         <li>Candidato terminó el cuestionario → REPRO y empresa (campana). El correo de «cuestionario completado» ya no se envía.</li>
+        <li>REPRO guarda un comentario nuevo del candidato → campana a los usuarios de la empresa que pueden ver la orden. El correo de ese comentario solo sale si la empresa tiene encendido el interruptor Comentarios.</li>
     </ul>
 
     @include('ayuda.partials.callout', [

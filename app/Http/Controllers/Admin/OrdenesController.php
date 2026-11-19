@@ -13,6 +13,7 @@ use App\Models\EvaluadorNota;
 use App\Models\Empresa;
 use App\Models\Sede;
 use App\Models\User;
+use App\Notifications\ComentarioAgregadoNotification;
 use App\Notifications\EvaluadoAsignadoNotification;
 use App\Notifications\OrdenCreadaNotification;
 use App\Notifications\ResultadoPreliminarNotification;
@@ -939,14 +940,23 @@ class OrdenesController extends Controller
     }
 
     /**
-     * Correo extra, solo si la empresa lo tiene encendido y los correos automáticos también.
+     * Campana a quienes pueden ver la orden. El correo es extra y solo sale
+     * si la empresa lo tiene encendido y los correos automáticos también.
      * Corregir un comentario ya guardado no pasa por aquí.
      */
     private function notificarComentarioEmpresa(EvaluadoOrden $evaluado, string $texto): void
     {
         $evaluado->loadMissing('orden.empresa');
         $orden = $evaluado->orden;
-        if (! $orden || ! CorreoClienteSupport::permiteComentarios($orden->empresa)) {
+        if (! $orden) {
+            return;
+        }
+
+        foreach (DestinatariosCorreoEmpresaSupport::usuariosVisiblesEmpresa($orden) as $usuario) {
+            $usuario->notify(new ComentarioAgregadoNotification($evaluado));
+        }
+
+        if (! CorreoClienteSupport::permiteComentarios($orden->empresa)) {
             return;
         }
 

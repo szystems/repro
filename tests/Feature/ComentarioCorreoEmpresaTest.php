@@ -9,8 +9,10 @@ use App\Models\EvaluadoOrden;
 use App\Models\Orden;
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\ComentarioAgregadoNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Tests\Feature\Concerns\CreatesRolesAndPermissions;
 use Tests\TestCase;
 
@@ -31,6 +33,7 @@ class ComentarioCorreoEmpresaTest extends TestCase
         parent::setUp();
         $this->setUpRolesAndPermissions();
         Mail::fake();
+        Notification::fake();
 
         $this->empresa = Empresa::factory()->create([
             'nombre' => 'Cliente Comentarios',
@@ -75,6 +78,8 @@ class ComentarioCorreoEmpresaTest extends TestCase
             ->assertRedirect();
 
         Mail::assertNotQueued(ComentarioAgregadoMail::class);
+        Notification::assertSentTo($this->titular, ComentarioAgregadoNotification::class);
+        Notification::assertNotSentTo($this->repro, ComentarioAgregadoNotification::class);
     }
 
     public function test_con_el_aviso_encendido_el_comentario_llega_al_titular(): void
@@ -93,6 +98,12 @@ class ComentarioCorreoEmpresaTest extends TestCase
                 && $mail->comentario === 'Confirmó la cita de mañana.'
                 && str_contains($mail->envelope()->subject, 'Ana López');
         });
+        Notification::assertSentTo($this->titular, ComentarioAgregadoNotification::class, function (ComentarioAgregadoNotification $aviso) {
+            $datos = $aviso->toArray($this->titular);
+
+            return str_contains($datos['mensaje'], 'Ana López')
+                && str_contains($datos['url'], '/empresa/ordenes/');
+        });
     }
 
     public function test_si_los_correos_generales_estan_apagados_no_sale_el_de_comentarios(): void
@@ -109,6 +120,7 @@ class ComentarioCorreoEmpresaTest extends TestCase
             ->assertRedirect();
 
         Mail::assertNotQueued(ComentarioAgregadoMail::class);
+        Notification::assertSentTo($this->titular, ComentarioAgregadoNotification::class);
     }
 
     public function test_corregir_un_comentario_no_manda_otro_correo(): void
@@ -117,6 +129,7 @@ class ComentarioCorreoEmpresaTest extends TestCase
         $this->evaluado->agregarObservacion('Texto con un error.', $this->repro->id);
         $nota = EvaluadoObservacionEntrada::where('evaluado_orden_id', $this->evaluado->id)->first();
         Mail::fake();
+        Notification::fake();
 
         $this->actingAs($this->repro)
             ->patch(route('evaluados.corregir-observacion', [$this->evaluado, $nota]), [
@@ -125,6 +138,7 @@ class ComentarioCorreoEmpresaTest extends TestCase
             ->assertRedirect();
 
         Mail::assertNotQueued(ComentarioAgregadoMail::class);
+        Notification::assertNotSentTo($this->titular, ComentarioAgregadoNotification::class);
     }
 
     public function test_el_interruptor_de_comentarios_nace_apagado_y_se_enciende_aparte(): void
